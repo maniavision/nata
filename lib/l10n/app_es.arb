@@ -1,0 +1,528 @@
+{
+  "@@locale": "es",
+
+  "appName": "Nata",
+
+  "splashTitle": "Seleccionar idioma y moneda",
+  "splashSubtitle": "Personaliza tu experiencia de entrega entre pares en todo el mundo.",
+  "splashWelcomePill": "Welcome · Bienvenue · Bienvenido",
+  "splashDetectedRegion": "REGIÓN DETECTADA",
+  "splashDetectedValue": "Estados Unidos · Inglés y USD",
+  "splashQuickApply": "Aplicar",
+  "splashChooseLanguage": "ELEGIR IDIOMA",
+  "splashPreferredCurrency": "MONEDA PREFERIDA",
+  "splashSaveAndContinue": "Guardar y continuar",
+  "splashSettingsNote": "Puedes cambiar tu idioma y moneda en Ajustes de perfil.",
+  "splashAvailable": "{count} disponibles",
+  "@splashAvailable": { "placeholders": { "count": { "type": "int" } } },
+
+  "langEnglish": "English",
+  "langEnglishSub": "Predeterminado · Internacional",
+  "langSpanish": "Español",
+  "langSpanishSub": "Español · España y Latinoamérica",
+  "langFrench": "Français",
+  "langFrenchSub": "Francés · Francia y África",
+
+  "currUSD": "Dólar estadounidense",
+  "currEUR": "Euro",
+  "currGBP": "Libra esterlina",
+  "currXOF": "Franco CFA",
+
+  "signIn": "Iniciar sesión",
+  "signUp": "Registrarse",
+  "email": "Correo o teléfono",
+  "password": "Contraseña",
+  "forgotPassword": "¿Olvidaste tu contraseña?",
+  "rememberMe": "Recordarme",
+  "faceId": "Face ID",
+  "signInButton": "Iniciar sesión",
+  "newToNata": "¿Nuevo en Nata?",
+  "createAccount": "Crear una cuenta",
+  "tagline": "Entregas entre pares · Red de viajeros verificados al 100%",
+  "welcomeBack": "Bienvenido de nuevo",
+  "welcomeBackSub": "Inicia sesión para gestionar entregas, rutas y solicitudes.",
+  "orWithEmail": "o con correo electrónico",
+  "apple": "Apple",
+  "google": "Google",
+
+  "createYourAccount": "Crea tu cuenta",
+  "createYourAccountSub": "Envía artículos con viajeros verificados que van a tu destino.",
+  "firstName": "Nombre",
+  "lastName": "Apellido",
+  "emailAddress": "Correo electrónico",
+  "phoneNumber": "Número de teléfono",
+  "orSignUpManually": "o regístrate manualmente",
+  "mandatoryIdTitle": "Verificación de identidad obligatoria",
+  "mandatoryIdBody": "Se solicitará una verificación de ID gubernamental y escaneo facial justo después del registro antes de realizar transacciones.",
+  "createAccountButton": "Crear cuenta y continuar",
+  "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+  "signInHere": "Inicia sesión aquí",
+
+  "goodMorning": "BUENOS DÍAS",
+  "homeHero": "Tu paquete ya está en camino.",
+  "homeSubtitle": "Envíalo con alguien que va a tu destino",
+  "findATraveler": "ENCONTRAR VIAJERO",
+  "trustedRoutes": "Rutas confiables, usuarios verificados",
+  "deliverTo": "ENTREGAR EN",
+  "whereIsItGoing": "¿Adónde va?",
+  "deliveryDate": "FECHA DE ENTREGA",
+  "chooseADate": "Elige una fecha",
+  "selectedDate": "FECHA SELECCIONADA",
+  "searchTravelers": "Buscar viajeros",
+  "sendAnItem": "Enviar un artículo",
+  "addATrip": "Agregar viaje",
+  "communityFavorites": "FAVORITOS DE LA COMUNIDAD",
+  "activeTravelers": "Viajeros activos",
+  "seeAll": "Ver todos",
+  "recentRoutes": "Rutas recientes",
+  "viewAll": "Ver todos",
+  "sealedBoxPolicy": "Política de caja sellada",
+  "sealedBoxPolicyBody": "Los artículos siempre deben estar sellados en su caja comercial original para el cumplimiento aduanero y la seguridad en viajes.",
+  "available": "Disponible",
+  "home": "Inicio",
+  "requests": "Solicitudes",
+  "messages": "Mensajes",
+  "profile": "Perfil",
+
+  "searchForTravelers": "Buscar viajeros",
+  "reset": "Restablecer",
+  "whereItemStartsFrom": "¿De dónde sale el artículo?",
+  "departureCountry": "País de salida",
+  "departureCity": "Ciudad de salida",
+  "whereItemNeedsToGo": "¿A dónde debe llegar el artículo?",
+  "destinationCountry": "País de destino",
+  "destinationCity": "Ciudad de destino",
+  "desiredDeliveryDate": "Fecha de entrega deseada",
+  "flexibleDays": "Flexible dentro de ±2 días",
+  "searchTravelersButton": "Buscar viajeros",
+  "originalPackagingTitle": "Requisito de embalaje original",
+  "originalPackagingBody": "Los artículos deben estar sellados en su caja original. El precio se calcula automáticamente según el tamaño y peso.",
+  "recentSearches": "BÚSQUEDAS RECIENTES",
+
+  "travelerResults": "Resultados de viajeros",
+  "routeAndDate": "RUTA Y FECHA DESEADA",
+  "aroundDate": "Alrededor del 22 de junio, 2025 · 4 viajeros disponibles",
+  "edit": "Editar",
+  "itemsDelivered": "artículos",
+  "viewProfile": "Ver perfil",
+  "needDifferentDate": "¿Necesitas otra fecha?",
+  "getNotified": "Recibe una notificación cuando nuevos viajeros añadan viajes en esta ruta.",
+
+  "travelerProfile": "Perfil del viajero",
+  "frequentTraveler": "Viajero frecuente en la ruta LOS ⇄ LHR",
+  "itemsDeliveredStat": "Artículos entregados",
+  "senderReviews": "reseñas de remitentes",
+  "onTimeRate": "Puntualidad",
+  "travelDateAndRoute": "FECHA Y RUTA DE VIAJE",
+  "departure": "Salida",
+  "destination": "Destino",
+  "directFlight": "Vuelo directo",
+  "pricingLabel": "Precio:",
+  "pricingValue": "Calculado por tamaño y peso del artículo",
+  "itemSizeAndWeight": "LÍMITES DE TAMAÑO Y PESO ACEPTADOS",
+  "weightLimit": "Límite de peso",
+  "sizeLimit": "Límite de tamaño",
+  "checkBaggage": "Espacio en equipaje facturado",
+  "maxDimensions": "Máx. 30 × 20 × 15 cm",
+  "itemRequirement": "Requisito del artículo",
+  "itemRequirementBody": "Los artículos deben estar sellados en su caja original. Esto permite a los viajeros transportarlos con confianza y facilita los controles aduaneros.",
+  "deliveryHistoryAndReviews": "HISTORIAL DE ENTREGAS Y RESEÑAS",
+  "sendRequest": "Enviar solicitud",
+
+  "deliveryRequest": "Solicitud de entrega",
+  "step1of1": "Paso 1 de 1",
+  "selectedTraveler": "VIAJERO SELECCIONADO",
+  "whatIsTheItem": "¿Qué es el artículo?",
+  "itemCategory": "Categoría del artículo",
+  "electronics": "Electrónica",
+  "apparel": "Ropa",
+  "documents": "Documentos",
+  "itemDescription": "Descripción del artículo",
+  "packageWeight": "Peso del paquete",
+  "packageDimensions": "Dimensiones del paquete",
+  "itemPhotos": "Fotos del artículo (caja sellada)",
+  "photoAttached": "foto adjunta",
+  "addPhoto": "Añadir foto",
+  "calculatedPrice": "Precio calculado del artículo",
+  "sendDeliveryRequest": "Enviar solicitud de entrega",
+
+  "secureEscrowCheckout": "Pago seguro con depósito en garantía",
+  "paymentWindowActive": "VENTANA DE PAGO ACTIVA",
+  "requestExpires": "La solicitud vence en",
+  "howEscrowWorks": "Cómo funciona la protección de depósito",
+  "escrowBody": "Tu pago es retenido de forma segura por Nata. El viajero solo recibe el pago después de que tu destinatario verifique la entrega con el código de 4 dígitos o foto.",
+  "selectPaymentMethod": "SELECCIONAR MÉTODO DE PAGO",
+  "applePay": "Apple Pay",
+  "applePaySub": "Predeterminado · Rápido y seguro",
+  "creditCard": "Tarjeta de crédito o débito",
+  "creditCardSub": "Visa, Mastercard, Amex",
+  "mobileMoney": "Dinero móvil",
+  "mobileMoneyPhoneSub": "M-Pesa, MTN MoMo, Orange, Wave",
+  "paymentBreakdown": "DESGLOSE DE PAGO",
+  "travelerReward": "Recompensa del viajero",
+  "platformFee": "Protección y comisión de garantía de Nata",
+  "totalEscrow": "Total en depósito de garantía",
+  "payIntoEscrow": "Pagar en depósito",
+  "cancellationTitle": "Garantía de cancelación y reembolso",
+  "refundBullet1": "Reembolso total del 100% si el viajero cancela o el artículo no se entrega.",
+  "refundBullet2": "Cancelación gratuita en cualquier momento antes de la entrega física al viajero.",
+  "refundBullet3": "Ventana de disputa de 3 días después de la entrega antes de finalizar los fondos.",
+  "escrowEncrypted": "Depósito cifrado de 256 bits por Nata Pay",
+
+  "deliveryRequests": "Solicitudes de entrega",
+  "incoming": "Entrantes",
+  "outgoing": "Salientes",
+  "incomingSection": "SOLICITUDES ENTRANTES (COMO VIAJERO)",
+  "pendingReview": "pendientes de revisión",
+  "outgoingSection": "SOLICITUDES SALIENTES (COMO REMITENTE)",
+  "total": "total",
+  "sender": "Remitente",
+  "successfulDeliveries": "entregas exitosas",
+  "yourTrip": "Tu viaje:",
+  "travelDate": "Fecha de viaje:",
+  "item": "Artículo:",
+  "weightAndSize": "Peso y tamaño:",
+  "sealedPhotoAttached": "foto de caja sellada adjunta",
+  "viewPhoto": "Ver foto",
+  "viewPhotos": "Ver fotos",
+  "decline": "Rechazar",
+  "acceptRequest": "Aceptar solicitud",
+  "pending": "Pendiente",
+  "accepted": "Aceptado",
+  "declined": "Rechazado",
+  "payInTime": "Pagar en",
+  "payEscrow": "Pagar depósito",
+  "refundCredited": "Reembolso acreditado al saldo",
+  "findAnotherTraveler": "Buscar otro viajero",
+  "arrangeHandoff": "Coordinar entrega por chat",
+
+  "messagesTitle": "Mensajes",
+  "unreadUpdates": "3 actualizaciones no leídas",
+  "searchConversations": "Buscar conversaciones o seguimiento...",
+  "allFilter": "Todos (4)",
+  "activeDeliveries": "Entregas activas (2)",
+  "completed": "Completadas (1)",
+  "support": "Soporte",
+
+  "accountAndProfile": "Cuenta y perfil",
+  "memberSince": "Miembro desde {date}",
+  "@memberSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tripsCarried": "VIAJES REALIZADOS",
+  "parcelsSent": "PAQUETES ENVIADOS",
+  "natawallet": "BILLETERA NATA",
+  "escrowProtected": "Protegido con depósito",
+  "availableForPayout": "Disponible para retiro",
+  "withdraw": "Retirar",
+  "heldInEscrow": "retenido en depósito",
+  "viewHistory": "Ver historial",
+  "language": "Idioma",
+  "currency": "Moneda",
+  "identityVerification": "Verificación de identidad",
+  "tier1Verified": "Nivel 1 verificado · Pasaporte y biometría",
+  "sealedBoxPolicySetting": "Política de caja sellada",
+  "originalBoxCompliance": "Cumplimiento de seguridad de caja original",
+  "logOut": "Cerrar sesión",
+
+  "addATripTitle": "Añadir un viaje",
+  "clear": "Borrar",
+  "travelerMode": "MODO VIAJERO",
+  "headingSomewhere": "¿Vas a algún lugar pronto?",
+  "luggageEarnings": "Convierte el espacio libre de tu equipaje en ingresos entregando paquetes sellados.",
+  "departureDetails": "DETALLES DE SALIDA",
+  "from": "Desde",
+  "arrivalDetails": "DETALLES DE LLEGADA",
+  "to": "Hasta",
+  "departureDate": "FECHA DE SALIDA",
+  "arrivalDate": "FECHA DE LLEGADA",
+  "flightTicket": "RECIBO DE BOLETO DE VUELO",
+  "flightTicketSub": "Sube una copia del recibo de tu reserva de vuelo para confirmar tu viaje",
+  "uploadFlightReceipt": "Subir recibo de vuelo (PDF / Imagen)",
+  "replaceFlightReceipt": "Reemplazar recibo de vuelo (PDF / Imagen)",
+  "luggageCapacity": "CAPACIDAD DE EQUIPAJE QUE PUEDES LLEVAR",
+  "maxWeight": "Peso máximo",
+  "maxItemSize": "Tamaño máximo del artículo",
+  "howMatchingWorks": "Cómo funciona la búsqueda",
+  "howMatchingBody": "Una vez guardado, tu viaje aparecerá en los resultados de búsqueda para remitentes que buscan esta ruta y fecha.",
+  "saveAndPublish": "Guardar y publicar viaje",
+
+  "confirmDelivery": "Confirmar entrega",
+  "enter4DigitCode": "Ingresa el código de 4 dígitos",
+  "recipientWillGive": "Tu destinatario te dará este código al recibir el artículo.",
+  "codeEntered": "Código ingresado — listo para confirmar",
+  "uploadHandoffPhoto": "Subir foto de entrega",
+  "handoffPhotoSub": "Toma una foto contigo y el destinatario, o del artículo siendo entregado.",
+  "confirmDeliveryButton": "Confirmar entrega y liberar pago",
+  "disputeWindow": "El pago se libera después de la ventana de disputa de 3 días",
+
+  "leaveAReview": "Dejar una reseña",
+  "howWasExperience": "¿Cómo fue tu experiencia?",
+  "whatWentWell": "¿Qué salió bien?",
+  "leaveComment": "Deja un comentario (opcional)",
+  "commentHint": "Describe tu experiencia — esto ayuda a la comunidad...",
+  "submitReview": "Enviar reseña",
+  "skipForNow": "Omitir por ahora",
+  "reviewSubmitted": "¡Reseña enviada!",
+  "reviewThanks": "Gracias por reseñar a Amara Kalu. Tu opinión ayuda a mantener la confianza de la comunidad.",
+  "returningHome": "Volviendo al inicio...",
+  "ratingPoor": "Malo — no era lo que esperaba",
+  "ratingFair": "Regular — algunos problemas",
+  "ratingGood": "Bueno — cumplió las expectativas",
+  "ratingGreat": "Muy bueno — superó las expectativas",
+  "ratingExcellent": "Excelente — lo recomendaría",
+
+  "identityVerificationTitle": "Verificación de identidad",
+  "required": "OBLIGATORIO",
+  "almostDone": "CASI LISTO",
+  "cancel": "Cancelar",
+  "step1of2": "Paso 1 de 2",
+  "step2of2": "Paso 2 de 2",
+  "skipForNowId": "Omitir por ahora",
+  "actionRequired": "Acción requerida antes de enviar",
+  "actionRequiredBody": "Puedes explorar viajeros en cualquier momento, pero la verificación de identidad es obligatoria para enviar o aceptar solicitudes.",
+  "verifyIdentity": "Verifica tu identidad",
+  "verifyIdentitySub": "Completa 2 pasos rápidos para verificarte en menos de 2 minutos.",
+  "uploadOfficialId": "Subir ID oficial",
+  "passportOrId": "Pasaporte, Cédula nacional o Licencia de conducir",
+  "activeStep": "Activo",
+  "nextStep": "Siguiente",
+  "passportOption": "Pasaporte",
+  "driversLicense": "Lic. de conducir",
+  "nationalId": "Cédula nacional",
+  "takePhotoOrUpload": "Toma una foto o sube la página frontal",
+  "allCornersVisible": "Asegúrate de que las 4 esquinas sean visibles sin reflejos",
+  "useCamera": "Usar cámara",
+  "chooseFile": "Elegir archivo",
+  "faceScan": "Escaneo facial 3D",
+  "faceScanSub": "Compara tu selfie en vivo con la foto de tu ID",
+  "scanIdToContinue": "Escanear ID para continuar",
+  "biometricNote": "Tus datos biométricos se procesan únicamente para la verificación de identidad.",
+  "step1Completed": "Paso 1 completado",
+  "passportVerified": "Documento de pasaporte verificado · Fortune Niama",
+  "editId": "Editar ID",
+  "faceScanTitle": "Escaneo biométrico facial 3D",
+  "faceScanBody": "Centra tu rostro dentro del marco para verificar la vitalidad y confirmar la propiedad.",
+  "holdStill": "Quédate quieto, mira directamente a la pantalla",
+  "nodHead": "Asiente lentamente con la cabeza cuando el borde se vuelva verde.",
+  "goodLight": "Buena luz",
+  "noGlasses": "Sin gafas",
+  "neutralFace": "Cara neutral",
+  "startBiometricScan": "Iniciar escaneo biométrico",
+  "biometricLocalNote": "Los escaneos faciales biométricos se procesan localmente para coincidir con tu pasaporte.",
+  "fullyVerified": "¡Estás completamente verificado!",
+  "fullyVerifiedSub": "Tus documentos de identidad y escaneo biométrico han sido autenticados con éxito.",
+  "verificationReport": "INFORME DE VERIFICACIÓN",
+  "instantApproval": "Aprobación instantánea ✓",
+  "passportIdDoc": "Documento de identidad (Pasaporte)",
+  "biometricLiveness": "Vitalidad biométrica 3D",
+  "trustLimit": "Límite de confianza y garantía",
+  "unlockedPerks": "BENEFICIOS DE MIEMBRO DESBLOQUEADOS",
+  "perk1": "Publicar viajes ilimitados",
+  "perk2": "Liberación rápida de pagos",
+  "perk3": "Insignia de perfil verificado",
+  "perk4": "Prioridad en búsquedas",
+  "continueToHome": "Continuar al inicio",
+  "viewPublicProfile": "Ver perfil público",
+  "encrypted256": "Cifrado de 256 bits",
+  "instantAi": "Verificación IA instantánea",
+  "gdprCompliant": "Cumplimiento GDPR y KYC",
+  "trips": "Viajes",
+  "identityActionRequiredSub": "Acción requerida: verifica tu identidad",
+  "identityUnderReview": "La verificación está actualmente en revisión",
+  "verificationReviewing": "En revisión",
+  "ratingStat": "Valoración",
+  "upcomingTrips": "PRÓXIMOS VIAJES",
+  "newTravelerRating": "Nuevo",
+  "upcomingTripsStat": "Próximos viajes",
+  "travelerOnRoute": "Viajero en la ruta {from} ⇄ {to}",
+  "@travelerOnRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "frequentTravelerOnRoute": "Viajero frecuente en la ruta {from} ⇄ {to}",
+  "@frequentTravelerOnRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "noReviewsYet": "Aún no hay reseñas",
+  "myTrips": "Mis viajes",
+  "tabUpcoming": "Próximos",
+  "tabPast": "Pasados",
+  "tripPublished": "Publicado",
+  "tripInReview": "En revisión",
+  "tripCompleted": "Completado",
+  "tripCancelled": "Cancelado",
+  "editTrip": "Editar viaje",
+  "viewRequests": "Ver solicitudes",
+  "maxWeightLabel": "Peso máx.",
+  "maxSizeLabel": "Tamaño máx.",
+  "noUpcomingTrips": "No hay viajes próximos",
+  "noPastTrips": "Aún no hay viajes pasados",
+  "addTripPrompt": "Añade un viaje para empezar a ganar con el espacio de tu equipaje.",
+  "tripInReviewNote": "Estamos revisando tu viaje. Se publicará cuando sea aprobado.",
+  "couldNotLoadTrips": "No se pudieron cargar tus viajes.",
+  "retry": "Reintentar",
+  "saveChanges": "Guardar cambios",
+  "tripSubmitted": "Viaje enviado a revisión",
+  "tripUpdated": "Viaje actualizado",
+  "selectCountry": "Selecciona un país",
+  "selectCity": "Selecciona una ciudad",
+  "selectDate": "Selecciona una fecha",
+  "tripPrice": "PRECIO POR ARTÍCULO",
+  "tripPriceHint": "Tu tarifa por llevar un artículo",
+  "errPickDeparture": "Elige desde dónde sales.",
+  "errPickArrival": "Elige tu destino.",
+  "errSameCity": "La salida y la llegada deben ser ciudades distintas.",
+  "errPickDepDate": "Elige una fecha de salida.",
+  "errPickArrDate": "Elige una fecha de llegada.",
+  "errArrivalBeforeDeparture": "La llegada no puede ser anterior a la salida.",
+  "errAttachReceipt": "Adjunta tu recibo de vuelo.",
+  "errPrice": "Introduce un precio válido.",
+  "errSaveFailed": "No se pudo guardar tu viaje. Inténtalo de nuevo.",
+  "itemsDeliveredCount": "{count, plural, =1{1 artículo entregado} other{{count} artículos entregados}}",
+  "@itemsDeliveredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingReference": "Referencia de reserva",
+  "bookingReferenceSub": "Introduce el código de referencia de tu reserva de vuelo (PNR)",
+  "errBookingReference": "La referencia de reserva debe tener de 5 a 8 letras o números.",
+  "bookingReferenceShort": "Ref. {code}",
+  "@bookingReferenceShort": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "verificationPending": "Verificación pendiente",
+  "verificationUnverified": "Sin verificar",
+  "takePhoto": "Tomar foto",
+  "uploadFile": "Subir archivo",
+  "errCamera": "No se pudo abrir la cámara.",
+  "notifications": "Notificaciones",
+  "markAllRead": "Marcar todo como leído",
+  "paymentsFilter": "Pagos",
+  "notifToday": "Hoy",
+  "notifEarlier": "Anteriores",
+  "noNotifications": "Aún no hay notificaciones",
+  "noNotificationsSub": "Te avisaremos aquí cuando pase algo con tus viajes, solicitudes y pagos.",
+  "couldNotLoadNotifications": "No se pudieron cargar tus notificaciones.",
+  "justNow": "Ahora mismo",
+  "yesterdayLabel": "Ayer",
+  "minutesAgo": "hace {count} min",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "hace {count} h",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifFilterAll": "Todas",
+  "faceIdReason": "Confirma que eres tú para iniciar sesión en Nata",
+  "faceIdSignInFirst": "Para usar Face ID, inicia sesión primero con tu número de teléfono y deja marcado «Recordarme».",
+  "faceIdUnavailable": "Face ID no está disponible en este dispositivo.",
+  "faceIdNotSetUp": "Configura primero Face ID en los ajustes de tu dispositivo.",
+  "faceIdFailed": "Face ID no te reconoció. Inténtalo de nuevo o inicia sesión con tu número de teléfono.",
+  "faceIdLocked": "Face ID está bloqueado por ahora. Inicia sesión con tu número de teléfono.",
+  "splashDetectedSummary": "{country} · {language} y {currency}",
+  "@splashDetectedSummary": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesCaughtUp": "Todo al día",
+  "searchChats": "Buscar por nombre, ruta o artículo",
+  "noConversations": "Aún no hay conversaciones",
+  "noConversationsSub": "Cuando envíes o recibas una solicitud de entrega, tu chat con el viajero o el remitente aparecerá aquí.",
+  "noChatMatches": "Ninguna conversación coincide con tu búsqueda",
+  "couldNotLoadMessages": "No se pudieron cargar tus mensajes.",
+  "couldNotLoadChat": "No se pudo cargar este chat.",
+  "typeMessage": "Escribe un mensaje…",
+  "msgSending": "Enviando…",
+  "msgSent": "Enviado ✓",
+  "msgRead": "Leído ✓✓",
+  "msgFailed": "No enviado · toca para reintentar",
+  "chatEmpty": "Aún no hay mensajes. ¡Saluda!",
+  "chatPhotoLabel": "Foto",
+  "chatChoosePhoto": "Elegir de la galería",
+  "chatPhotoFailed": "No se pudo enviar la foto.",
+  "chatCameraFailed": "No se pudo abrir la cámara o las fotos.",
+  "chatPhotoLoadFailed": "Foto no disponible",
+  "unreadMessagesCount": "{count, plural, =1{1 mensaje sin leer} other{{count} mensajes sin leer}}",
+  "@unreadMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterAllCount": "Todas ({count})",
+  "@filterAllCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterActiveCount": "Activas ({count})",
+  "@filterActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterCompletedCount": "Completadas ({count})",
+  "@filterCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatYouPrefix": "Tú: {text}",
+  "@chatYouPrefix": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  }
+}

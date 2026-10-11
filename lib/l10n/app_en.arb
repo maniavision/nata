@@ -1,0 +1,528 @@
+{
+  "@@locale": "en",
+
+  "appName": "Nata",
+
+  "splashTitle": "Select Language & Currency",
+  "splashSubtitle": "Personalize your peer delivery experience across routes worldwide.",
+  "splashWelcomePill": "Welcome · Bienvenue · Bienvenido",
+  "splashDetectedRegion": "DETECTED REGION",
+  "splashDetectedValue": "United States · English & USD",
+  "splashQuickApply": "Quick Apply",
+  "splashChooseLanguage": "CHOOSE LANGUAGE",
+  "splashPreferredCurrency": "PREFERRED CURRENCY",
+  "splashSaveAndContinue": "Save & Continue",
+  "splashSettingsNote": "You can change your language and currency anytime in Profile Settings.",
+  "splashAvailable": "{count} available",
+  "@splashAvailable": { "placeholders": { "count": { "type": "int" } } },
+
+  "langEnglish": "English",
+  "langEnglishSub": "Default · International",
+  "langSpanish": "Español",
+  "langSpanishSub": "Spanish · España & LatAm",
+  "langFrench": "Français",
+  "langFrenchSub": "French · France & Afrique",
+
+  "currUSD": "US Dollar",
+  "currEUR": "Euro",
+  "currGBP": "British Pound",
+  "currXOF": "Franc CFA",
+
+  "signIn": "Sign In",
+  "signUp": "Sign Up",
+  "email": "Email or Phone",
+  "password": "Password",
+  "forgotPassword": "Forgot password?",
+  "rememberMe": "Remember me",
+  "faceId": "Face ID",
+  "signInButton": "Sign In",
+  "newToNata": "New to Nata?",
+  "createAccount": "Create an account",
+  "tagline": "Direct peer deliveries · 100% verified traveler network",
+  "welcomeBack": "Welcome back",
+  "welcomeBackSub": "Sign in to manage deliveries, routes, and requests.",
+  "orWithEmail": "or with email",
+  "apple": "Apple",
+  "google": "Google",
+
+  "createYourAccount": "Create your account",
+  "createYourAccountSub": "Send items with verified travelers heading to your destination.",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "emailAddress": "Email address",
+  "phoneNumber": "Phone number",
+  "orSignUpManually": "or sign up manually",
+  "mandatoryIdTitle": "Mandatory ID Verification",
+  "mandatoryIdBody": "Government ID & face scan verification will be requested right after sign-up before transacting.",
+  "createAccountButton": "Create Account & Continue",
+  "alreadyHaveAccount": "Already have an account?",
+  "signInHere": "Sign In here",
+
+  "goodMorning": "GOOD MORNING",
+  "homeHero": "Your parcel is already on its way.",
+  "homeSubtitle": "Send it with someone going your way",
+  "findATraveler": "FIND A TRAVELER",
+  "trustedRoutes": "Trusted routes, verified users",
+  "deliverTo": "DELIVER TO",
+  "whereIsItGoing": "Where is it going?",
+  "deliveryDate": "DELIVERY DATE",
+  "chooseADate": "Choose a date",
+  "selectedDate": "SELECTED DATE",
+  "searchTravelers": "Search travelers",
+  "sendAnItem": "Send an item",
+  "addATrip": "Add a trip",
+  "communityFavorites": "COMMUNITY FAVORITES",
+  "activeTravelers": "Active travelers",
+  "seeAll": "See all",
+  "recentRoutes": "Recent routes",
+  "viewAll": "View all",
+  "sealedBoxPolicy": "Sealed Box Policy",
+  "sealedBoxPolicyBody": "Items must always be sealed in their original retail box for customs compliance and travel security.",
+  "available": "Available",
+  "home": "Home",
+  "requests": "Requests",
+  "messages": "Messages",
+  "profile": "Profile",
+
+  "searchForTravelers": "Search for Travelers",
+  "reset": "Reset",
+  "whereItemStartsFrom": "Where is the item starting from?",
+  "departureCountry": "Departure country",
+  "departureCity": "Departure city",
+  "whereItemNeedsToGo": "Where does the item need to go?",
+  "destinationCountry": "Destination country",
+  "destinationCity": "Destination city",
+  "desiredDeliveryDate": "Desired delivery date",
+  "flexibleDays": "Flexible within ±2 days",
+  "searchTravelersButton": "Search Travelers",
+  "originalPackagingTitle": "Original Packaging Requirement",
+  "originalPackagingBody": "Items must be sealed in their original box. Pricing is calculated automatically based on item size and weight.",
+  "recentSearches": "RECENT SEARCHES",
+
+  "travelerResults": "Traveler Results",
+  "routeAndDate": "ROUTE & DESIRED DATE",
+  "aroundDate": "Around June 22, 2025 · 4 travelers available",
+  "edit": "Edit",
+  "itemsDelivered": "items",
+  "viewProfile": "View profile",
+  "needDifferentDate": "Need a different date?",
+  "getNotified": "Get notified immediately when new travelers add trips on this route.",
+
+  "travelerProfile": "Traveler Profile",
+  "frequentTraveler": "Frequent traveler on LOS ⇄ LHR route",
+  "itemsDeliveredStat": "Items delivered",
+  "senderReviews": "sender reviews",
+  "onTimeRate": "On-time rate",
+  "travelDateAndRoute": "TRAVEL DATE AND ROUTE",
+  "departure": "Departure",
+  "destination": "Destination",
+  "directFlight": "Direct flight",
+  "pricingLabel": "Pricing:",
+  "pricingValue": "Calculated per item size & weight",
+  "itemSizeAndWeight": "ITEM SIZE & WEIGHT LIMITS ACCEPTED",
+  "weightLimit": "Weight Limit",
+  "sizeLimit": "Size Limit",
+  "checkBaggage": "Checked baggage space",
+  "maxDimensions": "Max 30 × 20 × 15 cm",
+  "itemRequirement": "Item Requirement",
+  "itemRequirementBody": "Items must be sealed in their original box. This lets travelers carry items with confidence and helps with customs and security checks.",
+  "deliveryHistoryAndReviews": "DELIVERY HISTORY & REVIEWS",
+  "sendRequest": "Send Request",
+
+  "deliveryRequest": "Delivery Request",
+  "step1of1": "Step 1 of 1",
+  "selectedTraveler": "SELECTED TRAVELER",
+  "whatIsTheItem": "What is the item?",
+  "itemCategory": "Item Category",
+  "electronics": "Electronics",
+  "apparel": "Apparel",
+  "documents": "Documents",
+  "itemDescription": "Item Description",
+  "packageWeight": "Package Weight",
+  "packageDimensions": "Package Dimensions",
+  "itemPhotos": "Item Photos (Sealed Box)",
+  "photoAttached": "photo attached",
+  "addPhoto": "Add photo",
+  "calculatedPrice": "Calculated Item Price",
+  "sendDeliveryRequest": "Send Delivery Request",
+
+  "secureEscrowCheckout": "Secure Escrow Checkout",
+  "paymentWindowActive": "PAYMENT WINDOW ACTIVE",
+  "requestExpires": "Request expires in",
+  "howEscrowWorks": "How Escrow Protection Works",
+  "escrowBody": "Your payment is held safely by Nata. The traveler is only paid after your recipient verifies delivery with your secret 4-digit code or photo proof.",
+  "selectPaymentMethod": "SELECT PAYMENT METHOD",
+  "applePay": "Apple Pay",
+  "applePaySub": "Default · Fast & Secure 1-tap",
+  "creditCard": "Credit or Debit Card",
+  "creditCardSub": "Visa, Mastercard, Amex",
+  "mobileMoney": "Mobile Money",
+  "mobileMoneyPhoneSub": "M-Pesa, MTN MoMo, Orange, Wave",
+  "paymentBreakdown": "PAYMENT BREAKDOWN",
+  "travelerReward": "Traveler reward",
+  "platformFee": "CarryWise protection & escrow fee",
+  "totalEscrow": "Total to Hold in Escrow",
+  "payIntoEscrow": "Pay into Escrow",
+  "cancellationTitle": "Cancellation & Refund Guarantee",
+  "refundBullet1": "Full 100% refund if traveler cancels or item is not delivered.",
+  "refundBullet2": "Free cancellation anytime before physical handoff to traveler.",
+  "refundBullet3": "3-day dispute window after delivery before funds are finalized.",
+  "escrowEncrypted": "256-Bit Encrypted Escrow by Nata Pay",
+
+  "deliveryRequests": "Delivery Requests",
+  "incoming": "Incoming",
+  "outgoing": "Outgoing",
+  "incomingSection": "INCOMING REQUESTS (AS TRAVELER)",
+  "pendingReview": "pending review",
+  "outgoingSection": "OUTGOING REQUESTS (AS SENDER)",
+  "total": "total",
+  "sender": "Sender",
+  "successfulDeliveries": "successful deliveries",
+  "yourTrip": "Your Trip:",
+  "travelDate": "Travel Date:",
+  "item": "Item:",
+  "weightAndSize": "Weight & Size:",
+  "sealedPhotoAttached": "factory-sealed photo attached",
+  "viewPhoto": "View Photo",
+  "viewPhotos": "View Photos",
+  "decline": "Decline",
+  "acceptRequest": "Accept Request",
+  "pending": "Pending",
+  "accepted": "Accepted",
+  "declined": "Declined",
+  "payInTime": "Pay in",
+  "payEscrow": "Pay Escrow",
+  "refundCredited": "Refund credited to balance",
+  "findAnotherTraveler": "Find another traveler",
+  "arrangeHandoff": "Arrange handoff via chat",
+
+  "messagesTitle": "Messages",
+  "unreadUpdates": "3 unread delivery updates",
+  "searchConversations": "Search conversations or tracking...",
+  "allFilter": "All (4)",
+  "activeDeliveries": "Active Deliveries (2)",
+  "completed": "Completed (1)",
+  "support": "Support",
+
+  "accountAndProfile": "Account & Profile",
+  "memberSince": "Member since {date}",
+  "@memberSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tripsCarried": "TRIPS CARRIED",
+  "parcelsSent": "PARCELS SENT",
+  "natawallet": "NATA WALLET",
+  "escrowProtected": "Escrow Protected",
+  "availableForPayout": "Available for Payout",
+  "withdraw": "Withdraw",
+  "heldInEscrow": "held in Escrow",
+  "viewHistory": "View History",
+  "language": "Language",
+  "currency": "Currency",
+  "identityVerification": "Identity Verification",
+  "tier1Verified": "Tier 1 Verified · Passport & Biometrics",
+  "sealedBoxPolicySetting": "Sealed Box Policy",
+  "originalBoxCompliance": "Original box security compliance",
+  "logOut": "Log Out",
+
+  "addATripTitle": "Add a Trip",
+  "clear": "Clear",
+  "travelerMode": "TRAVELER MODE",
+  "headingSomewhere": "Heading somewhere soon?",
+  "luggageEarnings": "Turn unused luggage space into earnings by delivering sealed packages.",
+  "departureDetails": "DEPARTURE DETAILS",
+  "from": "From",
+  "arrivalDetails": "ARRIVAL DETAILS",
+  "to": "To",
+  "departureDate": "DEPARTURE DATE",
+  "arrivalDate": "ARRIVAL DATE",
+  "flightTicket": "FLIGHT TICKET RECEIPT",
+  "flightTicketSub": "Upload a copy of your flight booking receipt to confirm your trip",
+  "uploadFlightReceipt": "Upload Flight Receipt (PDF / Image)",
+  "replaceFlightReceipt": "Replace Flight Receipt (PDF / Image)",
+  "luggageCapacity": "LUGGAGE CAPACITY YOU CAN CARRY",
+  "maxWeight": "Max Weight",
+  "maxItemSize": "Max Item Size",
+  "howMatchingWorks": "How search matching works",
+  "howMatchingBody": "Once saved, your trip will appear in search results for senders looking for this route and date. Senders will only request sealed boxes within your specified capacity.",
+  "saveAndPublish": "Save & Publish Trip",
+
+  "confirmDelivery": "Confirm Delivery",
+  "enter4DigitCode": "Enter 4-Digit Release Code",
+  "recipientWillGive": "Your recipient will give you this code when they receive the item.",
+  "codeEntered": "Code entered — ready to confirm",
+  "uploadHandoffPhoto": "Upload Handoff Photo",
+  "handoffPhotoSub": "Take a photo of you and the recipient together, or a photo of the item being handed over.",
+  "confirmDeliveryButton": "Confirm Delivery & Release Payment",
+  "disputeWindow": "Payment releases after 3-day dispute window",
+
+  "leaveAReview": "Leave a Review",
+  "howWasExperience": "How was your experience?",
+  "whatWentWell": "What went well?",
+  "leaveComment": "Leave a comment (optional)",
+  "commentHint": "Describe your experience — this helps the community...",
+  "submitReview": "Submit Review",
+  "skipForNow": "Skip for now",
+  "reviewSubmitted": "Review Submitted!",
+  "reviewThanks": "Thanks for reviewing Amara Kalu. Your feedback helps the community stay trusted and safe.",
+  "returningHome": "Returning to home...",
+  "ratingPoor": "Poor — not what I expected",
+  "ratingFair": "Fair — some issues",
+  "ratingGood": "Good — met expectations",
+  "ratingGreat": "Great — exceeded expectations",
+  "ratingExcellent": "Excellent — would recommend!",
+
+  "identityVerificationTitle": "Identity Verification",
+  "required": "REQUIRED",
+  "almostDone": "ALMOST DONE",
+  "cancel": "Cancel",
+  "step1of2": "Step 1 of 2",
+  "step2of2": "Step 2 of 2",
+  "skipForNowId": "Skip for now",
+  "actionRequired": "Action required before sending",
+  "actionRequiredBody": "You can browse travelers anytime, but identity verification is mandatory to send or accept parcel requests.",
+  "verifyIdentity": "Verify your identity",
+  "verifyIdentitySub": "Complete 2 quick steps to verify yourself in under 2 minutes.",
+  "uploadOfficialId": "Upload official ID",
+  "passportOrId": "Passport, National ID or Driver's License",
+  "activeStep": "Active",
+  "nextStep": "Next",
+  "passportOption": "Passport",
+  "driversLicense": "Driver's Lic.",
+  "nationalId": "National ID",
+  "takePhotoOrUpload": "Take photo or upload front page",
+  "allCornersVisible": "Ensure all 4 corners are visible with no glare",
+  "useCamera": "Use camera",
+  "chooseFile": "Choose file",
+  "faceScan": "3D Face Scan",
+  "faceScanSub": "Matches your live selfie with your ID photo",
+  "scanIdToContinue": "Scan ID to Continue",
+  "biometricNote": "Your biometric data is processed strictly for identity verification.",
+  "step1Completed": "Step 1 Completed",
+  "passportVerified": "Passport document verified · Fortune Niama",
+  "editId": "Edit ID",
+  "faceScanTitle": "3D Biometric Face Scan",
+  "faceScanBody": "Center your face within the frame to verify liveness and confirm ownership.",
+  "holdStill": "Hold still, look directly at the screen",
+  "nodHead": "Slowly nod your head when the border turns green.",
+  "goodLight": "Good Light",
+  "noGlasses": "No Glasses",
+  "neutralFace": "Neutral Face",
+  "startBiometricScan": "Start Biometric Scan",
+  "biometricLocalNote": "Biometric face scans are processed locally to match against your passport.",
+  "fullyVerified": "You're Fully Verified!",
+  "fullyVerifiedSub": "Your identity documents and biometric scan have been authenticated successfully.",
+  "verificationReport": "VERIFICATION REPORT",
+  "instantApproval": "Instant Approval ✓",
+  "passportIdDoc": "Passport ID Document",
+  "biometricLiveness": "3D Biometric Liveness",
+  "trustLimit": "Trust & Escrow Limit",
+  "unlockedPerks": "UNLOCKED MEMBER PERKS",
+  "perk1": "Post unlimited trips",
+  "perk2": "Fast payout release",
+  "perk3": "Verified profile badge",
+  "perk4": "Priority match rank",
+  "continueToHome": "Continue to Home",
+  "viewPublicProfile": "View Public Profile",
+  "encrypted256": "256-bit Encrypted",
+  "instantAi": "Instant AI Verification",
+  "gdprCompliant": "GDPR & KYC Compliant",
+  "trips": "Trips",
+  "identityActionRequiredSub": "Action Required: Verify your identity",
+  "identityUnderReview": "Verification is currently under review",
+  "verificationReviewing": "Reviewing",
+  "ratingStat": "Rating",
+  "upcomingTrips": "UPCOMING TRIPS",
+  "newTravelerRating": "New",
+  "upcomingTripsStat": "Upcoming trips",
+  "travelerOnRoute": "Traveler on {from} ⇄ {to} route",
+  "@travelerOnRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "frequentTravelerOnRoute": "Frequent traveler on {from} ⇄ {to} route",
+  "@frequentTravelerOnRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "noReviewsYet": "No reviews yet",
+  "myTrips": "My Trips",
+  "tabUpcoming": "Upcoming",
+  "tabPast": "Past",
+  "tripPublished": "Published",
+  "tripInReview": "In review",
+  "tripCompleted": "Completed",
+  "tripCancelled": "Cancelled",
+  "editTrip": "Edit Trip",
+  "viewRequests": "View Requests",
+  "maxWeightLabel": "Max weight",
+  "maxSizeLabel": "Max size",
+  "noUpcomingTrips": "No upcoming trips",
+  "noPastTrips": "No past trips yet",
+  "addTripPrompt": "Add a trip to start earning from your luggage space.",
+  "tripInReviewNote": "We're reviewing your trip. It goes live once approved.",
+  "couldNotLoadTrips": "Could not load your trips.",
+  "retry": "Retry",
+  "saveChanges": "Save changes",
+  "tripSubmitted": "Trip submitted for review",
+  "tripUpdated": "Trip updated",
+  "selectCountry": "Select country",
+  "selectCity": "Select city",
+  "selectDate": "Select date",
+  "tripPrice": "PRICE PER ITEM",
+  "tripPriceHint": "Your fee for carrying one item",
+  "errPickDeparture": "Choose where you are departing from.",
+  "errPickArrival": "Choose your destination.",
+  "errSameCity": "Departure and arrival must be different cities.",
+  "errPickDepDate": "Choose a departure date.",
+  "errPickArrDate": "Choose an arrival date.",
+  "errArrivalBeforeDeparture": "Arrival can't be before departure.",
+  "errAttachReceipt": "Attach your flight receipt.",
+  "errPrice": "Enter a valid price.",
+  "errSaveFailed": "Could not save your trip. Please try again.",
+  "itemsDeliveredCount": "{count, plural, =1{1 item delivered} other{{count} items delivered}}",
+  "@itemsDeliveredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingReference": "Booking reference",
+  "bookingReferenceSub": "Enter the reference code from your flight booking (PNR)",
+  "errBookingReference": "Booking reference must be 5–8 letters or numbers.",
+  "bookingReferenceShort": "Ref {code}",
+  "@bookingReferenceShort": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "verificationPending": "Verification pending",
+  "verificationUnverified": "Unverified",
+  "takePhoto": "Take Photo",
+  "uploadFile": "Upload File",
+  "errCamera": "Could not open the camera.",
+  "notifications": "Notifications",
+  "markAllRead": "Mark all read",
+  "paymentsFilter": "Payments",
+  "notifToday": "Today",
+  "notifEarlier": "Earlier",
+  "noNotifications": "No notifications yet",
+  "noNotificationsSub": "We'll let you know here when something happens with your trips, requests and payments.",
+  "couldNotLoadNotifications": "Could not load your notifications.",
+  "justNow": "Just now",
+  "yesterdayLabel": "Yesterday",
+  "minutesAgo": "{count} min ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} hr ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifFilterAll": "All",
+  "faceIdReason": "Confirm it's you to sign in to Nata",
+  "faceIdSignInFirst": "To use Face ID, sign in with your phone number first and keep \"Remember me\" ticked.",
+  "faceIdUnavailable": "Face ID isn't available on this device.",
+  "faceIdNotSetUp": "Set up Face ID in your device settings first.",
+  "faceIdFailed": "Face ID didn't recognise you. Try again or sign in with your phone number.",
+  "faceIdLocked": "Face ID is locked for now. Sign in with your phone number.",
+  "splashDetectedSummary": "{country} · {language} & {currency}",
+  "@splashDetectedSummary": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesCaughtUp": "All caught up",
+  "searchChats": "Search by name, route or item",
+  "noConversations": "No conversations yet",
+  "noConversationsSub": "When you send or receive a delivery request, your chat with the traveler or sender appears here.",
+  "noChatMatches": "No conversations match your search",
+  "couldNotLoadMessages": "Could not load your messages.",
+  "couldNotLoadChat": "Could not load this chat.",
+  "typeMessage": "Type a message…",
+  "msgSending": "Sending…",
+  "msgSent": "Sent ✓",
+  "msgRead": "Read ✓✓",
+  "msgFailed": "Not sent · tap to retry",
+  "chatEmpty": "No messages yet. Say hello!",
+  "chatPhotoLabel": "Photo",
+  "chatChoosePhoto": "Choose from library",
+  "chatPhotoFailed": "Could not send the photo.",
+  "chatCameraFailed": "Could not open the camera or photos.",
+  "chatPhotoLoadFailed": "Photo unavailable",
+  "unreadMessagesCount": "{count, plural, =1{1 unread message} other{{count} unread messages}}",
+  "@unreadMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterAllCount": "All ({count})",
+  "@filterAllCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterActiveCount": "Active ({count})",
+  "@filterActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterCompletedCount": "Completed ({count})",
+  "@filterCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatYouPrefix": "You: {text}",
+  "@chatYouPrefix": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  }
+}

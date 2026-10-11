@@ -1,0 +1,528 @@
+{
+  "@@locale": "fr",
+
+  "appName": "Nata",
+
+  "splashTitle": "Sélectionner la langue et la devise",
+  "splashSubtitle": "Personnalisez votre expérience de livraison entre pairs à travers le monde.",
+  "splashWelcomePill": "Welcome · Bienvenue · Bienvenido",
+  "splashDetectedRegion": "RÉGION DÉTECTÉE",
+  "splashDetectedValue": "États-Unis · Anglais et USD",
+  "splashQuickApply": "Appliquer",
+  "splashChooseLanguage": "CHOISIR LA LANGUE",
+  "splashPreferredCurrency": "DEVISE PRÉFÉRÉE",
+  "splashSaveAndContinue": "Enregistrer et continuer",
+  "splashSettingsNote": "Vous pouvez modifier votre langue et votre devise à tout moment dans les paramètres de profil.",
+  "splashAvailable": "{count} disponibles",
+  "@splashAvailable": { "placeholders": { "count": { "type": "int" } } },
+
+  "langEnglish": "English",
+  "langEnglishSub": "Par défaut · International",
+  "langSpanish": "Español",
+  "langSpanishSub": "Espagnol · Espagne et Amérique latine",
+  "langFrench": "Français",
+  "langFrenchSub": "Français · France et Afrique",
+
+  "currUSD": "Dollar américain",
+  "currEUR": "Euro",
+  "currGBP": "Livre sterling",
+  "currXOF": "Franc CFA",
+
+  "signIn": "Se connecter",
+  "signUp": "S'inscrire",
+  "email": "E-mail ou téléphone",
+  "password": "Mot de passe",
+  "forgotPassword": "Mot de passe oublié ?",
+  "rememberMe": "Se souvenir de moi",
+  "faceId": "Face ID",
+  "signInButton": "Se connecter",
+  "newToNata": "Nouveau sur Nata ?",
+  "createAccount": "Créer un compte",
+  "tagline": "Livraisons entre pairs · Réseau de voyageurs vérifiés à 100%",
+  "welcomeBack": "Bon retour",
+  "welcomeBackSub": "Connectez-vous pour gérer vos livraisons, itinéraires et demandes.",
+  "orWithEmail": "ou avec e-mail",
+  "apple": "Apple",
+  "google": "Google",
+
+  "createYourAccount": "Créez votre compte",
+  "createYourAccountSub": "Envoyez des articles avec des voyageurs vérifiés se rendant à votre destination.",
+  "firstName": "Prénom",
+  "lastName": "Nom de famille",
+  "emailAddress": "Adresse e-mail",
+  "phoneNumber": "Numéro de téléphone",
+  "orSignUpManually": "ou inscrivez-vous manuellement",
+  "mandatoryIdTitle": "Vérification d'identité obligatoire",
+  "mandatoryIdBody": "Une vérification par pièce d'identité officielle et scan du visage sera demandée juste après l'inscription avant toute transaction.",
+  "createAccountButton": "Créer un compte et continuer",
+  "alreadyHaveAccount": "Vous avez déjà un compte ?",
+  "signInHere": "Connectez-vous ici",
+
+  "goodMorning": "BONJOUR",
+  "homeHero": "Votre colis est déjà en route.",
+  "homeSubtitle": "Envoyez-le avec quelqu'un qui va dans votre direction",
+  "findATraveler": "TROUVER UN VOYAGEUR",
+  "trustedRoutes": "Itinéraires de confiance, utilisateurs vérifiés",
+  "deliverTo": "LIVRER À",
+  "whereIsItGoing": "Où va-t-il ?",
+  "deliveryDate": "DATE DE LIVRAISON",
+  "chooseADate": "Choisir une date",
+  "selectedDate": "DATE SÉLECTIONNÉE",
+  "searchTravelers": "Rechercher des voyageurs",
+  "sendAnItem": "Envoyer un article",
+  "addATrip": "Ajouter un voyage",
+  "communityFavorites": "FAVORIS DE LA COMMUNAUTÉ",
+  "activeTravelers": "Voyageurs actifs",
+  "seeAll": "Voir tout",
+  "recentRoutes": "Itinéraires récents",
+  "viewAll": "Voir tout",
+  "sealedBoxPolicy": "Politique de boîte scellée",
+  "sealedBoxPolicyBody": "Les articles doivent toujours être scellés dans leur boîte commerciale d'origine pour la conformité douanière et la sécurité des voyages.",
+  "available": "Disponible",
+  "home": "Accueil",
+  "requests": "Demandes",
+  "messages": "Messages",
+  "profile": "Profil",
+
+  "searchForTravelers": "Rechercher des voyageurs",
+  "reset": "Réinitialiser",
+  "whereItemStartsFrom": "D'où part l'article ?",
+  "departureCountry": "Pays de départ",
+  "departureCity": "Ville de départ",
+  "whereItemNeedsToGo": "Où doit aller l'article ?",
+  "destinationCountry": "Pays de destination",
+  "destinationCity": "Ville de destination",
+  "desiredDeliveryDate": "Date de livraison souhaitée",
+  "flexibleDays": "Flexible à ±2 jours",
+  "searchTravelersButton": "Rechercher des voyageurs",
+  "originalPackagingTitle": "Exigence d'emballage original",
+  "originalPackagingBody": "Les articles doivent être scellés dans leur boîte d'origine. Le prix est calculé automatiquement en fonction de la taille et du poids.",
+  "recentSearches": "RECHERCHES RÉCENTES",
+
+  "travelerResults": "Résultats des voyageurs",
+  "routeAndDate": "ITINÉRAIRE ET DATE SOUHAITÉE",
+  "aroundDate": "Vers le 22 juin 2025 · 4 voyageurs disponibles",
+  "edit": "Modifier",
+  "itemsDelivered": "articles",
+  "viewProfile": "Voir le profil",
+  "needDifferentDate": "Besoin d'une autre date ?",
+  "getNotified": "Soyez notifié dès que de nouveaux voyageurs ajoutent des trajets sur cet itinéraire.",
+
+  "travelerProfile": "Profil du voyageur",
+  "frequentTraveler": "Voyageur fréquent sur la route LOS ⇄ LHR",
+  "itemsDeliveredStat": "Articles livrés",
+  "senderReviews": "avis d'expéditeurs",
+  "onTimeRate": "Ponctualité",
+  "travelDateAndRoute": "DATE ET ITINÉRAIRE DE VOYAGE",
+  "departure": "Départ",
+  "destination": "Destination",
+  "directFlight": "Vol direct",
+  "pricingLabel": "Tarif :",
+  "pricingValue": "Calculé selon la taille et le poids de l'article",
+  "itemSizeAndWeight": "LIMITES DE TAILLE ET DE POIDS ACCEPTÉES",
+  "weightLimit": "Limite de poids",
+  "sizeLimit": "Limite de taille",
+  "checkBaggage": "Espace en bagage enregistré",
+  "maxDimensions": "Max. 30 × 20 × 15 cm",
+  "itemRequirement": "Exigence relative à l'article",
+  "itemRequirementBody": "Les articles doivent être scellés dans leur boîte d'origine. Cela permet aux voyageurs de les transporter en toute confiance et facilite les contrôles douaniers.",
+  "deliveryHistoryAndReviews": "HISTORIQUE DES LIVRAISONS ET AVIS",
+  "sendRequest": "Envoyer une demande",
+
+  "deliveryRequest": "Demande de livraison",
+  "step1of1": "Étape 1 sur 1",
+  "selectedTraveler": "VOYAGEUR SÉLECTIONNÉ",
+  "whatIsTheItem": "Qu'est-ce que l'article ?",
+  "itemCategory": "Catégorie de l'article",
+  "electronics": "Électronique",
+  "apparel": "Vêtements",
+  "documents": "Documents",
+  "itemDescription": "Description de l'article",
+  "packageWeight": "Poids du colis",
+  "packageDimensions": "Dimensions du colis",
+  "itemPhotos": "Photos de l'article (boîte scellée)",
+  "photoAttached": "photo jointe",
+  "addPhoto": "Ajouter une photo",
+  "calculatedPrice": "Prix calculé de l'article",
+  "sendDeliveryRequest": "Envoyer la demande de livraison",
+
+  "secureEscrowCheckout": "Paiement sécurisé en séquestre",
+  "paymentWindowActive": "FENÊTRE DE PAIEMENT ACTIVE",
+  "requestExpires": "La demande expire dans",
+  "howEscrowWorks": "Comment fonctionne la protection en séquestre",
+  "escrowBody": "Votre paiement est conservé en toute sécurité par Nata. Le voyageur n'est payé qu'après que votre destinataire a vérifié la livraison avec le code à 4 chiffres ou une photo.",
+  "selectPaymentMethod": "SÉLECTIONNER LE MODE DE PAIEMENT",
+  "applePay": "Apple Pay",
+  "applePaySub": "Par défaut · Rapide et sécurisé",
+  "creditCard": "Carte de crédit ou de débit",
+  "creditCardSub": "Visa, Mastercard, Amex",
+  "mobileMoney": "Mobile Money",
+  "mobileMoneyPhoneSub": "M-Pesa, MTN MoMo, Orange, Wave",
+  "paymentBreakdown": "DÉTAIL DU PAIEMENT",
+  "travelerReward": "Récompense du voyageur",
+  "platformFee": "Protection et commission de séquestre Nata",
+  "totalEscrow": "Total à placer en séquestre",
+  "payIntoEscrow": "Payer en séquestre",
+  "cancellationTitle": "Garantie d'annulation et de remboursement",
+  "refundBullet1": "Remboursement intégral à 100 % si le voyageur annule ou si l'article n'est pas livré.",
+  "refundBullet2": "Annulation gratuite à tout moment avant la remise physique au voyageur.",
+  "refundBullet3": "Fenêtre de litige de 3 jours après la livraison avant la finalisation des fonds.",
+  "escrowEncrypted": "Séquestre chiffré 256 bits par Nata Pay",
+
+  "deliveryRequests": "Demandes de livraison",
+  "incoming": "Entrantes",
+  "outgoing": "Sortantes",
+  "incomingSection": "DEMANDES ENTRANTES (EN TANT QUE VOYAGEUR)",
+  "pendingReview": "en attente d'examen",
+  "outgoingSection": "DEMANDES SORTANTES (EN TANT QU'EXPÉDITEUR)",
+  "total": "total",
+  "sender": "Expéditeur",
+  "successfulDeliveries": "livraisons réussies",
+  "yourTrip": "Votre voyage :",
+  "travelDate": "Date de voyage :",
+  "item": "Article :",
+  "weightAndSize": "Poids et taille :",
+  "sealedPhotoAttached": "photo de boîte scellée jointe",
+  "viewPhoto": "Voir la photo",
+  "viewPhotos": "Voir les photos",
+  "decline": "Refuser",
+  "acceptRequest": "Accepter la demande",
+  "pending": "En attente",
+  "accepted": "Accepté",
+  "declined": "Refusé",
+  "payInTime": "Payer dans",
+  "payEscrow": "Payer le séquestre",
+  "refundCredited": "Remboursement crédité sur le solde",
+  "findAnotherTraveler": "Trouver un autre voyageur",
+  "arrangeHandoff": "Organiser la remise via le chat",
+
+  "messagesTitle": "Messages",
+  "unreadUpdates": "3 mises à jour non lues",
+  "searchConversations": "Rechercher des conversations ou un suivi...",
+  "allFilter": "Tout (4)",
+  "activeDeliveries": "Livraisons actives (2)",
+  "completed": "Terminées (1)",
+  "support": "Assistance",
+
+  "accountAndProfile": "Compte et profil",
+  "memberSince": "Membre depuis {date}",
+  "@memberSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tripsCarried": "VOYAGES EFFECTUÉS",
+  "parcelsSent": "COLIS ENVOYÉS",
+  "natawallet": "PORTEFEUILLE NATA",
+  "escrowProtected": "Protégé par séquestre",
+  "availableForPayout": "Disponible pour le retrait",
+  "withdraw": "Retirer",
+  "heldInEscrow": "en séquestre",
+  "viewHistory": "Voir l'historique",
+  "language": "Langue",
+  "currency": "Devise",
+  "identityVerification": "Vérification d'identité",
+  "tier1Verified": "Niveau 1 vérifié · Passeport et biométrie",
+  "sealedBoxPolicySetting": "Politique de boîte scellée",
+  "originalBoxCompliance": "Conformité de sécurité de la boîte d'origine",
+  "logOut": "Se déconnecter",
+
+  "addATripTitle": "Ajouter un voyage",
+  "clear": "Effacer",
+  "travelerMode": "MODE VOYAGEUR",
+  "headingSomewhere": "Vous partez quelque part bientôt ?",
+  "luggageEarnings": "Transformez l'espace libre de vos bagages en revenus en livrant des colis scellés.",
+  "departureDetails": "DÉTAILS DE DÉPART",
+  "from": "De",
+  "arrivalDetails": "DÉTAILS D'ARRIVÉE",
+  "to": "À",
+  "departureDate": "DATE DE DÉPART",
+  "arrivalDate": "DATE D'ARRIVÉE",
+  "flightTicket": "REÇU DE BILLET D'AVION",
+  "flightTicketSub": "Téléchargez une copie de votre réservation de vol pour confirmer votre voyage",
+  "uploadFlightReceipt": "Télécharger le reçu de vol (PDF / Image)",
+  "replaceFlightReceipt": "Remplacer le reçu de vol (PDF / Image)",
+  "luggageCapacity": "CAPACITÉ DE BAGAGES QUE VOUS POUVEZ TRANSPORTER",
+  "maxWeight": "Poids maximum",
+  "maxItemSize": "Taille maximale de l'article",
+  "howMatchingWorks": "Comment fonctionne la mise en relation",
+  "howMatchingBody": "Une fois enregistré, votre voyage apparaîtra dans les résultats de recherche pour les expéditeurs cherchant cet itinéraire et cette date.",
+  "saveAndPublish": "Enregistrer et publier le voyage",
+
+  "confirmDelivery": "Confirmer la livraison",
+  "enter4DigitCode": "Saisir le code à 4 chiffres",
+  "recipientWillGive": "Votre destinataire vous donnera ce code à la réception de l'article.",
+  "codeEntered": "Code saisi — prêt à confirmer",
+  "uploadHandoffPhoto": "Télécharger la photo de remise",
+  "handoffPhotoSub": "Prenez une photo avec le destinataire ou de l'article en cours de remise.",
+  "confirmDeliveryButton": "Confirmer la livraison et libérer le paiement",
+  "disputeWindow": "Le paiement est libéré après la fenêtre de litige de 3 jours",
+
+  "leaveAReview": "Laisser un avis",
+  "howWasExperience": "Comment s'est passée votre expérience ?",
+  "whatWentWell": "Qu'est-ce qui s'est bien passé ?",
+  "leaveComment": "Laisser un commentaire (facultatif)",
+  "commentHint": "Décrivez votre expérience — cela aide la communauté...",
+  "submitReview": "Soumettre l'avis",
+  "skipForNow": "Ignorer pour l'instant",
+  "reviewSubmitted": "Avis envoyé !",
+  "reviewThanks": "Merci d'avoir évalué Amara Kalu. Votre avis aide à maintenir la confiance de la communauté.",
+  "returningHome": "Retour à l'accueil...",
+  "ratingPoor": "Mauvais — pas ce que j'attendais",
+  "ratingFair": "Passable — quelques problèmes",
+  "ratingGood": "Bien — a répondu aux attentes",
+  "ratingGreat": "Très bien — a dépassé les attentes",
+  "ratingExcellent": "Excellent — je le recommande !",
+
+  "identityVerificationTitle": "Vérification d'identité",
+  "required": "OBLIGATOIRE",
+  "almostDone": "PRESQUE TERMINÉ",
+  "cancel": "Annuler",
+  "step1of2": "Étape 1 sur 2",
+  "step2of2": "Étape 2 sur 2",
+  "skipForNowId": "Ignorer pour l'instant",
+  "actionRequired": "Action requise avant d'envoyer",
+  "actionRequiredBody": "Vous pouvez parcourir les voyageurs à tout moment, mais la vérification d'identité est obligatoire pour envoyer ou accepter des demandes.",
+  "verifyIdentity": "Vérifiez votre identité",
+  "verifyIdentitySub": "Effectuez 2 étapes rapides pour vous vérifier en moins de 2 minutes.",
+  "uploadOfficialId": "Télécharger une pièce d'identité officielle",
+  "passportOrId": "Passeport, carte d'identité nationale ou permis de conduire",
+  "activeStep": "Actif",
+  "nextStep": "Suivant",
+  "passportOption": "Passeport",
+  "driversLicense": "Permis de conduire",
+  "nationalId": "Carte d'identité",
+  "takePhotoOrUpload": "Prenez une photo ou téléchargez la page de couverture",
+  "allCornersVisible": "Assurez-vous que les 4 coins sont visibles sans reflet",
+  "useCamera": "Utiliser la caméra",
+  "chooseFile": "Choisir un fichier",
+  "faceScan": "Scan facial 3D",
+  "faceScanSub": "Compare votre selfie en direct avec la photo de votre pièce d'identité",
+  "scanIdToContinue": "Scanner la pièce d'identité pour continuer",
+  "biometricNote": "Vos données biométriques sont traitées uniquement à des fins de vérification d'identité.",
+  "step1Completed": "Étape 1 terminée",
+  "passportVerified": "Document de passeport vérifié · Fortune Niama",
+  "editId": "Modifier la pièce d'identité",
+  "faceScanTitle": "Scan biométrique facial 3D",
+  "faceScanBody": "Centrez votre visage dans le cadre pour vérifier la vivacité et confirmer votre identité.",
+  "holdStill": "Restez immobile, regardez directement l'écran",
+  "nodHead": "Hochez lentement la tête quand le bord devient vert.",
+  "goodLight": "Bonne lumière",
+  "noGlasses": "Sans lunettes",
+  "neutralFace": "Visage neutre",
+  "startBiometricScan": "Démarrer le scan biométrique",
+  "biometricLocalNote": "Les scans faciaux biométriques sont traités localement pour correspondre à votre passeport.",
+  "fullyVerified": "Vous êtes entièrement vérifié !",
+  "fullyVerifiedSub": "Vos documents d'identité et scan biométrique ont été authentifiés avec succès.",
+  "verificationReport": "RAPPORT DE VÉRIFICATION",
+  "instantApproval": "Approbation instantanée ✓",
+  "passportIdDoc": "Document d'identité (Passeport)",
+  "biometricLiveness": "Vivacité biométrique 3D",
+  "trustLimit": "Limite de confiance et de séquestre",
+  "unlockedPerks": "AVANTAGES MEMBRES DÉBLOQUÉS",
+  "perk1": "Publier des voyages illimités",
+  "perk2": "Libération rapide des paiements",
+  "perk3": "Badge de profil vérifié",
+  "perk4": "Priorité dans les résultats",
+  "continueToHome": "Continuer vers l'accueil",
+  "viewPublicProfile": "Voir le profil public",
+  "encrypted256": "Chiffrement 256 bits",
+  "instantAi": "Vérification IA instantanée",
+  "gdprCompliant": "Conforme RGPD et KYC",
+  "trips": "Trajets",
+  "identityActionRequiredSub": "Action requise : vérifiez votre identité",
+  "identityUnderReview": "La vérification est actuellement en cours d'examen",
+  "verificationReviewing": "En cours d'examen",
+  "ratingStat": "Note",
+  "upcomingTrips": "PROCHAINS TRAJETS",
+  "newTravelerRating": "Nouveau",
+  "upcomingTripsStat": "Prochains trajets",
+  "travelerOnRoute": "Voyageur sur la route {from} ⇄ {to}",
+  "@travelerOnRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "frequentTravelerOnRoute": "Voyageur fréquent sur la route {from} ⇄ {to}",
+  "@frequentTravelerOnRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "noReviewsYet": "Pas encore d'avis",
+  "myTrips": "Mes trajets",
+  "tabUpcoming": "À venir",
+  "tabPast": "Passés",
+  "tripPublished": "Publié",
+  "tripInReview": "En cours d'examen",
+  "tripCompleted": "Terminé",
+  "tripCancelled": "Annulé",
+  "editTrip": "Modifier le trajet",
+  "viewRequests": "Voir les demandes",
+  "maxWeightLabel": "Poids max.",
+  "maxSizeLabel": "Taille max.",
+  "noUpcomingTrips": "Aucun trajet à venir",
+  "noPastTrips": "Aucun trajet passé",
+  "addTripPrompt": "Ajoutez un trajet pour rentabiliser l'espace de vos bagages.",
+  "tripInReviewNote": "Nous examinons votre trajet. Il sera publié une fois approuvé.",
+  "couldNotLoadTrips": "Impossible de charger vos trajets.",
+  "retry": "Réessayer",
+  "saveChanges": "Enregistrer",
+  "tripSubmitted": "Trajet envoyé pour examen",
+  "tripUpdated": "Trajet mis à jour",
+  "selectCountry": "Choisir un pays",
+  "selectCity": "Choisir une ville",
+  "selectDate": "Choisir une date",
+  "tripPrice": "PRIX PAR ARTICLE",
+  "tripPriceHint": "Vos frais pour transporter un article",
+  "errPickDeparture": "Choisissez votre lieu de départ.",
+  "errPickArrival": "Choisissez votre destination.",
+  "errSameCity": "Le départ et l'arrivée doivent être des villes différentes.",
+  "errPickDepDate": "Choisissez une date de départ.",
+  "errPickArrDate": "Choisissez une date d'arrivée.",
+  "errArrivalBeforeDeparture": "L'arrivée ne peut pas précéder le départ.",
+  "errAttachReceipt": "Joignez votre reçu de vol.",
+  "errPrice": "Saisissez un prix valide.",
+  "errSaveFailed": "Impossible d'enregistrer votre trajet. Réessayez.",
+  "itemsDeliveredCount": "{count, plural, =1{1 article livré} other{{count} articles livrés}}",
+  "@itemsDeliveredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingReference": "Référence de réservation",
+  "bookingReferenceSub": "Saisissez le code de référence de votre réservation de vol (PNR)",
+  "errBookingReference": "La référence de réservation doit comporter 5 à 8 lettres ou chiffres.",
+  "bookingReferenceShort": "Réf. {code}",
+  "@bookingReferenceShort": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "verificationPending": "Vérification en attente",
+  "verificationUnverified": "Non vérifié",
+  "takePhoto": "Prendre une photo",
+  "uploadFile": "Téléverser un fichier",
+  "errCamera": "Impossible d'ouvrir l'appareil photo.",
+  "notifications": "Notifications",
+  "markAllRead": "Tout marquer comme lu",
+  "paymentsFilter": "Paiements",
+  "notifToday": "Aujourd'hui",
+  "notifEarlier": "Plus tôt",
+  "noNotifications": "Aucune notification pour le moment",
+  "noNotificationsSub": "Nous vous préviendrons ici dès qu'il se passe quelque chose avec vos trajets, demandes et paiements.",
+  "couldNotLoadNotifications": "Impossible de charger vos notifications.",
+  "justNow": "À l'instant",
+  "yesterdayLabel": "Hier",
+  "minutesAgo": "il y a {count} min",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "il y a {count} h",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifFilterAll": "Toutes",
+  "faceIdReason": "Confirmez que c'est vous pour vous connecter à Nata",
+  "faceIdSignInFirst": "Pour utiliser Face ID, connectez-vous d'abord avec votre numéro de téléphone en laissant « Se souvenir de moi » coché.",
+  "faceIdUnavailable": "Face ID n'est pas disponible sur cet appareil.",
+  "faceIdNotSetUp": "Configurez d'abord Face ID dans les réglages de votre appareil.",
+  "faceIdFailed": "Face ID ne vous a pas reconnu. Réessayez ou connectez-vous avec votre numéro de téléphone.",
+  "faceIdLocked": "Face ID est verrouillé pour le moment. Connectez-vous avec votre numéro de téléphone.",
+  "splashDetectedSummary": "{country} · {language} et {currency}",
+  "@splashDetectedSummary": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "messagesCaughtUp": "Vous êtes à jour",
+  "searchChats": "Rechercher par nom, trajet ou article",
+  "noConversations": "Aucune conversation pour le moment",
+  "noConversationsSub": "Lorsque vous envoyez ou recevez une demande de livraison, votre discussion avec le voyageur ou l'expéditeur apparaît ici.",
+  "noChatMatches": "Aucune conversation ne correspond à votre recherche",
+  "couldNotLoadMessages": "Impossible de charger vos messages.",
+  "couldNotLoadChat": "Impossible de charger cette discussion.",
+  "typeMessage": "Écrivez un message…",
+  "msgSending": "Envoi…",
+  "msgSent": "Envoyé ✓",
+  "msgRead": "Lu ✓✓",
+  "msgFailed": "Non envoyé · touchez pour réessayer",
+  "chatEmpty": "Pas encore de messages. Dites bonjour !",
+  "chatPhotoLabel": "Photo",
+  "chatChoosePhoto": "Choisir dans la photothèque",
+  "chatPhotoFailed": "Impossible d'envoyer la photo.",
+  "chatCameraFailed": "Impossible d'ouvrir l'appareil photo ou les photos.",
+  "chatPhotoLoadFailed": "Photo indisponible",
+  "unreadMessagesCount": "{count, plural, =1{1 message non lu} other{{count} messages non lus}}",
+  "@unreadMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterAllCount": "Toutes ({count})",
+  "@filterAllCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterActiveCount": "En cours ({count})",
+  "@filterActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterCompletedCount": "Terminées ({count})",
+  "@filterCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatYouPrefix": "Vous : {text}",
+  "@chatYouPrefix": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  }
+}

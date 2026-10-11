@@ -1,0 +1,574 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../main.dart';
+import '../services/traveler_service.dart';
+import '../widgets/app_bottom_nav.dart';
+import '../widgets/avatar_image.dart';
+import '../widgets/location_search_sheet.dart';
+import 'traveler_profile_screen.dart';
+
+class TravelerResultsScreen extends StatefulWidget {
+  /// Search criteria from Home. All optional: with none, every upcoming
+  /// traveler is listed.
+  final LocationSelection? departure;
+  final LocationSelection? destination;
+  final DateTime? date;
+
+  /// Override for tests; defaults to the real [TravelerService].
+  final TravelerService? service;
+
+  const TravelerResultsScreen({
+    super.key,
+    this.departure,
+    this.destination,
+    this.date,
+    this.service,
+  });
+
+  @override
+  State<TravelerResultsScreen> createState() => _TravelerResultsScreenState();
+}
+
+class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
+  bool _notifyMe = true;
+  bool _loading = true;
+  String? _error;
+  List<TravelerTrip> _results = const [];
+
+  static const _months = [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final results = await (widget.service ?? TravelerService()).search(
+        departureCountry: widget.departure?.countryCode,
+        departureCity: widget.departure?.city,
+        arrivalCountry: widget.destination?.countryCode,
+        arrivalCity: widget.destination?.city,
+        date: widget.date,
+      );
+      if (!mounted) return;
+      setState(() {
+        _results = results;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Could not load travelers. Please try again.';
+        _loading = false;
+      });
+    }
+  }
+
+  String _fmtShort(DateTime d) => '${_months[d.month]} ${d.day}';
+
+  /// e.g. "Lagos → London · before Jun 26"
+  String get _searchSummary {
+    final from = widget.departure?.city ?? 'Anywhere';
+    final to = widget.destination?.city ?? 'Anywhere';
+    final date = widget.date == null ? '' : ' · by ${_fmtShort(widget.date!)}';
+    return '$from → $to$date';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _buildHeader(),
+                Expanded(child: _buildBody()),
+              ],
+            ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: const AppBottomNav(current: 0, isTabRoot: false),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: AppColors.accent,
+          strokeWidth: 2.5,
+        ),
+      );
+    }
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.cloud_off_rounded,
+                size: 36,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(onPressed: _load, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+        children: [
+          if (_results.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 24, 0, 24),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.luggage_outlined,
+                    size: 40,
+                    color: AppColors.mutedForeground,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'No travelers on this route yet',
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Try another date or route, or turn on alerts below.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ..._results.map(
+            (r) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _TravelerCard(trip: r, service: widget.service),
+            ),
+          ),
+          _buildNotifyBanner(),
+        ],
+      ),
+    );
+  }
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.foreground,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Travelers Found',
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                Text(
+                  _searchSummary,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.secondary,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              _loading ? '…' : '${_results.length} available',
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Notify banner ──────────────────────────────────────────────────────────
+  Widget _buildNotifyBanner() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF6EE),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.notifications_active_rounded,
+                size: 18,
+                color: AppColors.accent,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Need a different date?',
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _notifyMe = !_notifyMe),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: 36,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: _notifyMe ? AppColors.accent : AppColors.border,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 180),
+                    alignment: _notifyMe
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Get notified immediately when new travelers add trips on this route.',
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Bottom nav (5 tabs, Search active) ────────────────────────────────────
+}
+
+// ── Traveler card ──────────────────────────────────────────────────────────
+class _TravelerCard extends StatefulWidget {
+  final TravelerTrip trip;
+  final TravelerService? service;
+  const _TravelerCard({required this.trip, this.service});
+
+  @override
+  State<_TravelerCard> createState() => _TravelerCardState();
+}
+
+class _TravelerCardState extends State<_TravelerCard> {
+  bool _pressed = false;
+
+  static const _months = [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _fmt(DateTime d) => '${_months[d.month]} ${d.day}';
+
+  String get _dateBadge => _fmt(widget.trip.departureDate);
+
+  String get _capacity {
+    final w = widget.trip.maxWeightKg;
+    if (w == null) return 'Capacity not specified';
+    return 'Accepts up to ${w.toStringAsFixed(1)} kg';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => TravelerProfileScreen(
+              trip: widget.trip,
+              service: widget.service,
+            ),
+          ),
+        );
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _pressed
+                ? AppColors.primary.withValues(alpha: 0.4)
+                : AppColors.border,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Avatar + verified badge
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: ClipOval(
+                    child: AvatarImage(
+                      path: widget.trip.avatarPath,
+                      fallback: Container(
+                        color: AppColors.secondary,
+                        child: const Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                          size: 26,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: -1,
+                  right: -1,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF168A68),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 14),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.trip.fullName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _dateBadge,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.inventory_2_outlined,
+                        size: 14,
+                        color: AppColors.accent,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${widget.trip.itemsDelivered} delivered',
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                      Text(
+                        '  •  ',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 12,
+                        color: Color(0xFFE5A83B),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        widget.trip.avgRating?.toStringAsFixed(1) ?? 'New',
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${widget.trip.departureCity} → ${widget.trip.arrivalCity}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _capacity,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

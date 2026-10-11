@@ -1,0 +1,35 @@
+name: carrywise_app
+description: "Nata - Peer delivery network app."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.4.1
+  supabase_flutter: ^2.8.4
+  image_picker: ^1.1.2
+  file_picker: ^8.1.7
+  shared_preferences: ^2.5.6
+  local_auth: ^3.0.2
+  geolocator: ^14.0.2
+  geocoding: ^5.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  generate: true

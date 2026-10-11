@@ -1,0 +1,879 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import '../l10n/l10n_ext.dart';
+import '../main.dart';
+import '../services/message_service.dart';
+import '../services/trip_service.dart' show PickedReceipt;
+import '../widgets/avatar_image.dart';
+
+/// Takes or chooses a photo to send. [camera] true = take one with the camera.
+/// Replaceable in tests.
+typedef ChatPhotoPicker =
+    Future<PickedReceipt?> Function({required bool camera});
+
+/// One conversation: the messages between a sender and a traveler.
+class ChatThreadScreen extends StatefulWidget {
+  final ConversationSummary conversation;
+
+  /// Overrides for tests.
+  final MessageService? service;
+  final ChatPhotoPicker? photoPicker;
+  final DateTime Function()? now;
+
+  /// How often new messages are fetched while the chat is open.
+  final Duration refreshEvery;
+
+  const ChatThreadScreen({
+    super.key,
+    required this.conversation,
+    this.service,
+    this.photoPicker,
+    this.now,
+    this.refreshEvery = const Duration(seconds: 4),
+  });
+
+  @override
+  State<ChatThreadScreen> createState() => _ChatThreadScreenState();
+}
+
+class _ChatThreadScreenState extends State<ChatThreadScreen>
+    with WidgetsBindingObserver {
+  static const _green = Color(0xFF168A68);
+  static const _maxPhotoBytes = 10 * 1024 * 1024;
+
+  final _inputCtrl = TextEditingController();
+
+  /// What the server has, oldest first.
+  List<ChatMessage> _server = const [];
+
+  /// Messages the user just sent that the server has not confirmed yet (or
+  /// that failed). Kept apart so a refresh never wipes them.
+  final List<ChatMessage> _local = [];
+  final Map<String, Uint8List> _localPhotoBytes = {};
+  final Map<String, PickedReceipt> _localPhotos = {};
+  int _localCounter = 0;
+
+  bool _loading = true;
+  bool _failed = false;
+  bool _loadingNow = false;
+  String? _notice;
+
+  Timer? _timer;
+
+  MessageService get _service => widget.service ?? MessageService();
+  DateTime get _now => (widget.now ?? DateTime.now)();
+  String? get _me => _service.currentUserId;
+  ConversationSummary get _c => widget.conversation;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    WidgetsBinding.instance.addObserver(this);
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    _inputCtrl.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(widget.refreshEvery, (_) {
+      if (!mounted) return;
+      if (ModalRoute.of(context)?.isCurrent == false) return;
+      _load(quiet: true);
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startTimer();
+      _load(quiet: true);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _timer?.cancel();
+    }
+  }
+
+  Future<void> _load({bool quiet = false}) async {
+    if (_loadingNow) return;
+    _loadingNow = true;
+    try {
+      final messages = await _service.messages(_c.id);
+      if (!mounted) return;
+      setState(() {
+        _server = messages;
+        _loading = false;
+        _failed = false;
+      });
+      // Anything the other person wrote is now seen.
+      final me = _me;
+      if (messages.any((m) => m.authorId != me && m.readAt == null)) {
+        unawaited(_service.markRead(_c.id));
+      }
+    } catch (_) {
+      if (!mounted || quiet) return;
+      setState(() {
+        _loading = false;
+        _failed = true;
+      });
+    } finally {
+      _loadingNow = false;
+    }
+  }
+
+  void _retryLoad() {
+    setState(() {
+      _loading = true;
+      _failed = false;
+    });
+    _load();
+  }
+
+  // ── Sending ────────────────────────────────────────────────────────────────
+  ChatMessage _newLocal({String? body, String? attachmentPath}) {
+    return ChatMessage(
+      id: 'local-${_localCounter++}',
+      conversationId: _c.id,
+      authorId: _me ?? '',
+      body: body,
+      attachmentPath: attachmentPath,
+      readAt: null,
+      createdAt: _now,
+      delivery: MessageDelivery.sending,
+    );
+  }
+
+  void _replaceLocal(
+    String localId,
+    ChatMessage? sent, {
+    MessageDelivery? delivery,
+  }) {
+    if (!mounted) return;
+    setState(() {
+      final i = _local.indexWhere((m) => m.id == localId);
+      if (i < 0) return;
+      if (sent != null) {
+        _local.removeAt(i);
+        _localPhotoBytes.remove(localId);
+        _localPhotos.remove(localId);
+        if (!_server.any((m) => m.id == sent.id)) {
+          _server = [..._server, sent];
+        }
+      } else {
+        _local[i] = _local[i].copyWith(delivery: delivery);
+      }
+    });
+  }
+
+  Future<void> _sendText() async {
+    final text = _inputCtrl.text.trim();
+    if (text.isEmpty) return;
+    _inputCtrl.clear();
+    final local = _newLocal(body: text);
+    setState(() => _local.add(local));
+    await _deliver(local);
+  }
+
+  Future<void> _deliver(ChatMessage local) async {
+    try {
+      var attachmentPath = local.attachmentPath;
+      final photo = _localPhotos[local.id];
+      if (photo != null) {
+        attachmentPath = await _service.uploadAttachment(_c.id, photo);
+      }
+      final sent = await _service.send(
+        _c.id,
+        body: local.body,
+        attachmentPath: attachmentPath,
+      );
+      _replaceLocal(local.id, sent);
+    } catch (_) {
+      _replaceLocal(local.id, null, delivery: MessageDelivery.failed);
+    }
+  }
+
+  void _retry(ChatMessage failed) {
+    if (failed.delivery != MessageDelivery.failed) return;
+    _replaceLocal(failed.id, null, delivery: MessageDelivery.sending);
+    _deliver(failed);
+  }
+
+  Future<void> _sendPhoto({required bool camera}) async {
+    try {
+      final picked = await (widget.photoPicker ?? _defaultPhotoPicker)(
+        camera: camera,
+      );
+      if (picked == null || !mounted) return;
+      if (picked.sizeBytes > _maxPhotoBytes) {
+        setState(() => _notice = context.l10n.chatPhotoFailed);
+        return;
+      }
+      final local = _newLocal(attachmentPath: 'pending');
+      setState(() {
+        _notice = null;
+        _local.add(local);
+        _localPhotoBytes[local.id] = picked.bytes;
+        _localPhotos[local.id] = picked;
+      });
+      await _deliver(local);
+    } catch (_) {
+      if (mounted) setState(() => _notice = context.l10n.chatCameraFailed);
+    }
+  }
+
+  static Future<PickedReceipt?> _defaultPhotoPicker({
+    required bool camera,
+  }) async {
+    final photo = await ImagePicker().pickImage(
+      source: camera ? ImageSource.camera : ImageSource.gallery,
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 80,
+    );
+    if (photo == null) return null;
+    final name = photo.name.isEmpty ? 'photo.jpg' : photo.name;
+    final ext = name.contains('.') ? name.split('.').last.toLowerCase() : 'jpg';
+    return PickedReceipt(
+      bytes: await photo.readAsBytes(),
+      name: name,
+      extension: ext,
+    );
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+  List<ChatMessage> get _all {
+    final list = [..._server, ..._local];
+    list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return list;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(child: _buildBody()),
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    final c = _c;
+    final fallback = Container(
+      color: AppColors.secondary,
+      child: const Icon(Icons.person, color: AppColors.primary),
+    );
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+        decoration: BoxDecoration(
+          color: AppColors.background.withValues(alpha: 0.95),
+          border: const Border(
+            bottom: BorderSide(color: AppColors.border, width: 0.7),
+          ),
+        ),
+        child: Row(
+          children: [
+            GestureDetector(
+              key: const ValueKey('chat-back'),
+              onTap: () => Navigator.of(context).maybePop(),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(
+                  Icons.arrow_back,
+                  size: 18,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: _green, width: 2),
+              ),
+              child: ClipOval(
+                child: AvatarImage(path: c.otherAvatarPath, fallback: fallback),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          c.displayName,
+                          key: const ValueKey('chat-title'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ),
+                      if (c.otherVerified) ...[
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 14,
+                          color: _green,
+                        ),
+                      ],
+                    ],
+                  ),
+                  Text(
+                    c.itemDescription.isEmpty
+                        ? c.routeLabel
+                        : '${c.routeLabel} · ${c.itemDescription}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      color: _green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    final l = context.l10n;
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: AppColors.accent,
+          strokeWidth: 2.5,
+        ),
+      );
+    }
+    if (_failed) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.cloud_off_rounded,
+                size: 36,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l.couldNotLoadChat,
+                key: const ValueKey('chat-error'),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(onPressed: _retryLoad, child: Text(l.retry)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final messages = _all;
+    if (messages.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            l.chatEmpty,
+            key: const ValueKey('chat-empty'),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Oldest first, with a date chip wherever the day changes; the list is
+    // shown upside down so it sits at the newest message without scrolling.
+    final entries = <Object>[];
+    DateTime? lastDay;
+    for (final m in messages) {
+      final day = DateTime(
+        m.createdAt.year,
+        m.createdAt.month,
+        m.createdAt.day,
+      );
+      if (lastDay != day) {
+        entries.add(day);
+        lastDay = day;
+      }
+      entries.add(m);
+    }
+    final reversed = entries.reversed.toList();
+
+    return ListView.builder(
+      key: const ValueKey('chat-list'),
+      reverse: true,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      itemCount: reversed.length,
+      itemBuilder: (context, i) {
+        final e = reversed[i];
+        return Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: e is DateTime
+              ? _buildDateChip(e)
+              : _buildBubble(e as ChatMessage),
+        );
+      },
+    );
+  }
+
+  Widget _buildDateChip(DateTime day) {
+    final l = context.l10n;
+    final now = _now;
+    final today = DateTime(now.year, now.month, now.day);
+    final diff = today.difference(day).inDays;
+    final label = diff == 0
+        ? l.notifToday
+        : diff == 1
+        ? l.yesterdayLabel
+        : DateFormat(
+            day.year == now.year ? 'MMM d' : 'MMM d, yyyy',
+          ).format(day);
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 10,
+            letterSpacing: 1.0,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Bubbles ────────────────────────────────────────────────────────────────
+  Widget _buildBubble(ChatMessage m) {
+    final mine = m.authorId == _me;
+    final maxWidth = MediaQuery.of(context).size.width * (mine ? 0.78 : 0.72);
+
+    final content = Column(
+      crossAxisAlignment: mine
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        if (m.hasAttachment) ...[
+          _AttachmentView(
+            message: m,
+            service: widget.service,
+            localBytes: _localPhotoBytes[m.id],
+          ),
+          if (m.body != null) const SizedBox(height: 8),
+        ],
+        if (m.body != null)
+          Text(
+            m.body!,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              height: 1.5,
+              color: mine ? AppColors.primaryForeground : AppColors.foreground,
+            ),
+          ),
+        const SizedBox(height: 4),
+        _buildStatusLine(m, mine),
+      ],
+    );
+
+    final bubble = Container(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: mine ? AppColors.primary : AppColors.card,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(mine ? 16 : 4),
+          topRight: Radius.circular(mine ? 4 : 16),
+          bottomLeft: const Radius.circular(16),
+          bottomRight: const Radius.circular(16),
+        ),
+        border: mine ? null : Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: mine
+                ? AppColors.primary.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: mine ? 6 : 4,
+            offset: mine ? const Offset(0, 2) : Offset.zero,
+          ),
+        ],
+      ),
+      child: content,
+    );
+
+    if (mine) {
+      final tappable = m.delivery == MessageDelivery.failed;
+      return Row(
+        key: ValueKey('msg-${m.id}'),
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          GestureDetector(
+            onTap: tappable ? () => _retry(m) : null,
+            child: bubble,
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      key: ValueKey('msg-${m.id}'),
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: ClipOval(
+            child: AvatarImage(
+              path: _c.otherAvatarPath,
+              fallback: Container(color: AppColors.secondary),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(child: bubble),
+      ],
+    );
+  }
+
+  Widget _buildStatusLine(ChatMessage m, bool mine) {
+    final l = context.l10n;
+    final time = DateFormat('h:mm a').format(m.createdAt);
+    String text = time;
+    Color color = mine
+        ? AppColors.primaryForeground.withValues(alpha: 0.7)
+        : AppColors.mutedForeground;
+    if (mine) {
+      switch (m.delivery) {
+        case MessageDelivery.sending:
+          text = '$time · ${l.msgSending}';
+        case MessageDelivery.failed:
+          text = l.msgFailed;
+          color = const Color(0xFFFFB4AB);
+        case MessageDelivery.sent:
+          text = '$time · ${m.isRead ? l.msgRead : l.msgSent}';
+      }
+    }
+    return Text(text, style: GoogleFonts.dmSans(fontSize: 10, color: color));
+  }
+
+  // ── Input bar ──────────────────────────────────────────────────────────────
+  Widget _buildFooter() {
+    final l = context.l10n;
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_notice != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  _notice!,
+                  key: const ValueKey('chat-notice'),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.destructive,
+                  ),
+                ),
+              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  key: const ValueKey('chat-camera'),
+                  onTap: () => _sendPhoto(camera: true),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      size: 18,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.input,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    padding: const EdgeInsets.only(left: 16, right: 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            key: const ValueKey('chat-input'),
+                            controller: _inputCtrl,
+                            minLines: 1,
+                            maxLines: 4,
+                            keyboardType: TextInputType.multiline,
+                            textCapitalization: TextCapitalization.sentences,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 13,
+                              color: AppColors.foreground,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: l.typeMessage,
+                              hintStyle: GoogleFonts.dmSans(
+                                fontSize: 13,
+                                color: AppColors.mutedForeground,
+                              ),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 11,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          key: const ValueKey('chat-gallery'),
+                          onTap: () => _sendPhoto(camera: false),
+                          child: const Padding(
+                            padding: EdgeInsets.only(left: 6),
+                            child: Icon(
+                              Icons.attach_file_rounded,
+                              size: 18,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  key: const ValueKey('chat-send'),
+                  onTap: _sendText,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.accent.withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A photo inside a bubble. Photos live in a private bucket, so a temporary
+/// link is fetched first. A photo that is still being sent is shown from memory.
+class _AttachmentView extends StatefulWidget {
+  final ChatMessage message;
+  final MessageService? service;
+  final Uint8List? localBytes;
+
+  const _AttachmentView({
+    required this.message,
+    required this.service,
+    required this.localBytes,
+  });
+
+  @override
+  State<_AttachmentView> createState() => _AttachmentViewState();
+}
+
+class _AttachmentViewState extends State<_AttachmentView> {
+  Future<String>? _url;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.localBytes == null) {
+      _url = (widget.service ?? MessageService()).attachmentUrl(
+        widget.message.attachmentPath!,
+      );
+    }
+  }
+
+  Widget _placeholder({bool loading = false}) => Container(
+    width: 200,
+    height: 140,
+    color: AppColors.secondary,
+    alignment: Alignment.center,
+    child: loading
+        ? const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accent,
+            ),
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.broken_image_outlined,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.l10n.chatPhotoLoadFailed,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ],
+          ),
+  );
+
+  void _openFullScreen(ImageProvider image) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => GestureDetector(
+        onTap: () => Navigator.of(ctx).pop(),
+        child: Dialog.fullscreen(
+          backgroundColor: Colors.black.withValues(alpha: 0.92),
+          child: SafeArea(
+            child: InteractiveViewer(
+              child: Center(
+                child: Image(
+                  image: image,
+                  errorBuilder: (c, e, st) => const Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white54,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = widget.localBytes;
+    Widget photo;
+    if (bytes != null) {
+      photo = Image.memory(
+        bytes,
+        width: 200,
+        height: 140,
+        fit: BoxFit.cover,
+        errorBuilder: (c, e, s) => _placeholder(),
+      );
+    } else {
+      photo = FutureBuilder<String>(
+        future: _url,
+        builder: (context, snap) {
+          if (snap.hasError) return _placeholder();
+          if (!snap.hasData) return _placeholder(loading: true);
+          final provider = NetworkImage(snap.data!);
+          return GestureDetector(
+            key: ValueKey('photo-${widget.message.id}'),
+            onTap: () => _openFullScreen(provider),
+            child: Image(
+              image: provider,
+              width: 200,
+              height: 140,
+              fit: BoxFit.cover,
+              errorBuilder: (c, e, s) => _placeholder(),
+              loadingBuilder: (c, child, progress) =>
+                  progress == null ? child : _placeholder(loading: true),
+            ),
+          );
+        },
+      );
+    }
+    return ClipRRect(borderRadius: BorderRadius.circular(12), child: photo);
+  }
+}
