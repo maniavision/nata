@@ -39,7 +39,7 @@ class BiometricService {
   final LocalAuthentication _auth;
 
   BiometricService({LocalAuthentication? auth})
-      : _auth = auth ?? LocalAuthentication();
+    : _auth = auth ?? LocalAuthentication();
 
   /// Can this device use a face / fingerprint right now, and if not, why?
   Future<BiometricAvailability> availability() async {

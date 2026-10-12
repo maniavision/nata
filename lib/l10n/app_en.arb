@@ -524,5 +524,145 @@
         "type": "String"
       }
     }
+  },
+  "recipientDetails": "Recipient Details",
+  "recipientName": "Recipient Name",
+  "recipientNameHint": "Full name as on their ID",
+  "recipientPhone": "Recipient Phone Number",
+  "recipientPhoneHint": "e.g. +44 7700 900123",
+  "recipientPhoneNote": "Shared with the traveler only after they accept your request",
+  "sizeAndWeight": "Size and Weight",
+  "travelerLimitLabel": "Traveler limit: {limit}",
+  "itemNameHint": "e.g. Sony Headphones, Sealed Cosmetics, etc.",
+  "itemDescHint": "Provide details about the item and packaging...",
+  "weightHint": "e.g. 0.9 kg",
+  "dimensionsHint": "e.g. 24 × 24 × 8 cm",
+  "photoMustShowSeal": "Photo must show sealed factory seal",
+  "travelerPriceLine": "Traveler's price",
+  "platformProtectionLine": "Platform protection & escrow",
+  "priceNoteNothingCharged": "Nothing is charged now. The traveler can accept or decline this request, and you pay only after they accept.",
+  "choosePhotoSource": "Add a photo",
+  "errItemName": "Tell us what the item is.",
+  "errAccountNotFound": "No account found for this number. Please sign up first.",
+  "itemsTitle": "Items",
+  "itemsCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemNumber": "Item {number}",
+  "@itemNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "removeItem": "Remove",
+  "addAnotherItem": "Add another item",
+  "errItemNameN": "Tell us what item {number} is.",
+  "@errItemNameN": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsMaxNote": "You can send up to {max} items in one request.",
+  "@itemsMaxNote": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "errRecipientName": "Enter the recipient's full name.",
+  "errRecipientPhone": "Enter the recipient's phone number with the country code, e.g. +44 7700 900123.",
+  "errWeight": "Enter the package weight, e.g. 0.9 kg.",
+  "errPhotoRequired": "Add at least one photo of the sealed item.",
+  "errPhotoTooBig": "That photo is too large (max 10 MB).",
+  "errPhotoLimit": "You can add up to 3 photos.",
+  "errTripUnavailable": "This trip is no longer available.",
+  "errOwnTrip": "You can't send a parcel with your own trip.",
+  "errDuplicate": "You already have an open request on this trip.",
+  "errSessionExpired": "Your session expired. Please sign in again.",
+  "errInvalidRequest": "Some details were rejected. Please check the form.",
+  "errRequestFailed": "Could not send your request. Please try again.",
+  "requestSent": "Request sent. The traveler will review it.",
+  "travelerMaxKg": "Max {kg} kg",
+  "@travelerMaxKg": {
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "errWeightTooHeavy": "This traveler accepts up to {max} kg.",
+  "@errWeightTooHeavy": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "photosAttachedCount": "{count, plural, =0{No photos} =1{1 photo attached} other{{count} photos attached}}",
+  "@photosAttachedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sendRequestWithPrice": "Send Delivery Request · {price}",
+  "@sendRequestWithPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "@travelerLimitLabel": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "packageSize": "Package Size",
+  "sizeEnvelope": "Envelope / Document",
+  "sizeShoebox": "Shoebox",
+  "sizeBackpack": "Backpack",
+  "errSizeRequired": "Choose the package size.",
+  "errSizeTooBig": "This package is bigger than the traveler accepts.",
+  "errPriceChanged": "The traveler changed their price. Go back and open the request again to see the new price.",
+  "priceEnterWeight": "Enter the package weight to see the final price.",
+  "priceRateUnavailable": "Exchange rate unavailable, so prices are shown in US dollars.",
+  "priceCredit": "Exchange rates by Exchange Rate API",
+  "priceCalculating": "Calculating the price…",
+  "errQuoteUnavailable": "Could not calculate the price. Check your connection and try again.",
+  "priceBasedOn": "Based on distance ({km} km), weight & delivery date",
+  "@priceBasedOn": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "priceRateLine": "1 USD = {rate} {currency} · updated {date}",
+  "@priceRateLine": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

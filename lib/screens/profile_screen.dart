@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _setupStreams() {
     final auth = _auth;
-    
+
     _profileSubscription = auth.profileStream().listen((profile) {
       if (profile != null && mounted) {
         setState(() {
@@ -104,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final profile = await auth.getProfile();
       final balances = await auth.getWalletBalances();
       final stats = await auth.getStats();
-      
+
       if (profile != null && mounted) {
         setState(() {
           _avatarPath = profile['avatar_path'];
@@ -165,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       try {
         final bytes = await image.readAsBytes();
         final extension = image.path.split('.').last;
-        
+
         final oldAvatarPath = _avatarPath;
 
         // 1. Upload to Storage (unique file name per upload)
@@ -193,15 +193,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile picture updated successfully')),
+            const SnackBar(
+              content: Text('Profile picture updated successfully'),
+            ),
           );
         }
       } catch (e) {
         debugPrint('Upload error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload image: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
         }
       } finally {
         if (mounted) {
@@ -297,8 +299,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(Icons.settings_rounded,
-                color: AppColors.primary, size: 20),
+            child: const Icon(
+              Icons.settings_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -338,7 +343,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: isVerified ? AppColors.accent : (isPending ? Colors.orange : AppColors.border), width: 3),
+                        color: isVerified
+                            ? AppColors.accent
+                            : (isPending ? Colors.orange : AppColors.border),
+                        width: 3,
+                      ),
                     ),
                     child: Stack(
                       children: [
@@ -351,24 +360,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   fit: BoxFit.cover,
                                 )
                               : _avatarPath != null
-                                  ? SizedBox(
-                                      width: 72,
-                                      height: 72,
-                                      child: AvatarImage(
-                                        path: _avatarPath,
-                                        fallback: Container(
-                                          color: AppColors.secondary,
-                                          child: const Icon(Icons.person,
-                                              size: 36,
-                                              color: AppColors.primary),
-                                        ),
-                                      ),
-                                    )
-                                  : Container(
+                              ? SizedBox(
+                                  width: 72,
+                                  height: 72,
+                                  child: AvatarImage(
+                                    path: _avatarPath,
+                                    fallback: Container(
                                       color: AppColors.secondary,
-                                      child: const Icon(Icons.person,
-                                          size: 36, color: AppColors.primary),
+                                      child: const Icon(
+                                        Icons.person,
+                                        size: 36,
+                                        color: AppColors.primary,
+                                      ),
                                     ),
+                                  ),
+                                )
+                              : Container(
+                                  color: AppColors.secondary,
+                                  child: const Icon(
+                                    Icons.person,
+                                    size: 36,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
                         ),
                         if (_isUploading)
                           Container(
@@ -379,7 +393,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: const Center(
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -405,8 +421,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.camera_alt_rounded,
-                            size: 14, color: Colors.white),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -418,10 +437,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: isVerified ? const Color(0xFF168A68) : Colors.orange,
+                          color: isVerified
+                              ? const Color(0xFF168A68)
+                              : Colors.orange,
                           shape: BoxShape.circle,
-                          border:
-                              Border.all(color: AppColors.card, width: 2),
+                          border: Border.all(color: AppColors.card, width: 2),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.1),
@@ -429,8 +449,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
-                        child: Icon(isVerified ? Icons.verified_rounded : Icons.pending_actions_rounded,
-                            size: 14, color: Colors.white),
+                        child: Icon(
+                          isVerified
+                              ? Icons.verified_rounded
+                              : Icons.pending_actions_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                 ],
@@ -461,45 +486,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Flexible(
                           child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: isVerified ? const Color(0xFFE4F4EE) : (isPending ? Colors.orange.withValues(alpha: 0.1) : AppColors.input),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(isVerified ? Icons.shield_rounded : (isPending ? Icons.pending_rounded : Icons.shield_outlined),
-                                  size: 12,
-                                  color: isVerified ? const Color(0xFF168A68) : (isPending ? Colors.orange : AppColors.mutedForeground)),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isVerified
+                                  ? const Color(0xFFE4F4EE)
+                                  : (isPending
+                                        ? Colors.orange.withValues(alpha: 0.1)
+                                        : AppColors.input),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
                                   isVerified
-                                      ? context.l10n.tier1Verified.split('·').first.trim()
+                                      ? Icons.shield_rounded
                                       : (isPending
-                                          ? context.l10n.verificationPending
-                                          : context.l10n.verificationUnverified),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.dmSans(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 10,
-                                    color: isVerified ? const Color(0xFF168A68) : (isPending ? Colors.orange : AppColors.mutedForeground),
+                                            ? Icons.pending_rounded
+                                            : Icons.shield_outlined),
+                                  size: 12,
+                                  color: isVerified
+                                      ? const Color(0xFF168A68)
+                                      : (isPending
+                                            ? Colors.orange
+                                            : AppColors.mutedForeground),
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    isVerified
+                                        ? context.l10n.tier1Verified
+                                              .split('·')
+                                              .first
+                                              .trim()
+                                        : (isPending
+                                              ? context.l10n.verificationPending
+                                              : context
+                                                    .l10n
+                                                    .verificationUnverified),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.dmSans(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 10,
+                                      color: isVerified
+                                          ? const Color(0xFF168A68)
+                                          : (isPending
+                                                ? Colors.orange
+                                                : AppColors.mutedForeground),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
                         ),
                         const SizedBox(width: 8),
                         Row(
                           children: [
-                            const Icon(Icons.star_rounded,
-                                size: 14,
-                                color: Color(0xFFE5A83B)),
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Color(0xFFE5A83B),
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               '5.0 ',
@@ -629,8 +681,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.account_balance_wallet_rounded,
-                        size: 18, color: AppColors.accent),
+                    child: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      size: 18,
+                      color: AppColors.accent,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -649,7 +704,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(999),
@@ -678,20 +735,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           context.l10n.availableForPayout,
                           style: GoogleFonts.dmSans(
                             fontSize: 11,
-                            color:
-                                Colors.white.withValues(alpha: 0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Row(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.baseline,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
                               NumberFormat.currency(
-                                      symbol: '\$', decimalDigits: 2)
-                                  .format(_availableBalance),
+                                symbol: '\$',
+                                decimalDigits: 2,
+                              ).format(_availableBalance),
                               style: GoogleFonts.manrope(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 28,
@@ -704,8 +760,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               'USD',
                               style: GoogleFonts.dmSans(
                                 fontSize: 12,
-                                color: Colors.white
-                                    .withValues(alpha: 0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -717,14 +772,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () {},
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.accent,
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                AppColors.accent.withValues(alpha: 0.4),
+                            color: AppColors.accent.withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -743,10 +799,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 14),
-              Container(
-                height: 1,
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
+              Container(height: 1, color: Colors.white.withValues(alpha: 0.1)),
               const SizedBox(height: 12),
               // Escrow row
               Row(
@@ -754,23 +807,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Expanded(
                     child: Row(
-                    children: [
-                      const Icon(Icons.lock_rounded,
-                          size: 14, color: AppColors.accent),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          '${NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(_escrowBalance)} ${context.l10n.heldInEscrow}',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.dmSans(
-                            fontSize: 12,
-                            color:
-                                Colors.white.withValues(alpha: 0.8),
+                      children: [
+                        const Icon(
+                          Icons.lock_rounded,
+                          size: 14,
+                          color: AppColors.accent,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            '${NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(_escrowBalance)} ${context.l10n.heldInEscrow}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -823,31 +878,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
         iconBg: _verificationStatus == 'verified'
             ? const Color(0xFFE4F4EE)
             : (_verificationStatus == 'pending'
-                ? Colors.orange.withValues(alpha: 0.1)
-                : const Color(0xFFFEE2E2)),
+                  ? Colors.orange.withValues(alpha: 0.1)
+                  : const Color(0xFFFEE2E2)),
         iconColor: _verificationStatus == 'verified'
             ? const Color(0xFF168A68)
             : (_verificationStatus == 'pending'
-                ? Colors.orange
-                : AppColors.destructive),
+                  ? Colors.orange
+                  : AppColors.destructive),
         title: context.l10n.identityVerification,
         subtitle: _verificationStatus == 'verified'
             ? context.l10n.tier1Verified
             : (_verificationStatus == 'pending'
-                ? context.l10n.identityUnderReview
-                : context.l10n.identityActionRequiredSub),
+                  ? context.l10n.identityUnderReview
+                  : context.l10n.identityActionRequiredSub),
         subtitleColor: _verificationStatus == 'verified'
             ? const Color(0xFF168A68)
             : (_verificationStatus == 'pending'
-                ? Colors.orange
-                : AppColors.destructive),
+                  ? Colors.orange
+                  : AppColors.destructive),
         verified: _verificationStatus == 'verified',
         trailing: _verificationStatus == 'pending'
             ? context.l10n.verificationReviewing
             : null,
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const IdentityVerificationScreen()),
+            MaterialPageRoute(
+              builder: (context) => const IdentityVerificationScreen(),
+            ),
           );
         },
       ),
@@ -867,10 +924,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       child: Column(
@@ -893,8 +947,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: item.iconBg,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(item.icon,
-                            size: 18, color: item.iconColor),
+                        child: Icon(item.icon, size: 18, color: item.iconColor),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -913,7 +966,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               item.subtitle,
                               style: GoogleFonts.dmSans(
                                 fontSize: 11,
-                                color: item.subtitleColor ??
+                                color:
+                                    item.subtitleColor ??
                                     AppColors.mutedForeground,
                                 fontWeight: item.subtitleColor != null
                                     ? FontWeight.w600
@@ -924,8 +978,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       if (item.verified)
-                        const Icon(Icons.check_circle_rounded,
-                            size: 18, color: Color(0xFF168A68))
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 18,
+                          color: Color(0xFF168A68),
+                        )
                       else if (item.trailing != null)
                         Row(
                           children: [
@@ -938,22 +995,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.chevron_right,
-                                size: 16,
-                                color: AppColors.mutedForeground),
+                            const Icon(
+                              Icons.chevron_right,
+                              size: 16,
+                              color: AppColors.mutedForeground,
+                            ),
                           ],
                         )
                       else
-                        const Icon(Icons.chevron_right,
-                            size: 16,
-                            color: AppColors.mutedForeground),
+                        const Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: AppColors.mutedForeground,
+                        ),
                     ],
                   ),
                 ),
               ),
               if (!isLast)
-                const Divider(
-                    color: AppColors.border, height: 1, indent: 62),
+                const Divider(color: AppColors.border, height: 1, indent: 62),
             ],
           );
         }).toList(),
@@ -981,13 +1041,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: AppColors.destructive.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-              color: AppColors.destructive.withValues(alpha: 0.3)),
+            color: AppColors.destructive.withValues(alpha: 0.3),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.logout_rounded,
-                size: 16, color: AppColors.destructive),
+            const Icon(
+              Icons.logout_rounded,
+              size: 16,
+              color: AppColors.destructive,
+            ),
             const SizedBox(width: 8),
             Text(
               context.l10n.logOut,
@@ -1037,7 +1101,7 @@ class _LanguagePickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final prefs = PreferencesService();
     final l = context.l10n;
-    
+
     final options = [
       (AppLanguage.english, '🇺🇸', l.langEnglish, l.langEnglishSub),
       (AppLanguage.spanish, '🇪🇸', l.langSpanish, l.langSpanishSub),
@@ -1086,7 +1150,9 @@ class _LanguagePickerSheet extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: selected ? AppColors.accent.withValues(alpha: 0.05) : AppColors.input,
+                  color: selected
+                      ? AppColors.accent.withValues(alpha: 0.05)
+                      : AppColors.input,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: selected ? AppColors.accent : AppColors.border,
@@ -1120,7 +1186,11 @@ class _LanguagePickerSheet extends StatelessWidget {
                       ),
                     ),
                     if (selected)
-                      const Icon(Icons.check_circle, color: AppColors.accent, size: 20),
+                      const Icon(
+                        Icons.check_circle,
+                        color: AppColors.accent,
+                        size: 20,
+                      ),
                   ],
                 ),
               ),
@@ -1199,7 +1269,9 @@ class _CurrencyPickerSheet extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: selected ? AppColors.accent.withValues(alpha: 0.05) : AppColors.input,
+                    color: selected
+                        ? AppColors.accent.withValues(alpha: 0.05)
+                        : AppColors.input,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: selected ? AppColors.accent : AppColors.border,
@@ -1227,7 +1299,9 @@ class _CurrencyPickerSheet extends StatelessWidget {
                               style: GoogleFonts.dmSans(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 10,
-                                color: selected ? AppColors.accent : AppColors.mutedForeground,
+                                color: selected
+                                    ? AppColors.accent
+                                    : AppColors.mutedForeground,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1236,7 +1310,11 @@ class _CurrencyPickerSheet extends StatelessWidget {
                         ),
                       ),
                       if (selected)
-                        const Icon(Icons.check_circle, size: 16, color: AppColors.accent),
+                        const Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: AppColors.accent,
+                        ),
                     ],
                   ),
                 ),

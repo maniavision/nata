@@ -9,8 +9,7 @@ class CheckoutEscrowScreen extends StatefulWidget {
   const CheckoutEscrowScreen({super.key});
 
   @override
-  State<CheckoutEscrowScreen> createState() =>
-      _CheckoutEscrowScreenState();
+  State<CheckoutEscrowScreen> createState() => _CheckoutEscrowScreenState();
 }
 
 class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
@@ -89,7 +88,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         decoration: BoxDecoration(
           color: AppColors.background.withValues(alpha: 0.95),
           border: const Border(
-              bottom: BorderSide(color: AppColors.border, width: 0.7)),
+            bottom: BorderSide(color: AppColors.border, width: 0.7),
+          ),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
         child: Row(
@@ -110,8 +110,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.arrow_back,
-                    color: AppColors.foreground, size: 20),
+                child: const Icon(
+                  Icons.arrow_back,
+                  color: AppColors.foreground,
+                  size: 20,
+                ),
               ),
             ),
             Expanded(
@@ -134,8 +137,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 color: AppColors.secondary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.shield_rounded,
-                  color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.shield_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ],
         ),
@@ -150,12 +156,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         color: const Color(0xFFFEF3C7).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+        ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4),
         ],
       ),
       padding: const EdgeInsets.all(14),
@@ -168,8 +172,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.access_time_rounded,
-                size: 18, color: Color(0xFFB45309)),
+            child: const Icon(
+              Icons.access_time_rounded,
+              size: 18,
+              color: Color(0xFFB45309),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -207,8 +214,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
@@ -272,44 +278,49 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.shield_rounded,
-                    size: 20, color: Colors.white),
+                child: const Icon(
+                  Icons.shield_rounded,
+                  size: 20,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(context.l10n.howEscrowWorks,
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: Colors.white,
-                        )),
+                    Text(
+                      context.l10n.howEscrowWorks,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     RichText(
                       text: TextSpan(
                         style: GoogleFonts.dmSans(
                           fontSize: 12,
-                          color:
-                              Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           height: 1.5,
                         ),
                         children: [
                           const TextSpan(
-                              text:
-                                  'Your payment is held safely by Nata. The traveler is only paid '),
-                          TextSpan(
                             text:
-                                'after your recipient verifies delivery',
+                                'Your payment is held safely by Nata. The traveler is only paid ',
+                          ),
+                          TextSpan(
+                            text: 'after your recipient verifies delivery',
                             style: GoogleFonts.dmSans(
                               fontWeight: FontWeight.w600,
                               color: AppColors.accent,
                             ),
                           ),
                           const TextSpan(
-                              text:
-                                  ' with your secret 4-digit code or photo proof.'),
+                            text:
+                                ' with your secret 4-digit code or photo proof.',
+                          ),
                         ],
                       ),
                     ),
@@ -331,10 +342,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -355,8 +363,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => Container(
                       color: AppColors.secondary,
-                      child: const Icon(Icons.person,
-                          color: AppColors.primary, size: 20),
+                      child: const Icon(
+                        Icons.person,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
@@ -368,50 +379,63 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   children: [
                     Row(
                       children: [
-                        Text('Amara K.',
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: AppColors.foreground,
-                            )),
+                        Text(
+                          'Amara K.',
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: AppColors.foreground,
+                          ),
+                        ),
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE4F4EE),
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: Text('Verified',
-                              style: GoogleFonts.dmSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 10,
-                                color: const Color(0xFF168A68),
-                              )),
+                          child: Text(
+                            'Verified',
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                              color: const Color(0xFF168A68),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    Text('Lagos (LOS) → London (LHR) · Jun 22',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
-                        )),
+                    Text(
+                      'Lagos (LOS) → London (LHR) · Jun 22',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Text('Accepted',
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.accent,
-                  )),
+              Text(
+                'Accepted',
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.accent,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           const Divider(color: AppColors.border, height: 1),
           const SizedBox(height: 12),
-          _summaryRow(Icons.inventory_2_outlined, 'Item',
-              'MacBook Air M2 (Sealed Box)'),
+          _summaryRow(
+            Icons.inventory_2_outlined,
+            'Item',
+            'MacBook Air M2 (Sealed Box)',
+          ),
           const SizedBox(height: 8),
           _summaryRow(Icons.monitor_weight_outlined, 'Weight', '1.24 kg'),
         ],
@@ -427,19 +451,23 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           children: [
             Icon(icon, size: 14, color: AppColors.mutedForeground),
             const SizedBox(width: 6),
-            Text(label,
-                style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  color: AppColors.mutedForeground,
-                )),
+            Text(
+              label,
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            ),
           ],
         ),
-        Text(value,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              color: AppColors.foreground,
-            )),
+        Text(
+          value,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            color: AppColors.foreground,
+          ),
+        ),
       ],
     );
   }
@@ -478,33 +506,32 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.selectPaymentMethod,
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                letterSpacing: 1.2,
-                color: AppColors.mutedForeground,
-              )),
+          Text(
+            context.l10n.selectPaymentMethod,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              letterSpacing: 1.2,
+              color: AppColors.mutedForeground,
+            ),
+          ),
           const SizedBox(height: 12),
           ...methods.asMap().entries.map((e) {
             final m = e.value;
             final selected = _paymentMethod == e.key;
             return Padding(
-              padding:
-                  EdgeInsets.only(bottom: e.key < methods.length - 1 ? 8 : 0),
+              padding: EdgeInsets.only(
+                bottom: e.key < methods.length - 1 ? 8 : 0,
+              ),
               child: GestureDetector(
-                onTap: () =>
-                    setState(() => _paymentMethod = e.key),
+                onTap: () => setState(() => _paymentMethod = e.key),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
                   decoration: BoxDecoration(
@@ -513,9 +540,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                         : AppColors.input.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: selected
-                          ? AppColors.accent
-                          : AppColors.border,
+                      color: selected ? AppColors.accent : AppColors.border,
                       width: selected ? 2 : 1,
                     ),
                   ),
@@ -527,9 +552,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                         height: 36,
                         decoration: BoxDecoration(
                           color: m.iconBg.withValues(
-                              alpha: m.iconBg == const Color(0xFF00A859)
-                                  ? 0.15
-                                  : 1.0),
+                            alpha: m.iconBg == const Color(0xFF00A859)
+                                ? 0.15
+                                : 1.0,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                           border: m.iconBorder == true
                               ? Border.all(color: AppColors.border)
@@ -538,12 +564,14 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                         child: m.icon != null
                             ? Icon(m.icon!, size: 20, color: m.iconColor)
                             : Center(
-                                child: Text(m.iconLabel ?? '',
-                                    style: GoogleFonts.dmSans(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 14,
-                                      color: const Color(0xFF00A859),
-                                    )),
+                                child: Text(
+                                  m.iconLabel ?? '',
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                    color: const Color(0xFF00A859),
+                                  ),
+                                ),
                               ),
                       ),
                       const SizedBox(width: 12),
@@ -551,17 +579,21 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(m.title,
-                                style: GoogleFonts.dmSans(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.foreground,
-                                )),
-                            Text(m.subtitle,
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 11,
-                                  color: AppColors.mutedForeground,
-                                )),
+                            Text(
+                              m.title,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                                color: AppColors.foreground,
+                              ),
+                            ),
+                            Text(
+                              m.subtitle,
+                              style: GoogleFonts.dmSans(
+                                fontSize: 11,
+                                color: AppColors.mutedForeground,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -582,8 +614,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                           ),
                         ),
                         child: selected
-                            ? const Icon(Icons.check,
-                                size: 10, color: Colors.white)
+                            ? const Icon(
+                                Icons.check,
+                                size: 10,
+                                color: Colors.white,
+                              )
                             : null,
                       ),
                     ],
@@ -605,28 +640,26 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.paymentBreakdown,
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                letterSpacing: 1.2,
-                color: AppColors.mutedForeground,
-              )),
+          Text(
+            context.l10n.paymentBreakdown,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              letterSpacing: 1.2,
+              color: AppColors.mutedForeground,
+            ),
+          ),
           const SizedBox(height: 12),
           _breakdownRow(context.l10n.travelerReward, '\$45.00'),
           const SizedBox(height: 8),
-          _breakdownRow(
-              context.l10n.platformFee, '\$5.00'),
+          _breakdownRow(context.l10n.platformFee, '\$5.00'),
           const SizedBox(height: 12),
           const Divider(color: AppColors.border, height: 1),
           const SizedBox(height: 12),
@@ -634,23 +667,27 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(context.l10n.totalEscrow,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: AppColors.foreground,
-                    )),
+                child: Text(
+                  context.l10n.totalEscrow,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.foreground,
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
-              Text('\$50.00',
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
-                    color: AppColors.primary,
-                    letterSpacing: -0.5,
-                  )),
+              Text(
+                '\$50.00',
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  color: AppColors.primary,
+                  letterSpacing: -0.5,
+                ),
+              ),
             ],
           ),
         ],
@@ -663,19 +700,23 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Text(label,
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.mutedForeground,
-              )),
+          child: Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
         ),
         const SizedBox(width: 12),
-        Text(value,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-              color: AppColors.foreground,
-            )),
+        Text(
+          value,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+            color: AppColors.foreground,
+          ),
+        ),
       ],
     );
   }
@@ -694,30 +735,41 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.refresh_rounded,
-                  size: 16, color: AppColors.accent),
+              const Icon(
+                Icons.refresh_rounded,
+                size: 16,
+                color: AppColors.accent,
+              ),
               const SizedBox(width: 6),
               Flexible(
-                child: Text(context.l10n.cancellationTitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: AppColors.foreground,
-                    )),
+                child: Text(
+                  context.l10n.cancellationTitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.foreground,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          _bulletPoint('Full 100% refund',
-              'if traveler cancels or item is not delivered.'),
+          _bulletPoint(
+            'Full 100% refund',
+            'if traveler cancels or item is not delivered.',
+          ),
           const SizedBox(height: 4),
-          _bulletPoint('Free cancellation',
-              'anytime before physical handoff to traveler.'),
+          _bulletPoint(
+            'Free cancellation',
+            'anytime before physical handoff to traveler.',
+          ),
           const SizedBox(height: 4),
-          _bulletPoint('3-day dispute window',
-              'after delivery before funds are finalized.'),
+          _bulletPoint(
+            '3-day dispute window',
+            'after delivery before funds are finalized.',
+          ),
         ],
       ),
     );
@@ -755,12 +807,14 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       child: ElevatedButton.icon(
         onPressed: () => Navigator.of(context).pop(),
         icon: const Icon(Icons.lock_rounded, size: 18, color: Colors.white),
-        label: Text(context.l10n.payIntoEscrow,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
-              color: Colors.white,
-            )),
+        label: Text(
+          context.l10n.payIntoEscrow,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            color: Colors.white,
+          ),
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accent,
           foregroundColor: Colors.white,
@@ -776,14 +830,15 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.shield_rounded,
-            size: 14, color: Color(0xFF168A68)),
+        const Icon(Icons.shield_rounded, size: 14, color: Color(0xFF168A68)),
         const SizedBox(width: 4),
-        Text(context.l10n.escrowEncrypted,
-            style: GoogleFonts.dmSans(
-              fontSize: 10,
-              color: AppColors.mutedForeground,
-            )),
+        Text(
+          context.l10n.escrowEncrypted,
+          style: GoogleFonts.dmSans(
+            fontSize: 10,
+            color: AppColors.mutedForeground,
+          ),
+        ),
       ],
     );
   }

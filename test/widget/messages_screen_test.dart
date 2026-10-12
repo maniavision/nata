@@ -10,48 +10,48 @@ import '../helpers/fakes.dart';
 final now = DateTime(2030, 6, 15, 12, 0);
 
 List<ConversationSummary> mixed() => [
-      sampleConversation(
-        id: 'amara',
-        firstName: 'Amara',
-        lastName: 'Kalu',
-        status: 'accepted',
-        lastBody: 'I received your sealed iPhone box!',
-        lastAt: now.subtract(const Duration(minutes: 2)),
-        unread: 2,
-      ),
-      sampleConversation(
-        id: 'daniel',
-        firstName: 'Daniel',
-        lastName: 'Okafor',
-        from: 'Accra',
-        to: 'Paris',
-        item: 'Sony headphones',
-        status: 'paid',
-        lastBody: 'See you at Terminal 2E.',
-        lastAt: now.subtract(const Duration(hours: 1)),
-      ),
-      sampleConversation(
-        id: 'maya',
-        firstName: 'Maya',
-        lastName: 'Tariq',
-        from: 'Nairobi',
-        to: 'Dubai',
-        item: 'Documents',
-        status: 'delivered',
-        lastBody: 'Handed over. Payout released!',
-        lastAt: DateTime(2030, 6, 14, 10),
-      ),
-      sampleConversation(
-        id: 'chidi',
-        firstName: 'Chidi',
-        lastName: 'Eze',
-        from: 'Abuja',
-        to: 'Berlin',
-        item: 'Laptop sleeve',
-        status: 'declined',
-        lastBody: null,
-      ),
-    ];
+  sampleConversation(
+    id: 'amara',
+    firstName: 'Amara',
+    lastName: 'Kalu',
+    status: 'accepted',
+    lastBody: 'I received your sealed iPhone box!',
+    lastAt: now.subtract(const Duration(minutes: 2)),
+    unread: 2,
+  ),
+  sampleConversation(
+    id: 'daniel',
+    firstName: 'Daniel',
+    lastName: 'Okafor',
+    from: 'Accra',
+    to: 'Paris',
+    item: 'Sony headphones',
+    status: 'paid',
+    lastBody: 'See you at Terminal 2E.',
+    lastAt: now.subtract(const Duration(hours: 1)),
+  ),
+  sampleConversation(
+    id: 'maya',
+    firstName: 'Maya',
+    lastName: 'Tariq',
+    from: 'Nairobi',
+    to: 'Dubai',
+    item: 'Documents',
+    status: 'delivered',
+    lastBody: 'Handed over. Payout released!',
+    lastAt: DateTime(2030, 6, 14, 10),
+  ),
+  sampleConversation(
+    id: 'chidi',
+    firstName: 'Chidi',
+    lastName: 'Eze',
+    from: 'Abuja',
+    to: 'Berlin',
+    item: 'Laptop sleeve',
+    status: 'declined',
+    lastBody: null,
+  ),
+];
 
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
@@ -68,10 +68,16 @@ void main() {
     tester.view.physicalSize = const Size(900, 3000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(appWrapper(
-      MessagesScreen(service: service, now: () => now, refreshEvery: refreshEvery),
-      locale: locale,
-    ));
+    await tester.pumpWidget(
+      appWrapper(
+        MessagesScreen(
+          service: service,
+          now: () => now,
+          refreshEvery: refreshEvery,
+        ),
+        locale: locale,
+      ),
+    );
     if (settle) await tester.pumpAndSettle();
   }
 
@@ -115,8 +121,9 @@ void main() {
       expect(find.text('5 unread messages'), findsOneWidget);
     });
 
-    testWidgets('subtitle says all caught up when nothing is unread',
-        (tester) async {
+    testWidgets('subtitle says all caught up when nothing is unread', (
+      tester,
+    ) async {
       service.convs = [sampleConversation(unread: 0)];
       await pump(tester);
 
@@ -131,8 +138,9 @@ void main() {
       expect(find.text('Amara K.'), findsNothing);
     });
 
-    testWidgets('shows the same bottom navigation, Messages highlighted',
-        (tester) async {
+    testWidgets('shows the same bottom navigation, Messages highlighted', (
+      tester,
+    ) async {
       await pump(tester);
 
       for (final label in ['Home', 'Requests', 'Trips', 'Profile']) {
@@ -184,7 +192,9 @@ void main() {
 
       await tester.drag(
         find.descendant(
-            of: find.byType(RefreshIndicator), matching: find.byType(ListView)),
+          of: find.byType(RefreshIndicator),
+          matching: find.byType(ListView),
+        ),
         const Offset(0, 400),
       );
       await tester.pump();
@@ -207,7 +217,9 @@ void main() {
       expect(top('daniel'), lessThan(top('maya')));
     });
 
-    testWidgets('show the other person\'s name, route and item', (tester) async {
+    testWidgets('show the other person\'s name, route and item', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(find.text('Amara K.'), findsOneWidget);
@@ -227,27 +239,48 @@ void main() {
     testWidgets('a verified person has a badge, others do not', (tester) async {
       service.convs = [
         sampleConversation(id: 'v', verified: true),
-        sampleConversation(id: 'u', verified: false, firstName: 'Nia', lastName: 'Jones'),
+        sampleConversation(
+          id: 'u',
+          verified: false,
+          firstName: 'Nia',
+          lastName: 'Jones',
+        ),
       ];
       await pump(tester);
 
-      expect(find.descendant(of: tile('v'), matching: find.byIcon(Icons.verified_rounded)),
-          findsOneWidget);
-      expect(find.descendant(of: tile('u'), matching: find.byIcon(Icons.verified_rounded)),
-          findsNothing);
+      expect(
+        find.descendant(
+          of: tile('v'),
+          matching: find.byIcon(Icons.verified_rounded),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: tile('u'),
+          matching: find.byIcon(Icons.verified_rounded),
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets('unread conversations show a count badge', (tester) async {
       await pump(tester);
 
       expect(find.byKey(const ValueKey('unread-amara')), findsOneWidget);
-      expect(find.descendant(of: find.byKey(const ValueKey('unread-amara')), matching: find.text('2')),
-          findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('unread-amara')),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('unread-daniel')), findsNothing);
     });
 
-    testWidgets('I wrote the last message: it is prefixed with "You:"',
-        (tester) async {
+    testWidgets('I wrote the last message: it is prefixed with "You:"', (
+      tester,
+    ) async {
       service.convs = [
         sampleConversation(lastBody: 'On my way', lastAuthor: meId),
       ];
@@ -264,7 +297,9 @@ void main() {
     });
 
     testWidgets('a photo-only last message shows "Photo"', (tester) async {
-      service.convs = [sampleConversation(lastBody: null, lastAttachment: 'c/1.jpg')];
+      service.convs = [
+        sampleConversation(lastBody: null, lastAttachment: 'c/1.jpg'),
+      ];
       await pump(tester);
 
       expect(find.text('📷 Photo'), findsOneWidget);
@@ -272,7 +307,11 @@ void main() {
 
     testWidgets('my own photo is prefixed too', (tester) async {
       service.convs = [
-        sampleConversation(lastBody: null, lastAttachment: 'c/1.jpg', lastAuthor: meId),
+        sampleConversation(
+          lastBody: null,
+          lastAttachment: 'c/1.jpg',
+          lastAuthor: meId,
+        ),
       ];
       await pump(tester);
 
@@ -282,17 +321,26 @@ void main() {
     testWidgets('no messages yet: an invitation to say hello', (tester) async {
       await pump(tester);
 
-      expect(find.descendant(of: tile('chidi'), matching: find.text('No messages yet. Say hello!')),
-          findsOneWidget);
+      expect(
+        find.descendant(
+          of: tile('chidi'),
+          matching: find.text('No messages yet. Say hello!'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a completed delivery is marked Completed ✓', (tester) async {
       await pump(tester);
 
-      expect(find.descendant(of: tile('maya'), matching: find.text('Completed ✓')),
-          findsOneWidget);
-      expect(find.descendant(of: tile('maya'), matching: find.text('Documents')),
-          findsNothing);
+      expect(
+        find.descendant(of: tile('maya'), matching: find.text('Completed ✓')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: tile('maya'), matching: find.text('Documents')),
+        findsNothing,
+      );
     });
 
     testWidgets('a person with no name still shows something', (tester) async {
@@ -312,8 +360,9 @@ void main() {
       expect(find.text('Completed (1)'), findsOneWidget); // delivered
     });
 
-    testWidgets('Active shows accepted and paid, not delivered or declined',
-        (tester) async {
+    testWidgets('Active shows accepted and paid, not delivered or declined', (
+      tester,
+    ) async {
       await pump(tester);
 
       await tapKey(tester, 'messages-filter-1');
@@ -363,8 +412,9 @@ void main() {
       expect(find.text('No conversations match your search'), findsOneWidget);
     });
 
-    testWidgets('has no Support filter (there are no support threads)',
-        (tester) async {
+    testWidgets('has no Support filter (there are no support threads)', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(find.text('Support'), findsNothing);
@@ -373,7 +423,10 @@ void main() {
 
   group('search', () {
     Future<void> search(WidgetTester tester, String text) async {
-      await tester.enterText(find.byKey(const ValueKey('messages-search')), text);
+      await tester.enterText(
+        find.byKey(const ValueKey('messages-search')),
+        text,
+      );
       await tester.pumpAndSettle();
     }
 
@@ -490,15 +543,19 @@ void main() {
       expect(service.conversationCalls, greaterThan(1));
     });
 
-    testWidgets('reading a chat clears its unread badge on return',
-        (tester) async {
+    testWidgets('reading a chat clears its unread badge on return', (
+      tester,
+    ) async {
       await pump(tester);
       expect(find.byKey(const ValueKey('unread-amara')), findsOneWidget);
       await tester.tap(tile('amara'));
       await tester.pumpAndSettle();
 
       // Meanwhile the server has marked it read.
-      service.convs = [for (final c in mixed()) c.id == 'amara' ? sampleConversation(id: 'amara', unread: 0) : c];
+      service.convs = [
+        for (final c in mixed())
+          c.id == 'amara' ? sampleConversation(id: 'amara', unread: 0) : c,
+      ];
       await tester.tap(find.byKey(const ValueKey('chat-back')));
       await tester.pumpAndSettle();
 
@@ -526,7 +583,12 @@ void main() {
       expect(find.text('All caught up'), findsNothing);
 
       service.convs = [
-        sampleConversation(id: 'new', firstName: 'Zoe', lastName: 'Park', unread: 4),
+        sampleConversation(
+          id: 'new',
+          firstName: 'Zoe',
+          lastName: 'Park',
+          unread: 4,
+        ),
       ];
       await tester.pump(const Duration(seconds: 15));
       await tester.pump();
@@ -566,8 +628,9 @@ void main() {
       expect(service.conversationCalls, 1);
     });
 
-    testWidgets('pauses in the background and catches up on return',
-        (tester) async {
+    testWidgets('pauses in the background and catches up on return', (
+      tester,
+    ) async {
       await pump(tester);
 
       // The real order the OS reports when the app goes to the background...

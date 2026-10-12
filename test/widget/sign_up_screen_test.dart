@@ -43,8 +43,9 @@ void main() {
       expect(find.text('United States'), findsOneWidget);
     });
 
-    testWidgets('renders the US flag emoji for the selected country',
-        (tester) async {
+    testWidgets('renders the US flag emoji for the selected country', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSignUp());
       await tester.pump();
 
@@ -52,15 +53,17 @@ void main() {
       expect(find.text('🇺🇸'), findsWidgets);
     });
 
-    testWidgets('typing in country field triggers suggestion list',
-        (tester) async {
+    testWidgets('typing in country field triggers suggestion list', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSignUp());
       await tester.pump();
 
       // Find the country TextField (inside _CountryField)
       // It has a hint 'Type to search country...'
-      final countryField =
-          find.widgetWithText(TextField, 'United States').first;
+      final countryField = find
+          .widgetWithText(TextField, 'United States')
+          .first;
       await tester.tap(countryField);
       await tester.pump();
 
@@ -73,13 +76,15 @@ void main() {
       expect(find.text('Ghana'), findsWidgets);
     });
 
-    testWidgets('selecting a suggestion updates the field and phone code',
-        (tester) async {
+    testWidgets('selecting a suggestion updates the field and phone code', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSignUp());
       await tester.pump();
 
-      final countryField =
-          find.widgetWithText(TextField, 'United States').first;
+      final countryField = find
+          .widgetWithText(TextField, 'United States')
+          .first;
       await tester.tap(countryField);
       await tester.pump();
       await tester.enterText(countryField, 'Ghana');
@@ -139,8 +144,9 @@ void main() {
       expect(btn.onPressed, isNotNull);
     });
 
-    testWidgets('tapping Create Account with empty fields shows error',
-        (tester) async {
+    testWidgets('tapping Create Account with empty fields shows error', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSignUp());
       await tester.pump();
 
@@ -187,8 +193,9 @@ void main() {
       expect(find.text('Nata'), findsOneWidget);
     });
 
-    testWidgets('entering first name after error still shows form fields',
-        (tester) async {
+    testWidgets('entering first name after error still shows form fields', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSignUp());
       await tester.pump();
 
@@ -241,15 +248,20 @@ void main() {
       }
     });
 
-    testWidgets('the name fields start empty, so the placeholders show',
-        (tester) async {
+    testWidgets('the name fields start empty, so the placeholders show', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSignUp());
       await tester.pump();
 
-      expect(tester.widget<TextField>(find.byType(TextField).at(0)).controller?.text,
-          isEmpty);
-      expect(tester.widget<TextField>(find.byType(TextField).at(1)).controller?.text,
-          isEmpty);
+      expect(
+        tester.widget<TextField>(find.byType(TextField).at(0)).controller?.text,
+        isEmpty,
+      );
+      expect(
+        tester.widget<TextField>(find.byType(TextField).at(1)).controller?.text,
+        isEmpty,
+      );
       expect(find.text('John'), findsOneWidget);
       expect(find.text('Doe'), findsOneWidget);
     });
@@ -280,12 +292,14 @@ void main() {
       // text; what matters is that the fields now hold what was typed.)
     });
 
-    testWidgets('the placeholders are the same in every language',
-        (tester) async {
+    testWidgets('the placeholders are the same in every language', (
+      tester,
+    ) async {
       for (final l in ['es', 'fr']) {
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pumpWidget(
-            appWrapper(const SignUpScreen(), locale: Locale(l)));
+          appWrapper(const SignUpScreen(), locale: Locale(l)),
+        );
         await tester.pump();
 
         expect(hint(tester, 0), 'John');

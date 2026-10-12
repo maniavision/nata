@@ -25,28 +25,32 @@ void main() {
   final pickerCalls = <bool>[];
 
   List<ChatMessage> sample() => [
-        sampleMessage(
-            id: 'm1',
-            author: 'other-1',
-            body: 'Hi! Can you carry my parcel?',
-            createdAt: DateTime(2030, 6, 14, 18, 5)),
-        sampleMessage(
-            id: 'm2',
-            author: meId,
-            body: 'Yes, I have space.',
-            readAt: DateTime(2030, 6, 14, 18, 10),
-            createdAt: DateTime(2030, 6, 14, 18, 8)),
-        sampleMessage(
-            id: 'm3',
-            author: 'other-1',
-            body: 'Great, see you tomorrow.',
-            createdAt: DateTime(2030, 6, 15, 10, 30)),
-        sampleMessage(
-            id: 'm4',
-            author: meId,
-            body: 'On my way!',
-            createdAt: DateTime(2030, 6, 15, 11, 45)),
-      ];
+    sampleMessage(
+      id: 'm1',
+      author: 'other-1',
+      body: 'Hi! Can you carry my parcel?',
+      createdAt: DateTime(2030, 6, 14, 18, 5),
+    ),
+    sampleMessage(
+      id: 'm2',
+      author: meId,
+      body: 'Yes, I have space.',
+      readAt: DateTime(2030, 6, 14, 18, 10),
+      createdAt: DateTime(2030, 6, 14, 18, 8),
+    ),
+    sampleMessage(
+      id: 'm3',
+      author: 'other-1',
+      body: 'Great, see you tomorrow.',
+      createdAt: DateTime(2030, 6, 15, 10, 30),
+    ),
+    sampleMessage(
+      id: 'm4',
+      author: meId,
+      body: 'On my way!',
+      createdAt: DateTime(2030, 6, 15, 11, 45),
+    ),
+  ];
 
   setUp(() {
     conv = sampleConversation(id: 'conv-1');
@@ -75,15 +79,17 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpWidget(appWrapper(
-      ChatThreadScreen(
-        conversation: conversation ?? conv,
-        service: service,
-        photoPicker: fakePicker,
-        now: () => now,
+    await tester.pumpWidget(
+      appWrapper(
+        ChatThreadScreen(
+          conversation: conversation ?? conv,
+          service: service,
+          photoPicker: fakePicker,
+          now: () => now,
+        ),
+        locale: locale,
       ),
-      locale: locale,
-    ));
+    );
     if (settle) await tester.pumpAndSettle();
   }
 
@@ -117,7 +123,10 @@ void main() {
     testWidgets('shows the route and the item', (tester) async {
       await pump(tester);
 
-      expect(find.text('Lagos → London · iPhone 15 Pro (sealed)'), findsOneWidget);
+      expect(
+        find.text('Lagos → London · iPhone 15 Pro (sealed)'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('no verified badge for an unverified person', (tester) async {
@@ -130,16 +139,26 @@ void main() {
       tester.view.physicalSize = const Size(900, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(appWrapper(Builder(
-        builder: (context) => Scaffold(
-          body: TextButton(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => ChatThreadScreen(
-                    conversation: conv, service: service, now: () => now))),
-            child: const Text('open'),
+      await tester.pumpWidget(
+        appWrapper(
+          Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ChatThreadScreen(
+                      conversation: conv,
+                      service: service,
+                      now: () => now,
+                    ),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
           ),
         ),
-      )));
+      );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       expect(find.byType(ChatThreadScreen), findsOneWidget);
@@ -220,19 +239,27 @@ void main() {
       await pump(tester);
 
       final screenMid = tester.view.physicalSize.width / 2;
-      expect(tester.getCenter(find.text('On my way!')).dx, greaterThan(screenMid));
-      expect(tester.getCenter(find.text('Great, see you tomorrow.')).dx,
-          lessThan(screenMid));
+      expect(
+        tester.getCenter(find.text('On my way!')).dx,
+        greaterThan(screenMid),
+      );
+      expect(
+        tester.getCenter(find.text('Great, see you tomorrow.')).dx,
+        lessThan(screenMid),
+      );
     });
 
-    testWidgets('start at the newest message with no scrolling', (tester) async {
+    testWidgets('start at the newest message with no scrolling', (
+      tester,
+    ) async {
       service.thread['conv-1'] = [
         for (var i = 0; i < 60; i++)
           sampleMessage(
-              id: 'x$i',
-              author: i.isEven ? 'other-1' : meId,
-              body: 'Message number $i',
-              createdAt: DateTime(2030, 6, 15, 8).add(Duration(minutes: i))),
+            id: 'x$i',
+            author: i.isEven ? 'other-1' : meId,
+            body: 'Message number $i',
+            createdAt: DateTime(2030, 6, 15, 8).add(Duration(minutes: i)),
+          ),
       ];
       await pump(tester);
 
@@ -247,8 +274,9 @@ void main() {
       expect(find.textContaining('10:30 AM'), findsOneWidget);
     });
 
-    testWidgets('my messages say Sent, or Read once they were seen',
-        (tester) async {
+    testWidgets('my messages say Sent, or Read once they were seen', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(find.text('6:08 PM · Read ✓✓'), findsOneWidget);
@@ -266,13 +294,17 @@ void main() {
 
       expect(find.text('Yesterday'), findsOneWidget);
       expect(find.text('Today'), findsOneWidget);
-      expect(top(tester, find.text('Yesterday')), lessThan(top(tester, msg('m1'))));
+      expect(
+        top(tester, find.text('Yesterday')),
+        lessThan(top(tester, msg('m1'))),
+      );
       expect(top(tester, msg('m2')), lessThan(top(tester, find.text('Today'))));
       expect(top(tester, find.text('Today')), lessThan(top(tester, msg('m3'))));
     });
 
-    testWidgets('older days show the date, and other years the year',
-        (tester) async {
+    testWidgets('older days show the date, and other years the year', (
+      tester,
+    ) async {
       service.thread['conv-1'] = [
         sampleMessage(id: 'a', createdAt: DateTime(2030, 6, 3, 9)),
         sampleMessage(id: 'b', createdAt: DateTime(2029, 12, 24, 9)),
@@ -289,8 +321,9 @@ void main() {
       expect(find.text('Today'), findsOneWidget); // m3 and m4 share a day
     });
 
-    testWidgets('a photo-only message has no empty text bubble',
-        (tester) async {
+    testWidgets('a photo-only message has no empty text bubble', (
+      tester,
+    ) async {
       service.thread['conv-1'] = [
         sampleMessage(id: 'p', body: null, attachment: 'conv-1/1.jpg'),
       ];
@@ -301,17 +334,23 @@ void main() {
   });
 
   group('reading', () {
-    testWidgets('opening a chat marks the other person\'s messages as read',
-        (tester) async {
+    testWidgets('opening a chat marks the other person\'s messages as read', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(service.markedRead, ['conv-1']);
     });
 
-    testWidgets('nothing to mark when they are all already read',
-        (tester) async {
+    testWidgets('nothing to mark when they are all already read', (
+      tester,
+    ) async {
       service.thread['conv-1'] = [
-        sampleMessage(id: 'a', author: 'other-1', readAt: DateTime(2030, 6, 15, 9)),
+        sampleMessage(
+          id: 'a',
+          author: 'other-1',
+          readAt: DateTime(2030, 6, 15, 9),
+        ),
         sampleMessage(id: 'b', author: meId),
       ];
       await pump(tester);
@@ -326,17 +365,26 @@ void main() {
       expect(service.markedRead, isEmpty);
     });
 
-    testWidgets('a new message from them is marked read on the next refresh',
-        (tester) async {
+    testWidgets('a new message from them is marked read on the next refresh', (
+      tester,
+    ) async {
       service.thread['conv-1'] = [
-        sampleMessage(id: 'a', author: 'other-1', readAt: DateTime(2030, 6, 15, 9)),
+        sampleMessage(
+          id: 'a',
+          author: 'other-1',
+          readAt: DateTime(2030, 6, 15, 9),
+        ),
       ];
       await pump(tester);
       expect(service.markedRead, isEmpty);
 
       service.thread['conv-1'] = [
         ...service.thread['conv-1']!,
-        sampleMessage(id: 'b', author: 'other-1', createdAt: DateTime(2030, 6, 15, 11)),
+        sampleMessage(
+          id: 'b',
+          author: 'other-1',
+          createdAt: DateTime(2030, 6, 15, 11),
+        ),
       ];
       await tester.pump(const Duration(seconds: 4));
       await tester.pump();
@@ -346,8 +394,9 @@ void main() {
   });
 
   group('sending text', () {
-    testWidgets('has an input, a send button and the camera / attach buttons',
-        (tester) async {
+    testWidgets('has an input, a send button and the camera / attach buttons', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
@@ -375,10 +424,12 @@ void main() {
       await send(tester, 'Hello');
 
       expect(
-          tester.widget<TextField>(find.byKey(const ValueKey('chat-input')))
-              .controller!
-              .text,
-          isEmpty);
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('chat-input')))
+            .controller!
+            .text,
+        isEmpty,
+      );
     });
 
     testWidgets('trims the text', (tester) async {
@@ -398,8 +449,9 @@ void main() {
       expect(service.sent, isEmpty);
     });
 
-    testWidgets('shows "Sending…" until it is confirmed, then "Sent"',
-        (tester) async {
+    testWidgets('shows "Sending…" until it is confirmed, then "Sent"', (
+      tester,
+    ) async {
       service.sendGate = Completer<void>();
       await pump(tester);
 
@@ -434,16 +486,21 @@ void main() {
       await send(tester, 'second new');
       await send(tester, 'third new');
 
-      expect(top(tester, find.text('first new')),
-          lessThan(top(tester, find.text('second new'))));
-      expect(top(tester, find.text('second new')),
-          lessThan(top(tester, find.text('third new'))));
+      expect(
+        top(tester, find.text('first new')),
+        lessThan(top(tester, find.text('second new'))),
+      );
+      expect(
+        top(tester, find.text('second new')),
+        lessThan(top(tester, find.text('third new'))),
+      );
     });
   });
 
   group('when sending fails', () {
-    testWidgets('the message stays, marked "Not sent · tap to retry"',
-        (tester) async {
+    testWidgets('the message stays, marked "Not sent · tap to retry"', (
+      tester,
+    ) async {
       service.failSend = true;
       await pump(tester);
 
@@ -454,8 +511,9 @@ void main() {
       expect(service.sent, isEmpty);
     });
 
-    testWidgets('tapping it tries again, and it then goes through',
-        (tester) async {
+    testWidgets('tapping it tries again, and it then goes through', (
+      tester,
+    ) async {
       service.failSend = true;
       await pump(tester);
       await send(tester, 'Retry me');
@@ -509,15 +567,20 @@ void main() {
   });
 
   group('refreshing by itself', () {
-    testWidgets('new messages appear every 4 seconds without leaving',
-        (tester) async {
+    testWidgets('new messages appear every 4 seconds without leaving', (
+      tester,
+    ) async {
       await pump(tester);
       final before = service.messageCalls;
 
       service.thread['conv-1'] = [
         ...service.thread['conv-1']!,
-        sampleMessage(id: 'new', author: 'other-1', body: 'Just landed!',
-            createdAt: DateTime(2030, 6, 15, 11, 59)),
+        sampleMessage(
+          id: 'new',
+          author: 'other-1',
+          body: 'Just landed!',
+          createdAt: DateTime(2030, 6, 15, 11, 59),
+        ),
       ];
       await tester.pump(const Duration(seconds: 3));
       expect(find.text('Just landed!'), findsNothing);
@@ -535,9 +598,13 @@ void main() {
       service.thread['conv-1'] = [
         for (final m in service.thread['conv-1']!)
           m.id == 'm4'
-              ? sampleMessage(id: 'm4', author: meId, body: 'On my way!',
+              ? sampleMessage(
+                  id: 'm4',
+                  author: meId,
+                  body: 'On my way!',
                   readAt: DateTime(2030, 6, 15, 11, 50),
-                  createdAt: DateTime(2030, 6, 15, 11, 45))
+                  createdAt: DateTime(2030, 6, 15, 11, 45),
+                )
               : m,
       ];
       await tester.pump(const Duration(seconds: 4));
@@ -567,8 +634,9 @@ void main() {
       expect(service.messageCalls, calls);
     });
 
-    testWidgets('pauses in the background and catches up on return',
-        (tester) async {
+    testWidgets('pauses in the background and catches up on return', (
+      tester,
+    ) async {
       await pump(tester);
       final calls = service.messageCalls;
 
@@ -606,8 +674,9 @@ void main() {
       expect(service.sent.single.body, isNull);
     });
 
-    testWidgets('the attach button chooses one from the library',
-        (tester) async {
+    testWidgets('the attach button chooses one from the library', (
+      tester,
+    ) async {
       await pump(tester);
 
       await tapKey(tester, 'chat-gallery');
@@ -674,8 +743,9 @@ void main() {
       expect(service.sent, isEmpty);
     });
 
-    testWidgets('retrying a failed photo uploads it again and sends it',
-        (tester) async {
+    testWidgets('retrying a failed photo uploads it again and sends it', (
+      tester,
+    ) async {
       service.failUpload = true;
       await pump(tester);
       await tapKey(tester, 'chat-camera');
@@ -701,11 +771,16 @@ void main() {
       expect(find.byKey(const ValueKey('chat-notice')), findsNothing);
     });
 
-    testWidgets('photos from the other person load through a signed link',
-        (tester) async {
+    testWidgets('photos from the other person load through a signed link', (
+      tester,
+    ) async {
       service.thread['conv-1'] = [
-        sampleMessage(id: 'p1', author: 'other-1', body: 'Here it is',
-            attachment: 'conv-1/9.jpg'),
+        sampleMessage(
+          id: 'p1',
+          author: 'other-1',
+          body: 'Here it is',
+          attachment: 'conv-1/9.jpg',
+        ),
       ];
       await pump(tester);
 
@@ -713,8 +788,9 @@ void main() {
       expect(find.text('Here it is'), findsOneWidget);
     });
 
-    testWidgets('a photo that cannot be loaded shows a placeholder',
-        (tester) async {
+    testWidgets('a photo that cannot be loaded shows a placeholder', (
+      tester,
+    ) async {
       service.failAttachmentUrl = true;
       service.thread['conv-1'] = [
         sampleMessage(id: 'p1', body: null, attachment: 'conv-1/9.jpg'),
@@ -724,21 +800,23 @@ void main() {
       expect(find.text('Photo unavailable'), findsOneWidget);
     });
 
-    testWidgets('tapping a photo opens it full screen, tapping again closes it',
-        (tester) async {
-      service.thread['conv-1'] = [
-        sampleMessage(id: 'p1', body: null, attachment: 'conv-1/9.jpg'),
-      ];
-      await pump(tester);
+    testWidgets(
+      'tapping a photo opens it full screen, tapping again closes it',
+      (tester) async {
+        service.thread['conv-1'] = [
+          sampleMessage(id: 'p1', body: null, attachment: 'conv-1/9.jpg'),
+        ];
+        await pump(tester);
 
-      await tester.tap(find.byKey(const ValueKey('photo-p1')));
-      await tester.pumpAndSettle();
-      expect(find.byType(InteractiveViewer), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('photo-p1')));
+        await tester.pumpAndSettle();
+        expect(find.byType(InteractiveViewer), findsOneWidget);
 
-      await tester.tap(find.byType(InteractiveViewer));
-      await tester.pumpAndSettle();
-      expect(find.byType(InteractiveViewer), findsNothing);
-    });
+        await tester.tap(find.byType(InteractiveViewer));
+        await tester.pumpAndSettle();
+        expect(find.byType(InteractiveViewer), findsNothing);
+      },
+    );
   });
 
   group('translations', () {

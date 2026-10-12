@@ -11,16 +11,15 @@ TravelerTrip trav(
   double? rating = 4.5,
   String tripId = '',
   String city = 'Lagos',
-}) =>
-    sampleTrip(
-      tripId: tripId.isEmpty ? 'trip-$id' : tripId,
-      travelerId: id,
-      firstName: id,
-      lastName: 'X',
-      itemsDelivered: delivered,
-      avgRating: rating,
-      departureCity: city,
-    );
+}) => sampleTrip(
+  tripId: tripId.isEmpty ? 'trip-$id' : tripId,
+  travelerId: id,
+  firstName: id,
+  lastName: 'X',
+  itemsDelivered: delivered,
+  avgRating: rating,
+  departureCity: city,
+);
 
 List<String> ids(List<TravelerTrip> l) => l.map((t) => t.travelerId).toList();
 
@@ -80,17 +79,19 @@ void main() {
       expect(ids(pool), ['first', 'second', 'third']);
     });
 
-    test('a traveler with several trips appears once, with their first trip',
-        () {
-      final pool = topTravelerPool([
-        trav('a', delivered: 30, tripId: 'a-soon', city: 'Lagos'),
-        trav('b', delivered: 10),
-        trav('a', delivered: 30, tripId: 'a-later', city: 'Abuja'),
-      ]);
+    test(
+      'a traveler with several trips appears once, with their first trip',
+      () {
+        final pool = topTravelerPool([
+          trav('a', delivered: 30, tripId: 'a-soon', city: 'Lagos'),
+          trav('b', delivered: 10),
+          trav('a', delivered: 30, tripId: 'a-later', city: 'Abuja'),
+        ]);
 
-      expect(ids(pool), ['a', 'b']);
-      expect(pool.first.tripId, 'a-soon');
-    });
+        expect(ids(pool), ['a', 'b']);
+        expect(pool.first.tripId, 'a-soon');
+      },
+    );
 
     test('an empty list gives an empty pool', () {
       expect(topTravelerPool([]), isEmpty);
@@ -117,8 +118,11 @@ void main() {
     test('only ever picks from the top-delivery pool', () {
       for (var seed = 0; seed < 200; seed++) {
         final picked = ids(pickTopTravelers(many, Random(seed)));
-        expect(top10.containsAll(picked), isTrue,
-            reason: 'seed $seed picked $picked');
+        expect(
+          top10.containsAll(picked),
+          isTrue,
+          reason: 'seed $seed picked $picked',
+        );
       }
     });
 
@@ -138,8 +142,10 @@ void main() {
     });
 
     test('the same seed gives the same picks', () {
-      expect(ids(pickTopTravelers(many, Random(7))),
-          ids(pickTopTravelers(many, Random(7))));
+      expect(
+        ids(pickTopTravelers(many, Random(7))),
+        ids(pickTopTravelers(many, Random(7))),
+      );
     });
 
     test('different draws give different travelers over time', () {
@@ -180,8 +186,10 @@ void main() {
       final picked = pickTopTravelers(eight, Random(5));
 
       expect(picked.length, 5);
-      expect(eight.map((t) => t.travelerId).toSet().containsAll(ids(picked)),
-          isTrue);
+      expect(
+        eight.map((t) => t.travelerId).toSet().containsAll(ids(picked)),
+        isTrue,
+      );
     });
 
     test('an empty list gives nothing', () {

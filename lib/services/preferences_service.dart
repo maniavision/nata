@@ -148,12 +148,10 @@ class PreferencesService extends ChangeNotifier {
   Future<void> get pendingWrites => _lastWrite;
 
   /// Sets language by locale code (e.g. 'en', 'es', 'fr').
-  void setLanguageCode(String code) =>
-      setLanguage(AppLanguage.fromCode(code));
+  void setLanguageCode(String code) => setLanguage(AppLanguage.fromCode(code));
 
   /// Sets currency by code (e.g. 'USD', 'EUR').
-  void setCurrencyCode(String code) =>
-      setCurrency(AppCurrency.fromCode(code));
+  void setCurrencyCode(String code) => setCurrency(AppCurrency.fromCode(code));
 
   // ── Persistence ────────────────────────────────────────────────────────────
 
@@ -167,20 +165,16 @@ class PreferencesService extends ChangeNotifier {
 
     try {
       // Ensure nata.profiles row exists (trigger may not have fired yet)
-      await client
-          .schema('nata')
-          .from('profiles')
-          .upsert({'id': userId}, onConflict: 'id');
+      await client.schema('nata').from('profiles').upsert({
+        'id': userId,
+      }, onConflict: 'id');
 
       // Now upsert the user settings
-      await client
-          .schema('nata')
-          .from('user_settings')
-          .upsert({
-            'user_id': userId,
-            'language': _language.code,
-            'currency_code': _currency.code,
-          }, onConflict: 'user_id');
+      await client.schema('nata').from('user_settings').upsert({
+        'user_id': userId,
+        'language': _language.code,
+        'currency_code': _currency.code,
+      }, onConflict: 'user_id');
     } catch (e) {
       debugPrint('PreferencesService.saveToProfile: $e');
     }
@@ -206,7 +200,8 @@ class PreferencesService extends ChangeNotifier {
       }
       if (row['currency_code'] != null) {
         _currency = AppCurrency.fromCode(
-            (row['currency_code'] as String).trim());
+          (row['currency_code'] as String).trim(),
+        );
       }
       notifyListeners();
     } catch (e) {

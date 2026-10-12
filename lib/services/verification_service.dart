@@ -31,11 +31,13 @@ class VerificationService {
 
     final path = '$uid/$fileName';
 
-    await _client.storage.from('identity-documents').uploadBinary(
-      path,
-      bytes,
-      fileOptions: FileOptions(contentType: mimeType, upsert: true),
-    );
+    await _client.storage
+        .from('identity-documents')
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: true),
+        );
 
     return path;
   }
@@ -64,8 +66,7 @@ class VerificationService {
           'id_document_type': docType,
           'id_document_path': documentPath,
           'status': 'pending',
-        },
-            onConflict: 'user_id')
+        }, onConflict: 'user_id')
         .select()
         .single();
 

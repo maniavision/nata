@@ -36,11 +36,7 @@ class LocationSearchSheet extends StatefulWidget {
   final String title;
   final LocationSelection? initial;
 
-  const LocationSearchSheet({
-    super.key,
-    required this.title,
-    this.initial,
-  });
+  const LocationSearchSheet({super.key, required this.title, this.initial});
 
   static Future<LocationSelection?> show(
     BuildContext context, {
@@ -114,8 +110,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     setState(() => _loading = true);
     try {
       if (_step == 0) {
-        final results =
-            await LocationSearchService().searchCountries(query);
+        final results = await LocationSearchService().searchCountries(query);
         if (mounted) setState(() => _countryResults = results);
       } else {
         final results = await LocationSearchService().searchCities(
@@ -141,13 +136,15 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   }
 
   void _selectCity(CityResult city) {
-    Navigator.of(context).pop(LocationSelection(
-      country: _selectedCountry!.name,
-      countryCode: _selectedCountry!.isoCode,
-      city: city.name,
-      displayLabel: city.displayName,
-      cityId: city.id,
-    ));
+    Navigator.of(context).pop(
+      LocationSelection(
+        country: _selectedCountry!.name,
+        countryCode: _selectedCountry!.isoCode,
+        city: city.name,
+        displayLabel: city.displayName,
+        cityId: city.id,
+      ),
+    );
   }
 
   void _goBackToCountry() {
@@ -161,8 +158,9 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     _search('');
   }
 
-  String get _hintText =>
-      _step == 0 ? 'Search country...' : 'Search city in ${_selectedCountry?.name}...';
+  String get _hintText => _step == 0
+      ? 'Search country...'
+      : 'Search city in ${_selectedCountry?.name}...';
 
   String _flagEmoji(String isoCode) {
     if (isoCode.length != 2) return '🌍';
@@ -182,8 +180,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
       padding: EdgeInsets.only(bottom: bottomPad),
       duration: const Duration(milliseconds: 150),
       child: ClipRRect(
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         child: Container(
           height: sheetHeight,
           color: AppColors.card,
@@ -203,147 +200,161 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   }
 
   Widget _buildDragHandle() => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 4),
-        child: Container(
-          width: 48,
-          height: 6,
-          decoration: BoxDecoration(
-            color: AppColors.muted,
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 12, bottom: 4),
+    child: Container(
+      width: 48,
+      height: 6,
+      decoration: BoxDecoration(
+        color: AppColors.muted,
+        borderRadius: BorderRadius.circular(999),
+      ),
+    ),
+  );
 
   Widget _buildHeader() => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-        child: Row(
-          children: [
-            if (_step == 1)
-              GestureDetector(
-                onTap: _goBackToCountry,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  margin: const EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back_rounded,
-                      size: 16, color: AppColors.foreground),
-                ),
+    padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+    child: Row(
+      children: [
+        if (_step == 1)
+          GestureDetector(
+            onTap: _goBackToCountry,
+            child: Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(right: 10),
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                shape: BoxShape.circle,
               ),
-            Expanded(
-              child: Text(
-                _step == 0 ? widget.title : 'Select City',
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  color: AppColors.foreground,
-                ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                size: 16,
+                color: AppColors.foreground,
               ),
             ),
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.close_rounded,
-                    size: 16, color: AppColors.mutedForeground),
-              ),
+          ),
+        Expanded(
+          child: Text(
+            _step == 0 ? widget.title : 'Select City',
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              color: AppColors.foreground,
             ),
-          ],
+          ),
         ),
-      );
+        GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.secondary,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildSearchBar() => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.input,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _focusNode.hasFocus ? AppColors.ring : AppColors.border,
-              width: _focusNode.hasFocus ? 2 : 1,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Row(
-            children: [
-              const Icon(Icons.search_rounded,
-                  size: 18, color: AppColors.mutedForeground),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _searchCtrl,
-                  focusNode: _focusNode,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 14,
-                    color: AppColors.foreground,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: _hintText,
-                    hintStyle: GoogleFonts.dmSans(
-                      fontSize: 14,
-                      color: AppColors.mutedForeground,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    isDense: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-              if (_searchCtrl.text.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    _searchCtrl.clear();
-                    _search('');
-                  },
-                  child: const Icon(Icons.close_rounded,
-                      size: 16, color: AppColors.mutedForeground),
-                ),
-            ],
-          ),
+    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+    child: Container(
+      decoration: BoxDecoration(
+        color: AppColors.input,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _focusNode.hasFocus ? AppColors.ring : AppColors.border,
+          width: _focusNode.hasFocus ? 2 : 1,
         ),
-      );
-
-  Widget _buildCountryBreadcrumb() => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-        child: Row(
-          children: [
-            Text(
-              _flagEmoji(_selectedCountry?.isoCode ?? ''),
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              _selectedCountry?.name ?? '',
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.search_rounded,
+            size: 18,
+            color: AppColors.mutedForeground,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _searchCtrl,
+              focusNode: _focusNode,
               style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: AppColors.primary,
+                fontSize: 14,
+                color: AppColors.foreground,
+              ),
+              decoration: InputDecoration(
+                hintText: _hintText,
+                hintStyle: GoogleFonts.dmSans(
+                  fontSize: 14,
+                  color: AppColors.mutedForeground,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right_rounded,
-                size: 16, color: AppColors.mutedForeground),
-            Text(
-              'Select city',
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
+          ),
+          if (_searchCtrl.text.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchCtrl.clear();
+                _search('');
+              },
+              child: const Icon(
+                Icons.close_rounded,
+                size: 16,
                 color: AppColors.mutedForeground,
               ),
             ),
-          ],
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildCountryBreadcrumb() => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+    child: Row(
+      children: [
+        Text(
+          _flagEmoji(_selectedCountry?.isoCode ?? ''),
+          style: const TextStyle(fontSize: 16),
         ),
-      );
+        const SizedBox(width: 6),
+        Text(
+          _selectedCountry?.name ?? '',
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(width: 4),
+        const Icon(
+          Icons.chevron_right_rounded,
+          size: 16,
+          color: AppColors.mutedForeground,
+        ),
+        Text(
+          'Select city',
+          style: GoogleFonts.dmSans(
+            fontSize: 13,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildResultsList() {
     if (_loading) {
@@ -355,15 +366,17 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
       );
     }
 
-    final isEmpty =
-        _step == 0 ? _countryResults.isEmpty : _cityResults.isEmpty;
+    final isEmpty = _step == 0 ? _countryResults.isEmpty : _cityResults.isEmpty;
     if (isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.search_off_rounded,
-                size: 40, color: AppColors.muted),
+            const Icon(
+              Icons.search_off_rounded,
+              size: 40,
+              color: AppColors.muted,
+            ),
             const SizedBox(height: 8),
             Text(
               _step == 0
@@ -387,15 +400,18 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _countryResults.length,
       separatorBuilder: (_, __) => const Divider(
-          color: AppColors.border, height: 1, indent: 20, endIndent: 20),
+        color: AppColors.border,
+        height: 1,
+        indent: 20,
+        endIndent: 20,
+      ),
       itemBuilder: (context, i) {
         final country = _countryResults[i];
         return GestureDetector(
           onTap: () => _selectCountry(country),
           child: Container(
             color: Colors.transparent,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             child: Row(
               children: [
                 Text(
@@ -413,8 +429,11 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                     ),
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded,
-                    size: 18, color: AppColors.mutedForeground),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.mutedForeground,
+                ),
               ],
             ),
           ),
@@ -428,15 +447,18 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _cityResults.length,
       separatorBuilder: (_, __) => const Divider(
-          color: AppColors.border, height: 1, indent: 20, endIndent: 20),
+        color: AppColors.border,
+        height: 1,
+        indent: 20,
+        endIndent: 20,
+      ),
       itemBuilder: (context, i) {
         final city = _cityResults[i];
         return GestureDetector(
           onTap: () => _selectCity(city),
           child: Container(
             color: Colors.transparent,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             child: Row(
               children: [
                 Container(
@@ -446,8 +468,11 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                     color: AppColors.secondary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.location_city_rounded,
-                      size: 18, color: AppColors.primary),
+                  child: const Icon(
+                    Icons.location_city_rounded,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -472,8 +497,11 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded,
-                    size: 18, color: AppColors.mutedForeground),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.mutedForeground,
+                ),
               ],
             ),
           ),

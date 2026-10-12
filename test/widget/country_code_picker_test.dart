@@ -41,8 +41,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(TextField, 'Search country...'),
-          findsOneWidget);
+      expect(
+        find.widgetWithText(TextField, 'Search country...'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('bottom sheet shows close button', (tester) async {
@@ -86,7 +88,9 @@ void main() {
 
       // Find the selected country (the USA) and check that it is marked.
       await tester.enterText(
-          find.widgetWithText(TextField, 'Search country...'), 'United States');
+        find.widgetWithText(TextField, 'Search country...'),
+        'United States',
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -102,15 +106,18 @@ void main() {
 
       // Type "United" in the search field
       await tester.enterText(
-          find.widgetWithText(TextField, 'Search country...'), 'United');
+        find.widgetWithText(TextField, 'Search country...'),
+        'United',
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('United Kingdom'), findsOneWidget);
     });
 
-    testWidgets('selecting a country updates the login screen prefix',
-        (tester) async {
+    testWidgets('selecting a country updates the login screen prefix', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildLogin());
       await tester.pump();
 
@@ -120,7 +127,9 @@ void main() {
 
       // Search for Ghana (short, unambiguous)
       await tester.enterText(
-          find.widgetWithText(TextField, 'Search country...'), 'Ghana');
+        find.widgetWithText(TextField, 'Search country...'),
+        'Ghana',
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -134,8 +143,9 @@ void main() {
       expect(find.text('🇬🇭'), findsOneWidget);
     });
 
-    testWidgets('closing sheet without selection keeps original country',
-        (tester) async {
+    testWidgets('closing sheet without selection keeps original country', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildLogin());
       await tester.pump();
 

@@ -36,41 +36,48 @@ void main() {
 
   /// A realistic mix: two upcoming, three past.
   List<Trip> mixedTrips() => [
-        sampleMyTrip(
-            id: 'live', status: TripStatus.live, requests: 3,
-            departureDate: inDays(5)),
-        sampleMyTrip(
-            id: 'review',
-            status: TripStatus.pendingReview,
-            departureCity: 'Accra',
-            departureCountry: 'Ghana',
-            arrivalCity: 'Paris',
-            arrivalCountry: 'France',
-            maxWeightKg: 1,
-            maxSize: 'Envelope / Document',
-            departureDate: inDays(12)),
-        sampleMyTrip(
-            id: 'done',
-            status: TripStatus.completed,
-            departureCity: 'Lagos',
-            arrivalCity: 'Nairobi',
-            arrivalCountry: 'Kenya',
-            departureDate: inDays(-40),
-            delivered: 2),
-        sampleMyTrip(
-            id: 'cancelled',
-            status: TripStatus.cancelled,
-            departureCity: 'Abuja',
-            arrivalCity: 'Dubai',
-            departureDate: inDays(20)),
-        sampleMyTrip(
-            id: 'expired',
-            status: TripStatus.live,
-            departureCity: 'Kano',
-            arrivalCity: 'Cairo',
-            departureDate: inDays(-3),
-            arrivalDate: inDays(-2)),
-      ];
+    sampleMyTrip(
+      id: 'live',
+      status: TripStatus.live,
+      requests: 3,
+      departureDate: inDays(5),
+    ),
+    sampleMyTrip(
+      id: 'review',
+      status: TripStatus.pendingReview,
+      departureCity: 'Accra',
+      departureCountry: 'Ghana',
+      arrivalCity: 'Paris',
+      arrivalCountry: 'France',
+      maxWeightKg: 1,
+      maxSize: 'Envelope / Document',
+      departureDate: inDays(12),
+    ),
+    sampleMyTrip(
+      id: 'done',
+      status: TripStatus.completed,
+      departureCity: 'Lagos',
+      arrivalCity: 'Nairobi',
+      arrivalCountry: 'Kenya',
+      departureDate: inDays(-40),
+      delivered: 2,
+    ),
+    sampleMyTrip(
+      id: 'cancelled',
+      status: TripStatus.cancelled,
+      departureCity: 'Abuja',
+      arrivalCity: 'Dubai',
+      departureDate: inDays(20),
+    ),
+    sampleMyTrip(
+      id: 'expired',
+      status: TripStatus.live,
+      departureCity: 'Kano',
+      arrivalCity: 'Cairo',
+      departureDate: inDays(-3),
+      arrivalDate: inDays(-2),
+    ),
+  ];
 
   group('My Trips header and tabs', () {
     testWidgets('shows the title and the add button', (tester) async {
@@ -97,18 +104,25 @@ void main() {
       expect(find.text('Upcoming'), findsOneWidget);
       expect(find.text('Past'), findsOneWidget);
       // 2 upcoming (live + in review), 3 past (completed, cancelled, expired)
-      expect(find.descendant(
-              of: find.byKey(const ValueKey('trips-tab-0')),
-              matching: find.text('2')),
-          findsOneWidget);
-      expect(find.descendant(
-              of: find.byKey(const ValueKey('trips-tab-1')),
-              matching: find.text('3')),
-          findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('trips-tab-0')),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('trips-tab-1')),
+          matching: find.text('3'),
+        ),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('Upcoming is selected first and lists only upcoming trips',
-        (tester) async {
+    testWidgets('Upcoming is selected first and lists only upcoming trips', (
+      tester,
+    ) async {
       service.trips = mixedTrips();
       await pump(tester);
 
@@ -119,8 +133,9 @@ void main() {
       expect(find.byKey(const ValueKey('trip-card-expired')), findsNothing);
     });
 
-    testWidgets('the Past tab lists finished, cancelled and expired trips',
-        (tester) async {
+    testWidgets('the Past tab lists finished, cancelled and expired trips', (
+      tester,
+    ) async {
       service.trips = mixedTrips();
       await pump(tester);
 
@@ -156,8 +171,7 @@ void main() {
   });
 
   group('trip cards', () {
-    testWidgets('show the route, countries and departure date',
-        (tester) async {
+    testWidgets('show the route, countries and departure date', (tester) async {
       service.trips = [sampleMyTrip(departureDate: DateTime(2030, 6, 5))];
       await pump(tester);
 
@@ -167,8 +181,9 @@ void main() {
       expect(find.text('Departure'), findsOneWidget);
     });
 
-    testWidgets('show max weight, max size and the request count',
-        (tester) async {
+    testWidgets('show max weight, max size and the request count', (
+      tester,
+    ) async {
       service.trips = [sampleMyTrip(requests: 3)];
       await pump(tester);
 
@@ -204,9 +219,15 @@ void main() {
     testWidgets('status chips: Completed and Cancelled', (tester) async {
       service.trips = [
         sampleMyTrip(
-            id: 'a', status: TripStatus.completed, departureDate: inDays(-9)),
+          id: 'a',
+          status: TripStatus.completed,
+          departureDate: inDays(-9),
+        ),
         sampleMyTrip(
-            id: 'b', status: TripStatus.cancelled, departureDate: inDays(-8)),
+          id: 'b',
+          status: TripStatus.cancelled,
+          departureDate: inDays(-8),
+        ),
       ];
       await pump(tester);
       await tapKey(tester, 'trips-tab-1');
@@ -215,8 +236,9 @@ void main() {
       expect(find.text('Cancelled'), findsOneWidget);
     });
 
-    testWidgets('a published trip offers Edit and View Requests',
-        (tester) async {
+    testWidgets('a published trip offers Edit and View Requests', (
+      tester,
+    ) async {
       service.trips = [sampleMyTrip(id: 'live')];
       await pump(tester);
 
@@ -226,10 +248,10 @@ void main() {
       expect(find.text('View Requests'), findsOneWidget);
     });
 
-    testWidgets('a trip in review can be edited and explains the wait',
-        (tester) async {
-      service.trips =
-          [sampleMyTrip(id: 'r', status: TripStatus.pendingReview)];
+    testWidgets('a trip in review can be edited and explains the wait', (
+      tester,
+    ) async {
+      service.trips = [sampleMyTrip(id: 'r', status: TripStatus.pendingReview)];
       await pump(tester);
 
       expect(find.byKey(const ValueKey('trip-edit-r')), findsOneWidget);
@@ -237,13 +259,15 @@ void main() {
       expect(find.textContaining('reviewing your trip'), findsOneWidget);
     });
 
-    testWidgets('a completed trip summarises deliveries (plural)',
-        (tester) async {
+    testWidgets('a completed trip summarises deliveries (plural)', (
+      tester,
+    ) async {
       service.trips = [
         sampleMyTrip(
-            status: TripStatus.completed,
-            departureDate: inDays(-30),
-            delivered: 2),
+          status: TripStatus.completed,
+          departureDate: inDays(-30),
+          delivered: 2,
+        ),
       ];
       await pump(tester);
       await tapKey(tester, 'trips-tab-1');
@@ -253,13 +277,15 @@ void main() {
       expect(find.text('View Requests'), findsNothing);
     });
 
-    testWidgets('a completed trip summarises deliveries (singular)',
-        (tester) async {
+    testWidgets('a completed trip summarises deliveries (singular)', (
+      tester,
+    ) async {
       service.trips = [
         sampleMyTrip(
-            status: TripStatus.completed,
-            departureDate: inDays(-30),
-            delivered: 1),
+          status: TripStatus.completed,
+          departureDate: inDays(-30),
+          delivered: 1,
+        ),
       ];
       await pump(tester);
       await tapKey(tester, 'trips-tab-1');
@@ -269,7 +295,11 @@ void main() {
 
     testWidgets('past cards offer no edit actions', (tester) async {
       service.trips = [
-        sampleMyTrip(id: 'old', departureDate: inDays(-9), arrivalDate: inDays(-8)),
+        sampleMyTrip(
+          id: 'old',
+          departureDate: inDays(-9),
+          arrivalDate: inDays(-8),
+        ),
       ];
       await pump(tester);
       await tapKey(tester, 'trips-tab-1');
@@ -278,8 +308,9 @@ void main() {
       expect(find.text('3.0 kg'), findsNothing); // no stats row on past cards
     });
 
-    testWidgets('does not show invented flight numbers or earnings',
-        (tester) async {
+    testWidgets('does not show invented flight numbers or earnings', (
+      tester,
+    ) async {
       service.trips = mixedTrips();
       await pump(tester);
 
@@ -308,9 +339,10 @@ void main() {
     testWidgets('is shown on past trips too', (tester) async {
       service.trips = [
         sampleMyTrip(
-            status: TripStatus.completed,
-            departureDate: inDays(-30),
-            bookingReference: 'ABC123'),
+          status: TripStatus.completed,
+          departureDate: inDays(-30),
+          bookingReference: 'ABC123',
+        ),
       ];
       await pump(tester);
       await tapKey(tester, 'trips-tab-1');
@@ -320,11 +352,15 @@ void main() {
   });
 
   group('empty and error states', () {
-    testWidgets('no trips at all: upcoming empty state with an add button',
-        (tester) async {
+    testWidgets('no trips at all: upcoming empty state with an add button', (
+      tester,
+    ) async {
       await pump(tester);
 
-      expect(find.byKey(const ValueKey('trips-empty-upcoming')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('trips-empty-upcoming')),
+        findsOneWidget,
+      );
       expect(find.text('No upcoming trips'), findsOneWidget);
       expect(find.byKey(const ValueKey('trips-empty-add')), findsOneWidget);
     });
@@ -393,8 +429,9 @@ void main() {
       expect(find.byKey(const ValueKey('trip-card-new')), findsOneWidget);
     });
 
-    testWidgets('it does not reload when Add a Trip is cancelled',
-        (tester) async {
+    testWidgets('it does not reload when Add a Trip is cancelled', (
+      tester,
+    ) async {
       await pump(tester);
       await tapKey(tester, 'trips-add');
 
@@ -404,8 +441,9 @@ void main() {
       expect(service.loadCount, 1);
     });
 
-    testWidgets('Edit Trip opens the form pre-filled with that trip',
-        (tester) async {
+    testWidgets('Edit Trip opens the form pre-filled with that trip', (
+      tester,
+    ) async {
       service.trips = [
         sampleMyTrip(
           id: 'live',
@@ -423,7 +461,8 @@ void main() {
       expect(find.text('Save changes'), findsOneWidget);
       expect(find.text('Lagos'), findsOneWidget);
       final price = tester.widget<TextField>(
-          find.byKey(const ValueKey('add-trip-price')));
+        find.byKey(const ValueKey('add-trip-price')),
+      );
       expect(price.controller!.text, '42');
     });
 
@@ -450,11 +489,18 @@ void main() {
   });
 
   group('bottom navigation', () {
-    testWidgets('shows the same five tabs as every other screen',
-        (tester) async {
+    testWidgets('shows the same five tabs as every other screen', (
+      tester,
+    ) async {
       await pump(tester);
 
-      for (final label in ['Home', 'Requests', 'Trips', 'Messages', 'Profile']) {
+      for (final label in [
+        'Home',
+        'Requests',
+        'Trips',
+        'Messages',
+        'Profile',
+      ]) {
         expect(find.text(label), findsOneWidget);
       }
     });
@@ -472,10 +518,14 @@ void main() {
       tester.view.physicalSize = const Size(900, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(appWrapper(HomeScreen(
-        authService: FakeAuthService(),
-        travelerService: FakeTravelerService(),
-      )));
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: FakeTravelerService(),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Trips'));
@@ -485,15 +535,20 @@ void main() {
       expect(find.text('My Trips'), findsOneWidget);
     });
 
-    testWidgets('Home\'s "Add a Trip" button still opens the form directly',
-        (tester) async {
+    testWidgets('Home\'s "Add a Trip" button still opens the form directly', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(900, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(appWrapper(HomeScreen(
-        authService: FakeAuthService(),
-        travelerService: FakeTravelerService(),
-      )));
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: FakeTravelerService(),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Add a Trip'));
@@ -504,13 +559,16 @@ void main() {
   });
 
   group('date formatting', () {
-    testWidgets('dates are zero padded like the design (Jul 04, 2030)',
-        (tester) async {
+    testWidgets('dates are zero padded like the design (Jul 04, 2030)', (
+      tester,
+    ) async {
       service.trips = [sampleMyTrip(departureDate: DateTime(2030, 7, 4))];
       await pump(tester);
 
-      expect(find.text(DateFormat('MMM dd, yyyy').format(DateTime(2030, 7, 4))),
-          findsOneWidget);
+      expect(
+        find.text(DateFormat('MMM dd, yyyy').format(DateTime(2030, 7, 4))),
+        findsOneWidget,
+      );
       expect(find.text('Jul 04, 2030'), findsOneWidget);
     });
   });

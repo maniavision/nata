@@ -1295,4 +1295,221 @@ class AppLocalizationsEn extends AppLocalizations {
   String chatYouPrefix(String text) {
     return 'You: $text';
   }
+
+  @override
+  String get recipientDetails => 'Recipient Details';
+
+  @override
+  String get recipientName => 'Recipient Name';
+
+  @override
+  String get recipientNameHint => 'Full name as on their ID';
+
+  @override
+  String get recipientPhone => 'Recipient Phone Number';
+
+  @override
+  String get recipientPhoneHint => 'e.g. +44 7700 900123';
+
+  @override
+  String get recipientPhoneNote =>
+      'Shared with the traveler only after they accept your request';
+
+  @override
+  String get sizeAndWeight => 'Size and Weight';
+
+  @override
+  String travelerLimitLabel(String limit) {
+    return 'Traveler limit: $limit';
+  }
+
+  @override
+  String get itemNameHint => 'e.g. Sony Headphones, Sealed Cosmetics, etc.';
+
+  @override
+  String get itemDescHint => 'Provide details about the item and packaging...';
+
+  @override
+  String get weightHint => 'e.g. 0.9 kg';
+
+  @override
+  String get dimensionsHint => 'e.g. 24 × 24 × 8 cm';
+
+  @override
+  String get photoMustShowSeal => 'Photo must show sealed factory seal';
+
+  @override
+  String get travelerPriceLine => 'Traveler\'s price';
+
+  @override
+  String get platformProtectionLine => 'Platform protection & escrow';
+
+  @override
+  String get priceNoteNothingCharged =>
+      'Nothing is charged now. The traveler can accept or decline this request, and you pay only after they accept.';
+
+  @override
+  String get choosePhotoSource => 'Add a photo';
+
+  @override
+  String get errItemName => 'Tell us what the item is.';
+
+  @override
+  String get errAccountNotFound =>
+      'No account found for this number. Please sign up first.';
+
+  @override
+  String get itemsTitle => 'Items';
+
+  @override
+  String itemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String itemNumber(int number) {
+    return 'Item $number';
+  }
+
+  @override
+  String get removeItem => 'Remove';
+
+  @override
+  String get addAnotherItem => 'Add another item';
+
+  @override
+  String errItemNameN(int number) {
+    return 'Tell us what item $number is.';
+  }
+
+  @override
+  String itemsMaxNote(int max) {
+    return 'You can send up to $max items in one request.';
+  }
+
+  @override
+  String get errRecipientName => 'Enter the recipient\'s full name.';
+
+  @override
+  String get errRecipientPhone =>
+      'Enter the recipient\'s phone number with the country code, e.g. +44 7700 900123.';
+
+  @override
+  String get errWeight => 'Enter the package weight, e.g. 0.9 kg.';
+
+  @override
+  String get errPhotoRequired => 'Add at least one photo of the sealed item.';
+
+  @override
+  String get errPhotoTooBig => 'That photo is too large (max 10 MB).';
+
+  @override
+  String get errPhotoLimit => 'You can add up to 3 photos.';
+
+  @override
+  String get errTripUnavailable => 'This trip is no longer available.';
+
+  @override
+  String get errOwnTrip => 'You can\'t send a parcel with your own trip.';
+
+  @override
+  String get errDuplicate => 'You already have an open request on this trip.';
+
+  @override
+  String get errSessionExpired => 'Your session expired. Please sign in again.';
+
+  @override
+  String get errInvalidRequest =>
+      'Some details were rejected. Please check the form.';
+
+  @override
+  String get errRequestFailed =>
+      'Could not send your request. Please try again.';
+
+  @override
+  String get requestSent => 'Request sent. The traveler will review it.';
+
+  @override
+  String travelerMaxKg(String kg) {
+    return 'Max $kg kg';
+  }
+
+  @override
+  String errWeightTooHeavy(String max) {
+    return 'This traveler accepts up to $max kg.';
+  }
+
+  @override
+  String photosAttachedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos attached',
+      one: '1 photo attached',
+      zero: 'No photos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sendRequestWithPrice(String price) {
+    return 'Send Delivery Request · $price';
+  }
+
+  @override
+  String get packageSize => 'Package Size';
+
+  @override
+  String get sizeEnvelope => 'Envelope / Document';
+
+  @override
+  String get sizeShoebox => 'Shoebox';
+
+  @override
+  String get sizeBackpack => 'Backpack';
+
+  @override
+  String get errSizeRequired => 'Choose the package size.';
+
+  @override
+  String get errSizeTooBig =>
+      'This package is bigger than the traveler accepts.';
+
+  @override
+  String get errPriceChanged =>
+      'The traveler changed their price. Go back and open the request again to see the new price.';
+
+  @override
+  String get priceEnterWeight =>
+      'Enter the package weight to see the final price.';
+
+  @override
+  String get priceRateUnavailable =>
+      'Exchange rate unavailable, so prices are shown in US dollars.';
+
+  @override
+  String get priceCredit => 'Exchange rates by Exchange Rate API';
+
+  @override
+  String get priceCalculating => 'Calculating the price…';
+
+  @override
+  String get errQuoteUnavailable =>
+      'Could not calculate the price. Check your connection and try again.';
+
+  @override
+  String priceBasedOn(String km) {
+    return 'Based on distance ($km km), weight & delivery date';
+  }
+
+  @override
+  String priceRateLine(String rate, String currency, String date) {
+    return '1 USD = $rate $currency · updated $date';
+  }
 }

@@ -15,10 +15,9 @@ void main() {
 
     setUp(() => travelers = FakeTravelerService());
 
-    Widget buildHome() => appWrapper(HomeScreen(
-          authService: FakeAuthService(),
-          travelerService: travelers,
-        ));
+    Widget buildHome() => appWrapper(
+      HomeScreen(authService: FakeAuthService(), travelerService: travelers),
+    );
 
     testWidgets('renders greeting "Hello,"', (tester) async {
       await tester.pumpWidget(buildHome());
@@ -34,8 +33,9 @@ void main() {
       expect(find.text('Fortune Niama'), findsOneWidget);
     });
 
-    testWidgets('renders "Where are you sending?" search card heading',
-        (tester) async {
+    testWidgets('renders "Where are you sending?" search card heading', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildHome());
       await tester.pump();
 
@@ -112,7 +112,9 @@ void main() {
       expect(find.text('Jun 26'), findsOneWidget);
     });
 
-    testWidgets('renders traveler capacity text from each trip weight limit', (tester) async {
+    testWidgets('renders traveler capacity text from each trip weight limit', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildHome());
       await tester.pump();
 

@@ -140,6 +140,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           builder: (context) => OtpScreen(
             phone: e164,
             isSignUp: true,
+            authService: widget.authService,
             firstName: firstName,
             lastName: lastName,
             onSuccess: () {
@@ -210,14 +211,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         boxShadow: [
           BoxShadow(
-              color: Color(0x1A000000),
-              blurRadius: 3,
-              offset: Offset(0, 1)),
+            color: Color(0x1A000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
           BoxShadow(
-              color: Color(0x1A000000),
-              blurRadius: 2,
-              spreadRadius: -1,
-              offset: Offset(0, 1)),
+            color: Color(0x1A000000),
+            blurRadius: 2,
+            spreadRadius: -1,
+            offset: Offset(0, 1),
+          ),
         ],
       ),
       child: Stack(
@@ -273,8 +276,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         color: AppColors.accent,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send,
-                          color: Colors.white, size: 13),
+                      child: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 13,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -338,15 +344,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
             border: Border.all(color: AppColors.border),
             boxShadow: const [
               BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 15,
-                  spreadRadius: -3,
-                  offset: Offset(0, 10)),
+                color: Color(0x1A000000),
+                blurRadius: 15,
+                spreadRadius: -3,
+                offset: Offset(0, 10),
+              ),
               BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 6,
-                  spreadRadius: -4,
-                  offset: Offset(0, 4)),
+                color: Color(0x1A000000),
+                blurRadius: 6,
+                spreadRadius: -4,
+                offset: Offset(0, 4),
+              ),
             ],
           ),
           padding: const EdgeInsets.all(20),
@@ -405,14 +413,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: const [
                   BoxShadow(
-                      color: Color(0x1A000000),
-                      blurRadius: 3,
-                      offset: Offset(0, 1)),
+                    color: Color(0x1A000000),
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
+                  ),
                   BoxShadow(
-                      color: Color(0x1A000000),
-                      blurRadius: 2,
-                      spreadRadius: -1,
-                      offset: Offset(0, 1)),
+                    color: Color(0x1A000000),
+                    blurRadius: 2,
+                    spreadRadius: -1,
+                    offset: Offset(0, 1),
+                  ),
                 ],
               ),
               child: Text(
@@ -438,7 +448,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         Expanded(
           child: _SocialButton(
             label: context.l10n.apple,
-            icon: const Icon(Icons.apple, size: 18, color: AppColors.foreground),
+            icon: const Icon(
+              Icons.apple,
+              size: 18,
+              color: AppColors.foreground,
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -457,7 +471,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Row(
       children: [
         const Expanded(
-            child: Divider(color: AppColors.border, thickness: 1, height: 1)),
+          child: Divider(color: AppColors.border, thickness: 1, height: 1),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
@@ -471,7 +486,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
         const Expanded(
-            child: Divider(color: AppColors.border, thickness: 1, height: 1)),
+          child: Divider(color: AppColors.border, thickness: 1, height: 1),
+        ),
       ],
     );
   }
@@ -570,16 +586,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFFFF6EE),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.25)),
+            border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Padding(
                 padding: EdgeInsets.only(top: 2),
-                child: Icon(Icons.shield,
-                    size: 17, color: AppColors.accent),
+                child: Icon(Icons.shield, size: 17, color: AppColors.accent),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -618,19 +632,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
             decoration: BoxDecoration(
               color: AppColors.destructive.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.destructive.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.destructive.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.error_outline_rounded,
-                    size: 16, color: AppColors.destructive),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 16,
+                  color: AppColors.destructive,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(_error!,
-                      style: GoogleFonts.dmSans(
-                        fontSize: 12,
-                        color: AppColors.destructive,
-                      )),
+                  child: Text(
+                    _error!,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      color: AppColors.destructive,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -655,7 +676,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2.5, color: Colors.white),
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -673,8 +696,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward,
-                          size: 18, color: Colors.white),
+                      const Icon(
+                        Icons.arrow_forward,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
           ),
@@ -715,7 +741,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
               Text(
                 context.l10n.alreadyHaveAccount + ' ',
                 style: GoogleFonts.dmSans(
-                    fontSize: 11, color: AppColors.mutedForeground),
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
               ),
               GestureDetector(
                 onTap: _goToLogin,
@@ -793,8 +821,11 @@ class _CountryField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Row(
             children: [
-              const Icon(Icons.language_rounded,
-                  size: 16, color: AppColors.mutedForeground),
+              const Icon(
+                Icons.language_rounded,
+                size: 16,
+                color: AppColors.mutedForeground,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: TextField(
@@ -854,14 +885,16 @@ class _CountryField extends StatelessWidget {
                     onTap: () => onSelected(country),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.card,
                         border: isLast
                             ? null
                             : const Border(
-                                bottom:
-                                    BorderSide(color: AppColors.border)),
+                                bottom: BorderSide(color: AppColors.border),
+                              ),
                       ),
                       child: Row(
                         children: [
@@ -926,12 +959,16 @@ class _SimpleTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: GoogleFonts.dmSans(
-            fontSize: 12, color: AppColors.mutedForeground),
+          fontSize: 12,
+          color: AppColors.mutedForeground,
+        ),
         filled: true,
         fillColor: AppColors.input,
         isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: const BorderSide(color: AppColors.border),
@@ -943,7 +980,9 @@ class _SimpleTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-              color: AppColors.ring.withValues(alpha: 0.4), width: 2),
+            color: AppColors.ring.withValues(alpha: 0.4),
+            width: 2,
+          ),
         ),
       ),
     );
@@ -982,7 +1021,9 @@ class _IconTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: GoogleFonts.dmSans(
-            fontSize: 12, color: AppColors.mutedForeground),
+          fontSize: 12,
+          color: AppColors.mutedForeground,
+        ),
         filled: true,
         fillColor: AppColors.input,
         isDense: true,
@@ -992,18 +1033,18 @@ class _IconTextField extends StatelessWidget {
                 child: prefixIcon,
               )
             : null,
-        prefixIconConstraints:
-            const BoxConstraints(minWidth: 0, minHeight: 0),
+        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixIcon: suffixIcon != null
             ? Padding(
                 padding: const EdgeInsets.only(right: 14),
                 child: suffixIcon,
               )
             : null,
-        suffixIconConstraints:
-            const BoxConstraints(minWidth: 0, minHeight: 0),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 13,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.border),
@@ -1040,8 +1081,7 @@ class _GlassCircleButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.3),
               shape: BoxShape.circle,
-              border:
-                  Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Center(child: child),
           ),
@@ -1065,13 +1105,11 @@ class _GlassPill extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(999),
-              border:
-                  Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: child,
           ),

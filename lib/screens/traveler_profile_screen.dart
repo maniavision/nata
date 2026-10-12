@@ -768,7 +768,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => const DeliveryRequestScreen(),
+                    builder: (context) => DeliveryRequestScreen(trip: _trip),
                   ),
                 );
               },

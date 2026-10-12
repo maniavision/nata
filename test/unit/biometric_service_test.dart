@@ -26,19 +26,23 @@ void main() {
   }
 
   void authenticateReturns(bool value) {
-    when(() => auth.authenticate(
-          localizedReason: any(named: 'localizedReason'),
-          biometricOnly: any(named: 'biometricOnly'),
-          persistAcrossBackgrounding: any(named: 'persistAcrossBackgrounding'),
-        )).thenAnswer((_) async => value);
+    when(
+      () => auth.authenticate(
+        localizedReason: any(named: 'localizedReason'),
+        biometricOnly: any(named: 'biometricOnly'),
+        persistAcrossBackgrounding: any(named: 'persistAcrossBackgrounding'),
+      ),
+    ).thenAnswer((_) async => value);
   }
 
   void authenticateThrows(Object error) {
-    when(() => auth.authenticate(
-          localizedReason: any(named: 'localizedReason'),
-          biometricOnly: any(named: 'biometricOnly'),
-          persistAcrossBackgrounding: any(named: 'persistAcrossBackgrounding'),
-        )).thenThrow(error);
+    when(
+      () => auth.authenticate(
+        localizedReason: any(named: 'localizedReason'),
+        biometricOnly: any(named: 'biometricOnly'),
+        persistAcrossBackgrounding: any(named: 'persistAcrossBackgrounding'),
+      ),
+    ).thenThrow(error);
   }
 
   group('availability', () {
@@ -68,16 +72,20 @@ void main() {
       expect(await service.availability(), BiometricAvailability.unsupported);
     });
 
-    test('not enrolled when nothing is set up in the device settings',
-        () async {
-      device(enrolled: []);
+    test(
+      'not enrolled when nothing is set up in the device settings',
+      () async {
+        device(enrolled: []);
 
-      expect(await service.availability(), BiometricAvailability.notEnrolled);
-      expect(await service.isAvailable(), isFalse);
-    });
+        expect(await service.availability(), BiometricAvailability.notEnrolled);
+        expect(await service.isAvailable(), isFalse);
+      },
+    );
 
     test('a plugin error is treated as unsupported, never thrown', () async {
-      when(() => auth.isDeviceSupported()).thenThrow(PlatformException(code: 'x'));
+      when(
+        () => auth.isDeviceSupported(),
+      ).thenThrow(PlatformException(code: 'x'));
 
       expect(await service.availability(), BiometricAvailability.unsupported);
     });
@@ -96,25 +104,31 @@ void main() {
       expect(await service.authenticate('Why'), BiometricResult.failed);
     });
 
-    test('shows the reason it was given, and allows Face / fingerprint only',
-        () async {
-      authenticateReturns(true);
+    test(
+      'shows the reason it was given, and allows Face / fingerprint only',
+      () async {
+        authenticateReturns(true);
 
-      await service.authenticate('Confirm it is you');
+        await service.authenticate('Confirm it is you');
 
-      final captured = verify(() => auth.authenticate(
+        final captured = verify(
+          () => auth.authenticate(
             localizedReason: captureAny(named: 'localizedReason'),
             biometricOnly: captureAny(named: 'biometricOnly'),
-            persistAcrossBackgrounding:
-                captureAny(named: 'persistAcrossBackgrounding'),
-          )).captured;
-      expect(captured[0], 'Confirm it is you');
-      expect(captured[1], isTrue); // no falling back to the passcode
-    });
+            persistAcrossBackgrounding: captureAny(
+              named: 'persistAcrossBackgrounding',
+            ),
+          ),
+        ).captured;
+        expect(captured[0], 'Confirm it is you');
+        expect(captured[1], isTrue); // no falling back to the passcode
+      },
+    );
 
     test('a plugin exception becomes a result, never an error', () async {
-      authenticateThrows(const LocalAuthException(
-          code: LocalAuthExceptionCode.userCanceled));
+      authenticateThrows(
+        const LocalAuthException(code: LocalAuthExceptionCode.userCanceled),
+      );
 
       expect(await service.authenticate('Why'), BiometricResult.cancelled);
     });
@@ -131,32 +145,52 @@ void main() {
         BiometricService.resultForCode(c);
 
     test('closing the prompt is a cancel', () {
-      expect(of(LocalAuthExceptionCode.userCanceled), BiometricResult.cancelled);
-      expect(of(LocalAuthExceptionCode.systemCanceled), BiometricResult.cancelled);
+      expect(
+        of(LocalAuthExceptionCode.userCanceled),
+        BiometricResult.cancelled,
+      );
+      expect(
+        of(LocalAuthExceptionCode.systemCanceled),
+        BiometricResult.cancelled,
+      );
       expect(of(LocalAuthExceptionCode.timeout), BiometricResult.cancelled);
     });
 
     test('nothing set up', () {
-      expect(of(LocalAuthExceptionCode.noBiometricsEnrolled),
-          BiometricResult.notEnrolled);
-      expect(of(LocalAuthExceptionCode.noCredentialsSet),
-          BiometricResult.notEnrolled);
+      expect(
+        of(LocalAuthExceptionCode.noBiometricsEnrolled),
+        BiometricResult.notEnrolled,
+      );
+      expect(
+        of(LocalAuthExceptionCode.noCredentialsSet),
+        BiometricResult.notEnrolled,
+      );
     });
 
     test('no hardware or not reachable', () {
-      expect(of(LocalAuthExceptionCode.noBiometricHardware),
-          BiometricResult.notAvailable);
-      expect(of(LocalAuthExceptionCode.biometricHardwareTemporarilyUnavailable),
-          BiometricResult.notAvailable);
-      expect(of(LocalAuthExceptionCode.uiUnavailable),
-          BiometricResult.notAvailable);
+      expect(
+        of(LocalAuthExceptionCode.noBiometricHardware),
+        BiometricResult.notAvailable,
+      );
+      expect(
+        of(LocalAuthExceptionCode.biometricHardwareTemporarilyUnavailable),
+        BiometricResult.notAvailable,
+      );
+      expect(
+        of(LocalAuthExceptionCode.uiUnavailable),
+        BiometricResult.notAvailable,
+      );
     });
 
     test('too many attempts', () {
-      expect(of(LocalAuthExceptionCode.temporaryLockout),
-          BiometricResult.lockedOut);
-      expect(of(LocalAuthExceptionCode.biometricLockout),
-          BiometricResult.lockedOut);
+      expect(
+        of(LocalAuthExceptionCode.temporaryLockout),
+        BiometricResult.lockedOut,
+      );
+      expect(
+        of(LocalAuthExceptionCode.biometricLockout),
+        BiometricResult.lockedOut,
+      );
     });
 
     test('every code maps to something', () {

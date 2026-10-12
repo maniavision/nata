@@ -31,18 +31,19 @@ picked as (
   ) x
 )
 insert into nata.delivery_requests (
-  id, trip_id, sender_id, item_description, item_weight_kg, item_size,
-  recipient_name, recipient_phone, status
+  id, trip_id, sender_id, item_name, item_category, item_description,
+  item_weight_kg, item_size, item_size_class, status
 )
 select
   md5('seed-req-' || p.n)::uuid,
   p.trip_id,
   me.id,
   (array['iPhone 15 Pro (sealed)', 'Sony headphones (retail box)', 'Documents envelope'])[p.n],
+  (array['electronics', 'electronics', 'documents'])[p.n],
+  '',
   (array[0.5, 0.9, 0.2])[p.n],
   (array['Shoebox (30×20×15 cm)', 'Shoebox (30×20×15 cm)', 'Envelope / Document'])[p.n],
-  'Seed Recipient',
-  '+10000000000',
+  (array['shoebox', 'shoebox', 'envelope'])[p.n],
   (array['accepted', 'paid', 'delivered'])[p.n]
 from picked p, me
 on conflict (id) do nothing;

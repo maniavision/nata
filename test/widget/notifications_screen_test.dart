@@ -10,44 +10,44 @@ import '../helpers/fakes.dart';
 final now = DateTime(2030, 6, 15, 12, 0);
 
 List<AppNotification> mixed() => [
-      sampleNotification(
-        id: 'n-req',
-        type: 'request',
-        title: 'Request accepted',
-        body: 'Amara K. accepted your delivery request for Lagos → London.',
-        createdAt: now.subtract(const Duration(minutes: 2)),
-      ),
-      sampleNotification(
-        id: 'n-msg',
-        type: 'message',
-        title: 'New message',
-        body: 'Daniel O.: Happy to carry the package to Paris on Jun 24.',
-        createdAt: now.subtract(const Duration(minutes: 18)),
-      ),
-      sampleNotification(
-        id: 'n-pay',
-        type: 'payment',
-        title: 'Payment held in escrow',
-        body: r'$85.00 is held securely until delivery is confirmed.',
-        createdAt: now.subtract(const Duration(hours: 1)),
-      ),
-      sampleNotification(
-        id: 'n-trip',
-        type: 'trip',
-        title: 'Trip published',
-        body: 'Your Lagos → London trip is now visible to senders.',
-        isRead: true,
-        createdAt: DateTime(2030, 6, 14, 10, 0),
-      ),
-      sampleNotification(
-        id: 'n-ver',
-        type: 'verification',
-        title: 'Identity verified',
-        body: 'Your identity has been verified.',
-        isRead: true,
-        createdAt: DateTime(2030, 6, 3, 9, 0),
-      ),
-    ];
+  sampleNotification(
+    id: 'n-req',
+    type: 'request',
+    title: 'Request accepted',
+    body: 'Amara K. accepted your delivery request for Lagos → London.',
+    createdAt: now.subtract(const Duration(minutes: 2)),
+  ),
+  sampleNotification(
+    id: 'n-msg',
+    type: 'message',
+    title: 'New message',
+    body: 'Daniel O.: Happy to carry the package to Paris on Jun 24.',
+    createdAt: now.subtract(const Duration(minutes: 18)),
+  ),
+  sampleNotification(
+    id: 'n-pay',
+    type: 'payment',
+    title: 'Payment held in escrow',
+    body: r'$85.00 is held securely until delivery is confirmed.',
+    createdAt: now.subtract(const Duration(hours: 1)),
+  ),
+  sampleNotification(
+    id: 'n-trip',
+    type: 'trip',
+    title: 'Trip published',
+    body: 'Your Lagos → London trip is now visible to senders.',
+    isRead: true,
+    createdAt: DateTime(2030, 6, 14, 10, 0),
+  ),
+  sampleNotification(
+    id: 'n-ver',
+    type: 'verification',
+    title: 'Identity verified',
+    body: 'Your identity has been verified.',
+    isRead: true,
+    createdAt: DateTime(2030, 6, 3, 9, 0),
+  ),
+];
 
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
@@ -64,10 +64,12 @@ void main() {
     tester.view.physicalSize = const Size(900, 3000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(appWrapper(
-      NotificationsScreen(service: service, now: () => now),
-      locale: locale,
-    ));
+    await tester.pumpWidget(
+      appWrapper(
+        NotificationsScreen(service: service, now: () => now),
+        locale: locale,
+      ),
+    );
     if (settle) await tester.pumpAndSettle();
   }
 
@@ -77,15 +79,18 @@ void main() {
   }
 
   int unreadDots() => find
-      .byWidgetPredicate((w) =>
-          w.key is ValueKey &&
-          (w.key as ValueKey).value.toString().startsWith('notif-unread-'))
+      .byWidgetPredicate(
+        (w) =>
+            w.key is ValueKey &&
+            (w.key as ValueKey).value.toString().startsWith('notif-unread-'),
+      )
       .evaluate()
       .length;
 
   group('header and filters', () {
-    testWidgets('shows the title, Mark all read and the four filters',
-        (tester) async {
+    testWidgets('shows the title, Mark all read and the four filters', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(find.text('Notifications'), findsOneWidget);
@@ -99,16 +104,23 @@ void main() {
       tester.view.physicalSize = const Size(900, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(appWrapper(Builder(
-        builder: (context) => Scaffold(
-          body: TextButton(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => NotificationsScreen(
-                    service: service, now: () => now))),
-            child: const Text('open'),
+      await tester.pumpWidget(
+        appWrapper(
+          Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        NotificationsScreen(service: service, now: () => now),
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
           ),
         ),
-      )));
+      );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       expect(find.byType(NotificationsScreen), findsOneWidget);
@@ -118,14 +130,24 @@ void main() {
       expect(find.byType(NotificationsScreen), findsNothing);
     });
 
-    testWidgets('shows the same bottom navigation, with no tab highlighted',
-        (tester) async {
+    testWidgets('shows the same bottom navigation, with no tab highlighted', (
+      tester,
+    ) async {
       await pump(tester);
 
-      for (final label in ['Home', 'Requests', 'Trips', 'Messages', 'Profile']) {
+      for (final label in [
+        'Home',
+        'Requests',
+        'Trips',
+        'Messages',
+        'Profile',
+      ]) {
         final text = tester.widget<Text>(find.text(label).last);
-        expect(text.style?.fontWeight, FontWeight.w500,
-            reason: '$label should not look selected');
+        expect(
+          text.style?.fontWeight,
+          FontWeight.w500,
+          reason: '$label should not look selected',
+        );
       }
     });
   });
@@ -177,8 +199,9 @@ void main() {
       service.items = [sampleNotification(id: 'fresh', title: 'Brand new')];
       await tester.drag(
         find.descendant(
-            of: find.byType(RefreshIndicator),
-            matching: find.byType(ListView)),
+          of: find.byType(RefreshIndicator),
+          matching: find.byType(ListView),
+        ),
         const Offset(0, 400),
       );
       await tester.pump(); // start the refresh
@@ -194,8 +217,9 @@ void main() {
     Future<void> pullDown(WidgetTester tester) async {
       await tester.drag(
         find.descendant(
-            of: find.byType(RefreshIndicator),
-            matching: find.byType(ListView)),
+          of: find.byType(RefreshIndicator),
+          matching: find.byType(ListView),
+        ),
         const Offset(0, 400),
       );
       await tester.pump();
@@ -203,8 +227,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('works even when the list is much shorter than the screen',
-        (tester) async {
+    testWidgets('works even when the list is much shorter than the screen', (
+      tester,
+    ) async {
       service.items = [mixed().first]; // a single card: nothing to scroll
       await pump(tester);
       tester.view.physicalSize = const Size(402, 800);
@@ -270,15 +295,18 @@ void main() {
       expect(find.text('EARLIER'), findsOneWidget);
     });
 
-    testWidgets('each card shows title, message and a readable time',
-        (tester) async {
+    testWidgets('each card shows title, message and a readable time', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(find.text('Request accepted'), findsOneWidget);
       expect(
-          find.text(
-              'Amara K. accepted your delivery request for Lagos → London.'),
-          findsOneWidget);
+        find.text(
+          'Amara K. accepted your delivery request for Lagos → London.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('2 min ago'), findsOneWidget);
       expect(find.text('18 min ago'), findsOneWidget);
       expect(find.text('1 hr ago'), findsOneWidget);
@@ -286,16 +314,20 @@ void main() {
       expect(find.text('Jun 3'), findsOneWidget);
     });
 
-    testWidgets('a notification without a message shows just the title',
-        (tester) async {
-      service.items = [sampleNotification(id: 'x', title: 'Only a title', body: '')];
+    testWidgets('a notification without a message shows just the title', (
+      tester,
+    ) async {
+      service.items = [
+        sampleNotification(id: 'x', title: 'Only a title', body: ''),
+      ];
       await pump(tester);
 
       expect(find.text('Only a title'), findsOneWidget);
     });
 
-    testWidgets('unread notifications have a dot, read ones do not',
-        (tester) async {
+    testWidgets('unread notifications have a dot, read ones do not', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(unreadDots(), 3);
@@ -307,7 +339,10 @@ void main() {
     testWidgets('each type has its own icon', (tester) async {
       await pump(tester);
 
-      expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget); // request
+      expect(
+        find.byIcon(Icons.check_circle_rounded),
+        findsOneWidget,
+      ); // request
       expect(find.byIcon(Icons.chat_bubble_rounded), findsOneWidget); // message
       expect(find.byIcon(Icons.account_balance_wallet_rounded), findsOneWidget);
       expect(find.byIcon(Icons.luggage_rounded), findsOneWidget); // trip
@@ -333,8 +368,9 @@ void main() {
       expect(service.markedRead, ['n-req']);
     });
 
-    testWidgets('tapping one that is already read does nothing',
-        (tester) async {
+    testWidgets('tapping one that is already read does nothing', (
+      tester,
+    ) async {
       await pump(tester);
 
       await tapKey(tester, 'notif-n-trip');
@@ -361,8 +397,9 @@ void main() {
       expect(service.markAllCalls, 1);
     });
 
-    testWidgets('Mark all read is dimmed and inert once all are read',
-        (tester) async {
+    testWidgets('Mark all read is dimmed and inert once all are read', (
+      tester,
+    ) async {
       await pump(tester);
       await tapKey(tester, 'notif-mark-all');
 
@@ -371,8 +408,9 @@ void main() {
       expect(service.markAllCalls, 1); // not called again
     });
 
-    testWidgets('Mark all read does nothing when there is nothing unread',
-        (tester) async {
+    testWidgets('Mark all read does nothing when there is nothing unread', (
+      tester,
+    ) async {
       service.items = [for (final n in mixed()) n.copyWith(isRead: true)];
       await pump(tester);
 
@@ -431,8 +469,9 @@ void main() {
       expect(find.text('Trip published'), findsNothing);
     });
 
-    testWidgets('messages and verification only appear under All',
-        (tester) async {
+    testWidgets('messages and verification only appear under All', (
+      tester,
+    ) async {
       await pump(tester);
       expect(find.text('New message'), findsOneWidget);
       expect(find.text('Identity verified'), findsOneWidget);
@@ -454,8 +493,9 @@ void main() {
       expect(find.text('Identity verified'), findsOneWidget);
     });
 
-    testWidgets('a filter with no matches shows the empty state',
-        (tester) async {
+    testWidgets('a filter with no matches shows the empty state', (
+      tester,
+    ) async {
       service.items = [sampleNotification(id: 'x', type: 'system')];
       await pump(tester);
 
@@ -476,12 +516,17 @@ void main() {
     testWidgets('the selected filter is highlighted', (tester) async {
       await pump(tester);
 
-      Color? chipColor(int i) => (tester
-              .widget<Container>(find.descendant(
-                  of: find.byKey(ValueKey('notif-filter-$i')),
-                  matching: find.byType(Container)))
-              .decoration as BoxDecoration)
-          .color;
+      Color? chipColor(int i) =>
+          (tester
+                      .widget<Container>(
+                        find.descendant(
+                          of: find.byKey(ValueKey('notif-filter-$i')),
+                          matching: find.byType(Container),
+                        ),
+                      )
+                      .decoration
+                  as BoxDecoration)
+              .color;
 
       final allActive = chipColor(0);
       expect(chipColor(1), isNot(allActive));
@@ -529,11 +574,15 @@ void main() {
       tester.view.physicalSize = const Size(900, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(appWrapper(HomeScreen(
-        authService: FakeAuthService(),
-        travelerService: FakeTravelerService(),
-        notificationService: service,
-      )));
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: FakeTravelerService(),
+            notificationService: service,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(NotificationsScreen), findsNothing);
 
@@ -549,11 +598,15 @@ void main() {
       tester.view.physicalSize = const Size(900, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(appWrapper(HomeScreen(
-        authService: FakeAuthService(),
-        travelerService: FakeTravelerService(),
-        notificationService: service,
-      )));
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: FakeTravelerService(),
+            notificationService: service,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('home-notifications')));
       await tester.pumpAndSettle();

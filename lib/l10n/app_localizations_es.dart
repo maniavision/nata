@@ -1309,4 +1309,225 @@ class AppLocalizationsEs extends AppLocalizations {
   String chatYouPrefix(String text) {
     return 'Tú: $text';
   }
+
+  @override
+  String get recipientDetails => 'Datos del destinatario';
+
+  @override
+  String get recipientName => 'Nombre del destinatario';
+
+  @override
+  String get recipientNameHint => 'Nombre completo como en su documento';
+
+  @override
+  String get recipientPhone => 'Teléfono del destinatario';
+
+  @override
+  String get recipientPhoneHint => 'p. ej. +44 7700 900123';
+
+  @override
+  String get recipientPhoneNote =>
+      'Se comparte con el viajero solo después de que acepte tu solicitud';
+
+  @override
+  String get sizeAndWeight => 'Tamaño y peso';
+
+  @override
+  String travelerLimitLabel(String limit) {
+    return 'Límite del viajero: $limit';
+  }
+
+  @override
+  String get itemNameHint =>
+      'p. ej. auriculares Sony, cosméticos sellados, etc.';
+
+  @override
+  String get itemDescHint => 'Da detalles sobre el artículo y el embalaje...';
+
+  @override
+  String get weightHint => 'p. ej. 0,9 kg';
+
+  @override
+  String get dimensionsHint => 'p. ej. 24 × 24 × 8 cm';
+
+  @override
+  String get photoMustShowSeal => 'La foto debe mostrar el sello de fábrica';
+
+  @override
+  String get travelerPriceLine => 'Precio del viajero';
+
+  @override
+  String get platformProtectionLine =>
+      'Protección de la plataforma y depósito en garantía';
+
+  @override
+  String get priceNoteNothingCharged =>
+      'No se cobra nada ahora. El viajero puede aceptar o rechazar esta solicitud y solo pagas después de que acepte.';
+
+  @override
+  String get choosePhotoSource => 'Añadir una foto';
+
+  @override
+  String get errItemName => 'Indica qué es el artículo.';
+
+  @override
+  String get errAccountNotFound =>
+      'No hay ninguna cuenta con este número. Primero regístrate.';
+
+  @override
+  String get itemsTitle => 'Artículos';
+
+  @override
+  String itemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count artículos',
+      one: '1 artículo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String itemNumber(int number) {
+    return 'Artículo $number';
+  }
+
+  @override
+  String get removeItem => 'Quitar';
+
+  @override
+  String get addAnotherItem => 'Añadir otro artículo';
+
+  @override
+  String errItemNameN(int number) {
+    return 'Indica qué es el artículo $number.';
+  }
+
+  @override
+  String itemsMaxNote(int max) {
+    return 'Puedes enviar hasta $max artículos en una solicitud.';
+  }
+
+  @override
+  String get errRecipientName =>
+      'Introduce el nombre completo del destinatario.';
+
+  @override
+  String get errRecipientPhone =>
+      'Introduce el teléfono del destinatario con el prefijo del país, p. ej. +44 7700 900123.';
+
+  @override
+  String get errWeight => 'Introduce el peso del paquete, p. ej. 0,9 kg.';
+
+  @override
+  String get errPhotoRequired =>
+      'Añade al menos una foto del artículo sellado.';
+
+  @override
+  String get errPhotoTooBig => 'Esa foto es demasiado grande (máx. 10 MB).';
+
+  @override
+  String get errPhotoLimit => 'Puedes añadir hasta 3 fotos.';
+
+  @override
+  String get errTripUnavailable => 'Este viaje ya no está disponible.';
+
+  @override
+  String get errOwnTrip => 'No puedes enviar un paquete con tu propio viaje.';
+
+  @override
+  String get errDuplicate => 'Ya tienes una solicitud abierta en este viaje.';
+
+  @override
+  String get errSessionExpired => 'Tu sesión caducó. Inicia sesión de nuevo.';
+
+  @override
+  String get errInvalidRequest =>
+      'Se rechazaron algunos datos. Revisa el formulario.';
+
+  @override
+  String get errRequestFailed =>
+      'No se pudo enviar tu solicitud. Inténtalo de nuevo.';
+
+  @override
+  String get requestSent => 'Solicitud enviada. El viajero la revisará.';
+
+  @override
+  String travelerMaxKg(String kg) {
+    return 'Máx. $kg kg';
+  }
+
+  @override
+  String errWeightTooHeavy(String max) {
+    return 'Este viajero acepta hasta $max kg.';
+  }
+
+  @override
+  String photosAttachedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fotos adjuntas',
+      one: '1 foto adjunta',
+      zero: 'Sin fotos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sendRequestWithPrice(String price) {
+    return 'Enviar solicitud de entrega · $price';
+  }
+
+  @override
+  String get packageSize => 'Tamaño del paquete';
+
+  @override
+  String get sizeEnvelope => 'Sobre / Documento';
+
+  @override
+  String get sizeShoebox => 'Caja de zapatos';
+
+  @override
+  String get sizeBackpack => 'Mochila';
+
+  @override
+  String get errSizeRequired => 'Elige el tamaño del paquete.';
+
+  @override
+  String get errSizeTooBig =>
+      'Este paquete es más grande de lo que acepta el viajero.';
+
+  @override
+  String get errPriceChanged =>
+      'El viajero cambió su precio. Vuelve y abre la solicitud de nuevo para ver el nuevo precio.';
+
+  @override
+  String get priceEnterWeight =>
+      'Introduce el peso del paquete para ver el precio final.';
+
+  @override
+  String get priceRateUnavailable =>
+      'Tipo de cambio no disponible, así que los precios se muestran en dólares estadounidenses.';
+
+  @override
+  String get priceCredit => 'Tipos de cambio de Exchange Rate API';
+
+  @override
+  String get priceCalculating => 'Calculando el precio…';
+
+  @override
+  String get errQuoteUnavailable =>
+      'No se pudo calcular el precio. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String priceBasedOn(String km) {
+    return 'Según la distancia ($km km), el peso y la fecha de entrega';
+  }
+
+  @override
+  String priceRateLine(String rate, String currency, String date) {
+    return '1 USD = $rate $currency · actualizado $date';
+  }
 }

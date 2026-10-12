@@ -23,6 +23,9 @@ class OtpScreen extends StatefulWidget {
   final String lastName;
   final VoidCallback onSuccess;
 
+  /// Override for tests; defaults to the real [AuthService].
+  final AuthService? authService;
+
   const OtpScreen({
     super.key,
     required this.phone,
@@ -30,6 +33,7 @@ class OtpScreen extends StatefulWidget {
     this.firstName = '',
     this.lastName = '',
     required this.onSuccess,
+    this.authService,
   });
 
   @override
@@ -37,8 +41,12 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  final List<TextEditingController> _digitCtrl =
-      List.generate(6, (_) => TextEditingController());
+  AuthService get _auth => widget.authService ?? AuthService();
+
+  final List<TextEditingController> _digitCtrl = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focus = List.generate(6, (_) => FocusNode());
 
   bool _loading = false;
@@ -105,14 +113,14 @@ class _OtpScreenState extends State<OtpScreen> {
     });
 
     try {
-      final response = await AuthService().verifyOtp(widget.phone, _otp);
+      final response = await _auth.verifyOtp(widget.phone, _otp);
 
       if (response.session != null) {
         final prefs = PreferencesService();
         if (widget.isSignUp) {
           // Save name + preferences to DB for new users
           if (widget.firstName.isNotEmpty || widget.lastName.isNotEmpty) {
-            await AuthService().updateProfile(
+            await _auth.updateProfile(
               firstName: widget.firstName,
               lastName: widget.lastName,
             );
@@ -155,7 +163,8 @@ class _OtpScreenState extends State<OtpScreen> {
       _loading = true;
     });
     try {
-      await AuthService().sendOtp(widget.phone);
+      // Same rule as the first code: logging in never creates an account.
+      await _auth.sendOtp(widget.phone, createUser: widget.isSignUp);
       _clearBoxes();
       _startTimer();
     } on Exception catch (e) {
@@ -194,15 +203,18 @@ class _OtpScreenState extends State<OtpScreen> {
     if (lower.contains('expired') || lower.contains('token has expired')) {
       return 'Code expired. Please request a new one.';
     }
-    if (lower.contains('invalid') || lower.contains('incorrect') ||
-        lower.contains('wrong') || lower.contains('otp') ||
+    if (lower.contains('invalid') ||
+        lower.contains('incorrect') ||
+        lower.contains('wrong') ||
+        lower.contains('otp') ||
         lower.contains('token')) {
       return 'Incorrect code. Please try again.';
     }
     if (lower.contains('rate limit') || lower.contains('too many')) {
       return 'Too many attempts. Please wait before retrying.';
     }
-    if (lower.contains('network') || lower.contains('socket') ||
+    if (lower.contains('network') ||
+        lower.contains('socket') ||
         lower.contains('connection')) {
       return 'Network error. Please check your connection.';
     }
@@ -242,8 +254,11 @@ class _OtpScreenState extends State<OtpScreen> {
                         color: AppColors.accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Icon(Icons.sms_rounded,
-                          size: 30, color: AppColors.accent),
+                      child: const Icon(
+                        Icons.sms_rounded,
+                        size: 30,
+                        color: AppColors.accent,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Text(
@@ -295,8 +310,11 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline_rounded,
-                                size: 16, color: AppColors.destructive),
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              size: 16,
+                              color: AppColors.destructive,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -320,12 +338,10 @@ class _OtpScreenState extends State<OtpScreen> {
                         onPressed: (_otpComplete && !_loading) ? _verify : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accent,
-                          disabledBackgroundColor:
-                              AppColors.muted,
+                          disabledBackgroundColor: AppColors.muted,
                           foregroundColor: Colors.white,
                           elevation: 2,
-                          shadowColor:
-                              AppColors.accent.withValues(alpha: 0.4),
+                          shadowColor: AppColors.accent.withValues(alpha: 0.4),
                           shape: const StadiumBorder(),
                         ),
                         child: _loading
@@ -333,8 +349,9 @@ class _OtpScreenState extends State<OtpScreen> {
                                 width: 22,
                                 height: 22,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: Colors.white),
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
                               )
                             : Text(
                                 'Verify Code',
@@ -394,8 +411,11 @@ class _OtpScreenState extends State<OtpScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.info_outline_rounded,
-                              size: 16, color: AppColors.mutedForeground),
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            size: 16,
+                            color: AppColors.mutedForeground,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -434,8 +454,11 @@ class _OtpScreenState extends State<OtpScreen> {
                 color: AppColors.secondary.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back,
-                  color: AppColors.foreground, size: 20),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.foreground,
+                size: 20,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -482,8 +505,8 @@ class _OtpScreenState extends State<OtpScreen> {
               color: _error != null
                   ? AppColors.destructive
                   : filled
-                      ? AppColors.primary
-                      : AppColors.border,
+                  ? AppColors.primary
+                  : AppColors.border,
               width: filled || _error != null ? 2 : 1,
             ),
           ),
@@ -493,16 +516,15 @@ class _OtpScreenState extends State<OtpScreen> {
               color: _error != null
                   ? AppColors.destructive
                   : filled
-                      ? AppColors.primary
-                      : AppColors.border,
+                  ? AppColors.primary
+                  : AppColors.border,
               width: filled || _error != null ? 2 : 1,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color:
-                  _error != null ? AppColors.destructive : AppColors.accent,
+              color: _error != null ? AppColors.destructive : AppColors.accent,
               width: 2,
             ),
           ),

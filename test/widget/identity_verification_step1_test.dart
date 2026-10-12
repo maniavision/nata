@@ -5,8 +5,7 @@ import '../helpers/app_wrapper.dart';
 
 void main() {
   group('IdentityVerificationScreen Step 1 UI', () {
-    Widget buildScreen() =>
-        appWrapper(const IdentityVerificationScreen());
+    Widget buildScreen() => appWrapper(const IdentityVerificationScreen());
 
     testWidgets('renders verify identity headline', (tester) async {
       await tester.pumpWidget(buildScreen());

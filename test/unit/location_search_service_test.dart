@@ -36,7 +36,11 @@ void main() {
     });
 
     test('toString returns name', () {
-      const c = CountryResult(isoCode: 'NG', name: 'Nigeria', phoneCode: '+234');
+      const c = CountryResult(
+        isoCode: 'NG',
+        name: 'Nigeria',
+        phoneCode: '+234',
+      );
       expect(c.toString(), 'Nigeria');
     });
   });

@@ -524,5 +524,145 @@
         "type": "String"
       }
     }
+  },
+  "recipientDetails": "Informations du destinataire",
+  "recipientName": "Nom du destinataire",
+  "recipientNameHint": "Nom complet comme sur sa pièce d'identité",
+  "recipientPhone": "Téléphone du destinataire",
+  "recipientPhoneHint": "ex. +44 7700 900123",
+  "recipientPhoneNote": "Partagé avec le voyageur uniquement après qu'il a accepté votre demande",
+  "sizeAndWeight": "Taille et poids",
+  "travelerLimitLabel": "Limite du voyageur : {limit}",
+  "itemNameHint": "ex. Casque Sony, cosmétiques scellés, etc.",
+  "itemDescHint": "Donnez des détails sur l'article et son emballage...",
+  "weightHint": "ex. 0,9 kg",
+  "dimensionsHint": "ex. 24 × 24 × 8 cm",
+  "photoMustShowSeal": "La photo doit montrer le sceau d'usine",
+  "travelerPriceLine": "Prix du voyageur",
+  "platformProtectionLine": "Protection de la plateforme et séquestre",
+  "priceNoteNothingCharged": "Rien n'est débité maintenant. Le voyageur peut accepter ou refuser cette demande et vous ne payez qu'après son acceptation.",
+  "choosePhotoSource": "Ajouter une photo",
+  "errItemName": "Indiquez de quel article il s'agit.",
+  "errAccountNotFound": "Aucun compte n'existe pour ce numéro. Veuillez d'abord vous inscrire.",
+  "itemsTitle": "Articles",
+  "itemsCount": "{count, plural, =1{1 article} other{{count} articles}}",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemNumber": "Article {number}",
+  "@itemNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "removeItem": "Retirer",
+  "addAnotherItem": "Ajouter un autre article",
+  "errItemNameN": "Indiquez de quel article il s'agit pour l'article {number}.",
+  "@errItemNameN": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsMaxNote": "Vous pouvez envoyer jusqu'à {max} articles par demande.",
+  "@itemsMaxNote": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "errRecipientName": "Saisissez le nom complet du destinataire.",
+  "errRecipientPhone": "Saisissez le téléphone du destinataire avec l'indicatif du pays, ex. +44 7700 900123.",
+  "errWeight": "Saisissez le poids du colis, ex. 0,9 kg.",
+  "errPhotoRequired": "Ajoutez au moins une photo de l'article scellé.",
+  "errPhotoTooBig": "Cette photo est trop volumineuse (max 10 Mo).",
+  "errPhotoLimit": "Vous pouvez ajouter jusqu'à 3 photos.",
+  "errTripUnavailable": "Ce trajet n'est plus disponible.",
+  "errOwnTrip": "Vous ne pouvez pas envoyer un colis avec votre propre trajet.",
+  "errDuplicate": "Vous avez déjà une demande en cours sur ce trajet.",
+  "errSessionExpired": "Votre session a expiré. Reconnectez-vous.",
+  "errInvalidRequest": "Certaines informations ont été refusées. Vérifiez le formulaire.",
+  "errRequestFailed": "Impossible d'envoyer votre demande. Réessayez.",
+  "requestSent": "Demande envoyée. Le voyageur va l'examiner.",
+  "travelerMaxKg": "Max {kg} kg",
+  "@travelerMaxKg": {
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "errWeightTooHeavy": "Ce voyageur accepte jusqu'à {max} kg.",
+  "@errWeightTooHeavy": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "photosAttachedCount": "{count, plural, =0{Aucune photo} =1{1 photo jointe} other{{count} photos jointes}}",
+  "@photosAttachedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sendRequestWithPrice": "Envoyer la demande de livraison · {price}",
+  "@sendRequestWithPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "@travelerLimitLabel": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "packageSize": "Taille du colis",
+  "sizeEnvelope": "Enveloppe / Document",
+  "sizeShoebox": "Boîte à chaussures",
+  "sizeBackpack": "Sac à dos",
+  "errSizeRequired": "Choisissez la taille du colis.",
+  "errSizeTooBig": "Ce colis est plus grand que ce que le voyageur accepte.",
+  "errPriceChanged": "Le voyageur a modifié son prix. Revenez en arrière et rouvrez la demande pour voir le nouveau prix.",
+  "priceEnterWeight": "Saisissez le poids du colis pour voir le prix final.",
+  "priceRateUnavailable": "Taux de change indisponible, les prix sont donc affichés en dollars américains.",
+  "priceCredit": "Taux de change par Exchange Rate API",
+  "priceCalculating": "Calcul du prix…",
+  "errQuoteUnavailable": "Impossible de calculer le prix. Vérifiez votre connexion et réessayez.",
+  "priceBasedOn": "Selon la distance ({km} km), le poids et la date de livraison",
+  "@priceBasedOn": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "priceRateLine": "1 USD = {rate} {currency} · mis à jour {date}",
+  "@priceRateLine": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

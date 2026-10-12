@@ -4,6 +4,8 @@
 // wide on a 400px phone), with enlarged text, in every supported language
 // (translations are often longer than English). Any layout overflow makes the
 // framework report an exception, which fails the test.
+import 'dart:typed_data';
+
 import 'package:carrywise_app/screens/add_trip_screen.dart';
 import 'package:carrywise_app/screens/checkout_escrow_screen.dart';
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
@@ -22,7 +24,9 @@ import 'package:carrywise_app/screens/splash_screen.dart';
 import 'package:carrywise_app/screens/traveler_profile_screen.dart';
 import 'package:carrywise_app/screens/traveler_results_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
+import 'package:carrywise_app/services/city_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
+import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,8 +54,44 @@ Future<void> _tap(WidgetTester tester, Key key) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
+/// A delivery request screen whose price inputs come from fakes, in the given
+/// currency. The route's cities are included so a price is shown.
+Widget _requestScreen({
+  TravelerTrip? trip,
+  AppCurrency currency = AppCurrency.usd,
+  FakeCityService? cities,
+  FakeExchangeRateService? rates,
+  Future<PickedReceipt?> Function({required bool camera})? photoPicker,
+}) {
+  PreferencesService().setCurrency(currency);
+  final t = trip ?? sampleTrip();
+  return DeliveryRequestScreen(
+    trip: t,
+    service: FakeRequestService(),
+    cityService:
+        cities ??
+        FakeCityService(
+          cities: {
+            '${t.departureCountry}|${t.departureCity}': const CityCoordinates(
+              -26.2,
+              28.0,
+            ),
+            '${t.arrivalCountry}|${t.arrivalCity}': const CityCoordinates(
+              10.8,
+              106.6,
+            ),
+          },
+        ),
+    exchangeRates: rates ?? FakeExchangeRateService(),
+    now: () => DateTime.utc(2030, 6, 21, 12),
+    photoPicker: photoPicker,
+  );
+}
+
 void main() {
   var realFonts = false;
+
+  tearDown(() => PreferencesService().setCurrency(AppCurrency.usd));
 
   setUpAll(() async {
     GoogleFonts.config.allowRuntimeFetching = false;
@@ -257,7 +297,15 @@ void main() {
           'created_at': '2025-03-01T10:00:00+00:00',
         },
     ),
-    'Delivery request': () => const DeliveryRequestScreen(),
+    'Delivery request': () => _requestScreen(
+      trip: sampleTrip(
+        firstName: 'Oluwaseun-Chukwuemeka',
+        lastName: 'Adewale-Okonkwo',
+        departureCity: 'Johannesburg',
+        arrivalCity: 'Ho Chi Minh City',
+        maxSize: 'Envelope / Document and other long size text',
+      ),
+    ),
     'Checkout (escrow)': () => const CheckoutEscrowScreen(),
     'Delivery confirmation': () => const DeliveryConfirmScreen(),
     'Review': () => const ReviewScreen(),
@@ -392,6 +440,106 @@ void main() {
             await t.tap(find.byType(ElevatedButton).first);
             await t.pump(const Duration(milliseconds: 200));
           },
+        ),
+        'Delivery request (error shown)': (
+          build: () => _requestScreen(trip: sampleTrip(maxWeightKg: 3)),
+          act: (t) async {
+            await t.ensureVisible(find.byKey(const ValueKey('request-send')));
+            await t.tap(find.byKey(const ValueKey('request-send')));
+            await t.pump(const Duration(milliseconds: 200));
+          },
+        ),
+        'Delivery request (three photos)': (
+          build: () => _requestScreen(
+            photoPicker: ({required bool camera}) async => PickedReceipt(
+              bytes: Uint8List(300),
+              name: 'p.jpg',
+              extension: 'jpg',
+            ),
+          ),
+          act: (t) async {
+            for (var i = 0; i < 3; i++) {
+              await t.ensureVisible(
+                find.byKey(const ValueKey('request-add-photo')),
+              );
+              await t.tap(find.byKey(const ValueKey('request-add-photo')));
+              await t.pump(const Duration(milliseconds: 400));
+              await t.tap(find.byKey(const ValueKey('request-photo-camera')));
+              await t.pump(const Duration(milliseconds: 400));
+            }
+          },
+        ),
+        'Delivery request (five items, long names)': (
+          build: () => _requestScreen(currency: AppCurrency.xof),
+          act: (t) async {
+            for (var i = 0; i < 4; i++) {
+              await t.ensureVisible(
+                find.byKey(const ValueKey('request-add-item')),
+              );
+              await t.tap(find.byKey(const ValueKey('request-add-item')));
+              await t.pump(const Duration(milliseconds: 100));
+            }
+            for (var i = 0; i < 5; i++) {
+              await t.enterText(
+                find.byKey(ValueKey('request-item-$i')),
+                'A very long item name that keeps going to the 80 limit ... $i',
+              );
+              await t.pump();
+            }
+            await t.enterText(
+              find.byKey(const ValueKey('request-weight')),
+              '2.5',
+            );
+            await t.pump(const Duration(milliseconds: 200));
+          },
+        ),
+        'Delivery request (second item missing its name)': (
+          build: () => _requestScreen(),
+          act: (t) async {
+            await t.ensureVisible(
+              find.byKey(const ValueKey('request-add-item')),
+            );
+            await t.tap(find.byKey(const ValueKey('request-add-item')));
+            await t.pump(const Duration(milliseconds: 100));
+            await t.enterText(
+              find.byKey(const ValueKey('request-item-0')),
+              'Watch',
+            );
+            await t.ensureVisible(find.byKey(const ValueKey('request-send')));
+            await t.tap(find.byKey(const ValueKey('request-send')));
+            await t.pump(const Duration(milliseconds: 200));
+          },
+        ),
+        'Delivery request (price in CFA francs, weight entered)': (
+          build: () => _requestScreen(currency: AppCurrency.xof),
+          act: (t) async {
+            await t.enterText(
+              find.byKey(const ValueKey('request-weight')),
+              '9.5',
+            );
+            await t.pump(const Duration(milliseconds: 200));
+          },
+        ),
+        'Delivery request (price in euros, weight entered)': (
+          build: () => _requestScreen(currency: AppCurrency.eur),
+          act: (t) async {
+            await t.enterText(
+              find.byKey(const ValueKey('request-weight')),
+              '2.5',
+            );
+            await t.pump(const Duration(milliseconds: 200));
+          },
+        ),
+        'Delivery request (rates unavailable)': (
+          build: () => _requestScreen(
+            currency: AppCurrency.gbp,
+            rates: FakeExchangeRateService()..result = null,
+          ),
+          act: (t) async {},
+        ),
+        'Delivery request (price could not be calculated)': (
+          build: () => _requestScreen(cities: FakeCityService()..fail = true),
+          act: (t) async {},
         ),
         'Traveler profile (several trips)': (
           build: () {

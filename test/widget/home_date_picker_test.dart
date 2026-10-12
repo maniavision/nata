@@ -26,23 +26,27 @@ void main() {
   setUp(() {
     // Two travelers arrive today, one arrives on the 15th of next month.
     final nextMonth = DateTime(today.year, today.month + 1, 15);
-    service = FakeTravelerService(trips: [
-      sampleTrip(tripId: 'a', departureDate: today, arrivalDate: today),
-      sampleTrip(
+    service = FakeTravelerService(
+      trips: [
+        sampleTrip(tripId: 'a', departureDate: today, arrivalDate: today),
+        sampleTrip(
           tripId: 'b',
           travelerId: 'traveler-2',
           firstName: 'Daniel',
           lastName: 'Okafor',
           departureDate: today,
-          arrivalDate: today),
-      sampleTrip(
+          arrivalDate: today,
+        ),
+        sampleTrip(
           tripId: 'c',
           travelerId: 'traveler-3',
           firstName: 'Maya',
           lastName: 'Tariq',
           departureDate: nextMonth,
-          arrivalDate: nextMonth),
-    ]);
+          arrivalDate: nextMonth,
+        ),
+      ],
+    );
   });
 
   /// Pumps Home on a tall screen so the whole calendar sheet is visible.
@@ -50,10 +54,11 @@ void main() {
     tester.view.physicalSize = const Size(900, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(appWrapper(HomeScreen(
-      authService: FakeAuthService(),
-      travelerService: service,
-    )));
+    await tester.pumpWidget(
+      appWrapper(
+        HomeScreen(authService: FakeAuthService(), travelerService: service),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 
@@ -71,8 +76,9 @@ void main() {
       tester.widget<Text>(find.byKey(const ValueKey('date-summary')));
 
   group('Home date picker', () {
-    testWidgets('opens with no date selected (no stale default date)',
-        (tester) async {
+    testWidgets('opens with no date selected (no stale default date)', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -81,8 +87,9 @@ void main() {
       expect(find.text('Confirm Date (Anytime)'), findsOneWidget);
     });
 
-    testWidgets('shows real traveler counts per day and per month',
-        (tester) async {
+    testWidgets('shows real traveler counts per day and per month', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -96,8 +103,9 @@ void main() {
       expect(find.text('2 flts'), findsNothing);
     });
 
-    testWidgets('calendar counts follow the data (nothing fake)',
-        (tester) async {
+    testWidgets('calendar counts follow the data (nothing fake)', (
+      tester,
+    ) async {
       service.trips = [];
       await pumpHome(tester);
       await openSheet(tester);
@@ -117,8 +125,9 @@ void main() {
       expect(find.byKey(ValueKey('calendar-day-${today.day}')), findsOneWidget);
     });
 
-    testWidgets('cannot navigate to months before the current one',
-        (tester) async {
+    testWidgets('cannot navigate to months before the current one', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -135,13 +144,16 @@ void main() {
 
       await tapKey(tester, 'calendar-next-month');
 
-      final next = DateFormat('MMMM yyyy', 'en')
-          .format(DateTime(today.year, today.month + 1));
+      final next = DateFormat(
+        'MMMM yyyy',
+        'en',
+      ).format(DateTime(today.year, today.month + 1));
       expect(find.text(next), findsOneWidget);
     });
 
-    testWidgets('picking a day and confirming updates the Home date row',
-        (tester) async {
+    testWidgets('picking a day and confirming updates the Home date row', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -157,8 +169,9 @@ void main() {
       expect(find.text('Anytime this month'), findsNothing);
     });
 
-    testWidgets('re-opening the picker keeps the previous choice',
-        (tester) async {
+    testWidgets('re-opening the picker keeps the previous choice', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
       await tapKey(tester, 'calendar-day-${today.day}');
@@ -170,8 +183,9 @@ void main() {
       expect(summary(tester).data, startsWith(fmtLong(today)));
     });
 
-    testWidgets('"This Week" chip selects the end of this week',
-        (tester) async {
+    testWidgets('"This Week" chip selects the end of this week', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -182,8 +196,9 @@ void main() {
       expect(find.text(fmt(endOfWeek(0))), findsOneWidget);
     });
 
-    testWidgets('"Next Week" chip selects the end of next week',
-        (tester) async {
+    testWidgets('"Next Week" chip selects the end of next week', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -206,17 +221,23 @@ void main() {
       expect(find.text('Anytime this month'), findsOneWidget);
     });
 
-    testWidgets('"Anytime" chip is highlighted when no date is chosen',
-        (tester) async {
+    testWidgets('"Anytime" chip is highlighted when no date is chosen', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
-      Color? chipColor(int i) => (tester
-              .widget<AnimatedContainer>(find.descendant(
-                  of: find.byKey(ValueKey('date-filter-$i')),
-                  matching: find.byType(AnimatedContainer)))
-              .decoration as BoxDecoration)
-          .color;
+      Color? chipColor(int i) =>
+          (tester
+                      .widget<AnimatedContainer>(
+                        find.descendant(
+                          of: find.byKey(ValueKey('date-filter-$i')),
+                          matching: find.byType(AnimatedContainer),
+                        ),
+                      )
+                      .decoration
+                  as BoxDecoration)
+              .color;
 
       expect(chipColor(0), isNot(chipColor(1))); // Anytime is the active one
       await tapKey(tester, 'date-filter-1');
@@ -227,8 +248,9 @@ void main() {
       expect(chipColor(1), isNot(active));
     });
 
-    testWidgets('"Flexible" chip adds ±3 days and shows on Home',
-        (tester) async {
+    testWidgets('"Flexible" chip adds ±3 days and shows on Home', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -250,8 +272,9 @@ void main() {
       expect(summary(tester).data, isNot(contains('±3 days')));
     });
 
-    testWidgets('closing the sheet without confirming changes nothing',
-        (tester) async {
+    testWidgets('closing the sheet without confirming changes nothing', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
 
@@ -269,8 +292,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('search is sent without a date when "Anytime"',
-        (tester) async {
+    testWidgets('search is sent without a date when "Anytime"', (tester) async {
       await pumpHome(tester);
       await search(tester);
 
@@ -289,8 +311,9 @@ void main() {
       expect(service.searchCalls.last['date'], today);
     });
 
-    testWidgets('flexible search accepts arrivals up to 3 days later',
-        (tester) async {
+    testWidgets('flexible search accepts arrivals up to 3 days later', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await openSheet(tester);
       await tapKey(tester, 'calendar-day-${today.day}');
@@ -299,8 +322,10 @@ void main() {
 
       await search(tester);
 
-      expect(service.searchCalls.last['date'],
-          today.add(const Duration(days: 3)));
+      expect(
+        service.searchCalls.last['date'],
+        today.add(const Duration(days: 3)),
+      );
     });
   });
 }

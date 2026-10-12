@@ -22,8 +22,7 @@ class IdentityVerificationScreen extends StatefulWidget {
       _IdentityVerificationScreenState();
 }
 
-class _IdentityVerificationScreenState
-    extends State<IdentityVerificationScreen>
+class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
     with SingleTickerProviderStateMixin {
   late int _step = widget.initialStep; // 0=ID upload, 1=face scan, 2=success
   int _idType = 0; // 0=passport, 1=driver's lic, 2=national id
@@ -46,9 +45,10 @@ class _IdentityVerificationScreenState
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _pulseAnim = Tween<double>(
+      begin: 0.6,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -68,7 +68,9 @@ class _IdentityVerificationScreenState
 
   Future<void> _submitAndNext() async {
     if (_documentBytes == null) {
-      setState(() => _submitError = 'Please capture or upload your ID document first.');
+      setState(
+        () => _submitError = 'Please capture or upload your ID document first.',
+      );
       return;
     }
 
@@ -111,11 +113,16 @@ class _IdentityVerificationScreenState
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 350),
           transitionBuilder: (child, animation) => SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            position:
+                Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
             child: FadeTransition(opacity: animation, child: child),
           ),
           child: _step == 0
@@ -132,22 +139,23 @@ class _IdentityVerificationScreenState
                   submitError: _submitError,
                 )
               : _step == 1
-                  ? _Step2(
-                      key: const ValueKey(1),
-                      pulseAnim: _pulseAnim,
-                      onNext: () => setState(() => _step = 2),
-                      onBack: () => setState(() => _step = 0),
-                    )
-                  : _Step3(
-                      key: const ValueKey(2),
-                      onContinue: () {
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                              builder: (context) => const HomeScreen()),
-                          (route) => false,
-                        );
-                      },
-                    ),
+              ? _Step2(
+                  key: const ValueKey(1),
+                  pulseAnim: _pulseAnim,
+                  onNext: () => setState(() => _step = 2),
+                  onBack: () => setState(() => _step = 0),
+                )
+              : _Step3(
+                  key: const ValueKey(2),
+                  onContinue: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                ),
         ),
       ),
     );
@@ -164,7 +172,8 @@ class _Step1 extends StatelessWidget {
   final VoidCallback onBack;
   final Uint8List? documentBytes;
   final String? documentFileName;
-  final void Function(Uint8List bytes, String fileName, String mimeType) onDocumentPicked;
+  final void Function(Uint8List bytes, String fileName, String mimeType)
+  onDocumentPicked;
   final bool submitting;
   final String? submitError;
 
@@ -207,7 +216,9 @@ class _Step1 extends StatelessWidget {
                 Text(
                   context.l10n.verifyIdentitySub,
                   style: GoogleFonts.dmSans(
-                      fontSize: 12, color: AppColors.mutedForeground),
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildIdUploadCard(context),
@@ -223,8 +234,8 @@ class _Step1 extends StatelessWidget {
           buttonLabel: submitting
               ? 'Uploading...'
               : documentBytes != null
-                  ? 'Submit for Verification'
-                  : context.l10n.scanIdToContinue,
+              ? 'Submit for Verification'
+              : context.l10n.scanIdToContinue,
           buttonColor: documentBytes != null
               ? AppColors.accent
               : AppColors.primary,
@@ -254,8 +265,11 @@ class _Step1 extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: const Icon(Icons.arrow_back,
-                      color: AppColors.foreground, size: 20),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: AppColors.foreground,
+                    size: 20,
+                  ),
                 ),
               ),
               Row(
@@ -305,8 +319,7 @@ class _Step1 extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF1ED),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: AppColors.accent.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
       ),
       padding: const EdgeInsets.all(14),
       child: Row(
@@ -319,8 +332,11 @@ class _Step1 extends StatelessWidget {
               color: AppColors.accent.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.shield_outlined,
-                size: 18, color: AppColors.accent),
+            child: const Icon(
+              Icons.shield_outlined,
+              size: 18,
+              color: AppColors.accent,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -364,7 +380,9 @@ class _Step1 extends StatelessWidget {
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.2), width: 2),
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -387,12 +405,14 @@ class _Step1 extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text('1',
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.primaryForeground,
-                      )),
+                  child: Text(
+                    '1',
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.primaryForeground,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -400,39 +420,44 @@ class _Step1 extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(context.l10n.uploadOfficialId,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          color: AppColors.foreground,
-                        )),
-                    Text(context.l10n.passportOrId,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
-                        )),
+                    Text(
+                      context.l10n.uploadOfficialId,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    Text(
+                      context.l10n.passportOrId,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(context.l10n.activeStep,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                      letterSpacing: 1.0,
-                      color: AppColors.accent,
-                    )),
+                child: Text(
+                  context.l10n.activeStep,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    letterSpacing: 1.0,
+                    color: AppColors.accent,
+                  ),
+                ),
               ),
             ],
           ),
@@ -448,33 +473,34 @@ class _Step1 extends StatelessWidget {
                     margin: EdgeInsets.only(right: e.key < 2 ? 8 : 0),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected
-                          ? AppColors.primary
-                          : AppColors.input,
+                      color: selected ? AppColors.primary : AppColors.input,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.border),
+                        color: selected ? AppColors.primary : AppColors.border,
+                      ),
                     ),
                     child: Column(
                       children: [
-                        Icon(e.value.$1,
-                            size: 16,
+                        Icon(
+                          e.value.$1,
+                          size: 16,
+                          color: selected
+                              ? Colors.white
+                              : AppColors.mutedForeground,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          e.value.$2,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            fontSize: 10,
                             color: selected
                                 ? Colors.white
-                                : AppColors.mutedForeground),
-                        const SizedBox(height: 4),
-                        Text(e.value.$2,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontSize: 10,
-                              color: selected
-                                  ? Colors.white
-                                  : AppColors.foreground,
-                            )),
+                                : AppColors.foreground,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -496,19 +522,25 @@ class _Step1 extends StatelessWidget {
                 color: AppColors.destructive.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: AppColors.destructive.withValues(alpha: 0.3)),
+                  color: AppColors.destructive.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline_rounded,
-                      size: 16, color: AppColors.destructive),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 16,
+                    color: AppColors.destructive,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(submitError!,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 12,
-                          color: AppColors.destructive,
-                        )),
+                    child: Text(
+                      submitError!,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 12,
+                        color: AppColors.destructive,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -534,8 +566,11 @@ class _Step1 extends StatelessWidget {
               height: 180,
               color: AppColors.secondary,
               child: const Center(
-                child: Icon(Icons.insert_drive_file_rounded,
-                    size: 48, color: AppColors.primary),
+                child: Icon(
+                  Icons.insert_drive_file_rounded,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
@@ -543,8 +578,11 @@ class _Step1 extends StatelessWidget {
         const SizedBox(height: 8),
         Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                size: 16, color: Color(0xFF168A68)),
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 16,
+              color: Color(0xFF168A68),
+            ),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
@@ -593,8 +631,11 @@ class _Step1 extends StatelessWidget {
               color: AppColors.secondary,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.add_a_photo_rounded,
-                size: 24, color: AppColors.primary),
+            child: const Icon(
+              Icons.add_a_photo_rounded,
+              size: 24,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
@@ -664,12 +705,14 @@ class _Step1 extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: AppColors.foreground),
             const SizedBox(width: 5),
-            Text(label,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: AppColors.foreground,
-                )),
+            Text(
+              label,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: AppColors.foreground,
+              ),
+            ),
           ],
         ),
       ),
@@ -690,20 +733,28 @@ class _Step1 extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt_rounded,
-                    color: AppColors.primary),
-                title: Text(context.l10n.useCamera,
-                    style: GoogleFonts.dmSans(fontWeight: FontWeight.w600)),
+                leading: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  context.l10n.useCamera,
+                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickFromCamera(context);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_rounded,
-                    color: AppColors.primary),
-                title: Text(context.l10n.chooseFile,
-                    style: GoogleFonts.dmSans(fontWeight: FontWeight.w600)),
+                leading: const Icon(
+                  Icons.photo_library_rounded,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  context.l10n.chooseFile,
+                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickFromGallery(context);
@@ -754,8 +805,8 @@ class _Step1 extends StatelessWidget {
       final mime = ext == 'pdf'
           ? 'application/pdf'
           : ext == 'png'
-              ? 'image/png'
-              : 'image/jpeg';
+          ? 'image/png'
+          : 'image/jpeg';
       onDocumentPicked(file.bytes!, file.name, mime);
     } catch (e) {
       debugPrint('[Step1] file picker error: $e');
@@ -774,10 +825,7 @@ class _Step1 extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -791,12 +839,14 @@ class _Step1 extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text('2',
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.mutedForeground,
-                  )),
+              child: Text(
+                '2',
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -804,34 +854,39 @@ class _Step1 extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.faceScan,
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      color: AppColors.foreground,
-                    )),
-                Text(context.l10n.faceScanSub,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      color: AppColors.mutedForeground,
-                    )),
+                Text(
+                  context.l10n.faceScan,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                Text(
+                  context.l10n.faceScanSub,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.muted,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text(context.l10n.nextStep,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
-                  letterSpacing: 1.0,
-                  color: AppColors.mutedForeground,
-                )),
+            child: Text(
+              context.l10n.nextStep,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 10,
+                letterSpacing: 1.0,
+                color: AppColors.mutedForeground,
+              ),
+            ),
           ),
         ],
       ),
@@ -850,23 +905,29 @@ class _Step1 extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_rounded,
-                size: 14, color: Color(0xFF168A68)),
+            const Icon(Icons.lock_rounded, size: 14, color: Color(0xFF168A68)),
             const SizedBox(width: 4),
-            Text(context.l10n.encrypted256,
-                style: GoogleFonts.dmSans(
-                    fontSize: 11, color: AppColors.mutedForeground)),
+            Text(
+              context.l10n.encrypted256,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
           ],
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.bolt_rounded,
-                size: 14, color: AppColors.accent),
+            const Icon(Icons.bolt_rounded, size: 14, color: AppColors.accent),
             const SizedBox(width: 4),
-            Text(context.l10n.instantAi,
-                style: GoogleFonts.dmSans(
-                    fontSize: 11, color: AppColors.mutedForeground)),
+            Text(
+              context.l10n.instantAi,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
           ],
         ),
       ],
@@ -914,7 +975,9 @@ class _Step2 extends StatelessWidget {
                 Text(
                   context.l10n.faceScanBody,
                   style: GoogleFonts.dmSans(
-                      fontSize: 12, color: AppColors.mutedForeground),
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildFaceCard(context),
@@ -927,8 +990,7 @@ class _Step2 extends StatelessWidget {
         _buildFooter(
           buttonLabel: context.l10n.startBiometricScan,
           buttonColor: AppColors.accent,
-          footnote:
-              context.l10n.biometricLocalNote,
+          footnote: context.l10n.biometricLocalNote,
           onTap: onNext,
         ),
       ],
@@ -952,8 +1014,11 @@ class _Step2 extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: const Icon(Icons.arrow_back,
-                      color: AppColors.foreground, size: 20),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: AppColors.foreground,
+                    size: 20,
+                  ),
                 ),
               ),
               Expanded(
@@ -1019,12 +1084,10 @@ class _Step2 extends StatelessWidget {
         color: const Color(0xFFE4F4EE),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: const Color(0xFF168A68).withValues(alpha: 0.3)),
+          color: const Color(0xFF168A68).withValues(alpha: 0.3),
+        ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4),
         ],
       ),
       padding: const EdgeInsets.all(14),
@@ -1037,38 +1100,47 @@ class _Step2 extends StatelessWidget {
               color: Color(0xFF168A68),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check_circle_rounded,
-                size: 18, color: Colors.white),
+            child: const Icon(
+              Icons.check_circle_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.step1Completed,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: AppColors.foreground,
-                    )),
-                Text(context.l10n.passportVerified,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                      color: const Color(0xFF168A68),
-                    )),
+                Text(
+                  context.l10n.step1Completed,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                Text(
+                  context.l10n.passportVerified,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                    color: const Color(0xFF168A68),
+                  ),
+                ),
               ],
             ),
           ),
           GestureDetector(
             onTap: () {},
-            child: Text(context.l10n.editId,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: AppColors.mutedForeground,
-                  decoration: TextDecoration.underline,
-                )),
+            child: Text(
+              context.l10n.editId,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+                decoration: TextDecoration.underline,
+              ),
+            ),
           ),
         ],
       ),
@@ -1081,7 +1153,9 @@ class _Step2 extends StatelessWidget {
         color: AppColors.card,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-            color: AppColors.accent.withValues(alpha: 0.4), width: 2),
+          color: AppColors.accent.withValues(alpha: 0.4),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -1105,8 +1179,9 @@ class _Step2 extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.accent
-                          .withValues(alpha: pulseAnim.value),
+                      color: AppColors.accent.withValues(
+                        alpha: pulseAnim.value,
+                      ),
                       width: 4,
                       style: BorderStyle.solid,
                     ),
@@ -1122,8 +1197,9 @@ class _Step2 extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.accent
-                                .withValues(alpha: 0.3 * pulseAnim.value),
+                            color: AppColors.accent.withValues(
+                              alpha: 0.3 * pulseAnim.value,
+                            ),
                           ),
                         ),
                       ),
@@ -1132,26 +1208,25 @@ class _Step2 extends StatelessWidget {
                         child: Container(
                           width: 144,
                           height: 144,
-                          color: AppColors.primary
-                              .withValues(alpha: 0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
                               Image.network(
                                 'https://lh3.googleusercontent.com/a/ACg8ocJ97aGjnJ1qNWsqUS-lOIkKvwls8WK-SI54YY8POZz7eBd4JRE=s96-c',
                                 fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stack) =>
-                                        Container(
-                                  color: AppColors.secondary,
-                                  child: const Icon(Icons.person,
-                                      size: 60,
-                                      color: AppColors.primary),
-                                ),
+                                errorBuilder: (context, error, stack) =>
+                                    Container(
+                                      color: AppColors.secondary,
+                                      child: const Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
                               ),
                               Container(
-                                color: AppColors.accent
-                                    .withValues(alpha: 0.08),
+                                color: AppColors.accent.withValues(alpha: 0.08),
                               ),
                               Center(
                                 child: Container(
@@ -1160,8 +1235,9 @@ class _Step2 extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       width: 2,
                                       style: BorderStyle.solid,
                                     ),
@@ -1187,14 +1263,16 @@ class _Step2 extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              AppColors.accent.withValues(alpha: 0.4),
+                          color: AppColors.accent.withValues(alpha: 0.4),
                           blurRadius: 6,
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.face_retouching_natural,
-                        size: 18, color: Colors.white),
+                    child: const Icon(
+                      Icons.face_retouching_natural,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -1215,28 +1293,34 @@ class _Step2 extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.visibility_rounded,
-                        size: 16, color: AppColors.accent),
+                    const Icon(
+                      Icons.visibility_rounded,
+                      size: 16,
+                      color: AppColors.accent,
+                    ),
                     const SizedBox(width: 6),
                     Flexible(
-                      child: Text(context.l10n.holdStill,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.dmSans(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
-                            color: AppColors.foreground,
-                          )),
+                      child: Text(
+                        context.l10n.holdStill,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          color: AppColors.foreground,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                    context.l10n.nodHead,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      color: AppColors.mutedForeground,
-                    )),
+                  context.l10n.nodHead,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1244,14 +1328,23 @@ class _Step2 extends StatelessWidget {
           // Tips grid
           Row(
             children: [
-              _tipTile(Icons.wb_sunny_rounded, context.l10n.goodLight,
-                  const Color(0xFFF59E0B)),
+              _tipTile(
+                Icons.wb_sunny_rounded,
+                context.l10n.goodLight,
+                const Color(0xFFF59E0B),
+              ),
               const SizedBox(width: 8),
-              _tipTile(Icons.remove_red_eye_outlined, context.l10n.noGlasses,
-                  AppColors.primary),
+              _tipTile(
+                Icons.remove_red_eye_outlined,
+                context.l10n.noGlasses,
+                AppColors.primary,
+              ),
               const SizedBox(width: 8),
-              _tipTile(Icons.sentiment_neutral_rounded,
-                  context.l10n.neutralFace, const Color(0xFF168A68)),
+              _tipTile(
+                Icons.sentiment_neutral_rounded,
+                context.l10n.neutralFace,
+                const Color(0xFF168A68),
+              ),
             ],
           ),
         ],
@@ -1272,13 +1365,15 @@ class _Step2 extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: color),
             const SizedBox(height: 4),
-            Text(label,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.dmSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.mutedForeground,
-                )),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.mutedForeground,
+              ),
+            ),
           ],
         ),
       ),
@@ -1297,23 +1392,33 @@ class _Step2 extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_rounded,
-                size: 14, color: Color(0xFF168A68)),
+            const Icon(Icons.lock_rounded, size: 14, color: Color(0xFF168A68)),
             const SizedBox(width: 4),
-            Text(context.l10n.encrypted256,
-                style: GoogleFonts.dmSans(
-                    fontSize: 11, color: AppColors.mutedForeground)),
+            Text(
+              context.l10n.encrypted256,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
           ],
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.verified_user_rounded,
-                size: 14, color: Color(0xFF168A68)),
+            const Icon(
+              Icons.verified_user_rounded,
+              size: 14,
+              color: Color(0xFF168A68),
+            ),
             const SizedBox(width: 4),
-            Text(context.l10n.gdprCompliant,
-                style: GoogleFonts.dmSans(
-                    fontSize: 11, color: AppColors.mutedForeground)),
+            Text(
+              context.l10n.gdprCompliant,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
           ],
         ),
       ],
@@ -1346,31 +1451,41 @@ class _Step3 extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Icon(Icons.shield_rounded,
-                    color: AppColors.primary, size: 22),
+                child: const Icon(
+                  Icons.shield_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 4),
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE4F4EE),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                      color: const Color(0xFF168A68)
-                          .withValues(alpha: 0.3)),
+                    color: const Color(0xFF168A68).withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded,
-                        size: 14, color: Color(0xFF168A68)),
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      size: 14,
+                      color: Color(0xFF168A68),
+                    ),
                     const SizedBox(width: 4),
-                    Text(context.l10n.tier1Verified.split('·').first.trim() + ',',
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 11,
-                          letterSpacing: 1.0,
-                          color: const Color(0xFF168A68),
-                        )),
+                    Text(
+                      context.l10n.tier1Verified.split('·').first.trim() + ',',
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                        letterSpacing: 1.0,
+                        color: const Color(0xFF168A68),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1393,19 +1508,22 @@ class _Step3 extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: const Color(0xFF168A68), width: 4),
+                          color: const Color(0xFF168A68),
+                          width: 4,
+                        ),
                         color: AppColors.background,
                       ),
                       child: ClipOval(
                         child: Image.network(
                           'https://lh3.googleusercontent.com/a/ACg8ocJ97aGjnJ1qNWsqUS-lOIkKvwls8WK-SI54YY8POZz7eBd4JRE=s96-c',
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stack) =>
-                              Container(
+                          errorBuilder: (context, error, stack) => Container(
                             color: AppColors.secondary,
-                            child: const Icon(Icons.person,
-                                size: 48,
-                                color: AppColors.primary),
+                            child: const Icon(
+                              Icons.person,
+                              size: 48,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       ),
@@ -1420,29 +1538,35 @@ class _Step3 extends StatelessWidget {
                           color: const Color(0xFF168A68),
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: AppColors.background, width: 2),
+                            color: AppColors.background,
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  Colors.black.withValues(alpha: 0.15),
+                              color: Colors.black.withValues(alpha: 0.15),
                               blurRadius: 6,
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.verified_rounded,
-                            size: 20, color: Colors.white),
+                        child: const Icon(
+                          Icons.verified_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(context.l10n.fullyVerified,
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 24,
-                      letterSpacing: -0.5,
-                      color: AppColors.foreground,
-                    )),
+                Text(
+                  context.l10n.fullyVerified,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 24,
+                    letterSpacing: -0.5,
+                    color: AppColors.foreground,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   context.l10n.fullyVerifiedSub,
@@ -1482,22 +1606,26 @@ class _Step3 extends StatelessWidget {
                     backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
                     elevation: 2,
-                    shadowColor:
-                        AppColors.accent.withValues(alpha: 0.4),
+                    shadowColor: AppColors.accent.withValues(alpha: 0.4),
                     shape: const StadiumBorder(),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(context.l10n.continueToHome,
-                          style: GoogleFonts.dmSans(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: Colors.white,
-                          )),
+                      Text(
+                        context.l10n.continueToHome,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward,
-                          size: 18, color: Colors.white),
+                      const Icon(
+                        Icons.arrow_forward,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),
@@ -1508,14 +1636,19 @@ class _Step3 extends StatelessWidget {
                 height: 44,
                 child: OutlinedButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.account_circle_rounded,
-                      size: 16, color: AppColors.primary),
-                  label: Text(context.l10n.viewPublicProfile,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.foreground,
-                      )),
+                  icon: const Icon(
+                    Icons.account_circle_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  label: Text(
+                    context.l10n.viewPublicProfile,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.foreground,
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.border),
                     backgroundColor: AppColors.card,
@@ -1537,10 +1670,7 @@ class _Step3 extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -1550,45 +1680,67 @@ class _Step3 extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(context.l10n.verificationReport,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                      letterSpacing: 1.4,
-                      color: AppColors.mutedForeground,
-                    )),
+                child: Text(
+                  context.l10n.verificationReport,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    letterSpacing: 1.4,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
-              Text(context.l10n.instantApproval,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11,
-                    color: const Color(0xFF168A68),
-                  )),
+              Text(
+                context.l10n.instantApproval,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                  color: const Color(0xFF168A68),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           const Divider(color: AppColors.border, height: 1),
           const SizedBox(height: 12),
-          _reportRow(context, Icons.credit_card_rounded, context.l10n.passportIdDoc,
-              'Verified', const Color(0xFF168A68)),
+          _reportRow(
+            context,
+            Icons.credit_card_rounded,
+            context.l10n.passportIdDoc,
+            'Verified',
+            const Color(0xFF168A68),
+          ),
           const SizedBox(height: 10),
-          _reportRow(context, Icons.face_retouching_natural,
-              context.l10n.biometricLiveness, '99.8% Match',
-              const Color(0xFF168A68)),
+          _reportRow(
+            context,
+            Icons.face_retouching_natural,
+            context.l10n.biometricLiveness,
+            '99.8% Match',
+            const Color(0xFF168A68),
+          ),
           const SizedBox(height: 10),
-          _reportRow(context, Icons.shield_rounded,
-              context.l10n.trustLimit, '\$2,500 / delivery',
-              AppColors.accent),
+          _reportRow(
+            context,
+            Icons.shield_rounded,
+            context.l10n.trustLimit,
+            '\$2,500 / delivery',
+            AppColors.accent,
+          ),
         ],
       ),
     );
   }
 
-  Widget _reportRow(BuildContext context,
-      IconData icon, String label, String value, Color valueColor) {
+  Widget _reportRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+    Color valueColor,
+  ) {
     return Row(
       children: [
         Container(
@@ -1602,26 +1754,32 @@ class _Step3 extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(label,
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-                color: AppColors.foreground,
-              )),
+          child: Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: AppColors.foreground,
+            ),
+          ),
         ),
         Row(
           children: [
             if (valueColor == const Color(0xFF168A68))
-              const Icon(Icons.check_circle_rounded,
-                  size: 14, color: Color(0xFF168A68)),
-            if (valueColor == const Color(0xFF168A68))
-              const SizedBox(width: 4),
-            Text(value,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  color: valueColor,
-                )),
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 14,
+                color: Color(0xFF168A68),
+              ),
+            if (valueColor == const Color(0xFF168A68)) const SizedBox(width: 4),
+            Text(
+              value,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: valueColor,
+              ),
+            ),
           ],
         ),
       ],
@@ -1648,19 +1806,24 @@ class _Step3 extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.card_giftcard_rounded,
-                  size: 16, color: AppColors.accent),
+              const Icon(
+                Icons.card_giftcard_rounded,
+                size: 16,
+                color: AppColors.accent,
+              ),
               const SizedBox(width: 6),
               Flexible(
-                child: Text(context.l10n.unlockedPerks,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      letterSpacing: 1.2,
-                      color: AppColors.foreground,
-                    )),
+                child: Text(
+                  context.l10n.unlockedPerks,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: AppColors.foreground,
+                  ),
+                ),
               ),
             ],
           ),
@@ -1674,28 +1837,35 @@ class _Step3 extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: perks
-                    .map((p) => SizedBox(
-                          width: itemWidth,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 1),
-                                child: Icon(Icons.check_rounded,
-                                    size: 14, color: Color(0xFF168A68)),
+                    .map(
+                      (p) => SizedBox(
+                        width: itemWidth,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(top: 1),
+                              child: Icon(
+                                Icons.check_rounded,
+                                size: 14,
+                                color: Color(0xFF168A68),
                               ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(p,
-                                    style: GoogleFonts.dmSans(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 11,
-                                      color: AppColors.mutedForeground,
-                                    )),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                p,
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 11,
+                                  color: AppColors.mutedForeground,
+                                ),
                               ),
-                            ],
-                          ),
-                        ))
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                     .toList(),
               );
             },
@@ -1714,13 +1884,15 @@ Widget _buildProgressBar({required int step, required BuildContext context}) {
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(l.identityVerificationTitle.toUpperCase(),
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                letterSpacing: 1.2,
-                color: AppColors.primary,
-              )),
+          Text(
+            l.identityVerificationTitle.toUpperCase(),
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              letterSpacing: 1.2,
+              color: AppColors.primary,
+            ),
+          ),
           Text(
             step == 0 ? l.step1of2 : l.step2of2,
             style: GoogleFonts.dmSans(
@@ -1738,9 +1910,7 @@ Widget _buildProgressBar({required int step, required BuildContext context}) {
             child: Container(
               height: 6,
               decoration: BoxDecoration(
-                color: step == 0
-                    ? AppColors.accent
-                    : const Color(0xFF168A68),
+                color: step == 0 ? AppColors.accent : const Color(0xFF168A68),
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -1750,9 +1920,7 @@ Widget _buildProgressBar({required int step, required BuildContext context}) {
             child: Container(
               height: 6,
               decoration: BoxDecoration(
-                color: step == 1
-                    ? AppColors.accent
-                    : AppColors.muted,
+                color: step == 1 ? AppColors.accent : AppColors.muted,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -1770,69 +1938,78 @@ Widget _buildFooter({
   required VoidCallback onTap,
   bool loading = false,
 }) {
-  return Builder(builder: (context) {
-    return Container(
-      color: AppColors.background,
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        12 + MediaQuery.of(context).padding.bottom,
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: loading ? null : onTap,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: buttonColor,
-                disabledBackgroundColor: AppColors.muted,
-                foregroundColor: Colors.white,
-                elevation: 2,
-                shadowColor: buttonColor.withValues(alpha: 0.4),
-                shape: const StadiumBorder(),
-              ),
-              child: loading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2.5, color: Colors.white),
-                    )
-                  : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.camera_alt_rounded,
-                      size: 18, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      buttonLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: Colors.white,
+  return Builder(
+    builder: (context) {
+      return Container(
+        color: AppColors.background,
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          12 + MediaQuery.of(context).padding.bottom,
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: loading ? null : onTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: buttonColor,
+                  disabledBackgroundColor: AppColors.muted,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                  shadowColor: buttonColor.withValues(alpha: 0.4),
+                  shape: const StadiumBorder(),
+                ),
+                child: loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.camera_alt_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              buttonLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(footnote,
+            const SizedBox(height: 8),
+            Text(
+              footnote,
               textAlign: TextAlign.center,
               style: GoogleFonts.dmSans(
                 fontSize: 10,
                 color: AppColors.mutedForeground,
-              )),
-        ],
-      ),
-    );
-  });
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

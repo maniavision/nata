@@ -15,8 +15,10 @@ class FakeRpcBuilder extends Fake implements PostgrestFilterBuilder<dynamic> {
   final Object? error;
 
   @override
-  Future<U> then<U>(FutureOr<U> Function(dynamic value) onValue,
-      {Function? onError}) {
+  Future<U> then<U>(
+    FutureOr<U> Function(dynamic value) onValue, {
+    Function? onError,
+  }) {
     final future = error != null
         ? Future<dynamic>.error(error!)
         : Future<dynamic>.value(value);
@@ -31,26 +33,25 @@ Map<String, dynamic> tripJson({
   String lastName = 'Kalu',
   Object? avgRating = 4.9,
   Object? maxWeight = 3.0,
-}) =>
-    {
-      'trip_id': tripId,
-      'traveler_id': travelerId,
-      'first_name': firstName,
-      'last_name': lastName,
-      'avatar_path': 'https://example.com/a.jpg',
-      'avg_rating': avgRating,
-      'items_delivered_count': 28,
-      'departure_city': 'Lagos',
-      'departure_country': 'NG',
-      'arrival_city': 'London',
-      'arrival_country': 'GB',
-      'departure_date': '2030-06-22',
-      'arrival_date': '2030-06-23',
-      'price': 35,
-      'currency': 'USD',
-      'max_weight_kg': maxWeight,
-      'max_size': 'Shoebox',
-    };
+}) => {
+  'trip_id': tripId,
+  'traveler_id': travelerId,
+  'first_name': firstName,
+  'last_name': lastName,
+  'avatar_path': 'https://example.com/a.jpg',
+  'avg_rating': avgRating,
+  'items_delivered_count': 28,
+  'departure_city': 'Lagos',
+  'departure_country': 'NG',
+  'arrival_city': 'London',
+  'arrival_country': 'GB',
+  'departure_date': '2030-06-22',
+  'arrival_date': '2030-06-23',
+  'price': 35,
+  'currency': 'USD',
+  'max_weight_kg': maxWeight,
+  'max_size': 'Shoebox',
+};
 
 void main() {
   group('TravelerTrip.fromJson', () {
@@ -84,7 +85,8 @@ void main() {
 
     test('keeps missing optional values as null', () {
       final t = TravelerTrip.fromJson(
-          tripJson(avgRating: null, maxWeight: null)..['max_size'] = null);
+        tripJson(avgRating: null, maxWeight: null)..['max_size'] = null,
+      );
 
       expect(t.avgRating, isNull);
       expect(t.maxWeightKg, isNull);
@@ -106,33 +108,34 @@ void main() {
 
   group('TravelerProfile.fromJson', () {
     Map<String, dynamic> profileJson({List<Map<String, dynamic>>? trips}) => {
-          'id': 'user-1',
-          'first_name': 'Amara',
-          'last_name': 'Kalu',
-          'avatar_path': 'https://example.com/a.jpg',
-          'verification_status': 'verified',
-          'avg_rating': 4.9,
-          'items_delivered_count': 28,
-          'member_since': '2025-03-01T10:00:00+00:00',
-          // Trips from the database do NOT repeat the traveler fields.
-          'trips': trips ??
-              [
-                {
-                  'trip_id': 'trip-1',
-                  'traveler_id': 'user-1',
-                  'departure_city': 'Lagos',
-                  'departure_country': 'NG',
-                  'arrival_city': 'London',
-                  'arrival_country': 'GB',
-                  'departure_date': '2030-06-22',
-                  'arrival_date': '2030-06-22',
-                  'price': 35,
-                  'currency': 'USD',
-                  'max_weight_kg': 3,
-                  'max_size': 'Shoebox',
-                },
-              ],
-        };
+      'id': 'user-1',
+      'first_name': 'Amara',
+      'last_name': 'Kalu',
+      'avatar_path': 'https://example.com/a.jpg',
+      'verification_status': 'verified',
+      'avg_rating': 4.9,
+      'items_delivered_count': 28,
+      'member_since': '2025-03-01T10:00:00+00:00',
+      // Trips from the database do NOT repeat the traveler fields.
+      'trips':
+          trips ??
+          [
+            {
+              'trip_id': 'trip-1',
+              'traveler_id': 'user-1',
+              'departure_city': 'Lagos',
+              'departure_country': 'NG',
+              'arrival_city': 'London',
+              'arrival_country': 'GB',
+              'departure_date': '2030-06-22',
+              'arrival_date': '2030-06-22',
+              'price': 35,
+              'currency': 'USD',
+              'max_weight_kg': 3,
+              'max_size': 'Shoebox',
+            },
+          ],
+    };
 
     test('parses the profile', () {
       final p = TravelerProfile.fromJson(profileJson());
@@ -185,20 +188,29 @@ void main() {
     });
 
     Map<dynamic, dynamic> sentParams() {
-      final captured = verify(() => client.rpc<dynamic>(
-            'search_travelers',
-            params: captureAny(named: 'params'),
-          )).captured;
+      final captured = verify(
+        () => client.rpc<dynamic>(
+          'search_travelers',
+          params: captureAny(named: 'params'),
+        ),
+      ).captured;
       return captured.single as Map<dynamic, dynamic>;
     }
 
     test('returns the parsed trips', () async {
-      when(() => client.rpc<dynamic>('search_travelers',
-              params: any(named: 'params')))
-          .thenAnswer((_) => FakeRpcBuilder(value: [
-                tripJson(),
-                tripJson(tripId: 'trip-2', firstName: 'Daniel'),
-              ]));
+      when(
+        () => client.rpc<dynamic>(
+          'search_travelers',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer(
+        (_) => FakeRpcBuilder(
+          value: [
+            tripJson(),
+            tripJson(tripId: 'trip-2', firstName: 'Daniel'),
+          ],
+        ),
+      );
 
       final results = await service.search();
 
@@ -207,9 +219,12 @@ void main() {
     });
 
     test('sends only the filters that were provided', () async {
-      when(() => client.rpc<dynamic>('search_travelers',
-              params: any(named: 'params')))
-          .thenAnswer((_) => FakeRpcBuilder(value: []));
+      when(
+        () => client.rpc<dynamic>(
+          'search_travelers',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakeRpcBuilder(value: []));
 
       await service.search(departureCountry: 'NG', departureCity: 'Lagos');
 
@@ -221,9 +236,12 @@ void main() {
     });
 
     test('formats the date as yyyy-MM-dd', () async {
-      when(() => client.rpc<dynamic>('search_travelers',
-              params: any(named: 'params')))
-          .thenAnswer((_) => FakeRpcBuilder(value: []));
+      when(
+        () => client.rpc<dynamic>(
+          'search_travelers',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakeRpcBuilder(value: []));
 
       await service.search(date: DateTime(2030, 6, 5, 18, 30));
 
@@ -231,12 +249,18 @@ void main() {
     });
 
     test('sends the destination and the limit', () async {
-      when(() => client.rpc<dynamic>('search_travelers',
-              params: any(named: 'params')))
-          .thenAnswer((_) => FakeRpcBuilder(value: []));
+      when(
+        () => client.rpc<dynamic>(
+          'search_travelers',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakeRpcBuilder(value: []));
 
       await service.search(
-          arrivalCountry: 'GB', arrivalCity: 'London', limit: 100);
+        arrivalCountry: 'GB',
+        arrivalCity: 'London',
+        limit: 100,
+      );
 
       final params = sentParams();
       expect(params['p_arrival_country'], 'GB');
@@ -246,9 +270,12 @@ void main() {
     });
 
     test('rethrows failures so screens can show an error state', () async {
-      when(() => client.rpc<dynamic>('search_travelers',
-              params: any(named: 'params')))
-          .thenAnswer((_) => FakeRpcBuilder(error: Exception('boom')));
+      when(
+        () => client.rpc<dynamic>(
+          'search_travelers',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakeRpcBuilder(error: Exception('boom')));
 
       expect(service.search(), throwsException);
     });
@@ -264,28 +291,42 @@ void main() {
     });
 
     test('asks for the right traveler and parses the result', () async {
-      when(() => client.rpc<dynamic>('get_traveler_profile',
-              params: any(named: 'params')))
-          .thenAnswer((_) => FakeRpcBuilder(value: {
-                'id': 'user-1',
-                'first_name': 'Amara',
-                'last_name': 'Kalu',
-                'verification_status': 'verified',
-                'items_delivered_count': 28,
-                'trips': <dynamic>[],
-              }));
+      when(
+        () => client.rpc<dynamic>(
+          'get_traveler_profile',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer(
+        (_) => FakeRpcBuilder(
+          value: {
+            'id': 'user-1',
+            'first_name': 'Amara',
+            'last_name': 'Kalu',
+            'verification_status': 'verified',
+            'items_delivered_count': 28,
+            'trips': <dynamic>[],
+          },
+        ),
+      );
 
       final profile = await service.getProfile('user-1');
 
       expect(profile?.fullName, 'Amara Kalu');
-      verify(() => client.rpc<dynamic>('get_traveler_profile',
-          params: {'p_traveler_id': 'user-1'})).called(1);
+      verify(
+        () => client.rpc<dynamic>(
+          'get_traveler_profile',
+          params: {'p_traveler_id': 'user-1'},
+        ),
+      ).called(1);
     });
 
     test('returns null when the traveler does not exist', () async {
-      when(() => client.rpc<dynamic>('get_traveler_profile',
-              params: any(named: 'params')))
-          .thenAnswer((_) => FakeRpcBuilder(value: null));
+      when(
+        () => client.rpc<dynamic>(
+          'get_traveler_profile',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakeRpcBuilder(value: null));
 
       expect(await service.getProfile('missing'), isNull);
     });

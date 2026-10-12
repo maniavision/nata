@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
@@ -94,8 +93,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.arrow_back,
-                  color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -117,8 +119,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(Icons.filter_list_rounded,
-                color: AppColors.primary, size: 18),
+            child: const Icon(
+              Icons.filter_list_rounded,
+              color: AppColors.primary,
+              size: 18,
+            ),
           ),
         ],
       ),
@@ -138,16 +143,30 @@ class _RequestsScreenState extends State<RequestsScreen> {
         ),
         child: Row(
           children: [
-            _tabButton(context.l10n.incoming, 0, badge: '2', badgeBg: AppColors.accent),
-            _tabButton(context.l10n.outgoing, 1, badge: '3', badgeBg: AppColors.border),
+            _tabButton(
+              context.l10n.incoming,
+              0,
+              badge: '2',
+              badgeBg: AppColors.accent,
+            ),
+            _tabButton(
+              context.l10n.outgoing,
+              1,
+              badge: '3',
+              badgeBg: AppColors.border,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _tabButton(String label, int index,
-      {required String badge, required Color badgeBg}) {
+  Widget _tabButton(
+    String label,
+    int index, {
+    required String badge,
+    required Color badgeBg,
+  }) {
     final active = _tab == index;
     return Expanded(
       child: GestureDetector(
@@ -165,7 +184,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
-                    )
+                    ),
                   ]
                 : null,
           ),
@@ -175,8 +194,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
               Text(
                 label,
                 style: GoogleFonts.dmSans(
-                  fontWeight:
-                      active ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
                   fontSize: 12,
                   color: active
                       ? AppColors.foreground
@@ -216,12 +234,17 @@ class _RequestsScreenState extends State<RequestsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(context.l10n.incomingSection, '2 ${context.l10n.pendingReview}'),
+        _sectionHeader(
+          context.l10n.incomingSection,
+          '2 ${context.l10n.pendingReview}',
+        ),
         const SizedBox(height: 10),
-        ..._incoming.map((r) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: _IncomingCard(request: r),
-            )),
+        ..._incoming.map(
+          (r) => Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: _IncomingCard(request: r),
+          ),
+        ),
       ],
     );
   }
@@ -291,7 +314,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
         Text(
           count,
           style: GoogleFonts.dmSans(
-              fontSize: 12, color: AppColors.mutedForeground),
+            fontSize: 12,
+            color: AppColors.mutedForeground,
+          ),
         ),
       ],
     );
@@ -348,8 +373,7 @@ class _IncomingCardState extends State<_IncomingCard> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => Container(
                       color: AppColors.secondary,
-                      child: const Icon(Icons.person,
-                          color: AppColors.primary),
+                      child: const Icon(Icons.person, color: AppColors.primary),
                     ),
                   ),
                 ),
@@ -379,7 +403,9 @@ class _IncomingCardState extends State<_IncomingCard> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(999),
@@ -409,8 +435,7 @@ class _IncomingCardState extends State<_IncomingCard> {
           const SizedBox(height: 12),
           // Photo row
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.secondary.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
@@ -418,8 +443,11 @@ class _IncomingCardState extends State<_IncomingCard> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.camera_alt_rounded,
-                    size: 16, color: AppColors.primary),
+                const Icon(
+                  Icons.camera_alt_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -433,7 +461,9 @@ class _IncomingCardState extends State<_IncomingCard> {
                 GestureDetector(
                   onTap: () {},
                   child: Text(
-                    widget.request.photos.startsWith('2') ? context.l10n.viewPhotos : context.l10n.viewPhoto,
+                    widget.request.photos.startsWith('2')
+                        ? context.l10n.viewPhotos
+                        : context.l10n.viewPhoto,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
@@ -452,8 +482,7 @@ class _IncomingCardState extends State<_IncomingCard> {
                 child: GestureDetector(
                   onTap: () => setState(() => _dismissed = true),
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: AppColors.card,
                       borderRadius: BorderRadius.circular(999),
@@ -462,9 +491,11 @@ class _IncomingCardState extends State<_IncomingCard> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.cancel_outlined,
-                            size: 16,
-                            color: AppColors.mutedForeground),
+                        const Icon(
+                          Icons.cancel_outlined,
+                          size: 16,
+                          color: AppColors.mutedForeground,
+                        ),
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
@@ -489,11 +520,14 @@ class _IncomingCardState extends State<_IncomingCard> {
                   onTap: () {
                     setState(() => _dismissed = true);
                     // Navigate to chat to arrange handoff
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MessagesScreen()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MessagesScreen(),
+                      ),
+                    );
                   },
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: AppColors.accent,
                       borderRadius: BorderRadius.circular(999),
@@ -501,8 +535,11 @@ class _IncomingCardState extends State<_IncomingCard> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.check_circle_rounded,
-                            size: 16, color: Colors.white),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
@@ -535,7 +572,9 @@ class _IncomingCardState extends State<_IncomingCard> {
         Text(
           label,
           style: GoogleFonts.dmSans(
-              fontSize: 12, color: AppColors.mutedForeground),
+            fontSize: 12,
+            color: AppColors.mutedForeground,
+          ),
         ),
         Flexible(
           child: Text(
@@ -615,21 +654,41 @@ class _OutgoingCard extends StatelessWidget {
                     child: ColorFiltered(
                       colorFilter: dimmed
                           ? const ColorFilter.matrix([
-                              0.2126, 0.7152, 0.0722, 0, 0,
-                              0.2126, 0.7152, 0.0722, 0, 0,
-                              0.2126, 0.7152, 0.0722, 0, 0,
-                              0, 0, 0, 1, 0,
+                              0.2126,
+                              0.7152,
+                              0.0722,
+                              0,
+                              0,
+                              0.2126,
+                              0.7152,
+                              0.0722,
+                              0,
+                              0,
+                              0.2126,
+                              0.7152,
+                              0.0722,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              1,
+                              0,
                             ])
                           : const ColorFilter.mode(
-                              Colors.transparent, BlendMode.multiply),
+                              Colors.transparent,
+                              BlendMode.multiply,
+                            ),
                       child: Image.network(
                         imageUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stack) =>
-                            Container(
+                        errorBuilder: (context, error, stack) => Container(
                           color: AppColors.secondary,
-                          child: const Icon(Icons.person,
-                              color: AppColors.primary, size: 20),
+                          child: const Icon(
+                            Icons.person,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ),
@@ -653,7 +712,9 @@ class _OutgoingCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: statusBg,
                               borderRadius: BorderRadius.circular(999),
@@ -703,8 +764,11 @@ class _OutgoingCard extends StatelessWidget {
                   Expanded(
                     child: Row(
                       children: [
-                        const Icon(Icons.access_time_rounded,
-                            size: 14, color: Color(0xFFB45309)),
+                        const Icon(
+                          Icons.access_time_rounded,
+                          size: 14,
+                          color: Color(0xFFB45309),
+                        ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
@@ -725,19 +789,22 @@ class _OutgoingCard extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const CheckoutEscrowScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const CheckoutEscrowScreen(),
+                        ),
                       );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.accent,
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                AppColors.accent.withValues(alpha: 0.3),
+                            color: AppColors.accent.withValues(alpha: 0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -754,8 +821,11 @@ class _OutgoingCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.arrow_forward,
-                              size: 14, color: Colors.white),
+                          const Icon(
+                            Icons.arrow_forward,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ],
                       ),
                     ),
@@ -766,7 +836,11 @@ class _OutgoingCard extends StatelessWidget {
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MessagesScreen()));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const MessagesScreen(),
+                    ),
+                  );
                 },
                 child: Container(
                   width: double.infinity,
@@ -779,15 +853,20 @@ class _OutgoingCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.chat_bubble_outline_rounded,
-                          size: 15, color: AppColors.primary),
+                      const Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 15,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 6),
-                      Text(context.l10n.arrangeHandoff,
-                          style: GoogleFonts.dmSans(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                            color: AppColors.primary,
-                          )),
+                      Text(
+                        context.l10n.arrangeHandoff,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -815,7 +894,11 @@ class _OutgoingCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   GestureDetector(
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const TravelerResultsScreen()));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const TravelerResultsScreen(),
+                        ),
+                      );
                     },
                     child: Text(
                       context.l10n.findAnotherTraveler,
@@ -838,7 +921,14 @@ class _OutgoingCard extends StatelessWidget {
 
 // ── Data models ────────────────────────────────────────────────────────────
 class _IncomingRequest {
-  final String name, subtitle, amount, trip, date, item, weight, photos,
+  final String name,
+      subtitle,
+      amount,
+      trip,
+      date,
+      item,
+      weight,
+      photos,
       imageUrl;
   const _IncomingRequest({
     required this.name,
@@ -852,4 +942,3 @@ class _IncomingRequest {
     required this.imageUrl,
   });
 }
-

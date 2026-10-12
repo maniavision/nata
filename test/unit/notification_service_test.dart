@@ -51,10 +51,13 @@ class FakeQuery<T> extends Fake implements PostgrestFilterBuilder<T> {
   }
 
   @override
-  Future<U> then<U>(FutureOr<U> Function(T value) onValue,
-      {Function? onError}) {
-    final future =
-        error != null ? Future<T>.error(error!) : Future<T>.value(value);
+  Future<U> then<U>(
+    FutureOr<U> Function(T value) onValue, {
+    Function? onError,
+  }) {
+    final future = error != null
+        ? Future<T>.error(error!)
+        : Future<T>.value(value);
     return future.then(onValue, onError: onError);
   }
 }
@@ -67,25 +70,26 @@ Map<String, dynamic> row({
   String? imageUrl,
   bool? isRead = false,
   String createdAt = '2030-06-15T12:00:00+00:00',
-}) =>
-    {
-      'id': id,
-      'type': type,
-      'title': title,
-      'body': body,
-      'image_url': imageUrl,
-      'is_read': isRead,
-      'created_at': createdAt,
-    };
+}) => {
+  'id': id,
+  'type': type,
+  'title': title,
+  'body': body,
+  'image_url': imageUrl,
+  'is_read': isRead,
+  'created_at': createdAt,
+};
 
 void main() {
   group('AppNotification.fromJson', () {
     test('parses every field', () {
-      final n = AppNotification.fromJson(row(
-        type: 'message',
-        imageUrl: 'https://example.com/a.jpg',
-        isRead: true,
-      ));
+      final n = AppNotification.fromJson(
+        row(
+          type: 'message',
+          imageUrl: 'https://example.com/a.jpg',
+          isRead: true,
+        ),
+      );
 
       expect(n.id, 'n1');
       expect(n.type, 'message');
@@ -187,8 +191,11 @@ void main() {
 
         await service.list();
 
-        expect(query.calls,
-            ['eq:user_id=user-1', 'order:created_at:desc', 'limit:100']);
+        expect(query.calls, [
+          'eq:user_id=user-1',
+          'order:created_at:desc',
+          'limit:100',
+        ]);
       });
 
       test('honours the limit', () async {
@@ -202,10 +209,11 @@ void main() {
 
       test('parses the rows in order', () async {
         when(() => table.select(any())).thenAnswer(
-            (_) => FakeQuery<List<Map<String, dynamic>>>([
-                  row(id: 'a', type: 'request'),
-                  row(id: 'b', type: 'payment'),
-                ]));
+          (_) => FakeQuery<List<Map<String, dynamic>>>([
+            row(id: 'a', type: 'request'),
+            row(id: 'b', type: 'payment'),
+          ]),
+        );
 
         final list = await service.list();
 
@@ -214,30 +222,43 @@ void main() {
       });
 
       test('an empty table is an empty list', () async {
-        when(() => table.select(any())).thenAnswer(
-            (_) => FakeQuery<List<Map<String, dynamic>>>([]));
+        when(
+          () => table.select(any()),
+        ).thenAnswer((_) => FakeQuery<List<Map<String, dynamic>>>([]));
 
         expect(await service.list(), isEmpty);
       });
 
       test('asks only for the columns it needs', () async {
-        when(() => table.select(any())).thenAnswer(
-            (_) => FakeQuery<List<Map<String, dynamic>>>([]));
+        when(
+          () => table.select(any()),
+        ).thenAnswer((_) => FakeQuery<List<Map<String, dynamic>>>([]));
 
         await service.list();
 
         final cols =
             verify(() => table.select(captureAny())).captured.single as String;
-        for (final c in ['id', 'type', 'title', 'body', 'image_url', 'is_read', 'created_at']) {
+        for (final c in [
+          'id',
+          'type',
+          'title',
+          'body',
+          'image_url',
+          'is_read',
+          'created_at',
+        ]) {
           expect(cols, contains(c));
         }
         expect(cols, isNot(contains('user_id')));
       });
 
       test('errors are passed on so the screen can show them', () async {
-        when(() => table.select(any())).thenAnswer((_) =>
-            FakeQuery<List<Map<String, dynamic>>>([],
-                error: Exception('relation does not exist')));
+        when(() => table.select(any())).thenAnswer(
+          (_) => FakeQuery<List<Map<String, dynamic>>>(
+            [],
+            error: Exception('relation does not exist'),
+          ),
+        );
 
         expect(service.list(), throwsException);
       });
@@ -257,13 +278,15 @@ void main() {
         await service.markRead('n-9');
 
         expect(query.calls, ['eq:id=n-9', 'eq:user_id=user-1']);
-        expect(verify(() => table.update(captureAny())).captured.single,
-            {'is_read': true});
+        expect(verify(() => table.update(captureAny())).captured.single, {
+          'is_read': true,
+        });
       });
 
       test('failures are rethrown', () async {
         when(() => table.update(any())).thenAnswer(
-            (_) => FakeQuery<dynamic>(null, error: Exception('denied')));
+          (_) => FakeQuery<dynamic>(null, error: Exception('denied')),
+        );
 
         expect(service.markRead('n-9'), throwsException);
       });
@@ -277,13 +300,15 @@ void main() {
         await service.markAllRead();
 
         expect(query.calls, ['eq:user_id=user-1', 'eq:is_read=false']);
-        expect(verify(() => table.update(captureAny())).captured.single,
-            {'is_read': true});
+        expect(verify(() => table.update(captureAny())).captured.single, {
+          'is_read': true,
+        });
       });
 
       test('failures are rethrown', () async {
         when(() => table.update(any())).thenAnswer(
-            (_) => FakeQuery<dynamic>(null, error: Exception('denied')));
+          (_) => FakeQuery<dynamic>(null, error: Exception('denied')),
+        );
 
         expect(service.markAllRead(), throwsException);
       });
@@ -347,7 +372,10 @@ void main() {
     test('is translated to French', () {
       final fr = AppLocalizationsFr();
       expect(label(now, fr), "À l'instant");
-      expect(label(now.subtract(const Duration(minutes: 5)), fr), 'il y a 5 min');
+      expect(
+        label(now.subtract(const Duration(minutes: 5)), fr),
+        'il y a 5 min',
+      );
       expect(label(DateTime(2030, 6, 15, 8), fr), 'il y a 4 h');
       expect(label(DateTime(2030, 6, 14, 10), fr), 'Hier');
     });
@@ -355,23 +383,31 @@ void main() {
 
   group('AvatarImage.resolveUrl', () {
     test('a full URL is used as it is', () {
-      expect(AvatarImage.resolveUrl('https://example.com/a.jpg'),
-          'https://example.com/a.jpg');
+      expect(
+        AvatarImage.resolveUrl('https://example.com/a.jpg'),
+        'https://example.com/a.jpg',
+      );
     });
 
     test('a cache-busting ?t= is removed', () {
-      expect(AvatarImage.resolveUrl('https://example.com/a.jpg?t=123'),
-          'https://example.com/a.jpg');
+      expect(
+        AvatarImage.resolveUrl('https://example.com/a.jpg?t=123'),
+        'https://example.com/a.jpg',
+      );
     });
 
     test('a cache-busting &t= is removed but other parameters stay', () {
-      expect(AvatarImage.resolveUrl('https://example.com/a.jpg?w=40&t=123'),
-          'https://example.com/a.jpg?w=40');
+      expect(
+        AvatarImage.resolveUrl('https://example.com/a.jpg?w=40&t=123'),
+        'https://example.com/a.jpg?w=40',
+      );
     });
 
     test('surrounding spaces are ignored', () {
-      expect(AvatarImage.resolveUrl('  https://example.com/a.jpg  '),
-          'https://example.com/a.jpg');
+      expect(
+        AvatarImage.resolveUrl('  https://example.com/a.jpg  '),
+        'https://example.com/a.jpg',
+      );
     });
   });
 }

@@ -1,44 +1,452 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../main.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import '../l10n/l10n_ext.dart';
+import '../main.dart';
+import '../services/city_service.dart';
+import '../services/delivery_pricing.dart';
+import '../services/exchange_rate_service.dart';
+import '../services/preferences_service.dart';
+import '../services/request_service.dart';
+import '../services/traveler_service.dart';
+import '../services/trip_service.dart' show PickedReceipt;
+import '../widgets/avatar_image.dart';
 
+/// Takes or chooses an item photo. [camera] true = take it with the camera.
+/// Replaceable in tests.
+typedef RequestPhotoPicker =
+    Future<PickedReceipt?> Function({required bool camera});
+
+/// Ask a traveler to carry a parcel on one of their trips.
 class DeliveryRequestScreen extends StatefulWidget {
-  const DeliveryRequestScreen({super.key});
+  /// The trip (and traveler) the parcel is for.
+  final TravelerTrip trip;
+
+  /// Overrides for tests.
+  final RequestService? service;
+  final RequestPhotoPicker? photoPicker;
+  final String Function()? idGenerator;
+  final CityService? cityService;
+  final ExchangeRateService? exchangeRates;
+  final DateTime Function()? now;
+
+  const DeliveryRequestScreen({
+    super.key,
+    required this.trip,
+    this.service,
+    this.photoPicker,
+    this.idGenerator,
+    this.cityService,
+    this.exchangeRates,
+    this.now,
+  });
 
   @override
-  State<DeliveryRequestScreen> createState() =>
-      _DeliveryRequestScreenState();
+  State<DeliveryRequestScreen> createState() => _DeliveryRequestScreenState();
 }
 
 class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
-  final _itemCtrl =
-      TextEditingController(text: 'Apple AirPods Max (New in Box)');
-  final _descCtrl = TextEditingController(
-      text: 'Brand new sealed retail box with manufacturer wrap intact.');
-  final _weightCtrl = TextEditingController(text: '0.9 kg');
-  final _dimsCtrl = TextEditingController(text: '24 × 24 × 8 cm');
+  static const _maxPhotos = 3;
+  static const _maxPhotoBytes = 10 * 1024 * 1024;
 
-  int _category = 0; // 0=Electronics, 1=Apparel, 2=Documents
-  bool _photoAttached = true;
+  /// The items in the parcel; always at least one.
+  final List<_ItemForm> _items = [_ItemForm(0)];
+  int _nextItemId = 1;
 
-  static const _categories = [
-    (Icons.devices_rounded, 'Electronics'),
-    (Icons.checkroom_rounded, 'Apparel'),
-    (Icons.description_rounded, 'Documents'),
-  ];
+  final _recipientNameCtrl = TextEditingController();
+  final _recipientPhoneCtrl = TextEditingController();
+  final _weightCtrl = TextEditingController();
+  final _dimsCtrl = TextEditingController();
+
+  RequestSizeClass? _sizeClass;
+  final List<PickedReceipt> _photos = [];
+
+  bool _sending = false;
+  String? _error;
+
+  /// Created once for this screen. Retrying a failed send reuses it, so the
+  /// database can never end up with two copies of the same request.
+  late final String _requestId = (widget.idGenerator ?? generateUuidV4).call();
+
+  TravelerTrip get _trip => widget.trip;
+
+  static const _categoryIcons = {
+    RequestCategory.electronics: Icons.devices_rounded,
+    RequestCategory.apparel: Icons.checkroom_rounded,
+    RequestCategory.documents: Icons.description_rounded,
+  };
+
+  // ── Price ──────────────────────────────────────────────────────────────────
+  // The cost depends on the distance between the two cities, the weight and how
+  // close the flight is. It is calculated in US dollars and shown in the
+  // currency the user picked.
+
+  /// Kilometres between the departure and arrival city (null until known).
+  double? _distanceKm;
+  bool _distanceFailed = false;
+
+  /// Exchange rates (null until fetched, or when they cannot be had).
+  ExchangeRates? _rates;
+  bool _ratesDone = false;
+
+  /// The currency the user picked in the app.
+  final String _currency = PreferencesService().currency.code;
+
+  DateTime _now() => (widget.now ?? DateTime.now)();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDistance();
+    _loadRates();
+  }
+
+  Future<void> _loadDistance() async {
+    // (A retry clears the error; the first call comes from initState, where
+    // setState is not allowed and there is nothing to clear.)
+    if (_distanceFailed) setState(() => _distanceFailed = false);
+    try {
+      final cities = widget.cityService ?? CityService();
+      final from = await cities.coordinates(
+        _trip.departureCountry,
+        _trip.departureCity,
+      );
+      final to = await cities.coordinates(
+        _trip.arrivalCountry,
+        _trip.arrivalCity,
+      );
+      if (!mounted) return;
+      if (from == null || to == null) {
+        setState(() => _distanceFailed = true);
+        return;
+      }
+      setState(() {
+        _distanceKm = DistanceCalculator.haversine(
+          from.latitude,
+          from.longitude,
+          to.latitude,
+          to.longitude,
+        );
+      });
+    } catch (_) {
+      if (mounted) setState(() => _distanceFailed = true);
+    }
+  }
+
+  Future<void> _loadRates() async {
+    if (_currency == 'USD') {
+      _ratesDone = true;
+      return;
+    }
+    ExchangeRates? rates;
+    try {
+      rates = await (widget.exchangeRates ?? ExchangeRateService()).rates();
+    } catch (_) {
+      rates = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      _rates = rates;
+      _ratesDone = true;
+    });
+  }
+
+  /// The weight typed so far; 0 until it is a valid weight.
+  double get _weightKg => RequestInput.parseWeightKg(_weightCtrl.text) ?? 0;
+
+  /// The price in US dollars, or null while the distance is unknown.
+  DeliveryQuote? get _quote {
+    final km = _distanceKm;
+    if (km == null) return null;
+    return DeliveryQuote.compute(
+      distanceKm: km,
+      departureDate: _trip.departureDate,
+      now: _now(),
+      weightKg: _weightKg,
+    );
+  }
+
+  /// The rate for the user's currency, or null if it is not known.
+  double? get _rate => _currency == 'USD' ? 1 : _rates?.rateFor(_currency);
+
+  /// The price ready to show, or null while it is still being worked out.
+  RequestPricing? get _pricing {
+    final quote = _quote;
+    if (quote == null || !_ratesDone) return null;
+    final rate = _rate;
+    // Without a rate the price is shown in dollars rather than guessed.
+    return rate == null
+        ? RequestPricing.forQuote(quote)
+        : RequestPricing.forQuote(quote, currency: _currency, rate: rate);
+  }
 
   @override
   void dispose() {
-    _itemCtrl.dispose();
-    _descCtrl.dispose();
+    for (final item in _items) {
+      item.dispose();
+    }
+    _recipientNameCtrl.dispose();
+    _recipientPhoneCtrl.dispose();
     _weightCtrl.dispose();
     _dimsCtrl.dispose();
     super.dispose();
   }
 
+  String _categoryName(RequestCategory c) {
+    final l = context.l10n;
+    switch (c) {
+      case RequestCategory.electronics:
+        return l.electronics;
+      case RequestCategory.apparel:
+        return l.apparel;
+      case RequestCategory.documents:
+        return l.documents;
+    }
+  }
+
+  String _sizeName(RequestSizeClass c) {
+    final l = context.l10n;
+    switch (c) {
+      case RequestSizeClass.envelope:
+        return l.sizeEnvelope;
+      case RequestSizeClass.shoebox:
+        return l.sizeShoebox;
+      case RequestSizeClass.backpack:
+        return l.sizeBackpack;
+    }
+  }
+
+  void _clearError() {
+    if (_error != null) setState(() => _error = null);
+  }
+
+  // ── Items ──────────────────────────────────────────────────────────────────
+  void _addItem() {
+    if (_items.length >= RequestDraft.maxItems) return;
+    setState(() {
+      _items.add(_ItemForm(_nextItemId++));
+      _error = null;
+    });
+  }
+
+  void _removeItem(int index) {
+    if (_items.length <= 1) return;
+    final removed = _items[index];
+    setState(() {
+      _items.removeAt(index);
+      _error = null;
+    });
+    // The field is still on screen for this frame; free it afterwards.
+    WidgetsBinding.instance.addPostFrameCallback((_) => removed.dispose());
+  }
+
+  // ── Photos ─────────────────────────────────────────────────────────────────
+  Future<void> _addPhoto() async {
+    if (_photos.length >= _maxPhotos) {
+      setState(() => _error = context.l10n.errPhotoLimit);
+      return;
+    }
+    final camera = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              key: const ValueKey('request-photo-camera'),
+              leading: const Icon(
+                Icons.photo_camera_rounded,
+                color: AppColors.primary,
+              ),
+              title: Text(
+                ctx.l10n.takePhoto,
+                style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+              ),
+              onTap: () => Navigator.of(ctx).pop(true),
+            ),
+            ListTile(
+              key: const ValueKey('request-photo-library'),
+              leading: const Icon(
+                Icons.photo_library_rounded,
+                color: AppColors.primary,
+              ),
+              title: Text(
+                ctx.l10n.chatChoosePhoto,
+                style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+              ),
+              onTap: () => Navigator.of(ctx).pop(false),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (camera == null || !mounted) return;
+
+    try {
+      final picked = await (widget.photoPicker ?? _defaultPhotoPicker)(
+        camera: camera,
+      );
+      if (picked == null || !mounted) return;
+      if (picked.sizeBytes > _maxPhotoBytes) {
+        setState(() => _error = context.l10n.errPhotoTooBig);
+        return;
+      }
+      setState(() {
+        _photos.add(picked);
+        _error = null;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _error = context.l10n.chatCameraFailed);
+    }
+  }
+
+  static Future<PickedReceipt?> _defaultPhotoPicker({
+    required bool camera,
+  }) async {
+    final photo = await ImagePicker().pickImage(
+      source: camera ? ImageSource.camera : ImageSource.gallery,
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 80,
+    );
+    if (photo == null) return null;
+    final name = photo.name.isEmpty ? 'photo.jpg' : photo.name;
+    final ext = name.contains('.') ? name.split('.').last.toLowerCase() : 'jpg';
+    return PickedReceipt(
+      bytes: await photo.readAsBytes(),
+      name: name,
+      extension: ext,
+    );
+  }
+
+  // ── Validation + send ──────────────────────────────────────────────────────
+  /// The first thing wrong with the form, or null when it can be sent.
+  String? _validate() {
+    final l = context.l10n;
+    for (var i = 0; i < _items.length; i++) {
+      if (_items[i].name.text.trim().isEmpty) {
+        return _items.length == 1 ? l.errItemName : l.errItemNameN(i + 1);
+      }
+    }
+    if (_recipientNameCtrl.text.trim().length < 2) return l.errRecipientName;
+    if (RequestInput.normalizePhone(_recipientPhoneCtrl.text) == null) {
+      return l.errRecipientPhone;
+    }
+    final weight = RequestInput.parseWeightKg(_weightCtrl.text);
+    if (weight == null) return l.errWeight;
+    final max = _trip.maxWeightKg;
+    if (max != null && weight > max) {
+      return l.errWeightTooHeavy(max.toStringAsFixed(1));
+    }
+    final size = _sizeClass;
+    if (size == null) return l.errSizeRequired;
+    if (!size.fitsIn(RequestSizeClass.fromTripSize(_trip.maxSize))) {
+      return l.errSizeTooBig;
+    }
+    if (_photos.isEmpty) return l.errPhotoRequired;
+    return null;
+  }
+
+  Future<void> _send() async {
+    if (_sending) return;
+    final problem = _validate();
+    if (problem != null) {
+      setState(() => _error = problem);
+      return;
+    }
+
+    final quote = _quote;
+    if (quote == null) {
+      setState(() => _error = context.l10n.errQuoteUnavailable);
+      return;
+    }
+
+    final draft = RequestDraft(
+      tripId: _trip.tripId,
+      items: [
+        for (final item in _items)
+          RequestItem(
+            name: item.name.text,
+            category: item.category,
+            description: item.description.text,
+          ),
+      ],
+      weightKg: RequestInput.parseWeightKg(_weightCtrl.text)!,
+      dimensions: _dimsCtrl.text,
+      sizeClass: _sizeClass!,
+      recipientName: _recipientNameCtrl.text,
+      recipientPhone: RequestInput.normalizePhone(_recipientPhoneCtrl.text)!,
+      // Always in US dollars: that is what the database calculates and stores.
+      expectedTotal: quote.totalUsd,
+    );
+
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+
+    try {
+      await (widget.service ?? RequestService()).send(
+        _requestId,
+        draft,
+        List.of(_photos),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(context.l10n.requestSent)));
+      // Back to the start of the app: the request is on its way.
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } on RequestException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _error = _messageFor(e.reason);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _error = context.l10n.errRequestFailed;
+      });
+    }
+  }
+
+  String _messageFor(RequestFailure reason) {
+    final l = context.l10n;
+    switch (reason) {
+      case RequestFailure.notSignedIn:
+        return l.errSessionExpired;
+      case RequestFailure.tripUnavailable:
+        return l.errTripUnavailable;
+      case RequestFailure.ownTrip:
+        return l.errOwnTrip;
+      case RequestFailure.weightTooHeavy:
+        return l.errWeightTooHeavy((_trip.maxWeightKg ?? 0).toStringAsFixed(1));
+      case RequestFailure.duplicate:
+        return l.errDuplicate;
+      case RequestFailure.priceChanged:
+        return l.errPriceChanged;
+      case RequestFailure.sizeTooBig:
+        return l.errSizeTooBig;
+      case RequestFailure.invalid:
+        return l.errInvalidRequest;
+      case RequestFailure.other:
+        return l.errRequestFailed;
+    }
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,14 +458,18 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 120),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 160),
                 child: Column(
                   children: [
                     _buildTravelerSummary(),
                     const SizedBox(height: 16),
                     _buildItemRequirementBanner(),
                     const SizedBox(height: 16),
-                    _buildItemDetailsCard(),
+                    _buildItemsSection(),
+                    const SizedBox(height: 16),
+                    _buildRecipientCard(),
                     const SizedBox(height: 16),
                     _buildSizeWeightCard(),
                     const SizedBox(height: 16),
@@ -75,13 +487,13 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     );
   }
 
-  // ── Header ─────────────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
       child: Row(
         children: [
           GestureDetector(
+            key: const ValueKey('request-back'),
             onTap: () => Navigator.of(context).pop(),
             child: Container(
               width: 40,
@@ -91,14 +503,19 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.arrow_back,
-                  color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ),
           Expanded(
             child: Center(
               child: Text(
                 context.l10n.deliveryRequest,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
@@ -120,18 +537,17 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     );
   }
 
-  // ── Traveler summary ───────────────────────────────────────────────────────
+  // ── Selected traveler ──────────────────────────────────────────────────────
   Widget _buildTravelerSummary() {
+    final l = context.l10n;
+    final max = _trip.maxWeightKg;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-          ),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0D000000), offset: Offset(0, 1)),
         ],
       ),
       padding: const EdgeInsets.all(14),
@@ -145,13 +561,11 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               border: Border.all(color: AppColors.border, width: 2),
             ),
             child: ClipOval(
-              child: Image.network(
-                'https://randomuser.me/api/portraits/women/44.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) => Container(
+              child: AvatarImage(
+                path: _trip.avatarPath,
+                fallback: Container(
                   color: AppColors.secondary,
-                  child: const Icon(Icons.person,
-                      color: AppColors.primary),
+                  child: const Icon(Icons.person, color: AppColors.primary),
                 ),
               ),
             ),
@@ -162,7 +576,9 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n.selectedTraveler,
+                  l.selectedTraveler,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.dmSans(
                     fontWeight: FontWeight.w700,
                     fontSize: 9,
@@ -171,7 +587,10 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                   ),
                 ),
                 Text(
-                  'Amara Kalu',
+                  _trip.fullName,
+                  key: const ValueKey('request-traveler-name'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -179,7 +598,11 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                   ),
                 ),
                 Text(
-                  'Lagos (LOS) → London (LHR) · Jun 22',
+                  '${_trip.departureCity} → ${_trip.arrivalCity} · '
+                  '${DateFormat('MMM d').format(_trip.departureDate)}',
+                  key: const ValueKey('request-traveler-route'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     color: AppColors.mutedForeground,
@@ -188,35 +611,36 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.secondary,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'Max 3.0 kg',
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                color: AppColors.mutedForeground,
+          if (max != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                l.travelerMaxKg(max.toStringAsFixed(1)),
+                key: const ValueKey('request-max-chip'),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  // ── Item requirement banner ────────────────────────────────────────────────
   Widget _buildItemRequirementBanner() {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFF6EE),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: AppColors.accent.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.all(14),
       child: Row(
@@ -229,27 +653,32 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               color: AppColors.accent.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.inventory_2_rounded,
-                size: 20, color: AppColors.accent),
+            child: const Icon(
+              Icons.inventory_2_rounded,
+              size: 20,
+              color: AppColors.accent,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.itemRequirement,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: AppColors.accent,
-                    )),
-                const SizedBox(height: 3),
+                Text(
+                  context.l10n.itemRequirement,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.accent,
+                  ),
+                ),
+                const SizedBox(height: 2),
                 Text(
                   context.l10n.itemRequirementBody,
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     color: AppColors.foreground,
-                    height: 1.5,
+                    height: 1.6,
                   ),
                 ),
               ],
@@ -260,100 +689,317 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     );
   }
 
-  // ── Item details card ──────────────────────────────────────────────────────
-  Widget _buildItemDetailsCard() {
+  // ── Items ──────────────────────────────────────────────────────────────────
+  Widget _buildItemsSection() {
+    final l = context.l10n;
+    final atLimit = _items.length >= RequestDraft.maxItems;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.itemsTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l.itemsCount(_items.length),
+                key: const ValueKey('request-item-count'),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (var i = 0; i < _items.length; i++) ...[
+          _buildItemCard(i),
+          const SizedBox(height: 12),
+        ],
+        if (atLimit)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              l.itemsMaxNote(RequestDraft.maxItems),
+              key: const ValueKey('request-items-max'),
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          )
+        else
+          _buildAddItemButton(),
+      ],
+    );
+  }
+
+  Widget _buildAddItemButton() {
+    return GestureDetector(
+      key: const ValueKey('request-add-item'),
+      onTap: _addItem,
+      child: CustomPaint(
+        painter: _DashedBorderPainter(
+          color: AppColors.border,
+          radius: 20,
+          strokeWidth: 2,
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColors.input,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.add_circle_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  context.l10n.addAnotherItem,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemCard(int index) {
+    final l = context.l10n;
+    final item = _items[index];
+    return KeyedSubtree(
+      key: ValueKey('request-item-card-${item.id}'),
+      child: _Card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l.itemNumber(index + 1).toUpperCase(),
+                    key: ValueKey('request-item-title-$index'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                      letterSpacing: 1.4,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                if (_items.length > 1)
+                  GestureDetector(
+                    key: ValueKey('request-item-remove-$index'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _removeItem(index),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 14,
+                            color: AppColors.destructive,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            l.removeItem,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                              color: AppColors.destructive,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _fieldLabel(l.whatIsTheItem.toUpperCase()),
+            const SizedBox(height: 6),
+            _iconTextField(
+              fieldKey: 'request-item-$index',
+              icon: Icons.sell_rounded,
+              controller: item.name,
+              hint: l.itemNameHint,
+              maxLength: 80,
+              capitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: 14),
+            _fieldLabel(l.itemCategory.toUpperCase()),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                for (final c in RequestCategory.values)
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: c == RequestCategory.values.last ? 0 : 8,
+                      ),
+                      child: _categoryTile(index, c),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _fieldLabel(l.itemDescription.toUpperCase()),
+            const SizedBox(height: 6),
+            TextField(
+              key: ValueKey('request-description-$index'),
+              controller: item.description,
+              maxLines: 3,
+              minLines: 2,
+              maxLength: 300,
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (_) => _clearError(),
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: AppColors.foreground,
+              ),
+              decoration: InputDecoration(
+                hintText: l.itemDescHint,
+                hintStyle: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  color: AppColors.mutedForeground,
+                ),
+                counterText: '',
+                filled: true,
+                fillColor: AppColors.input,
+                isDense: true,
+                contentPadding: const EdgeInsets.all(12),
+                border: _fieldBorder(),
+                enabledBorder: _fieldBorder(),
+                focusedBorder: _fieldBorder(focused: true),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _categoryTile(int index, RequestCategory c) {
+    final active = _items[index].category == c;
+    return GestureDetector(
+      key: ValueKey('request-category-$index-${c.name}'),
+      onTap: () => setState(() => _items[index].category = c),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+        decoration: BoxDecoration(
+          color: active ? AppColors.primary : AppColors.input,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: active ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              _categoryIcons[c],
+              size: 16,
+              color: active ? Colors.white : AppColors.mutedForeground,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              _categoryName(c),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.dmSans(
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 10,
+                color: active ? Colors.white : AppColors.foreground,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Recipient ──────────────────────────────────────────────────────────────
+  Widget _buildRecipientCard() {
+    final l = context.l10n;
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _fieldLabel('WHAT IS THE ITEM?'),
-          const SizedBox(height: 6),
-          _iconTextField(
-            icon: Icons.label_rounded,
-            controller: _itemCtrl,
-            hint: 'e.g. Sony Headphones, Sealed Cosmetics...',
-          ),
-          const SizedBox(height: 14),
-          _fieldLabel('ITEM CATEGORY'),
-          const SizedBox(height: 8),
-          Row(
-            children: _categories.asMap().entries.map((e) {
-              final active = _category == e.key;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _category = e.key),
-                  child: Container(
-                    margin: EdgeInsets.only(
-                        right: e.key < _categories.length - 1 ? 8 : 0),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: active ? AppColors.primary : AppColors.input,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: active
-                              ? AppColors.primary
-                              : AppColors.border),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(e.value.$1,
-                            size: 16,
-                            color: active
-                                ? Colors.white
-                                : AppColors.mutedForeground),
-                        const SizedBox(height: 3),
-                        Text(e.value.$2,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: active
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontSize: 10,
-                              color: active
-                                  ? Colors.white
-                                  : AppColors.foreground,
-                            )),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 14),
-          _fieldLabel('ITEM DESCRIPTION'),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _descCtrl,
-            maxLines: 2,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
+          Text(
+            l.recipientDetails,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
               color: AppColors.foreground,
             ),
-            decoration: InputDecoration(
-              hintText:
-                  'Provide details about the item and packaging...',
-              hintStyle: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.mutedForeground,
-              ),
-              filled: true,
-              fillColor: AppColors.input,
-              isDense: true,
-              contentPadding: const EdgeInsets.all(12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: AppColors.ring, width: 2),
-              ),
+          ),
+          const SizedBox(height: 14),
+          _fieldLabel(l.recipientName.toUpperCase()),
+          const SizedBox(height: 6),
+          _iconTextField(
+            fieldKey: 'request-recipient-name',
+            icon: Icons.person_rounded,
+            controller: _recipientNameCtrl,
+            hint: l.recipientNameHint,
+            maxLength: 80,
+            capitalization: TextCapitalization.words,
+          ),
+          const SizedBox(height: 14),
+          _fieldLabel(l.recipientPhone.toUpperCase()),
+          const SizedBox(height: 6),
+          _iconTextField(
+            fieldKey: 'request-recipient-phone',
+            icon: Icons.phone_rounded,
+            controller: _recipientPhoneCtrl,
+            hint: l.recipientPhoneHint,
+            keyboardType: TextInputType.phone,
+            maxLength: 24,
+            formatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().\s]')),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l.recipientPhoneNote,
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: AppColors.mutedForeground,
             ),
           ),
         ],
@@ -361,38 +1007,55 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     );
   }
 
-  // ── Size & weight card ─────────────────────────────────────────────────────
+  // ── Size and weight ────────────────────────────────────────────────────────
   Widget _buildSizeWeightCard() {
+    final l = context.l10n;
+    final max = _trip.maxWeightKg;
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Size and Weight',
-              style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: AppColors.foreground,
-              )),
+          Text(
+            l.sizeAndWeight,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              color: AppColors.foreground,
+            ),
+          ),
           const SizedBox(height: 14),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _fieldLabel('PACKAGE WEIGHT'),
+                    _fieldLabel(l.packageWeight.toUpperCase(), small: true),
                     const SizedBox(height: 6),
                     _iconTextField(
-                      icon: Icons.monitor_weight_outlined,
+                      fieldKey: 'request-weight',
+                      icon: Icons.scale_rounded,
                       controller: _weightCtrl,
-                      hint: '0.0 kg',
+                      hint: l.weightHint,
+                      compact: true,
+                      maxLength: 10,
+                      onChangedExtra: () => setState(() {}),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text('Traveler limit: 3.0 kg',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 10,
-                          color: AppColors.mutedForeground,
-                        )),
+                    Text(
+                      l.travelerLimitLabel(
+                        max == null ? '—' : '${max.toStringAsFixed(1)} kg',
+                      ),
+                      key: const ValueKey('request-weight-limit'),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -401,22 +1064,48 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _fieldLabel('PACKAGE DIMENSIONS'),
+                    _fieldLabel(l.packageDimensions.toUpperCase(), small: true),
                     const SizedBox(height: 6),
                     _iconTextField(
+                      fieldKey: 'request-dimensions',
                       icon: Icons.inventory_2_outlined,
                       controller: _dimsCtrl,
-                      hint: '0 × 0 × 0 cm',
+                      hint: l.dimensionsHint,
+                      compact: true,
+                      maxLength: 40,
                     ),
                     const SizedBox(height: 4),
-                    Text('Traveler limit: Shoebox',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 10,
-                          color: AppColors.mutedForeground,
-                        )),
+                    Text(
+                      l.travelerLimitLabel(
+                        (_trip.maxSize ?? '').isEmpty ? '—' : _trip.maxSize!,
+                      ),
+                      key: const ValueKey('request-size-limit'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _fieldLabel(l.packageSize.toUpperCase(), small: true),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (final c in RequestSizeClass.values)
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: c == RequestSizeClass.values.last ? 0 : 8,
+                    ),
+                    child: _sizeTile(c),
+                  ),
+                ),
             ],
           ),
         ],
@@ -424,8 +1113,46 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     );
   }
 
-  // ── Photos card ────────────────────────────────────────────────────────────
+  Widget _sizeTile(RequestSizeClass c) {
+    final active = _sizeClass == c;
+    final tooBig = !c.fitsIn(RequestSizeClass.fromTripSize(_trip.maxSize));
+    return GestureDetector(
+      key: ValueKey('request-size-${c.dbValue}'),
+      onTap: () => setState(() {
+        _sizeClass = c;
+        _error = null;
+      }),
+      child: Opacity(
+        opacity: tooBig ? 0.5 : 1,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: active ? AppColors.primary : AppColors.input,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: active ? AppColors.primary : AppColors.border,
+            ),
+          ),
+          child: Text(
+            _sizeName(c),
+            maxLines: 2,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.dmSans(
+              fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 10,
+              color: active ? Colors.white : AppColors.foreground,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Photos ─────────────────────────────────────────────────────────────────
   Widget _buildPhotosCard() {
+    final l = context.l10n;
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,18 +1161,21 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(context.l10n.itemPhotos,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      color: AppColors.foreground,
-                    )),
+                child: Text(
+                  l.itemPhotos,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: AppColors.foreground,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Text(
-                _photoAttached ? '1 photo attached' : '0 photos',
+                l.photosAttachedCount(_photos.length),
+                key: const ValueKey('request-photo-count'),
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 11,
@@ -455,136 +1185,16 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
+          GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
             children: [
-              // Photo tile
-              if (_photoAttached)
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Stack(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary,
-                            borderRadius: BorderRadius.circular(12),
-                            border:
-                                Border.all(color: AppColors.border),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Container(color: AppColors.muted),
-                                Container(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.2),
-                                  child: const Center(
-                                    child: Icon(
-                                        Icons.check_circle_rounded,
-                                        color: Colors.white,
-                                        size: 28),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: () => setState(
-                                () => _photoAttached = false),
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: AppColors.card
-                                    .withValues(alpha: 0.9),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.close_rounded,
-                                  size: 12,
-                                  color: AppColors.foreground),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              if (_photoAttached) const SizedBox(width: 10),
-              // Add photo button
-              Expanded(
-                child: GestureDetector(
-                  onTap: () =>
-                      setState(() => _photoAttached = true),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.input,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.border,
-                          style: BorderStyle.solid,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add_a_photo_rounded,
-                              size: 22, color: AppColors.primary),
-                          const SizedBox(height: 4),
-                          Text(context.l10n.addPhoto,
-                              style: GoogleFonts.dmSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 10,
-                                color: AppColors.mutedForeground,
-                              )),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Hint tile
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary
-                          .withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color:
-                              AppColors.border.withValues(alpha: 0.6),
-                          style: BorderStyle.solid),
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.info_outline_rounded,
-                            size: 16,
-                            color: AppColors.mutedForeground),
-                        const SizedBox(height: 4),
-                        Text('Photo must show sealed factory seal',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.dmSans(
-                              fontSize: 9,
-                              color: AppColors.mutedForeground,
-                              height: 1.3,
-                            )),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              for (var i = 0; i < _photos.length; i++) _photoTile(i),
+              if (_photos.length < _maxPhotos) _addPhotoTile(),
+              if (_photos.length < _maxPhotos - 1) _sealHintTile(),
             ],
           ),
         ],
@@ -592,8 +1202,329 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     );
   }
 
-  // ── Pricing card ───────────────────────────────────────────────────────────
+  Widget _photoTile(int index) {
+    return ClipRRect(
+      key: ValueKey('request-photo-$index'),
+      borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.memory(
+            _photos[index].bytes,
+            fit: BoxFit.cover,
+            errorBuilder: (c, e, s) => Container(
+              color: AppColors.secondary,
+              child: const Icon(
+                Icons.image_outlined,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+          Container(
+            color: AppColors.primary.withValues(alpha: 0.2),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.check_circle_rounded,
+              size: 22,
+              color: Colors.white,
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              key: ValueKey('request-photo-remove-$index'),
+              onTap: () => setState(() {
+                _photos.removeAt(index);
+                _error = null;
+              }),
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: AppColors.card.withValues(alpha: 0.9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 14,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _addPhotoTile() {
+    return GestureDetector(
+      key: const ValueKey('request-add-photo'),
+      onTap: _addPhoto,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.input,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border, width: 2),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.add_a_photo_rounded,
+              size: 22,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                context.l10n.addPhoto,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 10,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sealHintTile() {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            size: 16,
+            color: AppColors.mutedForeground,
+          ),
+          const SizedBox(height: 4),
+          Flexible(
+            child: Text(
+              context.l10n.photoMustShowSeal,
+              textAlign: TextAlign.center,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.dmSans(
+                fontSize: 9,
+                height: 1.2,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Price ──────────────────────────────────────────────────────────────────
   Widget _buildPricingCard() {
+    final l = context.l10n;
+    final p = _pricing;
+
+    Widget line(String label, String value) => Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          value,
+          style: GoogleFonts.dmSans(
+            fontSize: 11,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+      ],
+    );
+
+    final Widget body;
+    if (_distanceFailed) {
+      body = Column(
+        children: [
+          Text(
+            l.errQuoteUnavailable,
+            key: const ValueKey('request-quote-error'),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('request-quote-retry'),
+            onPressed: _loadDistance,
+            child: Text(l.retry),
+          ),
+        ],
+      );
+    } else if (p == null) {
+      body = Row(
+        key: const ValueKey('request-price-loading'),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accent,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              l.priceCalculating,
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      final converted = p.currency != 'USD';
+      final rates = _rates;
+      body = Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.calculatedPrice,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.secondaryForeground,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                p.totalText,
+                key: const ValueKey('request-price-total'),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: AppColors.accent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          line(l.priceBasedOn(_distanceKm!.round().toString()), p.costText),
+          const SizedBox(height: 8),
+          line(l.platformProtectionLine, p.feeText),
+          if (_weightKg == 0) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l.priceEnterWeight,
+                key: const ValueKey('request-price-weight-hint'),
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ],
+          if (converted && rates != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l.priceRateLine(
+                  p.rate.toStringAsFixed(p.rate >= 100 ? 2 : 4),
+                  p.currency,
+                  DateFormat('MMM d').format(rates.updatedAt.toLocal()),
+                ),
+                key: const ValueKey('request-price-rate'),
+                style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l.priceCredit,
+                style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ],
+          if (_currency != 'USD' && rates == null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l.priceRateUnavailable,
+                key: const ValueKey('request-price-rate-missing'),
+                style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  color: AppColors.destructive,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          const Divider(color: AppColors.border, height: 1),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.info_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.priceNoteNothingCharged,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.6,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.secondary.withValues(alpha: 0.7),
@@ -601,135 +1532,147 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         border: Border.all(color: AppColors.border),
       ),
       padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(context.l10n.calculatedPrice,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.secondaryForeground,
-                  )),
-              Text('\$27.50',
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: AppColors.accent,
-                  )),
-            ],
+      child: body,
+    );
+  }
+
+  // ── Send bar ───────────────────────────────────────────────────────────────
+  Widget _buildSendBar(BuildContext context) {
+    final l = context.l10n;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.background.withValues(alpha: 0.95),
+            border: const Border(top: BorderSide(color: AppColors.border)),
           ),
-          const SizedBox(height: 8),
-          _priceRow(
-              'Based on weight (0.9 kg) & dimensions', '\$25.00'),
-          const SizedBox(height: 4),
-          _priceRow('Platform protection & escrow', '\$2.50'),
-          const SizedBox(height: 10),
-          const Divider(color: AppColors.border, height: 1),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            12 + MediaQuery.of(context).padding.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 1),
-                child: Icon(Icons.info_outline_rounded,
-                    size: 16, color: AppColors.primary),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  "The price is calculated from your item's weight & size. The traveler can accept or decline this request upon review.",
-                  style: GoogleFonts.dmSans(
-                    fontSize: 11,
-                    color: AppColors.mutedForeground,
-                    height: 1.5,
+              if (_error != null) ...[
+                Container(
+                  key: const ValueKey('request-error'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.destructive.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.destructive.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        size: 16,
+                        color: AppColors.destructive,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: AppColors.destructive,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  key: const ValueKey('request-send'),
+                  onPressed: (_sending || _pricing == null) ? null : _send,
+                  icon: _sending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.send_outlined,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                  label: Text(
+                    _pricing == null
+                        ? l.sendDeliveryRequest
+                        : l.sendRequestWithPrice(_pricing!.totalText),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    disabledBackgroundColor: AppColors.accent.withValues(
+                      alpha: 0.6,
+                    ),
+                    foregroundColor: Colors.white,
+                    elevation: 1,
+                    shadowColor: const Color(0x33000000),
+                    shape: const StadiumBorder(),
                   ),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _priceRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(label,
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                color: AppColors.mutedForeground,
-              )),
-        ),
-        const SizedBox(width: 12),
-        Text(value,
-            style: GoogleFonts.dmSans(
-              fontSize: 11,
-              color: AppColors.mutedForeground,
-            )),
-      ],
-    );
-  }
-
-  // ── Send button bar ────────────────────────────────────────────────────────
-  Widget _buildSendBar(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          color: AppColors.background.withValues(alpha: 0.95),
-          padding: EdgeInsets.fromLTRB(
-            20,
-            12,
-            20,
-            12 + MediaQuery.of(context).padding.bottom,
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.send_rounded,
-                  size: 18, color: Colors.white),
-              label: Text(context.l10n.sendDeliveryRequest,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: Colors.white,
-                  )),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                elevation: 2,
-                shadowColor: AppColors.accent.withValues(alpha: 0.4),
-                shape: const StadiumBorder(),
-              ),
-            ),
-          ),
         ),
       ),
     );
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  Widget _fieldLabel(String text) => Text(
-        text,
-        style: GoogleFonts.dmSans(
-          fontWeight: FontWeight.w700,
-          fontSize: 10,
-          letterSpacing: 1.2,
-          color: AppColors.mutedForeground,
-        ),
-      );
+  // ── Shared pieces ──────────────────────────────────────────────────────────
+  OutlineInputBorder _fieldBorder({bool focused = false}) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(
+      color: focused ? AppColors.ring.withValues(alpha: 0.4) : AppColors.border,
+      width: focused ? 2 : 1,
+    ),
+  );
+
+  Widget _fieldLabel(String text, {bool small = false}) => Text(
+    text,
+    maxLines: 2,
+    overflow: TextOverflow.ellipsis,
+    style: GoogleFonts.dmSans(
+      fontWeight: FontWeight.w700,
+      fontSize: small ? 10 : 11,
+      letterSpacing: 1.3,
+      color: AppColors.mutedForeground,
+    ),
+  );
 
   Widget _iconTextField({
+    required String fieldKey,
     required IconData icon,
     required TextEditingController controller,
     required String hint,
+    bool compact = false,
+    int? maxLength,
+    TextInputType? keyboardType,
+    TextCapitalization capitalization = TextCapitalization.none,
+    List<TextInputFormatter>? formatters,
+    VoidCallback? onChangedExtra,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -737,27 +1680,40 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(width: 10),
+          Icon(icon, size: compact ? 16 : 18, color: AppColors.primary),
+          SizedBox(width: compact ? 8 : 10),
           Expanded(
             child: TextField(
+              key: ValueKey(fieldKey),
               controller: controller,
+              keyboardType: keyboardType,
+              textCapitalization: capitalization,
+              maxLength: maxLength,
+              inputFormatters: formatters,
+              onChanged: (_) {
+                _clearError();
+                onChangedExtra?.call();
+              },
               style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontWeight: compact ? FontWeight.w700 : FontWeight.w600,
+                fontSize: compact ? 12 : 13,
                 color: AppColors.foreground,
               ),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: GoogleFonts.dmSans(
-                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  fontSize: compact ? 12 : 13,
                   color: AppColors.mutedForeground,
                 ),
+                counterText: '',
                 isDense: true,
-                contentPadding: EdgeInsets.zero,
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: compact ? 12 : 14,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -770,7 +1726,6 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
   }
 }
 
-// ── Shared card wrapper ────────────────────────────────────────────────────
 class _Card extends StatelessWidget {
   final Widget child;
   const _Card({required this.child});
@@ -778,15 +1733,22 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Color(0x1A000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 2,
+            spreadRadius: -1,
+            offset: Offset(0, 1),
           ),
         ],
       ),
@@ -794,4 +1756,61 @@ class _Card extends StatelessWidget {
       child: child,
     );
   }
+}
+
+/// What is typed for one item of the parcel.
+class _ItemForm {
+  _ItemForm(this.id);
+
+  /// Never reused, so a card keeps its own state when another is removed.
+  final int id;
+  final name = TextEditingController();
+  final description = TextEditingController();
+  RequestCategory category = RequestCategory.electronics;
+
+  void dispose() {
+    name.dispose();
+    description.dispose();
+  }
+}
+
+/// A dashed rounded rectangle, for the "Add another item" button.
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+
+  const _DashedBorderPainter({
+    required this.color,
+    required this.radius,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Offset.zero & size,
+          Radius.circular(radius),
+        ).deflate(strokeWidth / 2),
+      );
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        canvas.drawPath(metric.extractPath(distance, distance + 6), paint);
+        distance += 10;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) =>
+      old.color != color ||
+      old.radius != radius ||
+      old.strokeWidth != strokeWidth;
 }

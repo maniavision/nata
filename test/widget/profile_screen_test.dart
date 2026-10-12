@@ -90,18 +90,22 @@ void main() {
           'created_at': '2025-03-01T10:00:00+00:00',
         };
       await tester.pumpWidget(
-          appWrapper(ProfileScreen(authService: auth), locale: locale));
+        appWrapper(ProfileScreen(authService: auth), locale: locale),
+      );
       await tester.pumpAndSettle();
     }
 
-    testWidgets('verified: badge and tier line, no stray comma',
-        (tester) async {
+    testWidgets('verified: badge and tier line, no stray comma', (
+      tester,
+    ) async {
       await pump(tester, 'verified');
 
       expect(find.text('Tier 1 Verified'), findsOneWidget);
       expect(find.text('Tier 1 Verified,'), findsNothing);
-      expect(find.text('Tier 1 Verified · Passport & Biometrics'),
-          findsOneWidget);
+      expect(
+        find.text('Tier 1 Verified · Passport & Biometrics'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('pending: badge, subtitle and trailing label', (tester) async {
@@ -109,8 +113,10 @@ void main() {
 
       expect(find.text('Verification pending'), findsOneWidget);
       expect(find.text('Verification pending,'), findsNothing);
-      expect(find.text('Verification is currently under review'),
-          findsOneWidget);
+      expect(
+        find.text('Verification is currently under review'),
+        findsOneWidget,
+      );
       expect(find.text('Reviewing'), findsOneWidget);
     });
 
@@ -119,16 +125,19 @@ void main() {
 
       expect(find.text('Unverified'), findsOneWidget);
       expect(find.text('Unverified,'), findsNothing);
-      expect(find.text('Action Required: Verify your identity'),
-          findsOneWidget);
+      expect(
+        find.text('Action Required: Verify your identity'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('the call to action is translated to Spanish',
-        (tester) async {
+    testWidgets('the call to action is translated to Spanish', (tester) async {
       await pump(tester, 'unverified', locale: const Locale('es'));
 
-      expect(find.text('Acción requerida: verifica tu identidad'),
-          findsOneWidget);
+      expect(
+        find.text('Acción requerida: verifica tu identidad'),
+        findsOneWidget,
+      );
       expect(find.text('Sin verificar'), findsOneWidget);
       expect(find.text('Action Required: Verify your identity'), findsNothing);
     });
@@ -136,16 +145,20 @@ void main() {
     testWidgets('the call to action is translated to French', (tester) async {
       await pump(tester, 'unverified', locale: const Locale('fr'));
 
-      expect(find.text('Action requise : vérifiez votre identité'),
-          findsOneWidget);
+      expect(
+        find.text('Action requise : vérifiez votre identité'),
+        findsOneWidget,
+      );
       expect(find.text('Non vérifié'), findsOneWidget);
     });
 
     testWidgets('the pending state is translated too', (tester) async {
       await pump(tester, 'pending', locale: const Locale('es'));
 
-      expect(find.text('La verificación está actualmente en revisión'),
-          findsOneWidget);
+      expect(
+        find.text('La verificación está actualmente en revisión'),
+        findsOneWidget,
+      );
       expect(find.text('En revisión'), findsOneWidget);
       expect(find.text('Verificación pendiente'), findsOneWidget);
     });
@@ -154,8 +167,9 @@ void main() {
   group('ProfileScreen data and actions', () {
     setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
-    testWidgets('shows the name, wallet and escrow from the account',
-        (tester) async {
+    testWidgets('shows the name, wallet and escrow from the account', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(900, 3200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
@@ -170,8 +184,9 @@ void main() {
       expect(find.textContaining('\$99.00'), findsOneWidget);
     });
 
-    testWidgets('keeps working when the profile cannot be loaded',
-        (tester) async {
+    testWidgets('keeps working when the profile cannot be loaded', (
+      tester,
+    ) async {
       final auth = FakeAuthService()..failProfile = true;
 
       await tester.pumpWidget(appWrapper(ProfileScreen(authService: auth)));
@@ -181,8 +196,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Log Out signs out and returns to the sign-in screen',
-        (tester) async {
+    testWidgets('Log Out signs out and returns to the sign-in screen', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(900, 3200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
@@ -198,10 +214,12 @@ void main() {
       expect(find.byType(ProfileScreen), findsNothing);
     });
 
-    testWidgets('shows the same bottom navigation as every screen',
-        (tester) async {
+    testWidgets('shows the same bottom navigation as every screen', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-          appWrapper(ProfileScreen(authService: FakeAuthService())));
+        appWrapper(ProfileScreen(authService: FakeAuthService())),
+      );
       await tester.pumpAndSettle();
 
       for (final l in ['Home', 'Requests', 'Trips', 'Messages', 'Profile']) {

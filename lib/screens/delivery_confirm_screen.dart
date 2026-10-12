@@ -15,8 +15,10 @@ class DeliveryConfirmScreen extends StatefulWidget {
 }
 
 class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
-  final List<TextEditingController> _digitCtrl =
-      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _digitCtrl = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   bool _photoUploaded = false;
   bool _confirmed = false;
@@ -29,7 +31,9 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
     setState(() => _confirmed = true);
     Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const ReviewScreen()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const ReviewScreen()),
+        );
       }
     });
   }
@@ -94,8 +98,11 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.arrow_back,
-                  color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ),
           Expanded(
@@ -117,8 +124,11 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
               color: AppColors.secondary,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.lock_rounded,
-                color: AppColors.primary, size: 20),
+            child: const Icon(
+              Icons.lock_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -163,17 +173,21 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Amara Kalu',
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: AppColors.foreground,
-                    )),
-                Text('iPhone 15 Pro (Sealed Box) · Order #CW-8921',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      color: AppColors.mutedForeground,
-                    )),
+                Text(
+                  'Amara Kalu',
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                Text(
+                  'iPhone 15 Pro (Sealed Box) · Order #CW-8921',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),
@@ -183,12 +197,14 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
               color: const Color(0xFFE4F4EE),
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text('\$48 Held',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: const Color(0xFF168A68),
-                )),
+            child: Text(
+              '\$48 Held',
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: const Color(0xFF168A68),
+              ),
+            ),
           ),
         ],
       ),
@@ -201,10 +217,11 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: _codeComplete
-                ? const Color(0xFF168A68).withValues(alpha: 0.4)
-                : AppColors.border,
-            width: _codeComplete ? 2 : 1),
+          color: _codeComplete
+              ? const Color(0xFF168A68).withValues(alpha: 0.4)
+              : AppColors.border,
+          width: _codeComplete ? 2 : 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -218,8 +235,11 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.lock_rounded,
-                  size: 18, color: AppColors.primary),
+              const Icon(
+                Icons.lock_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -291,7 +311,9 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(
-                          color: AppColors.accent, width: 2),
+                        color: AppColors.accent,
+                        width: 2,
+                      ),
                     ),
                   ),
                   onChanged: (v) {
@@ -309,8 +331,7 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
           if (_codeComplete) ...[
             const SizedBox(height: 16),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFFE4F4EE),
                 borderRadius: BorderRadius.circular(12),
@@ -318,15 +339,20 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.check_circle_rounded,
-                      size: 16, color: Color(0xFF168A68)),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: Color(0xFF168A68),
+                  ),
                   const SizedBox(width: 6),
-                  Text(context.l10n.codeEntered,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: const Color(0xFF168A68),
-                      )),
+                  Text(
+                    context.l10n.codeEntered,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: const Color(0xFF168A68),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -339,20 +365,20 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
   Widget _buildDivider() {
     return Row(
       children: [
-        const Expanded(
-            child: Divider(color: AppColors.border, height: 1)),
+        const Expanded(child: Divider(color: AppColors.border, height: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text('OR',
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                letterSpacing: 1.4,
-                color: AppColors.mutedForeground,
-              )),
+          child: Text(
+            'OR',
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              letterSpacing: 1.4,
+              color: AppColors.mutedForeground,
+            ),
+          ),
         ),
-        const Expanded(
-            child: Divider(color: AppColors.border, height: 1)),
+        const Expanded(child: Divider(color: AppColors.border, height: 1)),
       ],
     );
   }
@@ -363,10 +389,11 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
         color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: _photoUploaded
-                ? const Color(0xFF168A68).withValues(alpha: 0.4)
-                : AppColors.border,
-            width: _photoUploaded ? 2 : 1),
+          color: _photoUploaded
+              ? const Color(0xFF168A68).withValues(alpha: 0.4)
+              : AppColors.border,
+          width: _photoUploaded ? 2 : 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -381,8 +408,11 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.camera_alt_rounded,
-                  size: 18, color: AppColors.primary),
+              const Icon(
+                Icons.camera_alt_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -423,9 +453,7 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                   color: _photoUploaded
                       ? const Color(0xFF168A68)
                       : AppColors.border,
-                  style: _photoUploaded
-                      ? BorderStyle.solid
-                      : BorderStyle.solid,
+                  style: _photoUploaded ? BorderStyle.solid : BorderStyle.solid,
                   width: _photoUploaded ? 2 : 1,
                 ),
               ),
@@ -433,34 +461,46 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.check_circle_rounded,
-                            size: 28, color: Color(0xFF168A68)),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 28,
+                          color: Color(0xFF168A68),
+                        ),
                         const SizedBox(height: 6),
-                        Text('handoff_photo.jpg',
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: const Color(0xFF168A68),
-                            )),
-                        Text('Tap to remove',
-                            style: GoogleFonts.dmSans(
-                              fontSize: 10,
-                              color: AppColors.mutedForeground,
-                            )),
+                        Text(
+                          'handoff_photo.jpg',
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: const Color(0xFF168A68),
+                          ),
+                        ),
+                        Text(
+                          'Tap to remove',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 10,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
                       ],
                     )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.add_a_photo_rounded,
-                            size: 28, color: AppColors.primary),
+                        const Icon(
+                          Icons.add_a_photo_rounded,
+                          size: 28,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(height: 6),
-                        Text('Tap to take or upload photo',
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                              color: AppColors.mutedForeground,
-                            )),
+                        Text(
+                          'Tap to take or upload photo',
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
                       ],
                     ),
             ),
@@ -484,11 +524,15 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white))
-            : const Icon(Icons.verified_rounded,
-                size: 18, color: Colors.white),
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.verified_rounded, size: 18, color: Colors.white),
         label: Text(
-          _confirmed ? 'Confirming delivery...' : context.l10n.confirmDeliveryButton,
+          _confirmed
+              ? 'Confirming delivery...'
+              : context.l10n.confirmDeliveryButton,
           style: GoogleFonts.dmSans(
             fontWeight: FontWeight.w700,
             fontSize: 14,
@@ -510,18 +554,19 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.shield_rounded,
-            size: 14, color: Color(0xFF168A68)),
+        const Icon(Icons.shield_rounded, size: 14, color: Color(0xFF168A68)),
         const SizedBox(width: 6),
         Flexible(
-          child: Text(context.l10n.disputeWindow,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                color: AppColors.mutedForeground,
-              )),
+          child: Text(
+            context.l10n.disputeWindow,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              color: AppColors.mutedForeground,
+            ),
+          ),
         ),
       ],
     );

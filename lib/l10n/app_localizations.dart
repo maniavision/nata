@@ -2515,6 +2515,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You: {text}'**
   String chatYouPrefix(String text);
+
+  /// No description provided for @recipientDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient Details'**
+  String get recipientDetails;
+
+  /// No description provided for @recipientName.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient Name'**
+  String get recipientName;
+
+  /// No description provided for @recipientNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name as on their ID'**
+  String get recipientNameHint;
+
+  /// No description provided for @recipientPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient Phone Number'**
+  String get recipientPhone;
+
+  /// No description provided for @recipientPhoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. +44 7700 900123'**
+  String get recipientPhoneHint;
+
+  /// No description provided for @recipientPhoneNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with the traveler only after they accept your request'**
+  String get recipientPhoneNote;
+
+  /// No description provided for @sizeAndWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Size and Weight'**
+  String get sizeAndWeight;
+
+  /// No description provided for @travelerLimitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler limit: {limit}'**
+  String travelerLimitLabel(String limit);
+
+  /// No description provided for @itemNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Sony Headphones, Sealed Cosmetics, etc.'**
+  String get itemNameHint;
+
+  /// No description provided for @itemDescHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide details about the item and packaging...'**
+  String get itemDescHint;
+
+  /// No description provided for @weightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 0.9 kg'**
+  String get weightHint;
+
+  /// No description provided for @dimensionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 24 × 24 × 8 cm'**
+  String get dimensionsHint;
+
+  /// No description provided for @photoMustShowSeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo must show sealed factory seal'**
+  String get photoMustShowSeal;
+
+  /// No description provided for @travelerPriceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler\'s price'**
+  String get travelerPriceLine;
+
+  /// No description provided for @platformProtectionLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform protection & escrow'**
+  String get platformProtectionLine;
+
+  /// No description provided for @priceNoteNothingCharged.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is charged now. The traveler can accept or decline this request, and you pay only after they accept.'**
+  String get priceNoteNothingCharged;
+
+  /// No description provided for @choosePhotoSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get choosePhotoSource;
+
+  /// No description provided for @errItemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what the item is.'**
+  String get errItemName;
+
+  /// No description provided for @errAccountNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found for this number. Please sign up first.'**
+  String get errAccountNotFound;
+
+  /// No description provided for @itemsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get itemsTitle;
+
+  /// No description provided for @itemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String itemsCount(int count);
+
+  /// No description provided for @itemNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {number}'**
+  String itemNumber(int number);
+
+  /// No description provided for @removeItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeItem;
+
+  /// No description provided for @addAnotherItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another item'**
+  String get addAnotherItem;
+
+  /// No description provided for @errItemNameN.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what item {number} is.'**
+  String errItemNameN(int number);
+
+  /// No description provided for @itemsMaxNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can send up to {max} items in one request.'**
+  String itemsMaxNote(int max);
+
+  /// No description provided for @errRecipientName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the recipient\'s full name.'**
+  String get errRecipientName;
+
+  /// No description provided for @errRecipientPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the recipient\'s phone number with the country code, e.g. +44 7700 900123.'**
+  String get errRecipientPhone;
+
+  /// No description provided for @errWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the package weight, e.g. 0.9 kg.'**
+  String get errWeight;
+
+  /// No description provided for @errPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one photo of the sealed item.'**
+  String get errPhotoRequired;
+
+  /// No description provided for @errPhotoTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo is too large (max 10 MB).'**
+  String get errPhotoTooBig;
+
+  /// No description provided for @errPhotoLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add up to 3 photos.'**
+  String get errPhotoLimit;
+
+  /// No description provided for @errTripUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip is no longer available.'**
+  String get errTripUnavailable;
+
+  /// No description provided for @errOwnTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t send a parcel with your own trip.'**
+  String get errOwnTrip;
+
+  /// No description provided for @errDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have an open request on this trip.'**
+  String get errDuplicate;
+
+  /// No description provided for @errSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session expired. Please sign in again.'**
+  String get errSessionExpired;
+
+  /// No description provided for @errInvalidRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Some details were rejected. Please check the form.'**
+  String get errInvalidRequest;
+
+  /// No description provided for @errRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send your request. Please try again.'**
+  String get errRequestFailed;
+
+  /// No description provided for @requestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. The traveler will review it.'**
+  String get requestSent;
+
+  /// No description provided for @travelerMaxKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Max {kg} kg'**
+  String travelerMaxKg(String kg);
+
+  /// No description provided for @errWeightTooHeavy.
+  ///
+  /// In en, this message translates to:
+  /// **'This traveler accepts up to {max} kg.'**
+  String errWeightTooHeavy(String max);
+
+  /// No description provided for @photosAttachedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No photos} =1{1 photo attached} other{{count} photos attached}}'**
+  String photosAttachedCount(int count);
+
+  /// No description provided for @sendRequestWithPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Delivery Request · {price}'**
+  String sendRequestWithPrice(String price);
+
+  /// No description provided for @packageSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Package Size'**
+  String get packageSize;
+
+  /// No description provided for @sizeEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Envelope / Document'**
+  String get sizeEnvelope;
+
+  /// No description provided for @sizeShoebox.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoebox'**
+  String get sizeShoebox;
+
+  /// No description provided for @sizeBackpack.
+  ///
+  /// In en, this message translates to:
+  /// **'Backpack'**
+  String get sizeBackpack;
+
+  /// No description provided for @errSizeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the package size.'**
+  String get errSizeRequired;
+
+  /// No description provided for @errSizeTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'This package is bigger than the traveler accepts.'**
+  String get errSizeTooBig;
+
+  /// No description provided for @errPriceChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler changed their price. Go back and open the request again to see the new price.'**
+  String get errPriceChanged;
+
+  /// No description provided for @priceEnterWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the package weight to see the final price.'**
+  String get priceEnterWeight;
+
+  /// No description provided for @priceRateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate unavailable, so prices are shown in US dollars.'**
+  String get priceRateUnavailable;
+
+  /// No description provided for @priceCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rates by Exchange Rate API'**
+  String get priceCredit;
+
+  /// No description provided for @priceCalculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating the price…'**
+  String get priceCalculating;
+
+  /// No description provided for @errQuoteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not calculate the price. Check your connection and try again.'**
+  String get errQuoteUnavailable;
+
+  /// No description provided for @priceBasedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on distance ({km} km), weight & delivery date'**
+  String priceBasedOn(String km);
+
+  /// No description provided for @priceRateLine.
+  ///
+  /// In en, this message translates to:
+  /// **'1 USD = {rate} {currency} · updated {date}'**
+  String priceRateLine(String rate, String currency, String date);
 }
 
 class _AppLocalizationsDelegate

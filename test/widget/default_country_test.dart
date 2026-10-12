@@ -47,8 +47,9 @@ void main() {
   Finder field(int index) => find.byType(TextField).at(index);
 
   group('Sign in: default country', () {
-    testWidgets('starts on the USA (+1) when nobody has registered here',
-        (tester) async {
+    testWidgets('starts on the USA (+1) when nobody has registered here', (
+      tester,
+    ) async {
       await pumpLogin(tester);
 
       expect(find.text('🇺🇸'), findsOneWidget);
@@ -56,8 +57,9 @@ void main() {
       expect(find.text('+234'), findsNothing);
     });
 
-    testWidgets('starts on the country the user registered with',
-        (tester) async {
+    testWidgets('starts on the country the user registered with', (
+      tester,
+    ) async {
       PreferencesService().setCountry('GB');
 
       await pumpLogin(tester);
@@ -76,8 +78,9 @@ void main() {
       expect(find.text('+233'), findsOneWidget);
     });
 
-    testWidgets('a country code that is not known falls back to the USA',
-        (tester) async {
+    testWidgets('a country code that is not known falls back to the USA', (
+      tester,
+    ) async {
       PreferencesService().setCountry('ZZ');
 
       await pumpLogin(tester);
@@ -85,8 +88,9 @@ void main() {
       expect(find.text('+1'), findsOneWidget);
     });
 
-    testWidgets('after registering and logging out it keeps that country',
-        (tester) async {
+    testWidgets('after registering and logging out it keeps that country', (
+      tester,
+    ) async {
       PreferencesService().setCountry('GH'); // sign-up
       PreferencesService().reset(); // log out
 
@@ -102,7 +106,9 @@ void main() {
       await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
       await tester.pumpAndSettle();
       await tester.enterText(
-          find.widgetWithText(TextField, 'Search country...'), 'Ghana');
+        find.widgetWithText(TextField, 'Search country...'),
+        'Ghana',
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.tap(find.text('Ghana').last);
@@ -112,8 +118,9 @@ void main() {
       expect(find.text('+44'), findsNothing);
     });
 
-    testWidgets('the default dialing code is the one used to sign in (USA)',
-        (tester) async {
+    testWidgets('the default dialing code is the one used to sign in (USA)', (
+      tester,
+    ) async {
       final auth = FakeAuthService();
       await pumpLogin(tester, auth: auth);
 
@@ -125,8 +132,9 @@ void main() {
       expect(find.byType(OtpScreen), findsOneWidget);
     });
 
-    testWidgets('the registered country\'s code is the one used to sign in',
-        (tester) async {
+    testWidgets('the registered country\'s code is the one used to sign in', (
+      tester,
+    ) async {
       PreferencesService().setCountry('GB');
       final auth = FakeAuthService();
       await pumpLogin(tester, auth: auth);
@@ -150,8 +158,9 @@ void main() {
       expect(find.text('Nigeria'), findsNothing);
     });
 
-    testWidgets('starts on the remembered country when there is one',
-        (tester) async {
+    testWidgets('starts on the remembered country when there is one', (
+      tester,
+    ) async {
       PreferencesService().setCountry('GB');
 
       await pumpSignUp(tester);
@@ -172,8 +181,9 @@ void main() {
       expect(find.text('United Kingdom'), findsOneWidget);
     });
 
-    testWidgets('the default dialing code is the one used to register',
-        (tester) async {
+    testWidgets('the default dialing code is the one used to register', (
+      tester,
+    ) async {
       final auth = FakeAuthService();
       await pumpSignUp(tester, auth: auth);
 
@@ -187,8 +197,9 @@ void main() {
       expect(PreferencesService().countryIsoCode, 'US');
     });
 
-    testWidgets('registering with another country remembers it',
-        (tester) async {
+    testWidgets('registering with another country remembers it', (
+      tester,
+    ) async {
       final auth = FakeAuthService();
       await pumpSignUp(tester, auth: auth);
 
@@ -210,12 +221,17 @@ void main() {
 
       // ... and it is written to the device, so it survives a restart.
       await PreferencesService().pendingWrites;
-      expect((await SharedPreferences.getInstance())
-          .getString('registered_country_iso'), 'GH');
+      expect(
+        (await SharedPreferences.getInstance()).getString(
+          'registered_country_iso',
+        ),
+        'GH',
+      );
     });
 
-    testWidgets('register, log out: sign-in starts on the registered country',
-        (tester) async {
+    testWidgets('register, log out: sign-in starts on the registered country', (
+      tester,
+    ) async {
       final auth = FakeAuthService();
       await pumpSignUp(tester, auth: auth);
       await tester.tap(field(2));
@@ -238,8 +254,9 @@ void main() {
       expect(find.text('🇬🇭'), findsOneWidget);
     });
 
-    testWidgets('a failed code request does not break the country default',
-        (tester) async {
+    testWidgets('a failed code request does not break the country default', (
+      tester,
+    ) async {
       final auth = FakeAuthService()..otpError = Exception('rate limit');
       await pumpSignUp(tester, auth: auth);
 
@@ -249,8 +266,10 @@ void main() {
       await tester.tap(find.byType(ElevatedButton).first);
       await tester.pumpAndSettle();
 
-      expect(find.text('Too many requests. Please wait a moment and try again.'),
-          findsOneWidget);
+      expect(
+        find.text('Too many requests. Please wait a moment and try again.'),
+        findsOneWidget,
+      );
       expect(find.text('+1'), findsOneWidget);
     });
   });

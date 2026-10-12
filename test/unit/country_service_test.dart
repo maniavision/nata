@@ -100,16 +100,22 @@ void main() {
       // Get full list by searching common letter
       final full = await service.search('');
       for (final c in full) {
-        expect(c.phoneCode.startsWith('+'), isTrue,
-            reason: '${c.name} has invalid phone code: ${c.phoneCode}');
+        expect(
+          c.phoneCode.startsWith('+'),
+          isTrue,
+          reason: '${c.name} has invalid phone code: ${c.phoneCode}',
+        );
       }
     });
 
     test('all bundled countries have 2-letter iso codes', () async {
       final results = await service.search('');
       for (final c in results) {
-        expect(c.isoCode.length, 2,
-            reason: '${c.name} has invalid iso code: ${c.isoCode}');
+        expect(
+          c.isoCode.length,
+          2,
+          reason: '${c.name} has invalid iso code: ${c.isoCode}',
+        );
       }
     });
 

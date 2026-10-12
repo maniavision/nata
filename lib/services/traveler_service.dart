@@ -45,24 +45,24 @@ class TravelerTrip {
   String get fullName => '$firstName $lastName'.trim();
 
   factory TravelerTrip.fromJson(Map<String, dynamic> j) => TravelerTrip(
-        tripId: j['trip_id'] as String,
-        travelerId: j['traveler_id'] as String,
-        firstName: (j['first_name'] as String?) ?? '',
-        lastName: (j['last_name'] as String?) ?? '',
-        avatarPath: j['avatar_path'] as String?,
-        avgRating: (j['avg_rating'] as num?)?.toDouble(),
-        itemsDelivered: (j['items_delivered_count'] as num?)?.toInt() ?? 0,
-        departureCity: (j['departure_city'] as String?) ?? '',
-        departureCountry: (j['departure_country'] as String?) ?? '',
-        arrivalCity: (j['arrival_city'] as String?) ?? '',
-        arrivalCountry: (j['arrival_country'] as String?) ?? '',
-        departureDate: DateTime.parse(j['departure_date'] as String),
-        arrivalDate: DateTime.parse(j['arrival_date'] as String),
-        price: (j['price'] as num?)?.toDouble() ?? 0,
-        currency: ((j['currency'] as String?) ?? 'USD').trim(),
-        maxWeightKg: (j['max_weight_kg'] as num?)?.toDouble(),
-        maxSize: j['max_size'] as String?,
-      );
+    tripId: j['trip_id'] as String,
+    travelerId: j['traveler_id'] as String,
+    firstName: (j['first_name'] as String?) ?? '',
+    lastName: (j['last_name'] as String?) ?? '',
+    avatarPath: j['avatar_path'] as String?,
+    avgRating: (j['avg_rating'] as num?)?.toDouble(),
+    itemsDelivered: (j['items_delivered_count'] as num?)?.toInt() ?? 0,
+    departureCity: (j['departure_city'] as String?) ?? '',
+    departureCountry: (j['departure_country'] as String?) ?? '',
+    arrivalCity: (j['arrival_city'] as String?) ?? '',
+    arrivalCountry: (j['arrival_country'] as String?) ?? '',
+    departureDate: DateTime.parse(j['departure_date'] as String),
+    arrivalDate: DateTime.parse(j['arrival_date'] as String),
+    price: (j['price'] as num?)?.toDouble() ?? 0,
+    currency: ((j['currency'] as String?) ?? 'USD').trim(),
+    maxWeightKg: (j['max_weight_kg'] as num?)?.toDouble(),
+    maxSize: j['max_size'] as String?,
+  );
 }
 
 /// A traveler's public profile plus their upcoming live trips, as returned by
@@ -115,10 +115,12 @@ class TravelerProfile {
           ? null
           : DateTime.tryParse(j['member_since'] as String),
       trips: rawTrips
-          .map((t) => TravelerTrip.fromJson({
-                ...travelerFields,
-                ...Map<String, dynamic>.from(t as Map),
-              }))
+          .map(
+            (t) => TravelerTrip.fromJson({
+              ...travelerFields,
+              ...Map<String, dynamic>.from(t as Map),
+            }),
+          )
           .toList(),
     );
   }
@@ -130,7 +132,7 @@ class TravelerService {
   final SupabaseClient _client;
 
   TravelerService({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   /// All filters are optional. Throws if the request fails so the caller can
   /// show an error state.
@@ -152,10 +154,13 @@ class TravelerService {
     }..removeWhere((_, v) => v == null);
 
     try {
-      final rows = await _client.rpc('search_travelers', params: params)
-          as List<dynamic>;
+      final rows =
+          await _client.rpc('search_travelers', params: params)
+              as List<dynamic>;
       return rows
-          .map((r) => TravelerTrip.fromJson(Map<String, dynamic>.from(r as Map)))
+          .map(
+            (r) => TravelerTrip.fromJson(Map<String, dynamic>.from(r as Map)),
+          )
           .toList();
     } catch (e) {
       debugPrint('[TravelerService] search error: $e');
@@ -166,8 +171,10 @@ class TravelerService {
   /// Public profile + upcoming trips of one traveler, or null if not found.
   Future<TravelerProfile?> getProfile(String travelerId) async {
     try {
-      final res = await _client.rpc('get_traveler_profile',
-          params: {'p_traveler_id': travelerId});
+      final res = await _client.rpc(
+        'get_traveler_profile',
+        params: {'p_traveler_id': travelerId},
+      );
       if (res == null) return null;
       return TravelerProfile.fromJson(Map<String, dynamic>.from(res as Map));
     } catch (e) {

@@ -3,12 +3,20 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Signing in with a phone number that has no account.
+class AccountNotFoundException implements Exception {
+  const AccountNotFoundException();
+
+  @override
+  String toString() => 'AccountNotFoundException';
+}
+
 /// Wraps all Supabase authentication calls for the Nata app.
 class AuthService {
   final SupabaseClient _client;
 
   AuthService({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   // ── Current session / user ─────────────────────────────────────────────────
 
@@ -29,8 +37,34 @@ class AuthService {
   /// During development you can enable "Enable phone confirmations" and
   /// add a test number in the dashboard to receive the code without a
   /// real SMS provider (Supabase will log the code in the project logs).
-  Future<void> sendOtp(String phone) async {
-    await _client.auth.signInWithOtp(phone: phone);
+  ///
+  /// [createUser] decides whether an unknown number gets a new account:
+  ///  * true (sign up): the number is added to auth.users and a code is sent.
+  ///  * false (log in): the number must already be in auth.users. Nothing is
+  ///    created and no SMS is sent otherwise; [AccountNotFoundException] is
+  ///    thrown instead. Supabase enforces this, not just the app.
+  Future<void> sendOtp(String phone, {bool createUser = true}) async {
+    try {
+      await _client.auth.signInWithOtp(
+        phone: phone,
+        shouldCreateUser: createUser,
+      );
+    } on AuthException catch (e) {
+      if (!createUser && isAccountNotFound(e)) {
+        throw const AccountNotFoundException();
+      }
+      rethrow;
+    }
+  }
+
+  /// True when Supabase refused a code because the number has no account
+  /// ("Signups not allowed for otp", sent when shouldCreateUser is false).
+  @visibleForTesting
+  static bool isAccountNotFound(AuthException e) {
+    final msg = e.message.toLowerCase();
+    return msg.contains('signups not allowed') ||
+        e.code == 'otp_disabled' ||
+        e.code == 'user_not_found';
   }
 
   /// Verifies the 6-digit OTP received via SMS.
@@ -255,10 +289,7 @@ class AuthService {
       final tripsCount = (tripsResponse as List?)?.length ?? 0;
       final parcelsCount = (parcelsResponse as List?)?.length ?? 0;
 
-      return {
-        'trips': tripsCount,
-        'parcels': parcelsCount,
-      };
+      return {'trips': tripsCount, 'parcels': parcelsCount};
     } catch (e) {
       debugPrint('[AuthService] getStats error: $e');
       return {'trips': 0, 'parcels': 0};
@@ -299,13 +330,12 @@ class AuthService {
     if (extension.toLowerCase() == 'gif') mimeType = 'image/gif';
     if (extension.toLowerCase() == 'webp') mimeType = 'image/webp';
 
-    await _client.storage.from('user-assets').uploadBinary(
+    await _client.storage
+        .from('user-assets')
+        .uploadBinary(
           path,
           bytes,
-          fileOptions: FileOptions(
-            upsert: true,
-            contentType: mimeType,
-          ),
+          fileOptions: FileOptions(upsert: true, contentType: mimeType),
         );
 
     return path;
@@ -332,16 +362,19 @@ class AuthService {
   /// the URL. [timestamp] can still be passed to force a cache-busting URL.
   String getAvatarUrl(String? path, {String? timestamp}) {
     if (path == null || path.trim().isEmpty) return '';
-    
+
     String finalPath = path.trim();
 
     // 1. Handle full URLs (backwards compatibility)
     if (finalPath.startsWith('http')) {
       // Fix singular/plural if it's a Supabase URL
       if (finalPath.contains('/public/user-assets/avatar/')) {
-        finalPath = finalPath.replaceFirst('/public/user-assets/avatar/', '/public/user-assets/avatars/');
+        finalPath = finalPath.replaceFirst(
+          '/public/user-assets/avatar/',
+          '/public/user-assets/avatars/',
+        );
       }
-      
+
       // Remove existing timestamp if any to avoid stacking them
       if (finalPath.contains('?t=')) {
         finalPath = finalPath.split('?t=').first;
@@ -364,7 +397,7 @@ class AuthService {
     if (finalPath.startsWith('avatar/') && !finalPath.startsWith('avatars/')) {
       finalPath = finalPath.replaceFirst('avatar/', 'avatars/');
     }
-    
+
     // Ensure we are hitting the correct bucket
     final url = _client.storage.from('user-assets').getPublicUrl(finalPath);
     // Stable URL (no per-call timestamp) so image caches can reuse it.

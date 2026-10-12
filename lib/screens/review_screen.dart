@@ -28,7 +28,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
     '⭐ Would use again',
   ];
 
-  final Set<String> _selectedTags = {'📦 Item was intact', '⏰ On time', '💬 Great communicator'};
+  final Set<String> _selectedTags = {
+    '📦 Item was intact',
+    '⏰ On time',
+    '💬 Great communicator',
+  };
 
   @override
   void dispose() {
@@ -74,10 +78,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     _buildSubmitButton(),
                     const SizedBox(height: 12),
                     GestureDetector(
-                      onTap: () => Navigator.of(context)
-                          .pushAndRemoveUntil(
+                      onTap: () => Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
-                            builder: (context) => const HomeScreen()),
+                          builder: (context) => const HomeScreen(),
+                        ),
                         (route) => false,
                       ),
                       child: Text(
@@ -114,8 +118,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.arrow_back,
-                  color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ),
           Expanded(
@@ -176,43 +183,60 @@ class _ReviewScreenState extends State<ReviewScreen> {
               children: [
                 Row(
                   children: [
-                    Text('Amara Kalu',
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          color: AppColors.foreground,
-                        )),
+                    Text(
+                      'Amara Kalu',
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: AppColors.foreground,
+                      ),
+                    ),
                     const SizedBox(width: 6),
-                    const Icon(Icons.verified_rounded,
-                        size: 14, color: Color(0xFF168A68)),
+                    const Icon(
+                      Icons.verified_rounded,
+                      size: 14,
+                      color: Color(0xFF168A68),
+                    ),
                   ],
                 ),
-                Text('Delivered your iPhone 15 Pro · Jun 22',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 12,
-                      color: AppColors.mutedForeground,
-                    )),
+                Text(
+                  'Delivered your iPhone 15 Pro · Jun 22',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.inventory_2_outlined,
-                        size: 13, color: AppColors.primary),
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 4),
-                    Text('28 deliveries · ',
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
-                        )),
-                    const Icon(Icons.star_rounded,
-                        size: 13, color: Color(0xFFE5A83B)),
+                    Text(
+                      '28 deliveries · ',
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: Color(0xFFE5A83B),
+                    ),
                     const SizedBox(width: 2),
-                    Text('4.9 avg',
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
-                        )),
+                    Text(
+                      '4.9 avg',
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -262,9 +286,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   child: Icon(
                     filled ? Icons.star_rounded : Icons.star_outline_rounded,
                     size: 40,
-                    color: filled
-                        ? const Color(0xFFE5A83B)
-                        : AppColors.border,
+                    color: filled ? const Color(0xFFE5A83B) : AppColors.border,
                   ),
                 ),
               );
@@ -278,12 +300,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
   String _ratingLabel(int r, BuildContext context) {
     final l = context.l10n;
     switch (r) {
-      case 1: return l.ratingPoor;
-      case 2: return l.ratingFair;
-      case 3: return l.ratingGood;
-      case 4: return l.ratingGreat;
-      case 5: return l.ratingExcellent;
-      default: return '';
+      case 1:
+        return l.ratingPoor;
+      case 2:
+        return l.ratingFair;
+      case 3:
+        return l.ratingGood;
+      case 4:
+        return l.ratingGreat;
+      case 5:
+        return l.ratingExcellent;
+      default:
+        return '';
     }
   }
 
@@ -316,7 +344,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 8),
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: sel
                       ? AppColors.primary.withValues(alpha: 0.08)
@@ -330,12 +360,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 child: Text(
                   tag,
                   style: GoogleFonts.dmSans(
-                    fontWeight:
-                        sel ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 12,
-                    color: sel
-                        ? AppColors.primary
-                        : AppColors.foreground,
+                    color: sel ? AppColors.primary : AppColors.foreground,
                   ),
                 ),
               ),
@@ -362,13 +389,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
         TextField(
           controller: _commentCtrl,
           maxLines: 3,
-          style: GoogleFonts.dmSans(
-            fontSize: 13,
-            color: AppColors.foreground,
-          ),
+          style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.foreground),
           decoration: InputDecoration(
-            hintText:
-                context.l10n.commentHint,
+            hintText: context.l10n.commentHint,
             hintStyle: GoogleFonts.dmSans(
               fontSize: 13,
               color: AppColors.mutedForeground,
@@ -387,8 +410,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: AppColors.ring, width: 2),
+              borderSide: const BorderSide(color: AppColors.ring, width: 2),
             ),
           ),
         ),
@@ -440,16 +462,21 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     color: const Color(0xFFE4F4EE),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.verified_rounded,
-                      size: 48, color: Color(0xFF168A68)),
+                  child: const Icon(
+                    Icons.verified_rounded,
+                    size: 48,
+                    color: Color(0xFF168A68),
+                  ),
                 ),
                 const SizedBox(height: 24),
-                Text(context.l10n.reviewSubmitted,
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 24,
-                      color: AppColors.foreground,
-                    )),
+                Text(
+                  context.l10n.reviewSubmitted,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 24,
+                    color: AppColors.foreground,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.reviewThanks,
@@ -466,11 +493,13 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   strokeWidth: 2,
                 ),
                 const SizedBox(height: 12),
-                Text(context.l10n.returningHome,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 12,
-                      color: AppColors.mutedForeground,
-                    )),
+                Text(
+                  context.l10n.returningHome,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),

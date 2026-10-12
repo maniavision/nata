@@ -14,10 +14,10 @@ class CountryResult {
   });
 
   factory CountryResult.fromJson(Map<String, dynamic> j) => CountryResult(
-        isoCode: (j['iso_code'] as String? ?? '').trim(),
-        name: (j['name'] as String? ?? '').trim(),
-        phoneCode: (j['phone_code'] as String? ?? '').trim(),
-      );
+    isoCode: (j['iso_code'] as String? ?? '').trim(),
+    name: (j['name'] as String? ?? '').trim(),
+    phoneCode: (j['phone_code'] as String? ?? '').trim(),
+  );
 
   /// Display label shown in the UI.
   String get displayName => name;
@@ -95,20 +95,24 @@ class LocationSearchService {
     List<dynamic> rows;
 
     if (q.isEmpty) {
-      rows = await _client
-          .schema('nata')
-          .from('countries')
-          .select('iso_code, name, phone_code')
-          .order('name')
-          .limit(_maxCountries) as List<dynamic>;
+      rows =
+          await _client
+                  .schema('nata')
+                  .from('countries')
+                  .select('iso_code, name, phone_code')
+                  .order('name')
+                  .limit(_maxCountries)
+              as List<dynamic>;
     } else {
-      rows = await _client
-          .schema('nata')
-          .from('countries')
-          .select('iso_code, name, phone_code')
-          .ilike('name', '%$q%')
-          .order('name')
-          .limit(_maxCountries) as List<dynamic>;
+      rows =
+          await _client
+                  .schema('nata')
+                  .from('countries')
+                  .select('iso_code, name, phone_code')
+                  .ilike('name', '%$q%')
+                  .order('name')
+                  .limit(_maxCountries)
+              as List<dynamic>;
     }
 
     return rows
@@ -118,8 +122,10 @@ class LocationSearchService {
 
   // ── Cities ────────────────────────────────────────────────────────────────
 
-  Future<List<CityResult>> searchCities(String query,
-      {String? countryCode}) async {
+  Future<List<CityResult>> searchCities(
+    String query, {
+    String? countryCode,
+  }) async {
     if (query.trim().length < 2 && countryCode == null) return [];
     try {
       return await _searchCitiesRemote(query, countryCode: countryCode);
@@ -129,44 +135,54 @@ class LocationSearchService {
     }
   }
 
-  Future<List<CityResult>> _searchCitiesRemote(String query,
-      {String? countryCode}) async {
+  Future<List<CityResult>> _searchCitiesRemote(
+    String query, {
+    String? countryCode,
+  }) async {
     final q = query.trim();
     List<dynamic> rows;
 
     // Build query with filters before limit
     if (countryCode != null && q.isNotEmpty) {
-      rows = await _client
-          .schema('nata')
-          .from('cities')
-          .select('id, name, country_code, countries!inner(name)')
-          .eq('country_code', countryCode)
-          .ilike('name', '%$q%')
-          .order('name')
-          .limit(_maxCities) as List<dynamic>;
+      rows =
+          await _client
+                  .schema('nata')
+                  .from('cities')
+                  .select('id, name, country_code, countries!inner(name)')
+                  .eq('country_code', countryCode)
+                  .ilike('name', '%$q%')
+                  .order('name')
+                  .limit(_maxCities)
+              as List<dynamic>;
     } else if (countryCode != null) {
-      rows = await _client
-          .schema('nata')
-          .from('cities')
-          .select('id, name, country_code, countries!inner(name)')
-          .eq('country_code', countryCode)
-          .order('name')
-          .limit(_maxCities) as List<dynamic>;
+      rows =
+          await _client
+                  .schema('nata')
+                  .from('cities')
+                  .select('id, name, country_code, countries!inner(name)')
+                  .eq('country_code', countryCode)
+                  .order('name')
+                  .limit(_maxCities)
+              as List<dynamic>;
     } else if (q.isNotEmpty) {
-      rows = await _client
-          .schema('nata')
-          .from('cities')
-          .select('id, name, country_code, countries!inner(name)')
-          .ilike('name', '%$q%')
-          .order('name')
-          .limit(_maxCities) as List<dynamic>;
+      rows =
+          await _client
+                  .schema('nata')
+                  .from('cities')
+                  .select('id, name, country_code, countries!inner(name)')
+                  .ilike('name', '%$q%')
+                  .order('name')
+                  .limit(_maxCities)
+              as List<dynamic>;
     } else {
-      rows = await _client
-          .schema('nata')
-          .from('cities')
-          .select('id, name, country_code, countries!inner(name)')
-          .order('name')
-          .limit(_maxCities) as List<dynamic>;
+      rows =
+          await _client
+                  .schema('nata')
+                  .from('cities')
+                  .select('id, name, country_code, countries!inner(name)')
+                  .order('name')
+                  .limit(_maxCities)
+              as List<dynamic>;
     }
 
     return rows
@@ -185,7 +201,11 @@ class LocationSearchService {
     CountryResult(isoCode: 'US', name: 'United States', phoneCode: '+1'),
     CountryResult(isoCode: 'FR', name: 'France', phoneCode: '+33'),
     CountryResult(isoCode: 'DE', name: 'Germany', phoneCode: '+49'),
-    CountryResult(isoCode: 'AE', name: 'United Arab Emirates', phoneCode: '+971'),
+    CountryResult(
+      isoCode: 'AE',
+      name: 'United Arab Emirates',
+      phoneCode: '+971',
+    ),
     CountryResult(isoCode: 'CN', name: 'China', phoneCode: '+86'),
     CountryResult(isoCode: 'IN', name: 'India', phoneCode: '+91'),
     CountryResult(isoCode: 'BR', name: 'Brazil', phoneCode: '+55'),

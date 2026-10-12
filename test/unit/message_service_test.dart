@@ -37,8 +37,12 @@ class FakeQuery<T> extends Fake implements PostgrestFilterBuilder<T> {
   }
 
   @override
-  PostgrestTransformBuilder<T> order(String column,
-      {bool ascending = false, bool nullsFirst = false, String? referencedTable}) {
+  PostgrestTransformBuilder<T> order(
+    String column, {
+    bool ascending = false,
+    bool nullsFirst = false,
+    String? referencedTable,
+  }) {
     calls.add('order:$column:${ascending ? 'asc' : 'desc'}');
     return this;
   }
@@ -53,10 +57,9 @@ class FakeQuery<T> extends Fake implements PostgrestFilterBuilder<T> {
   @override
   PostgrestTransformBuilder<PostgrestList> select([String columns = '*']) {
     calls.add('select');
-    return FakeQuery<PostgrestList>(
-      [Map<String, dynamic>.from(value as Map)],
-      error: error,
-    );
+    return FakeQuery<PostgrestList>([
+      Map<String, dynamic>.from(value as Map),
+    ], error: error);
   }
 
   /// ... .single() : that row on its own.
@@ -65,13 +68,18 @@ class FakeQuery<T> extends Fake implements PostgrestFilterBuilder<T> {
     calls.add('single');
     final rows = value as List;
     return FakeQuery<PostgrestMap>(
-      rows.isEmpty ? <String, dynamic>{} : Map<String, dynamic>.from(rows.first as Map),
+      rows.isEmpty
+          ? <String, dynamic>{}
+          : Map<String, dynamic>.from(rows.first as Map),
       error: error,
     );
   }
 
   @override
-  Future<U> then<U>(FutureOr<U> Function(T value) onValue, {Function? onError}) {
+  Future<U> then<U>(
+    FutureOr<U> Function(T value) onValue, {
+    Function? onError,
+  }) {
     final f = error != null ? Future<T>.error(error!) : Future<T>.value(value);
     return f.then(onValue, onError: onError);
   }
@@ -89,28 +97,27 @@ Map<String, dynamic> convRow({
   Object? lastAt = '2030-06-15T12:00:00+00:00',
   Object? lastAuthor = 'u2',
   Object? unread = 2,
-}) =>
-    {
-      'conversation_id': id,
-      'request_id': 'r1',
-      'created_at': '2030-06-10T09:00:00+00:00',
-      'updated_at': '2030-06-15T12:00:00+00:00',
-      'other_user_id': 'u2',
-      'other_first_name': firstName,
-      'other_last_name': lastName,
-      'other_avatar_path': avatar,
-      'other_verified': verified,
-      'i_am_traveler': iAmTraveler,
-      'departure_city': 'Lagos',
-      'arrival_city': 'London',
-      'item_description': 'iPhone',
-      'request_status': 'accepted',
-      'last_body': lastBody,
-      'last_attachment_path': lastAttachment,
-      'last_message_at': lastAt,
-      'last_author_id': lastAuthor,
-      'unread_count': unread,
-    };
+}) => {
+  'conversation_id': id,
+  'request_id': 'r1',
+  'created_at': '2030-06-10T09:00:00+00:00',
+  'updated_at': '2030-06-15T12:00:00+00:00',
+  'other_user_id': 'u2',
+  'other_first_name': firstName,
+  'other_last_name': lastName,
+  'other_avatar_path': avatar,
+  'other_verified': verified,
+  'i_am_traveler': iAmTraveler,
+  'departure_city': 'Lagos',
+  'arrival_city': 'London',
+  'item_description': 'iPhone',
+  'request_status': 'accepted',
+  'last_body': lastBody,
+  'last_attachment_path': lastAttachment,
+  'last_message_at': lastAt,
+  'last_author_id': lastAuthor,
+  'unread_count': unread,
+};
 
 Map<String, dynamic> msgRow({
   String id = 'm1',
@@ -118,16 +125,15 @@ Map<String, dynamic> msgRow({
   Object? attachment,
   Object? readAt,
   String author = 'u2',
-}) =>
-    {
-      'id': id,
-      'conversation_id': 'c1',
-      'author_id': author,
-      'body': body,
-      'attachment_path': attachment,
-      'read_at': readAt,
-      'created_at': '2030-06-15T10:00:00+00:00',
-    };
+}) => {
+  'id': id,
+  'conversation_id': 'c1',
+  'author_id': author,
+  'body': body,
+  'attachment_path': attachment,
+  'read_at': readAt,
+  'created_at': '2030-06-15T10:00:00+00:00',
+};
 
 void main() {
   setUpAll(() {
@@ -137,7 +143,9 @@ void main() {
 
   group('ConversationSummary.fromJson', () {
     test('parses every field', () {
-      final c = ConversationSummary.fromJson(convRow(avatar: 'https://x/a.jpg'));
+      final c = ConversationSummary.fromJson(
+        convRow(avatar: 'https://x/a.jpg'),
+      );
 
       expect(c.id, 'c1');
       expect(c.requestId, 'r1');
@@ -159,8 +167,9 @@ void main() {
     });
 
     test('a conversation with no messages yet', () {
-      final c = ConversationSummary.fromJson(convRow(
-          lastBody: null, lastAt: null, lastAuthor: null, unread: 0));
+      final c = ConversationSummary.fromJson(
+        convRow(lastBody: null, lastAt: null, lastAuthor: null, unread: 0),
+      );
 
       expect(c.hasMessages, isFalse);
       expect(c.lastMessageAt, isNull);
@@ -170,7 +179,8 @@ void main() {
 
     test('a photo-only last message counts as a message', () {
       final c = ConversationSummary.fromJson(
-          convRow(lastBody: null, lastAttachment: 'c1/1.jpg'));
+        convRow(lastBody: null, lastAttachment: 'c1/1.jpg'),
+      );
 
       expect(c.hasMessages, isTrue);
       expect(c.lastBody, isNull);
@@ -178,8 +188,15 @@ void main() {
     });
 
     test('blank values become null, missing flags get defaults', () {
-      final c = ConversationSummary.fromJson(convRow(
-          avatar: '  ', lastBody: '', verified: null, iAmTraveler: null, unread: null));
+      final c = ConversationSummary.fromJson(
+        convRow(
+          avatar: '  ',
+          lastBody: '',
+          verified: null,
+          iAmTraveler: null,
+          unread: null,
+        ),
+      );
 
       expect(c.otherAvatarPath, isNull);
       expect(c.lastBody, isNull);
@@ -196,10 +213,15 @@ void main() {
   });
 
   group('ConversationSummary helpers', () {
-    ConversationSummary of({String? first = 'Amara', String? last = 'Kalu', String status = 'accepted', int unread = 0}) =>
-        ConversationSummary.fromJson(convRow(
-            firstName: first, lastName: last, unread: unread)
-          ..['request_status'] = status);
+    ConversationSummary of({
+      String? first = 'Amara',
+      String? last = 'Kalu',
+      String status = 'accepted',
+      int unread = 0,
+    }) => ConversationSummary.fromJson(
+      convRow(firstName: first, lastName: last, unread: unread)
+        ..['request_status'] = status,
+    );
 
     test('display name is first name + last initial', () {
       expect(of().displayName, 'Amara K.');
@@ -234,13 +256,15 @@ void main() {
       expect(of(status: 'delivered').isActive, isFalse);
     });
 
-    test('declined, expired and cancelled are neither active nor completed',
-        () {
-      for (final s in ['declined', 'expired', 'cancelled']) {
-        expect(of(status: s).isActive, isFalse, reason: s);
-        expect(of(status: s).isCompleted, isFalse, reason: s);
-      }
-    });
+    test(
+      'declined, expired and cancelled are neither active nor completed',
+      () {
+        for (final s in ['declined', 'expired', 'cancelled']) {
+          expect(of(status: s).isActive, isFalse, reason: s);
+          expect(of(status: s).isCompleted, isFalse, reason: s);
+        }
+      },
+    );
 
     test('hasUnread follows the count', () {
       expect(of(unread: 0).hasUnread, isFalse);
@@ -262,7 +286,9 @@ void main() {
     });
 
     test('parses a photo message without text', () {
-      final m = ChatMessage.fromJson(msgRow(body: null, attachment: 'c1/1.jpg'));
+      final m = ChatMessage.fromJson(
+        msgRow(body: null, attachment: 'c1/1.jpg'),
+      );
 
       expect(m.body, isNull);
       expect(m.hasAttachment, isTrue);
@@ -270,11 +296,16 @@ void main() {
     });
 
     test('blank text counts as no text', () {
-      expect(ChatMessage.fromJson(msgRow(body: '   ', attachment: 'x')).body, isNull);
+      expect(
+        ChatMessage.fromJson(msgRow(body: '   ', attachment: 'x')).body,
+        isNull,
+      );
     });
 
     test('read_at makes it read', () {
-      final m = ChatMessage.fromJson(msgRow(readAt: '2030-06-15T10:05:00+00:00'));
+      final m = ChatMessage.fromJson(
+        msgRow(readAt: '2030-06-15T10:05:00+00:00'),
+      );
 
       expect(m.isRead, isTrue);
       expect(m.readAt?.toUtc(), DateTime.utc(2030, 6, 15, 10, 5));
@@ -329,7 +360,8 @@ void main() {
     group('conversations', () {
       test('calls list_conversations and parses the rows', () async {
         when(() => client.rpc<dynamic>('list_conversations')).thenAnswer(
-            (_) => FakeQuery<dynamic>([convRow(id: 'a'), convRow(id: 'b')]));
+          (_) => FakeQuery<dynamic>([convRow(id: 'a'), convRow(id: 'b')]),
+        );
 
         final list = await service.conversations();
 
@@ -337,15 +369,17 @@ void main() {
       });
 
       test('an empty list', () async {
-        when(() => client.rpc<dynamic>('list_conversations'))
-            .thenAnswer((_) => FakeQuery<dynamic>([]));
+        when(
+          () => client.rpc<dynamic>('list_conversations'),
+        ).thenAnswer((_) => FakeQuery<dynamic>([]));
 
         expect(await service.conversations(), isEmpty);
       });
 
       test('errors are passed on', () async {
-        when(() => client.rpc<dynamic>('list_conversations')).thenAnswer(
-            (_) => FakeQuery<dynamic>([], error: Exception('boom')));
+        when(
+          () => client.rpc<dynamic>('list_conversations'),
+        ).thenAnswer((_) => FakeQuery<dynamic>([], error: Exception('boom')));
 
         expect(service.conversations(), throwsException);
       });
@@ -364,16 +398,21 @@ void main() {
 
         await service.messages('c1');
 
-        expect(q.calls, ['eq:conversation_id=c1', 'order:created_at:desc', 'limit:300']);
+        expect(q.calls, [
+          'eq:conversation_id=c1',
+          'order:created_at:desc',
+          'limit:300',
+        ]);
       });
 
       test('returns them oldest first', () async {
-        when(() => messages.select(any())).thenAnswer((_) =>
-            FakeQuery<List<Map<String, dynamic>>>([
-              msgRow(id: 'newest'),
-              msgRow(id: 'middle'),
-              msgRow(id: 'oldest'),
-            ]));
+        when(() => messages.select(any())).thenAnswer(
+          (_) => FakeQuery<List<Map<String, dynamic>>>([
+            msgRow(id: 'newest'),
+            msgRow(id: 'middle'),
+            msgRow(id: 'oldest'),
+          ]),
+        );
 
         final list = await service.messages('c1');
 
@@ -390,8 +429,10 @@ void main() {
       });
 
       test('errors are passed on', () async {
-        when(() => messages.select(any())).thenAnswer((_) =>
-            FakeQuery<List<Map<String, dynamic>>>([], error: Exception('x')));
+        when(() => messages.select(any())).thenAnswer(
+          (_) =>
+              FakeQuery<List<Map<String, dynamic>>>([], error: Exception('x')),
+        );
 
         expect(service.messages('c1'), throwsException);
       });
@@ -399,15 +440,18 @@ void main() {
 
     group('send', () {
       FakeQuery<dynamic> insertQuery([Object? error]) => FakeQuery<dynamic>(
-          msgRow(id: 'new', body: 'Hi there', author: 'me-1'), error: error);
+        msgRow(id: 'new', body: 'Hi there', author: 'me-1'),
+        error: error,
+      );
 
       test('writes as the signed-in user into that conversation', () async {
         when(() => messages.insert(any())).thenAnswer((_) => insertQuery());
 
         final m = await service.send('c1', body: 'Hi there');
 
-        final sent = verify(() => messages.insert(captureAny())).captured.single
-            as Map<String, dynamic>;
+        final sent =
+            verify(() => messages.insert(captureAny())).captured.single
+                as Map<String, dynamic>;
         expect(sent['conversation_id'], 'c1');
         expect(sent['author_id'], 'me-1');
         expect(sent['body'], 'Hi there');
@@ -420,8 +464,9 @@ void main() {
 
         await service.send('c1', body: '   Hi there   ');
 
-        final sent = verify(() => messages.insert(captureAny())).captured.single
-            as Map<String, dynamic>;
+        final sent =
+            verify(() => messages.insert(captureAny())).captured.single
+                as Map<String, dynamic>;
         expect(sent['body'], 'Hi there');
       });
 
@@ -430,8 +475,9 @@ void main() {
 
         await service.send('c1', attachmentPath: 'c1/1.jpg');
 
-        final sent = verify(() => messages.insert(captureAny())).captured.single
-            as Map<String, dynamic>;
+        final sent =
+            verify(() => messages.insert(captureAny())).captured.single
+                as Map<String, dynamic>;
         expect(sent['body'], isNull);
         expect(sent['attachment_path'], 'c1/1.jpg');
       });
@@ -441,8 +487,9 @@ void main() {
 
         await service.send('c1', body: 'Look', attachmentPath: 'c1/1.jpg');
 
-        final sent = verify(() => messages.insert(captureAny())).captured.single
-            as Map<String, dynamic>;
+        final sent =
+            verify(() => messages.insert(captureAny())).captured.single
+                as Map<String, dynamic>;
         expect(sent['body'], 'Look');
         expect(sent['attachment_path'], 'c1/1.jpg');
       });
@@ -454,8 +501,9 @@ void main() {
       });
 
       test('database errors are passed on', () async {
-        when(() => messages.insert(any()))
-            .thenAnswer((_) => insertQuery(Exception('rls')));
+        when(
+          () => messages.insert(any()),
+        ).thenAnswer((_) => insertQuery(Exception('rls')));
 
         expect(service.send('c1', body: 'x'), throwsException);
       });
@@ -469,56 +517,87 @@ void main() {
 
     group('markRead', () {
       test('calls mark_conversation_read for that conversation', () async {
-        when(() => client.rpc<dynamic>('mark_conversation_read',
-                params: any(named: 'params')))
-            .thenAnswer((_) => FakeQuery<dynamic>(null));
+        when(
+          () => client.rpc<dynamic>(
+            'mark_conversation_read',
+            params: any(named: 'params'),
+          ),
+        ).thenAnswer((_) => FakeQuery<dynamic>(null));
 
         await service.markRead('c1');
 
-        verify(() => client.rpc<dynamic>('mark_conversation_read',
-            params: {'p_conversation_id': 'c1'})).called(1);
+        verify(
+          () => client.rpc<dynamic>(
+            'mark_conversation_read',
+            params: {'p_conversation_id': 'c1'},
+          ),
+        ).called(1);
       });
 
-      test('never throws: a failure only means it is tried again later',
-          () async {
-        when(() => client.rpc<dynamic>('mark_conversation_read',
-                params: any(named: 'params')))
-            .thenAnswer((_) => FakeQuery<dynamic>(null, error: Exception('x')));
+      test(
+        'never throws: a failure only means it is tried again later',
+        () async {
+          when(
+            () => client.rpc<dynamic>(
+              'mark_conversation_read',
+              params: any(named: 'params'),
+            ),
+          ).thenAnswer((_) => FakeQuery<dynamic>(null, error: Exception('x')));
 
-        await service.markRead('c1'); // completes normally
-      });
+          await service.markRead('c1'); // completes normally
+        },
+      );
     });
 
     group('photos', () {
-      PickedReceipt photo(String ext) =>
-          PickedReceipt(bytes: Uint8List.fromList([1, 2, 3]), name: 'p.$ext', extension: ext);
+      PickedReceipt photo(String ext) => PickedReceipt(
+        bytes: Uint8List.fromList([1, 2, 3]),
+        name: 'p.$ext',
+        extension: ext,
+      );
 
-      test('are uploaded to the private chat bucket in the chat\'s folder',
-          () async {
-        when(() => files.uploadBinary(any(), any(),
-                fileOptions: any(named: 'fileOptions')))
-            .thenAnswer((_) async => 'ok');
+      test(
+        'are uploaded to the private chat bucket in the chat\'s folder',
+        () async {
+          when(
+            () => files.uploadBinary(
+              any(),
+              any(),
+              fileOptions: any(named: 'fileOptions'),
+            ),
+          ).thenAnswer((_) async => 'ok');
 
-        final path = await service.uploadAttachment('c1', photo('JPG'));
+          final path = await service.uploadAttachment('c1', photo('JPG'));
 
-        expect(path, matches(RegExp(r'^c1/\d+\.jpg$')));
-        final captured = verify(() => files.uploadBinary(captureAny(), captureAny(),
-            fileOptions: captureAny(named: 'fileOptions'))).captured;
-        expect(captured[0], path);
-        expect((captured[2] as FileOptions).contentType, 'image/jpeg');
-      });
+          expect(path, matches(RegExp(r'^c1/\d+\.jpg$')));
+          final captured = verify(
+            () => files.uploadBinary(
+              captureAny(),
+              captureAny(),
+              fileOptions: captureAny(named: 'fileOptions'),
+            ),
+          ).captured;
+          expect(captured[0], path);
+          expect((captured[2] as FileOptions).contentType, 'image/jpeg');
+        },
+      );
 
       test('a failed upload is reported', () async {
-        when(() => files.uploadBinary(any(), any(),
-                fileOptions: any(named: 'fileOptions')))
-            .thenThrow(Exception('too big'));
+        when(
+          () => files.uploadBinary(
+            any(),
+            any(),
+            fileOptions: any(named: 'fileOptions'),
+          ),
+        ).thenThrow(Exception('too big'));
 
         expect(service.uploadAttachment('c1', photo('png')), throwsException);
       });
 
       test('are shown through a temporary signed link', () async {
-        when(() => files.createSignedUrl(any(), any()))
-            .thenAnswer((_) async => 'https://signed/1');
+        when(
+          () => files.createSignedUrl(any(), any()),
+        ).thenAnswer((_) async => 'https://signed/1');
 
         final url = await service.attachmentUrl('c1/1.jpg');
 
@@ -528,8 +607,9 @@ void main() {
 
       test('the same photo reuses its link, so images can be cached', () async {
         var n = 0;
-        when(() => files.createSignedUrl(any(), any()))
-            .thenAnswer((_) async => 'https://signed/${++n}');
+        when(
+          () => files.createSignedUrl(any(), any()),
+        ).thenAnswer((_) async => 'https://signed/${++n}');
 
         final a = await service.attachmentUrl('c1/1.jpg');
         final b = await service.attachmentUrl('c1/1.jpg');
@@ -540,8 +620,9 @@ void main() {
 
       test('different photos get their own links', () async {
         var n = 0;
-        when(() => files.createSignedUrl(any(), any()))
-            .thenAnswer((_) async => 'https://signed/${++n}');
+        when(
+          () => files.createSignedUrl(any(), any()),
+        ).thenAnswer((_) async => 'https://signed/${++n}');
 
         final a = await service.attachmentUrl('c1/1.jpg');
         final b = await service.attachmentUrl('c1/2.jpg');

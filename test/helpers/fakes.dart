@@ -3,10 +3,13 @@ import 'dart:typed_data';
 
 import 'package:carrywise_app/services/auth_service.dart';
 import 'package:carrywise_app/services/biometric_service.dart';
+import 'package:carrywise_app/services/city_service.dart';
+import 'package:carrywise_app/services/exchange_rate_service.dart';
 import 'package:carrywise_app/services/message_service.dart';
 import 'package:carrywise_app/services/notification_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:carrywise_app/services/region_service.dart';
+import 'package:carrywise_app/services/request_service.dart';
 import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
@@ -55,39 +58,42 @@ TravelerTrip sampleTrip({
 
 /// Three travelers matching the sample data the Home screen used to hard-code.
 List<TravelerTrip> sampleTravelers() => [
-      sampleTrip(),
-      sampleTrip(
-        tripId: 'trip-2',
-        travelerId: 'traveler-2',
-        firstName: 'Daniel',
-        lastName: 'Okafor',
-        avgRating: 5.0,
-        itemsDelivered: 41,
-        departureCity: 'Accra',
-        departureCountry: 'GH',
-        arrivalCity: 'Paris',
-        arrivalCountry: 'FR',
-        departureDate: DateTime(2030, 6, 24),
-        maxWeightKg: 5,
-      ),
-      sampleTrip(
-        tripId: 'trip-3',
-        travelerId: 'traveler-3',
-        firstName: 'Maya',
-        lastName: 'Tariq',
-        avgRating: 4.8,
-        itemsDelivered: 19,
-        departureCity: 'Nairobi',
-        departureCountry: 'KE',
-        arrivalCity: 'Dubai',
-        arrivalCountry: 'AE',
-        departureDate: DateTime(2030, 6, 26),
-        maxWeightKg: 2,
-      ),
-    ];
+  sampleTrip(),
+  sampleTrip(
+    tripId: 'trip-2',
+    travelerId: 'traveler-2',
+    firstName: 'Daniel',
+    lastName: 'Okafor',
+    avgRating: 5.0,
+    itemsDelivered: 41,
+    departureCity: 'Accra',
+    departureCountry: 'GH',
+    arrivalCity: 'Paris',
+    arrivalCountry: 'FR',
+    departureDate: DateTime(2030, 6, 24),
+    maxWeightKg: 5,
+  ),
+  sampleTrip(
+    tripId: 'trip-3',
+    travelerId: 'traveler-3',
+    firstName: 'Maya',
+    lastName: 'Tariq',
+    avgRating: 4.8,
+    itemsDelivered: 19,
+    departureCity: 'Nairobi',
+    departureCountry: 'KE',
+    arrivalCity: 'Dubai',
+    arrivalCountry: 'AE',
+    departureDate: DateTime(2030, 6, 26),
+    maxWeightKg: 2,
+  ),
+];
 
-TravelerProfile sampleProfile(List<TravelerTrip> trips,
-    {String firstName = 'Amara', String lastName = 'Kalu'}) {
+TravelerProfile sampleProfile(
+  List<TravelerTrip> trips, {
+  String firstName = 'Amara',
+  String lastName = 'Kalu',
+}) {
   return TravelerProfile(
     id: trips.first.travelerId,
     firstName: firstName,
@@ -179,11 +185,15 @@ class FakeAuthService extends Fake implements AuthService {
 
   /// Phone numbers an SMS code was requested for.
   final List<String> otpRequests = [];
+
+  /// For each request, whether the number was allowed to create an account.
+  final List<bool> otpCreateUser = [];
   Object? otpError;
 
   @override
-  Future<void> sendOtp(String phone) async {
+  Future<void> sendOtp(String phone, {bool createUser = true}) async {
     otpRequests.add(phone);
+    otpCreateUser.add(createUser);
     if (otpError != null) throw otpError!;
   }
 
@@ -242,7 +252,8 @@ Trip sampleMyTrip({
   int delivered = 0,
 }) {
   final today = DateTime.now();
-  final dep = departureDate ?? DateTime(today.year, today.month, today.day + 10);
+  final dep =
+      departureDate ?? DateTime(today.year, today.month, today.day + 10);
   return Trip(
     id: id,
     departureCityId: departureCityId,
@@ -320,12 +331,7 @@ class FakeTripService extends Fake implements TripService {
 }
 
 /// A city the fake location picker can return.
-LocationSelection city(
-  String name,
-  String code,
-  String country,
-  int id,
-) =>
+LocationSelection city(String name, String code, String country, int id) =>
     LocationSelection(
       country: country,
       countryCode: code,
@@ -341,7 +347,6 @@ PickedReceipt sampleReceipt({String name = 'ticket.pdf', int bytes = 2048}) =>
       extension: name.split('.').last,
     );
 
-
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 AppNotification sampleNotification({
@@ -352,21 +357,19 @@ AppNotification sampleNotification({
   String? imageUrl,
   bool isRead = false,
   DateTime? createdAt,
-}) =>
-    AppNotification(
-      id: id,
-      type: type,
-      title: title,
-      body: body,
-      imageUrl: imageUrl,
-      isRead: isRead,
-      createdAt: createdAt ?? DateTime(2030, 6, 15, 11, 58),
-    );
+}) => AppNotification(
+  id: id,
+  type: type,
+  title: title,
+  body: body,
+  imageUrl: imageUrl,
+  isRead: isRead,
+  createdAt: createdAt ?? DateTime(2030, 6, 15, 11, 58),
+);
 
 /// In-memory stand-in for [NotificationService].
 class FakeNotificationService extends Fake implements NotificationService {
-  FakeNotificationService({List<AppNotification>? items})
-      : items = items ?? [];
+  FakeNotificationService({List<AppNotification>? items}) : items = items ?? [];
 
   List<AppNotification> items;
   bool failList = false;
@@ -397,7 +400,6 @@ class FakeNotificationService extends Fake implements NotificationService {
   }
 }
 
-
 // ── Face ID ───────────────────────────────────────────────────────────────────
 
 /// Stand-in for [BiometricService]: you choose what the "device" answers.
@@ -427,7 +429,6 @@ class FakeBiometricService extends Fake implements BiometricService {
   }
 }
 
-
 // ── Region detection ──────────────────────────────────────────────────────────
 
 /// A phone whose location you control. Records what the app asked it to do.
@@ -438,7 +439,10 @@ class FakeDeviceLocation implements DeviceLocation {
   /// What the permission becomes if the app asks the user.
   LocationAccess accessAfterPrompt = LocationAccess.granted;
 
-  ({String isoCode, String? name})? found = (isoCode: 'US', name: 'United States');
+  ({String isoCode, String? name})? found = (
+    isoCode: 'US',
+    name: 'United States',
+  );
   Object? error;
 
   int promptCount = 0;
@@ -488,14 +492,12 @@ DetectedRegion region({
   String name = 'United States',
   AppLanguage language = AppLanguage.english,
   AppCurrency currency = AppCurrency.usd,
-}) =>
-    DetectedRegion(
-      isoCode: iso,
-      countryName: name,
-      language: language,
-      currency: currency,
-    );
-
+}) => DetectedRegion(
+  isoCode: iso,
+  countryName: name,
+  language: language,
+  currency: currency,
+);
 
 // ── Messages ──────────────────────────────────────────────────────────────────
 
@@ -551,24 +553,23 @@ ChatMessage sampleMessage({
   String? attachment,
   DateTime? readAt,
   DateTime? createdAt,
-}) =>
-    ChatMessage(
-      id: id,
-      conversationId: conversationId,
-      authorId: author,
-      body: body,
-      attachmentPath: attachment,
-      readAt: readAt,
-      createdAt: createdAt ?? DateTime(2030, 6, 15, 10, 0),
-    );
+}) => ChatMessage(
+  id: id,
+  conversationId: conversationId,
+  authorId: author,
+  body: body,
+  attachmentPath: attachment,
+  readAt: readAt,
+  createdAt: createdAt ?? DateTime(2030, 6, 15, 10, 0),
+);
 
 /// In-memory stand-in for [MessageService].
 class FakeMessageService extends Fake implements MessageService {
   FakeMessageService({
     List<ConversationSummary>? conversations,
     Map<String, List<ChatMessage>>? messages,
-  })  : convs = conversations ?? [],
-        thread = messages ?? {};
+  }) : convs = conversations ?? [],
+       thread = messages ?? {};
 
   List<ConversationSummary> convs;
   Map<String, List<ChatMessage>> thread;
@@ -585,7 +586,8 @@ class FakeMessageService extends Fake implements MessageService {
   int conversationCalls = 0;
   int messageCalls = 0;
   final List<String> markedRead = [];
-  final List<({String conversationId, String? body, String? attachment})> sent = [];
+  final List<({String conversationId, String? body, String? attachment})> sent =
+      [];
   final List<PickedReceipt> uploads = [];
   int _id = 0;
 
@@ -600,18 +602,28 @@ class FakeMessageService extends Fake implements MessageService {
   }
 
   @override
-  Future<List<ChatMessage>> messages(String conversationId, {int limit = 300}) async {
+  Future<List<ChatMessage>> messages(
+    String conversationId, {
+    int limit = 300,
+  }) async {
     messageCalls++;
     if (failMessages) throw Exception('messages failed');
     return [...(thread[conversationId] ?? const [])];
   }
 
   @override
-  Future<ChatMessage> send(String conversationId,
-      {String? body, String? attachmentPath}) async {
+  Future<ChatMessage> send(
+    String conversationId, {
+    String? body,
+    String? attachmentPath,
+  }) async {
     if (sendGate != null) await sendGate!.future;
     if (failSend) throw Exception('send failed');
-    sent.add((conversationId: conversationId, body: body, attachment: attachmentPath));
+    sent.add((
+      conversationId: conversationId,
+      body: body,
+      attachment: attachmentPath,
+    ));
     final m = ChatMessage(
       id: 'sent-${_id++}',
       conversationId: conversationId,
@@ -626,10 +638,14 @@ class FakeMessageService extends Fake implements MessageService {
   }
 
   @override
-  Future<void> markRead(String conversationId) async => markedRead.add(conversationId);
+  Future<void> markRead(String conversationId) async =>
+      markedRead.add(conversationId);
 
   @override
-  Future<String> uploadAttachment(String conversationId, PickedReceipt photo) async {
+  Future<String> uploadAttachment(
+    String conversationId,
+    PickedReceipt photo,
+  ) async {
     if (failUpload) throw Exception('upload failed');
     uploads.add(photo);
     return '$conversationId/${uploads.length}.jpg';
@@ -641,3 +657,92 @@ class FakeMessageService extends Fake implements MessageService {
     return 'https://example.com/signed/$path';
   }
 }
+
+// ── Delivery requests ─────────────────────────────────────────────────────────
+
+/// In-memory stand-in for [RequestService].
+class FakeRequestService extends Fake implements RequestService {
+  /// When set, the next send fails with this.
+  RequestException? fail;
+
+  /// When set, sending waits for it (to test the "sending" state).
+  Completer<void>? gate;
+
+  final List<({String id, RequestDraft draft, List<PickedReceipt> photos})>
+  sent = [];
+  int attempts = 0;
+
+  /// The request id of every attempt, failed or not.
+  final List<String> attemptIds = [];
+
+  @override
+  Future<String> send(
+    String requestId,
+    RequestDraft draft,
+    List<PickedReceipt> photos,
+  ) async {
+    attempts++;
+    attemptIds.add(requestId);
+    if (gate != null) await gate!.future;
+    if (fail != null) throw fail!;
+    sent.add((id: requestId, draft: draft, photos: photos));
+    return requestId;
+  }
+}
+
+// ── Delivery pricing inputs ───────────────────────────────────────────────────
+
+/// City coordinates by "CC|Name". Defaults to Lagos and London.
+class FakeCityService extends Fake implements CityService {
+  FakeCityService({Map<String, CityCoordinates>? cities})
+    : cities =
+          cities ??
+          {
+            'NG|Lagos': const CityCoordinates(6.5244, 3.3792),
+            'GB|London': const CityCoordinates(51.5074, -0.1278),
+            'GH|Accra': const CityCoordinates(5.6037, -0.187),
+            'FR|Paris': const CityCoordinates(48.8566, 2.3522),
+          };
+
+  Map<String, CityCoordinates> cities;
+  bool fail = false;
+  Completer<void>? gate;
+  int lookups = 0;
+
+  @override
+  Future<CityCoordinates?> coordinates(String countryCode, String city) async {
+    lookups++;
+    if (gate != null) await gate!.future;
+    if (fail) throw Exception('cities failed');
+    return cities['${countryCode.toUpperCase()}|$city'];
+  }
+}
+
+/// Exchange rates you control. Defaults to the real answer's rates.
+class FakeExchangeRateService extends Fake implements ExchangeRateService {
+  FakeExchangeRateService({this.result}) {
+    result ??= sampleRates();
+  }
+
+  ExchangeRates? result;
+  Completer<void>? gate;
+  int calls = 0;
+
+  @override
+  Future<ExchangeRates?> rates() async {
+    calls++;
+    if (gate != null) await gate!.future;
+    return result;
+  }
+}
+
+ExchangeRates sampleRates({DateTime? updatedAt}) => ExchangeRates(
+  perUsd: const {
+    'USD': 1,
+    'EUR': 0.892438,
+    'GBP': 0.755923,
+    'XOF': 585.399478,
+    'XAF': 585.399478,
+  },
+  updatedAt: updatedAt ?? DateTime.utc(2030, 6, 21, 12, 2),
+);

@@ -53,10 +53,13 @@ class FakeQuery<T> extends Fake implements PostgrestFilterBuilder<T> {
   }
 
   @override
-  Future<U> then<U>(FutureOr<U> Function(T value) onValue,
-      {Function? onError}) {
-    final future =
-        error != null ? Future<T>.error(error!) : Future<T>.value(value);
+  Future<U> then<U>(
+    FutureOr<U> Function(T value) onValue, {
+    Function? onError,
+  }) {
+    final future = error != null
+        ? Future<T>.error(error!)
+        : Future<T>.value(value);
     return future.then(onValue, onError: onError);
   }
 }
@@ -68,34 +71,35 @@ Map<String, dynamic> tripRow({
   String status = 'live',
   Map<String, dynamic>? departure,
   Map<String, dynamic>? arrival,
-}) =>
-    {
-      'id': id,
-      'departure_city_id': 1,
-      'arrival_city_id': 2,
-      'departure_date': '2030-06-22',
-      'arrival_date': '2030-06-23',
-      'price': price,
-      'currency': 'USD',
-      'max_weight_kg': maxWeight,
-      'max_size': 'Shoebox (30×20×15 cm)',
-      'ticket_receipt_path': 'user-1/1.pdf',
-      'status': status,
-      'departure': departure ??
-          {
-            'id': 1,
-            'name': 'Lagos',
-            'country_code': 'NG',
-            'countries': {'name': 'Nigeria'},
-          },
-      'arrival': arrival ??
-          {
-            'id': 2,
-            'name': 'London',
-            'country_code': 'GB',
-            'countries': {'name': 'United Kingdom'},
-          },
-    };
+}) => {
+  'id': id,
+  'departure_city_id': 1,
+  'arrival_city_id': 2,
+  'departure_date': '2030-06-22',
+  'arrival_date': '2030-06-23',
+  'price': price,
+  'currency': 'USD',
+  'max_weight_kg': maxWeight,
+  'max_size': 'Shoebox (30×20×15 cm)',
+  'ticket_receipt_path': 'user-1/1.pdf',
+  'status': status,
+  'departure':
+      departure ??
+      {
+        'id': 1,
+        'name': 'Lagos',
+        'country_code': 'NG',
+        'countries': {'name': 'Nigeria'},
+      },
+  'arrival':
+      arrival ??
+      {
+        'id': 2,
+        'name': 'London',
+        'country_code': 'GB',
+        'countries': {'name': 'United Kingdom'},
+      },
+};
 
 void main() {
   setUpAll(() {
@@ -138,9 +142,9 @@ void main() {
     });
 
     test('falls back to the country code when the name is unavailable', () {
-      final t = Trip.fromJson(tripRow(
-        departure: {'id': 1, 'name': 'Lagos', 'country_code': 'NG'},
-      ));
+      final t = Trip.fromJson(
+        tripRow(departure: {'id': 1, 'name': 'Lagos', 'country_code': 'NG'}),
+      );
 
       expect(t.departureCountry, 'NG');
     });
@@ -164,14 +168,16 @@ void main() {
 
   group('Trip.isUpcoming', () {
     final today = DateTime(2030, 6, 22);
-    Trip trip(String status, DateTime arrival) => Trip.fromJson(tripRow(
-          status: status,
-        )..['arrival_date'] = TripDraft.isoDate(arrival));
+    Trip trip(String status, DateTime arrival) => Trip.fromJson(
+      tripRow(status: status)..['arrival_date'] = TripDraft.isoDate(arrival),
+    );
 
     test('live and in-review trips that have not arrived are upcoming', () {
       expect(trip('live', DateTime(2030, 6, 30)).isUpcoming(today), isTrue);
-      expect(trip('pending_review', DateTime(2030, 6, 30)).isUpcoming(today),
-          isTrue);
+      expect(
+        trip('pending_review', DateTime(2030, 6, 30)).isUpcoming(today),
+        isTrue,
+      );
     });
 
     test('a trip arriving today is still upcoming', () {
@@ -182,15 +188,25 @@ void main() {
       expect(trip('live', DateTime(2030, 6, 21)).isUpcoming(today), isFalse);
     });
 
-    test('completed and cancelled trips are past even if the date is ahead',
-        () {
-      expect(trip('completed', DateTime(2030, 7, 1)).isUpcoming(today), isFalse);
-      expect(trip('cancelled', DateTime(2030, 7, 1)).isUpcoming(today), isFalse);
-    });
+    test(
+      'completed and cancelled trips are past even if the date is ahead',
+      () {
+        expect(
+          trip('completed', DateTime(2030, 7, 1)).isUpcoming(today),
+          isFalse,
+        );
+        expect(
+          trip('cancelled', DateTime(2030, 7, 1)).isUpcoming(today),
+          isFalse,
+        );
+      },
+    );
 
     test('the time of day does not matter', () {
-      expect(trip('live', today).isUpcoming(DateTime(2030, 6, 22, 23, 59)),
-          isTrue);
+      expect(
+        trip('live', today).isUpcoming(DateTime(2030, 6, 22, 23, 59)),
+        isTrue,
+      );
     });
   });
 
@@ -257,7 +273,10 @@ void main() {
 
   group('PickedReceipt', () {
     PickedReceipt r(String ext) => PickedReceipt(
-        bytes: Uint8List(1500), name: 'file.$ext', extension: ext);
+      bytes: Uint8List(1500),
+      name: 'file.$ext',
+      extension: ext,
+    );
 
     test('knows its size', () => expect(r('pdf').sizeBytes, 1500));
 
@@ -297,17 +316,17 @@ void main() {
     });
 
     TripDraft draft(String? ref) => TripDraft(
-          departureCityId: 1,
-          arrivalCityId: 2,
-          departureDate: DateTime(2030, 6, 5),
-          arrivalDate: DateTime(2030, 6, 6),
-          price: 30,
-          currency: 'USD',
-          maxWeightKg: 3,
-          maxSize: 'Backpack size',
-          ticketReceiptPath: 'user-1/1.pdf',
-          bookingReference: ref,
-        );
+      departureCityId: 1,
+      arrivalCityId: 2,
+      departureDate: DateTime(2030, 6, 5),
+      arrivalDate: DateTime(2030, 6, 6),
+      price: 30,
+      currency: 'USD',
+      maxWeightKg: 3,
+      maxSize: 'Backpack size',
+      ticketReceiptPath: 'user-1/1.pdf',
+      bookingReference: ref,
+    );
 
     test('is sent when creating a trip', () {
       expect(draft('X7KQ9R').toInsertJson('u')['booking_reference'], 'X7KQ9R');
@@ -327,7 +346,13 @@ void main() {
     group('pattern (matches the database check)', () {
       final re = TripDraft.bookingReferencePattern;
 
-      for (final ok in ['X7KQ9R', 'ABC12', 'ABCDEFG8', '12345', 'abcde'.toUpperCase()]) {
+      for (final ok in [
+        'X7KQ9R',
+        'ABC12',
+        'ABCDEFG8',
+        '12345',
+        'abcde'.toUpperCase(),
+      ]) {
         test('accepts "$ok"', () => expect(re.hasMatch(ok), isTrue));
       }
       for (final bad in [
@@ -389,15 +414,20 @@ void main() {
     });
 
     group('myTrips', () {
-      test('loads only the signed-in traveler\'s trips, soonest first',
-          () async {
-        final query = FakeQuery<List<Map<String, dynamic>>>([]);
-        when(() => trips.select(any())).thenAnswer((_) => query);
+      test(
+        'loads only the signed-in traveler\'s trips, soonest first',
+        () async {
+          final query = FakeQuery<List<Map<String, dynamic>>>([]);
+          when(() => trips.select(any())).thenAnswer((_) => query);
 
-        await service.myTrips();
+          await service.myTrips();
 
-        expect(query.calls, ['eq:traveler_id=user-1', 'order:departure_date:asc']);
-      });
+          expect(query.calls, [
+            'eq:traveler_id=user-1',
+            'order:departure_date:asc',
+          ]);
+        },
+      );
 
       test('selects the cities and their country names', () async {
         final query = FakeQuery<List<Map<String, dynamic>>>([]);
@@ -405,17 +435,17 @@ void main() {
 
         await service.myTrips();
 
-        final cols = verify(() => trips.select(captureAny())).captured.single
-            as String;
+        final cols =
+            verify(() => trips.select(captureAny())).captured.single as String;
         expect(cols, contains('departure:departure_city_id'));
         expect(cols, contains('arrival:arrival_city_id'));
         expect(cols, contains('countries(name)'));
       });
 
-      test('returns an empty list without asking for request counts',
-          () async {
-        when(() => trips.select(any()))
-            .thenAnswer((_) => FakeQuery<List<Map<String, dynamic>>>([]));
+      test('returns an empty list without asking for request counts', () async {
+        when(
+          () => trips.select(any()),
+        ).thenAnswer((_) => FakeQuery<List<Map<String, dynamic>>>([]));
 
         expect(await service.myTrips(), isEmpty);
         verifyNever(() => schema.from('delivery_requests'));
@@ -423,8 +453,11 @@ void main() {
 
       test('adds request and delivered counts per trip', () async {
         when(() => trips.select(any())).thenAnswer(
-            (_) => FakeQuery<List<Map<String, dynamic>>>(
-                [tripRow(id: 'a'), tripRow(id: 'b')]));
+          (_) => FakeQuery<List<Map<String, dynamic>>>([
+            tripRow(id: 'a'),
+            tripRow(id: 'b'),
+          ]),
+        );
         final reqQuery = FakeQuery<List<Map<String, dynamic>>>([
           {'trip_id': 'a', 'status': 'pending'},
           {'trip_id': 'a', 'status': 'delivered'},
@@ -443,24 +476,33 @@ void main() {
         expect(b.deliveredCount, 0);
       });
 
-      test('still returns the trips when request counts cannot be read',
-          () async {
-        when(() => trips.select(any())).thenAnswer(
-            (_) => FakeQuery<List<Map<String, dynamic>>>([tripRow(id: 'a')]));
-        when(() => requests.select(any())).thenAnswer(
-            (_) => FakeQuery<List<Map<String, dynamic>>>([],
-                error: Exception('permission denied')));
+      test(
+        'still returns the trips when request counts cannot be read',
+        () async {
+          when(() => trips.select(any())).thenAnswer(
+            (_) => FakeQuery<List<Map<String, dynamic>>>([tripRow(id: 'a')]),
+          );
+          when(() => requests.select(any())).thenAnswer(
+            (_) => FakeQuery<List<Map<String, dynamic>>>(
+              [],
+              error: Exception('permission denied'),
+            ),
+          );
 
-        final result = await service.myTrips();
+          final result = await service.myTrips();
 
-        expect(result.single.id, 'a');
-        expect(result.single.requestsCount, 0);
-      });
+          expect(result.single.id, 'a');
+          expect(result.single.requestsCount, 0);
+        },
+      );
 
       test('rethrows when the trips cannot be loaded', () async {
-        when(() => trips.select(any())).thenAnswer((_) =>
-            FakeQuery<List<Map<String, dynamic>>>([],
-                error: Exception('network')));
+        when(() => trips.select(any())).thenAnswer(
+          (_) => FakeQuery<List<Map<String, dynamic>>>(
+            [],
+            error: Exception('network'),
+          ),
+        );
 
         expect(service.myTrips(), throwsException);
       });
@@ -473,15 +515,15 @@ void main() {
     });
 
     group('createTrip / updateTrip', () {
-      test('createTrip inserts the draft for the signed-in traveler',
-          () async {
+      test('createTrip inserts the draft for the signed-in traveler', () async {
         final query = FakeQuery<dynamic>(null);
         when(() => trips.insert(any())).thenAnswer((_) => query);
 
         await service.createTrip(draft);
 
-        final sent = verify(() => trips.insert(captureAny())).captured.single
-            as Map<String, dynamic>;
+        final sent =
+            verify(() => trips.insert(captureAny())).captured.single
+                as Map<String, dynamic>;
         expect(sent['traveler_id'], 'user-1');
         expect(sent['status'], 'pending_review');
         expect(sent['departure_city_id'], 1);
@@ -489,8 +531,9 @@ void main() {
       });
 
       test('createTrip surfaces database errors', () async {
-        when(() => trips.insert(any()))
-            .thenAnswer((_) => FakeQuery<dynamic>(null, error: Exception('rls')));
+        when(
+          () => trips.insert(any()),
+        ).thenAnswer((_) => FakeQuery<dynamic>(null, error: Exception('rls')));
 
         expect(service.createTrip(draft), throwsException);
       });
@@ -502,46 +545,59 @@ void main() {
         await service.updateTrip('trip-9', draft);
 
         expect(query.calls, ['eq:id=trip-9', 'eq:traveler_id=user-1']);
-        final sent = verify(() => trips.update(captureAny())).captured.single
-            as Map<String, dynamic>;
+        final sent =
+            verify(() => trips.update(captureAny())).captured.single
+                as Map<String, dynamic>;
         expect(sent.containsKey('status'), isFalse);
         expect(sent.containsKey('traveler_id'), isFalse);
       });
     });
 
     group('receipts', () {
-      test('uploads to the private bucket inside the user\'s folder',
-          () async {
-        when(() => files.uploadBinary(any(), any(),
-                fileOptions: any(named: 'fileOptions')))
-            .thenAnswer((_) async => 'ok');
+      test('uploads to the private bucket inside the user\'s folder', () async {
+        when(
+          () => files.uploadBinary(
+            any(),
+            any(),
+            fileOptions: any(named: 'fileOptions'),
+          ),
+        ).thenAnswer((_) async => 'ok');
         final receipt = PickedReceipt(
-            bytes: Uint8List.fromList([1, 2, 3]),
-            name: 'ticket.PDF',
-            extension: 'PDF');
+          bytes: Uint8List.fromList([1, 2, 3]),
+          name: 'ticket.PDF',
+          extension: 'PDF',
+        );
 
         final path = await service.uploadReceipt(receipt);
 
         expect(path, matches(RegExp(r'^user-1/\d+\.pdf$')));
-        final captured = verify(() => files.uploadBinary(
-              captureAny(),
-              captureAny(),
-              fileOptions: captureAny(named: 'fileOptions'),
-            )).captured;
+        final captured = verify(
+          () => files.uploadBinary(
+            captureAny(),
+            captureAny(),
+            fileOptions: captureAny(named: 'fileOptions'),
+          ),
+        ).captured;
         expect(captured[0], path);
         expect(captured[1], receipt.bytes);
         expect((captured[2] as FileOptions).contentType, 'application/pdf');
       });
 
       test('a failed upload is reported', () async {
-        when(() => files.uploadBinary(any(), any(),
-                fileOptions: any(named: 'fileOptions')))
-            .thenThrow(Exception('too big'));
+        when(
+          () => files.uploadBinary(
+            any(),
+            any(),
+            fileOptions: any(named: 'fileOptions'),
+          ),
+        ).thenThrow(Exception('too big'));
 
         expect(
-            service.uploadReceipt(PickedReceipt(
-                bytes: Uint8List(1), name: 'a.pdf', extension: 'pdf')),
-            throwsException);
+          service.uploadReceipt(
+            PickedReceipt(bytes: Uint8List(1), name: 'a.pdf', extension: 'pdf'),
+          ),
+          throwsException,
+        );
       });
 
       test('deleteReceipt removes only the user\'s own files', () async {

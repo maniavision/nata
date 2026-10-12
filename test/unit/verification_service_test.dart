@@ -11,10 +11,14 @@ String idTypeFromIndex(int index) => _idTypeValues[index.clamp(0, 2)];
 
 String mimeFromExt(String ext) {
   switch (ext.toLowerCase()) {
-    case 'pdf': return 'application/pdf';
-    case 'png': return 'image/png';
-    case 'heic': return 'image/heic';
-    default: return 'image/jpeg';
+    case 'pdf':
+      return 'application/pdf';
+    case 'png':
+      return 'image/png';
+    case 'heic':
+      return 'image/heic';
+    default:
+      return 'image/jpeg';
   }
 }
 
@@ -45,10 +49,19 @@ void main() {
     test('jpg → image/jpeg', () => expect(mimeFromExt('jpg'), 'image/jpeg'));
     test('jpeg → image/jpeg', () => expect(mimeFromExt('jpeg'), 'image/jpeg'));
     test('png → image/png', () => expect(mimeFromExt('png'), 'image/png'));
-    test('pdf → application/pdf', () => expect(mimeFromExt('pdf'), 'application/pdf'));
+    test(
+      'pdf → application/pdf',
+      () => expect(mimeFromExt('pdf'), 'application/pdf'),
+    );
     test('heic → image/heic', () => expect(mimeFromExt('heic'), 'image/heic'));
-    test('unknown → image/jpeg fallback', () => expect(mimeFromExt('bmp'), 'image/jpeg'));
-    test('uppercase ext handled', () => expect(mimeFromExt('PNG'), 'image/png'));
+    test(
+      'unknown → image/jpeg fallback',
+      () => expect(mimeFromExt('bmp'), 'image/jpeg'),
+    );
+    test(
+      'uppercase ext handled',
+      () => expect(mimeFromExt('PNG'), 'image/png'),
+    );
   });
 
   group('Storage path construction', () {

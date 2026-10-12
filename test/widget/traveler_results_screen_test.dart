@@ -8,15 +8,17 @@ import '../helpers/app_wrapper.dart';
 import '../helpers/fakes.dart';
 
 const lagos = LocationSelection(
-    country: 'Nigeria',
-    countryCode: 'NG',
-    city: 'Lagos',
-    displayLabel: 'Lagos, Nigeria');
+  country: 'Nigeria',
+  countryCode: 'NG',
+  city: 'Lagos',
+  displayLabel: 'Lagos, Nigeria',
+);
 const london = LocationSelection(
-    country: 'United Kingdom',
-    countryCode: 'GB',
-    city: 'London',
-    displayLabel: 'London, United Kingdom');
+  country: 'United Kingdom',
+  countryCode: 'GB',
+  city: 'London',
+  displayLabel: 'London, United Kingdom',
+);
 
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
@@ -34,19 +36,27 @@ void main() {
     tester.view.physicalSize = const Size(900, 2000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(appWrapper(TravelerResultsScreen(
-      departure: departure,
-      destination: destination,
-      date: date,
-      service: service,
-    )));
+    await tester.pumpWidget(
+      appWrapper(
+        TravelerResultsScreen(
+          departure: departure,
+          destination: destination,
+          date: date,
+          service: service,
+        ),
+      ),
+    );
     if (settle) await tester.pumpAndSettle();
   }
 
   group('TravelerResultsScreen', () {
     testWidgets('sends the search criteria to the service', (tester) async {
-      await pumpResults(tester,
-          departure: lagos, destination: london, date: DateTime(2030, 6, 30));
+      await pumpResults(
+        tester,
+        departure: lagos,
+        destination: london,
+        date: DateTime(2030, 6, 30),
+      );
 
       final call = service.searchCalls.single;
       expect(call['departureCountry'], 'NG');
@@ -66,8 +76,12 @@ void main() {
     });
 
     testWidgets('summarises the search in the header', (tester) async {
-      await pumpResults(tester,
-          departure: lagos, destination: london, date: DateTime(2030, 6, 30));
+      await pumpResults(
+        tester,
+        departure: lagos,
+        destination: london,
+        date: DateTime(2030, 6, 30),
+      );
 
       expect(find.text('Lagos → London · by Jun 30'), findsOneWidget);
     });
@@ -87,8 +101,9 @@ void main() {
       expect(find.text('3 available'), findsOneWidget);
     });
 
-    testWidgets('card shows route, delivered count, rating and capacity',
-        (tester) async {
+    testWidgets('card shows route, delivered count, rating and capacity', (
+      tester,
+    ) async {
       await pumpResults(tester);
 
       expect(find.text('Lagos → London'), findsOneWidget);
@@ -121,8 +136,10 @@ void main() {
       service.failSearch = true;
       await pumpResults(tester);
 
-      expect(find.text('Could not load travelers. Please try again.'),
-          findsOneWidget);
+      expect(
+        find.text('Could not load travelers. Please try again.'),
+        findsOneWidget,
+      );
 
       service.failSearch = false;
       await tester.tap(find.text('Retry'));
@@ -132,8 +149,9 @@ void main() {
       expect(service.searchCalls.length, 2);
     });
 
-    testWidgets('tapping a traveler opens that traveler\'s profile',
-        (tester) async {
+    testWidgets('tapping a traveler opens that traveler\'s profile', (
+      tester,
+    ) async {
       await pumpResults(tester);
 
       await tester.tap(find.text('Daniel Okafor'));
@@ -147,11 +165,18 @@ void main() {
       expect(service.profileCalls, ['traveler-2']);
     });
 
-    testWidgets('shows the same bottom navigation as the other screens',
-        (tester) async {
+    testWidgets('shows the same bottom navigation as the other screens', (
+      tester,
+    ) async {
       await pumpResults(tester);
 
-      for (final label in ['Home', 'Requests', 'Trips', 'Messages', 'Profile']) {
+      for (final label in [
+        'Home',
+        'Requests',
+        'Trips',
+        'Messages',
+        'Profile',
+      ]) {
         expect(find.text(label), findsOneWidget);
       }
     });

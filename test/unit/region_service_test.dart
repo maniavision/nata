@@ -8,19 +8,52 @@ void main() {
     AppLanguage of(String iso) => RegionService.languageForCountry(iso);
 
     test('English by default', () {
-      for (final iso in ['US', 'GB', 'NG', 'GH', 'KE', 'ZA', 'CA', 'AU', 'IN', 'DE', 'JP']) {
+      for (final iso in [
+        'US',
+        'GB',
+        'NG',
+        'GH',
+        'KE',
+        'ZA',
+        'CA',
+        'AU',
+        'IN',
+        'DE',
+        'JP',
+      ]) {
         expect(of(iso), AppLanguage.english, reason: iso);
       }
     });
 
     test('Spanish where Spanish is the usual language', () {
-      for (final iso in ['ES', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'CU', 'PR']) {
+      for (final iso in [
+        'ES',
+        'MX',
+        'AR',
+        'CO',
+        'CL',
+        'PE',
+        'VE',
+        'CU',
+        'PR',
+      ]) {
         expect(of(iso), AppLanguage.spanish, reason: iso);
       }
     });
 
     test('French where French is the usual language', () {
-      for (final iso in ['FR', 'SN', 'CI', 'CM', 'CD', 'BF', 'ML', 'BJ', 'TG', 'HT']) {
+      for (final iso in [
+        'FR',
+        'SN',
+        'CI',
+        'CM',
+        'CD',
+        'BF',
+        'ML',
+        'BJ',
+        'TG',
+        'HT',
+      ]) {
         expect(of(iso), AppLanguage.french, reason: iso);
       }
     });
@@ -44,7 +77,19 @@ void main() {
     test('GBP for the United Kingdom', () => expect(of('GB'), AppCurrency.gbp));
 
     test('EUR across the eurozone', () {
-      for (final iso in ['FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'PT', 'IE', 'AT', 'GR', 'FI']) {
+      for (final iso in [
+        'FR',
+        'DE',
+        'ES',
+        'IT',
+        'NL',
+        'BE',
+        'PT',
+        'IE',
+        'AT',
+        'GR',
+        'FI',
+      ]) {
         expect(of(iso), AppCurrency.eur, reason: iso);
       }
     });
@@ -56,7 +101,17 @@ void main() {
     });
 
     test('USD for everywhere the app has no local currency', () {
-      for (final iso in ['NG', 'GH', 'KE', 'ZA', 'CA', 'MX', 'AU', 'JP', 'ZZ']) {
+      for (final iso in [
+        'NG',
+        'GH',
+        'KE',
+        'ZA',
+        'CA',
+        'MX',
+        'AU',
+        'JP',
+        'ZZ',
+      ]) {
         expect(of(iso), AppCurrency.usd, reason: iso);
       }
     });
@@ -91,16 +146,18 @@ void main() {
       expect(r.currency, AppCurrency.usd);
     });
 
-    test('suggests the language and currency of the detected country',
-        () async {
-      device.found = (isoCode: 'FR', name: 'France');
+    test(
+      'suggests the language and currency of the detected country',
+      () async {
+        device.found = (isoCode: 'FR', name: 'France');
 
-      final r = await service.detect();
+        final r = await service.detect();
 
-      expect(r!.countryName, 'France');
-      expect(r.language, AppLanguage.french);
-      expect(r.currency, AppCurrency.eur);
-    });
+        expect(r!.countryName, 'France');
+        expect(r.language, AppLanguage.french);
+        expect(r.currency, AppCurrency.eur);
+      },
+    );
 
     test('Senegal: French and CFA franc', () async {
       device.found = (isoCode: 'SN', name: 'Senegal');
@@ -129,16 +186,18 @@ void main() {
       expect(r.currency, AppCurrency.gbp);
     });
 
-    test('uses the name the phone reports for a country the app does not list',
-        () async {
-      device.found = (isoCode: 'IS', name: 'Iceland');
+    test(
+      'uses the name the phone reports for a country the app does not list',
+      () async {
+        device.found = (isoCode: 'IS', name: 'Iceland');
 
-      final r = await service.detect();
+        final r = await service.detect();
 
-      // Whatever the app's own list says, the user sees a real name.
-      expect(r!.countryName, isNotEmpty);
-      expect(r.countryName, anyOf('Iceland'));
-    });
+        // Whatever the app's own list says, the user sees a real name.
+        expect(r!.countryName, isNotEmpty);
+        expect(r.countryName, anyOf('Iceland'));
+      },
+    );
 
     test('falls back to the code when no name is known at all', () async {
       device.found = (isoCode: 'ZZ', name: null);
@@ -149,14 +208,16 @@ void main() {
     });
 
     group('when it cannot detect anything', () {
-      test('location switched off: nothing, and the user is not asked',
-          () async {
-        device.serviceEnabled = false;
+      test(
+        'location switched off: nothing, and the user is not asked',
+        () async {
+          device.serviceEnabled = false;
 
-        expect(await service.detect(), isNull);
-        expect(device.promptCount, 0);
-        expect(device.countryLookups, 0);
-      });
+          expect(await service.detect(), isNull);
+          expect(device.promptCount, 0);
+          expect(device.countryLookups, 0);
+        },
+      );
 
       test('permission refused when asked: nothing', () async {
         device.currentAccess = LocationAccess.denied;
@@ -167,14 +228,16 @@ void main() {
         expect(device.countryLookups, 0);
       });
 
-      test('permission refused for good: nothing, and not asked again',
-          () async {
-        device.currentAccess = LocationAccess.deniedForever;
+      test(
+        'permission refused for good: nothing, and not asked again',
+        () async {
+          device.currentAccess = LocationAccess.deniedForever;
 
-        expect(await service.detect(), isNull);
-        expect(device.promptCount, 0);
-        expect(device.countryLookups, 0);
-      });
+          expect(await service.detect(), isNull);
+          expect(device.promptCount, 0);
+          expect(device.countryLookups, 0);
+        },
+      );
 
       test('the country cannot be worked out: nothing', () async {
         device.found = null;
@@ -198,16 +261,18 @@ void main() {
         expect(device.promptCount, 0);
       });
 
-      test('not decided yet: the user is asked once, then it is detected',
-          () async {
-        device.currentAccess = LocationAccess.denied;
-        device.accessAfterPrompt = LocationAccess.granted;
+      test(
+        'not decided yet: the user is asked once, then it is detected',
+        () async {
+          device.currentAccess = LocationAccess.denied;
+          device.accessAfterPrompt = LocationAccess.granted;
 
-        final r = await service.detect();
+          final r = await service.detect();
 
-        expect(device.promptCount, 1);
-        expect(r?.isoCode, 'US');
-      });
+          expect(device.promptCount, 1);
+          expect(r?.isoCode, 'US');
+        },
+      );
     });
   });
 }

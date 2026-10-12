@@ -30,19 +30,24 @@ void main() {
     await PreferencesService().resetAll();
   });
 
-  Future<void> pump(WidgetTester tester, {Locale locale = const Locale('en')}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    Locale locale = const Locale('en'),
+  }) async {
     tester.view.physicalSize = const Size(900, 3000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpWidget(appWrapper(
-      LoginScreen(
-        authService: auth,
-        biometricService: bio,
-        homeBuilder: (_) => const Scaffold(body: Text('HOME-SCREEN')),
+    await tester.pumpWidget(
+      appWrapper(
+        LoginScreen(
+          authService: auth,
+          biometricService: bio,
+          homeBuilder: (_) => const Scaffold(body: Text('HOME-SCREEN')),
+        ),
+        locale: locale,
       ),
-      locale: locale,
-    ));
+    );
     await tester.pumpAndSettle();
   }
 
@@ -60,8 +65,9 @@ void main() {
       expect(find.byIcon(Icons.face_retouching_natural), findsOneWidget);
     });
 
-    testWidgets('signs in with a recognised face and goes to Home',
-        (tester) async {
+    testWidgets('signs in with a recognised face and goes to Home', (
+      tester,
+    ) async {
       await pump(tester);
 
       await tapFaceId(tester);
@@ -82,16 +88,22 @@ void main() {
     testWidgets('the prompt text is translated', (tester) async {
       await pump(tester, locale: const Locale('es'));
       await tapFaceId(tester);
-      expect(bio.lastReason, 'Confirma que eres tú para iniciar sesión en Nata');
+      expect(
+        bio.lastReason,
+        'Confirma que eres tú para iniciar sesión en Nata',
+      );
 
       await pump(tester, locale: const Locale('fr'));
       await tapFaceId(tester);
-      expect(bio.lastReason,
-          "Confirmez que c'est vous pour vous connecter à Nata");
+      expect(
+        bio.lastReason,
+        "Confirmez que c'est vous pour vous connecter à Nata",
+      );
     });
 
-    testWidgets('does nothing visible when the user closes the prompt',
-        (tester) async {
+    testWidgets('does nothing visible when the user closes the prompt', (
+      tester,
+    ) async {
       bio.result = BiometricResult.cancelled;
       await pump(tester);
 
@@ -102,101 +114,125 @@ void main() {
       expect(find.byType(LoginScreen), findsOneWidget);
     });
 
-    testWidgets('a face that is not recognised says so and stays on sign in',
-        (tester) async {
+    testWidgets('a face that is not recognised says so and stays on sign in', (
+      tester,
+    ) async {
       bio.result = BiometricResult.failed;
       await pump(tester);
 
       await tapFaceId(tester);
 
       expect(
-          find.text(
-              "Face ID didn't recognise you. Try again or sign in with your phone number."),
-          findsOneWidget);
+        find.text(
+          "Face ID didn't recognise you. Try again or sign in with your phone number.",
+        ),
+        findsOneWidget,
+      );
       expect(find.text('HOME-SCREEN'), findsNothing);
     });
 
-    testWidgets('too many attempts: tells the user to use the phone number',
-        (tester) async {
+    testWidgets('too many attempts: tells the user to use the phone number', (
+      tester,
+    ) async {
       bio.result = BiometricResult.lockedOut;
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.text('Face ID is locked for now. Sign in with your phone number.'),
-          findsOneWidget);
+      expect(
+        find.text('Face ID is locked for now. Sign in with your phone number.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('a result of "not set up" after the prompt is explained',
-        (tester) async {
+    testWidgets('a result of "not set up" after the prompt is explained', (
+      tester,
+    ) async {
       bio.result = BiometricResult.notEnrolled;
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.text('Set up Face ID in your device settings first.'),
-          findsOneWidget);
+      expect(
+        find.text('Set up Face ID in your device settings first.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('a result of "not available" after the prompt is explained',
-        (tester) async {
+    testWidgets('a result of "not available" after the prompt is explained', (
+      tester,
+    ) async {
       bio.result = BiometricResult.notAvailable;
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.text("Face ID isn't available on this device."),
-          findsOneWidget);
+      expect(
+        find.text("Face ID isn't available on this device."),
+        findsOneWidget,
+      );
     });
   });
 
   group('when Face ID cannot be used', () {
-    testWidgets('a device without Face ID says so, and never asks',
-        (tester) async {
+    testWidgets('a device without Face ID says so, and never asks', (
+      tester,
+    ) async {
       bio.availabilityResult = BiometricAvailability.unsupported;
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.text("Face ID isn't available on this device."),
-          findsOneWidget);
+      expect(
+        find.text("Face ID isn't available on this device."),
+        findsOneWidget,
+      );
       expect(bio.authenticateCalls, 0);
     });
 
-    testWidgets('Face ID not set up on the device: points to the settings',
-        (tester) async {
+    testWidgets('Face ID not set up on the device: points to the settings', (
+      tester,
+    ) async {
       bio.availabilityResult = BiometricAvailability.notEnrolled;
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.text('Set up Face ID in your device settings first.'),
-          findsOneWidget);
+      expect(
+        find.text('Set up Face ID in your device settings first.'),
+        findsOneWidget,
+      );
       expect(bio.authenticateCalls, 0);
     });
 
-    testWidgets('nobody signed in yet: asks to sign in with the phone first',
-        (tester) async {
+    testWidgets('nobody signed in yet: asks to sign in with the phone first', (
+      tester,
+    ) async {
       auth.hasSession = false;
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.textContaining('sign in with your phone number first'),
-          findsOneWidget);
+      expect(
+        find.textContaining('sign in with your phone number first'),
+        findsOneWidget,
+      );
       expect(bio.authenticateCalls, 0);
       expect(find.text('HOME-SCREEN'), findsNothing);
     });
 
-    testWidgets('signed in without "Remember me": Face ID stays off',
-        (tester) async {
+    testWidgets('signed in without "Remember me": Face ID stays off', (
+      tester,
+    ) async {
       PreferencesService().setFaceIdEnabled(false);
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.textContaining('sign in with your phone number first'),
-          findsOneWidget);
+      expect(
+        find.textContaining('sign in with your phone number first'),
+        findsOneWidget,
+      );
       expect(bio.authenticateCalls, 0);
     });
 
@@ -204,25 +240,32 @@ void main() {
       bio.availabilityResult = BiometricAvailability.unsupported;
       await pump(tester, locale: const Locale('es'));
       await tapFaceId(tester);
-      expect(find.text('Face ID no está disponible en este dispositivo.'),
-          findsOneWidget);
+      expect(
+        find.text('Face ID no está disponible en este dispositivo.'),
+        findsOneWidget,
+      );
 
       await pump(tester, locale: const Locale('fr'));
       await tapFaceId(tester);
-      expect(find.text("Face ID n'est pas disponible sur cet appareil."),
-          findsOneWidget);
+      expect(
+        find.text("Face ID n'est pas disponible sur cet appareil."),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('the device check happens before the session check',
-        (tester) async {
+    testWidgets('the device check happens before the session check', (
+      tester,
+    ) async {
       bio.availabilityResult = BiometricAvailability.unsupported;
       auth.hasSession = false;
       await pump(tester);
 
       await tapFaceId(tester);
 
-      expect(find.text("Face ID isn't available on this device."),
-          findsOneWidget);
+      expect(
+        find.text("Face ID isn't available on this device."),
+        findsOneWidget,
+      );
     });
   });
 
@@ -280,8 +323,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('signing in with "Remember me" ticked switches it on',
-        (tester) async {
+    testWidgets('signing in with "Remember me" ticked switches it on', (
+      tester,
+    ) async {
       PreferencesService().setFaceIdEnabled(false);
       await pump(tester);
       expect(find.byType(Checkbox), findsOneWidget);
@@ -293,7 +337,9 @@ void main() {
       expect(find.text('HOME-SCREEN'), findsOneWidget);
     });
 
-    testWidgets('signing in without "Remember me" keeps it off', (tester) async {
+    testWidgets('signing in without "Remember me" keeps it off', (
+      tester,
+    ) async {
       PreferencesService().setFaceIdEnabled(false);
       await pump(tester);
       await tester.tap(find.byType(Checkbox));
@@ -305,8 +351,9 @@ void main() {
       expect(PreferencesService().faceIdEnabled, isFalse);
     });
 
-    testWidgets('signing in again without "Remember me" switches it off',
-        (tester) async {
+    testWidgets('signing in again without "Remember me" switches it off', (
+      tester,
+    ) async {
       PreferencesService().setFaceIdEnabled(true);
       await pump(tester);
       await tester.tap(find.byType(Checkbox));

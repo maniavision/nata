@@ -67,10 +67,7 @@ void main() {
     });
 
     test('empty error falls back to generic', () {
-      expect(
-        friendlyError(''),
-        'Something went wrong. Please try again.',
-      );
+      expect(friendlyError(''), 'Something went wrong. Please try again.');
     });
   });
 

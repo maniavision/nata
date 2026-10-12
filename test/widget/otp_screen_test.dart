@@ -50,7 +50,10 @@ void main() {
       // Verify the static label "Resend code" appears as plain text somewhere,
       // OR that the RichText count > baseline (header + phone hint).
       // We check that no "Resend code" plain tap-button is shown yet (still in countdown).
-      expect(find.text('Resend code'), findsNothing); // plain text only shows when timer hits 0
+      expect(
+        find.text('Resend code'),
+        findsNothing,
+      ); // plain text only shows when timer hits 0
       // The countdown uses RichText — at least 2 RichTexts on screen
       expect(find.byType(RichText), findsWidgets);
     });
@@ -75,11 +78,13 @@ void main() {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => appWrapper(OtpScreen(
-                      phone: '+2348034567890',
-                      isSignUp: false,
-                      onSuccess: () {},
-                    )),
+                    builder: (_) => appWrapper(
+                      OtpScreen(
+                        phone: '+2348034567890',
+                        isSignUp: false,
+                        onSuccess: () {},
+                      ),
+                    ),
                   ),
                 );
               },

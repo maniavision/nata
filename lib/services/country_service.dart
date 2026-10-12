@@ -13,10 +13,10 @@ class Country {
   });
 
   factory Country.fromJson(Map<String, dynamic> json) => Country(
-        isoCode: (json['iso_code'] as String? ?? '').trim(),
-        name: (json['name'] as String? ?? '').trim(),
-        phoneCode: (json['phone_code'] as String? ?? '').trim(),
-      );
+    isoCode: (json['iso_code'] as String? ?? '').trim(),
+    name: (json['name'] as String? ?? '').trim(),
+    phoneCode: (json['phone_code'] as String? ?? '').trim(),
+  );
 
   @override
   String toString() => name;
@@ -46,10 +46,7 @@ class CountryService {
     final all = await _loadAll();
     if (query.trim().isEmpty) return all.take(8).toList();
     final q = query.toLowerCase();
-    return all
-        .where((c) => c.name.toLowerCase().contains(q))
-        .take(8)
-        .toList();
+    return all.where((c) => c.name.toLowerCase().contains(q)).take(8).toList();
   }
 
   /// The country with this ISO code (e.g. 'US'), or null if it is unknown.
@@ -69,11 +66,13 @@ class CountryService {
       // Query nata.countries directly via PostgREST (nata schema is exposed).
       // Requires the RLS policy "public read countries" to be applied:
       //   CREATE POLICY "public read countries" ON nata.countries FOR SELECT USING (true);
-      final rows = await Supabase.instance.client
-          .schema('nata')
-          .from('countries')
-          .select('iso_code, name, phone_code')
-          .order('name') as List<dynamic>;
+      final rows =
+          await Supabase.instance.client
+                  .schema('nata')
+                  .from('countries')
+                  .select('iso_code, name, phone_code')
+                  .order('name')
+              as List<dynamic>;
 
       if (rows.isNotEmpty) {
         _cache = rows

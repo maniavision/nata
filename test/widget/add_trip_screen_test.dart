@@ -69,29 +69,33 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(appWrapper(Builder(
-      builder: (context) => Scaffold(
-        body: Center(
-          child: TextButton(
-            onPressed: () async {
-              popResult = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (_) => AddTripScreen(
-                    trip: trip,
-                    service: service,
-                    locationPicker: fakeLocationPicker,
-                    receiptPicker: fakeReceiptPicker,
-                    receiptCamera: fakeReceiptCamera,
-                  ),
-                ),
-              );
-              popped = true;
-            },
-            child: const Text('open'),
+    await tester.pumpWidget(
+      appWrapper(
+        Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () async {
+                  popResult = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => AddTripScreen(
+                        trip: trip,
+                        service: service,
+                        locationPicker: fakeLocationPicker,
+                        receiptPicker: fakeReceiptPicker,
+                        receiptCamera: fakeReceiptCamera,
+                      ),
+                    ),
+                  );
+                  popped = true;
+                },
+                child: const Text('open'),
+              ),
+            ),
           ),
         ),
       ),
-    )));
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
   }
@@ -101,8 +105,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> pickDate(WidgetTester tester, String fieldKey, int day,
-      {int monthsAhead = 0}) async {
+  Future<void> pickDate(
+    WidgetTester tester,
+    String fieldKey,
+    int day, {
+    int monthsAhead = 0,
+  }) async {
     await tapKey(tester, fieldKey);
     for (var i = 0; i < monthsAhead; i++) {
       await tapKey(tester, 'calendar-next-month');
@@ -122,8 +130,9 @@ void main() {
 
   String? errorText(WidgetTester tester) {
     final f = find.descendant(
-        of: find.byKey(const ValueKey('add-trip-error')),
-        matching: find.byType(Text));
+      of: find.byKey(const ValueKey('add-trip-error')),
+      matching: find.byType(Text),
+    );
     return f.evaluate().isEmpty ? null : tester.widget<Text>(f).data;
   }
 
@@ -182,8 +191,9 @@ void main() {
   });
 
   group('country and city pickers', () {
-    testWidgets('choosing a departure fills both country and city',
-        (tester) async {
+    testWidgets('choosing a departure fills both country and city', (
+      tester,
+    ) async {
       await pump(tester);
 
       await tapKey(tester, 'add-trip-departure-country');
@@ -203,8 +213,9 @@ void main() {
       expect(pickerCalls.single.title, 'Arriving In');
     });
 
-    testWidgets('the country field starts from the country list',
-        (tester) async {
+    testWidgets('the country field starts from the country list', (
+      tester,
+    ) async {
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
 
@@ -213,8 +224,9 @@ void main() {
       expect(pickerCalls.last.initial, isNull);
     });
 
-    testWidgets('the city field opens on the chosen country\'s cities',
-        (tester) async {
+    testWidgets('the city field opens on the chosen country\'s cities', (
+      tester,
+    ) async {
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
 
@@ -224,8 +236,9 @@ void main() {
       expect(pickerCalls.last.initial?.city, 'Lagos');
     });
 
-    testWidgets('the city field with nothing chosen starts at countries',
-        (tester) async {
+    testWidgets('the city field with nothing chosen starts at countries', (
+      tester,
+    ) async {
       await pump(tester);
 
       await tapKey(tester, 'add-trip-arrival-city');
@@ -238,11 +251,15 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       // A picker the user dismisses without choosing.
-      await tester.pumpWidget(appWrapper(AddTripScreen(
-        service: service,
-        locationPicker: (context, {required title, initial}) async => null,
-        receiptPicker: fakeReceiptPicker,
-      )));
+      await tester.pumpWidget(
+        appWrapper(
+          AddTripScreen(
+            service: service,
+            locationPicker: (context, {required title, initial}) async => null,
+            receiptPicker: fakeReceiptPicker,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tapKey(tester, 'add-trip-departure-country');
@@ -280,8 +297,9 @@ void main() {
       expect(find.text(longDate(today)), findsNWidgets(2));
     });
 
-    testWidgets('arrival cannot be picked before the departure',
-        (tester) async {
+    testWidgets('arrival cannot be picked before the departure', (
+      tester,
+    ) async {
       await pump(tester);
       await pickDate(tester, 'add-trip-departure-date', 15, monthsAhead: 1);
 
@@ -302,8 +320,9 @@ void main() {
       }
     });
 
-    testWidgets('moving the departure past the arrival moves the arrival',
-        (tester) async {
+    testWidgets('moving the departure past the arrival moves the arrival', (
+      tester,
+    ) async {
       await pump(tester);
       await pickDate(tester, 'add-trip-departure-date', today.day);
       await pickDate(tester, 'add-trip-arrival-date', 10, monthsAhead: 1);
@@ -337,7 +356,10 @@ void main() {
 
       await tapKey(tester, 'add-trip-upload-receipt');
 
-      expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('add-trip-receipt-card')),
+        findsOneWidget,
+      );
       expect(find.text('my_ticket.pdf'), findsOneWidget);
       expect(find.textContaining('2.0 KB'), findsOneWidget);
       expect(find.text('✓ Attached'), findsOneWidget);
@@ -367,8 +389,10 @@ void main() {
     });
 
     testWidgets('a file over 10 MB is rejected', (tester) async {
-      nextReceipt =
-          sampleReceipt(name: 'huge.pdf', bytes: 10 * 1024 * 1024 + 1);
+      nextReceipt = sampleReceipt(
+        name: 'huge.pdf',
+        bytes: 10 * 1024 * 1024 + 1,
+      );
       await pump(tester);
 
       await tapKey(tester, 'add-trip-upload-receipt');
@@ -387,8 +411,9 @@ void main() {
       expect(errorText(tester), isNull);
     });
 
-    testWidgets('a picker failure shows an error instead of crashing',
-        (tester) async {
+    testWidgets('a picker failure shows an error instead of crashing', (
+      tester,
+    ) async {
       receiptError = Exception('no access');
       await pump(tester);
 
@@ -399,20 +424,25 @@ void main() {
   });
 
   group('take photo', () {
-    testWidgets('shows Take Photo and Upload File side by side',
-        (tester) async {
+    testWidgets('shows Take Photo and Upload File side by side', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(find.byKey(const ValueKey('add-trip-take-photo')), findsOneWidget);
       expect(
-          find.byKey(const ValueKey('add-trip-upload-receipt')), findsOneWidget);
+        find.byKey(const ValueKey('add-trip-upload-receipt')),
+        findsOneWidget,
+      );
       expect(find.text('Take Photo'), findsOneWidget);
       expect(find.text('Upload File'), findsOneWidget);
 
-      final take =
-          tester.getTopLeft(find.byKey(const ValueKey('add-trip-take-photo')));
-      final upload = tester
-          .getTopLeft(find.byKey(const ValueKey('add-trip-upload-receipt')));
+      final take = tester.getTopLeft(
+        find.byKey(const ValueKey('add-trip-take-photo')),
+      );
+      final upload = tester.getTopLeft(
+        find.byKey(const ValueKey('add-trip-upload-receipt')),
+      );
       expect(take.dy, upload.dy); // same row
       expect(take.dx, lessThan(upload.dx)); // photo first, as in the design
     });
@@ -423,7 +453,10 @@ void main() {
 
       await tapKey(tester, 'add-trip-take-photo');
 
-      expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('add-trip-receipt-card')),
+        findsOneWidget,
+      );
       expect(find.text('IMG_0042.jpg'), findsOneWidget);
       expect(find.textContaining('4.0 KB'), findsOneWidget);
       expect(find.text('✓ Attached'), findsOneWidget);
@@ -435,7 +468,10 @@ void main() {
 
       await tapKey(tester, 'add-trip-take-photo');
 
-      expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('add-trip-receipt-card')),
+        findsOneWidget,
+      );
       expect(errorText(tester), isNull);
     });
 
@@ -445,7 +481,10 @@ void main() {
 
       await tapKey(tester, 'add-trip-upload-receipt');
 
-      expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('add-trip-receipt-card')),
+        findsOneWidget,
+      );
       expect(errorText(tester), isNull);
     });
 
@@ -469,10 +508,10 @@ void main() {
       expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsNothing);
     });
 
-    testWidgets('a photo over 10 MB is rejected like any other file',
-        (tester) async {
-      nextPhoto =
-          sampleReceipt(name: 'huge.jpg', bytes: 10 * 1024 * 1024 + 1);
+    testWidgets('a photo over 10 MB is rejected like any other file', (
+      tester,
+    ) async {
+      nextPhoto = sampleReceipt(name: 'huge.jpg', bytes: 10 * 1024 * 1024 + 1);
       await pump(tester);
 
       await tapKey(tester, 'add-trip-take-photo');
@@ -481,8 +520,9 @@ void main() {
       expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsNothing);
     });
 
-    testWidgets('a photo replaces a file that was already attached',
-        (tester) async {
+    testWidgets('a photo replaces a file that was already attached', (
+      tester,
+    ) async {
       nextReceipt = sampleReceipt(name: 'ticket.pdf');
       nextPhoto = sampleReceipt(name: 'photo.jpg');
       await pump(tester);
@@ -495,8 +535,9 @@ void main() {
       expect(find.text('ticket.pdf'), findsNothing);
     });
 
-    testWidgets('a file replaces a photo that was already attached',
-        (tester) async {
+    testWidgets('a file replaces a photo that was already attached', (
+      tester,
+    ) async {
       nextReceipt = sampleReceipt(name: 'ticket.pdf');
       nextPhoto = sampleReceipt(name: 'photo.jpg');
       await pump(tester);
@@ -529,8 +570,9 @@ void main() {
       expect(errorText(tester), isNull);
     });
 
-    testWidgets('a photo satisfies the receipt requirement and is uploaded',
-        (tester) async {
+    testWidgets('a photo satisfies the receipt requirement and is uploaded', (
+      tester,
+    ) async {
       nextPhoto = sampleReceipt(name: 'photo.jpg', bytes: 3000);
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
@@ -547,8 +589,9 @@ void main() {
       expect(popResult, isTrue);
     });
 
-    testWidgets('a photo is required if nothing else is attached',
-        (tester) async {
+    testWidgets('a photo is required if nothing else is attached', (
+      tester,
+    ) async {
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
       await tapKey(tester, 'add-trip-arrival-country');
@@ -559,18 +602,23 @@ void main() {
       expect(errorText(tester), 'Attach your flight receipt.');
     });
 
-    testWidgets('while editing, a photo replaces the receipt on file',
-        (tester) async {
-      await pump(tester,
-          trip: sampleMyTrip(id: 'trip-7', receipt: 'user-1/old.pdf'));
+    testWidgets('while editing, a photo replaces the receipt on file', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        trip: sampleMyTrip(id: 'trip-7', receipt: 'user-1/old.pdf'),
+      );
       expect(find.textContaining('Receipt on file'), findsOneWidget);
 
       await tapKey(tester, 'add-trip-take-photo');
       await save(tester);
 
       expect(service.uploaded.single.name, 'photo.jpg');
-      expect(service.updated.single.draft.ticketReceiptPath,
-          FakeTripService.uploadedPath);
+      expect(
+        service.updated.single.draft.ticketReceiptPath,
+        FakeTripService.uploadedPath,
+      );
       expect(service.deletedReceipts, contains('user-1/old.pdf'));
     });
   });
@@ -595,8 +643,9 @@ void main() {
       expect(errorText(tester), 'Choose your destination.');
     });
 
-    testWidgets('departure and arrival must be different cities',
-        (tester) async {
+    testWidgets('departure and arrival must be different cities', (
+      tester,
+    ) async {
       london = lagos;
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
@@ -604,7 +653,10 @@ void main() {
 
       await save(tester);
 
-      expect(errorText(tester), 'Departure and arrival must be different cities.');
+      expect(
+        errorText(tester),
+        'Departure and arrival must be different cities.',
+      );
     });
 
     testWidgets('then the departure date', (tester) async {
@@ -654,8 +706,9 @@ void main() {
       });
     }
 
-    testWidgets('the error clears once the user fixes the field',
-        (tester) async {
+    testWidgets('the error clears once the user fixes the field', (
+      tester,
+    ) async {
       await pump(tester);
       await save(tester);
       expect(errorText(tester), isNotNull);
@@ -690,8 +743,9 @@ void main() {
       expect(service.created, hasLength(1));
     });
 
-    testWidgets('sends the chosen cities, dates, capacity and price',
-        (tester) async {
+    testWidgets('sends the chosen cities, dates, capacity and price', (
+      tester,
+    ) async {
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
       await tapKey(tester, 'add-trip-arrival-country');
@@ -776,11 +830,14 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       final button = tester.widget<ElevatedButton>(
-          find.byKey(const ValueKey('add-trip-save')));
+        find.byKey(const ValueKey('add-trip-save')),
+      );
       expect(button.onPressed, isNull);
 
-      await tester.tap(find.byKey(const ValueKey('add-trip-save')),
-          warnIfMissed: false);
+      await tester.tap(
+        find.byKey(const ValueKey('add-trip-save')),
+        warnIfMissed: false,
+      );
       await tester.pump();
 
       service.saveGate!.complete();
@@ -793,8 +850,9 @@ void main() {
   });
 
   group('when saving fails', () {
-    testWidgets('a failed save shows an error and stays on the form',
-        (tester) async {
+    testWidgets('a failed save shows an error and stays on the form', (
+      tester,
+    ) async {
       service.failSave = true;
       await pump(tester);
       await fillValidForm(tester);
@@ -806,8 +864,9 @@ void main() {
       expect(find.text('Save & Publish Trip'), findsOneWidget);
     });
 
-    testWidgets('the form keeps its values so the user can retry',
-        (tester) async {
+    testWidgets('the form keeps its values so the user can retry', (
+      tester,
+    ) async {
       service.failSave = true;
       await pump(tester);
       await fillValidForm(tester);
@@ -820,8 +879,9 @@ void main() {
       expect(popResult, isTrue);
     });
 
-    testWidgets('a receipt uploaded for a failed save is cleaned up',
-        (tester) async {
+    testWidgets('a receipt uploaded for a failed save is cleaned up', (
+      tester,
+    ) async {
       service.failSave = true;
       await pump(tester);
       await fillValidForm(tester);
@@ -855,8 +915,9 @@ void main() {
       expect(find.text('Select city'), findsNWidgets(2));
       expect(find.text('Select date'), findsNWidgets(2));
       expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsNothing);
-      final price = tester
-          .widget<TextField>(find.byKey(const ValueKey('add-trip-price')));
+      final price = tester.widget<TextField>(
+        find.byKey(const ValueKey('add-trip-price')),
+      );
       expect(price.controller!.text, isEmpty);
     });
   });
@@ -895,8 +956,9 @@ void main() {
       expect(find.text(longDate(trip.arrivalDate)), findsOneWidget);
       expect(find.text('Up to 5.0 kg'), findsOneWidget);
       expect(find.text('Backpack size'), findsOneWidget);
-      final price = tester
-          .widget<TextField>(find.byKey(const ValueKey('add-trip-price')));
+      final price = tester.widget<TextField>(
+        find.byKey(const ValueKey('add-trip-price')),
+      );
       expect(price.controller!.text, '30');
       expect(find.text('old.pdf'), findsOneWidget);
       expect(find.textContaining('Receipt on file'), findsOneWidget);
@@ -910,8 +972,9 @@ void main() {
       expect(find.text('PRICE PER ITEM (GBP)'), findsOneWidget);
     });
 
-    testWidgets('saving updates that trip without re-uploading',
-        (tester) async {
+    testWidgets('saving updates that trip without re-uploading', (
+      tester,
+    ) async {
       await pump(tester, trip: trip);
 
       await save(tester);
@@ -931,7 +994,10 @@ void main() {
     testWidgets('changing fields is sent in the update', (tester) async {
       await pump(tester, trip: trip);
       await enterPrice(tester, '55');
-      await tapKey(tester, 'add-trip-arrival-country'); // London -> london again
+      await tapKey(
+        tester,
+        'add-trip-arrival-country',
+      ); // London -> london again
       lagos = city('Abuja', 'NG', 'Nigeria', 7);
       await tapKey(tester, 'add-trip-departure-country');
 
@@ -942,21 +1008,25 @@ void main() {
       expect(d.departureCityId, 7);
     });
 
-    testWidgets('replacing the receipt uploads it and removes the old one',
-        (tester) async {
+    testWidgets('replacing the receipt uploads it and removes the old one', (
+      tester,
+    ) async {
       await pump(tester, trip: trip);
 
       await tapKey(tester, 'add-trip-upload-receipt');
       await save(tester);
 
       expect(service.uploaded, hasLength(1));
-      expect(service.updated.single.draft.ticketReceiptPath,
-          FakeTripService.uploadedPath);
+      expect(
+        service.updated.single.draft.ticketReceiptPath,
+        FakeTripService.uploadedPath,
+      );
       expect(service.deletedReceipts, contains('user-1/old.pdf'));
     });
 
-    testWidgets('removing the receipt without a new one is not allowed',
-        (tester) async {
+    testWidgets('removing the receipt without a new one is not allowed', (
+      tester,
+    ) async {
       await pump(tester, trip: trip);
       await tapKey(tester, 'add-trip-remove-receipt');
 
@@ -966,8 +1036,9 @@ void main() {
       expect(service.updated, isEmpty);
     });
 
-    testWidgets('a failed update does not delete the old receipt',
-        (tester) async {
+    testWidgets('a failed update does not delete the old receipt', (
+      tester,
+    ) async {
       service.failSave = true;
       await pump(tester, trip: trip);
       await tapKey(tester, 'add-trip-upload-receipt');
@@ -978,8 +1049,9 @@ void main() {
       expect(errorText(tester), isNotNull);
     });
 
-    testWidgets('a weight that is not in the list is still offered',
-        (tester) async {
+    testWidgets('a weight that is not in the list is still offered', (
+      tester,
+    ) async {
       trip = sampleMyTrip(maxWeightKg: 7.5);
       await pump(tester, trip: trip);
 
@@ -1003,8 +1075,9 @@ void main() {
       trip = sampleMyTrip(price: 12.5);
       await pump(tester, trip: trip);
 
-      final price = tester
-          .widget<TextField>(find.byKey(const ValueKey('add-trip-price')));
+      final price = tester.widget<TextField>(
+        find.byKey(const ValueKey('add-trip-price')),
+      );
       expect(price.controller!.text, '12.50');
     });
   });
@@ -1012,12 +1085,16 @@ void main() {
   group('booking reference', () {
     Future<void> typeRef(WidgetTester tester, String text) async {
       await tester.enterText(
-          find.byKey(const ValueKey('add-trip-booking-reference')), text);
+        find.byKey(const ValueKey('add-trip-booking-reference')),
+        text,
+      );
       await tester.pump();
     }
 
     String refText(WidgetTester tester) => tester
-        .widget<TextField>(find.byKey(const ValueKey('add-trip-booking-reference')))
+        .widget<TextField>(
+          find.byKey(const ValueKey('add-trip-booking-reference')),
+        )
         .controller!
         .text;
 
@@ -1025,19 +1102,24 @@ void main() {
       await pump(tester);
 
       expect(find.text('BOOKING REFERENCE'), findsOneWidget);
-      expect(find.text('Enter the reference code from your flight booking (PNR)'),
-          findsOneWidget);
+      expect(
+        find.text('Enter the reference code from your flight booking (PNR)'),
+        findsOneWidget,
+      );
       expect(find.text('e.g. X7KQ9R'), findsOneWidget);
     });
 
-    testWidgets('sits between the flight receipt and the capacity cards',
-        (tester) async {
+    testWidgets('sits between the flight receipt and the capacity cards', (
+      tester,
+    ) async {
       await pump(tester);
 
       double top(String text) => tester.getTopLeft(find.text(text)).dy;
       expect(top('FLIGHT TICKET RECEIPT'), lessThan(top('BOOKING REFERENCE')));
-      expect(top('BOOKING REFERENCE'),
-          lessThan(top('LUGGAGE CAPACITY YOU CAN CARRY')));
+      expect(
+        top('BOOKING REFERENCE'),
+        lessThan(top('LUGGAGE CAPACITY YOU CAN CARRY')),
+      );
     });
 
     testWidgets('upper-cases what the user types', (tester) async {
@@ -1072,8 +1154,7 @@ void main() {
       expect(refText(tester), 'X7KQ');
     });
 
-    testWidgets('is optional: a trip can be saved without one',
-        (tester) async {
+    testWidgets('is optional: a trip can be saved without one', (tester) async {
       await pump(tester);
       await fillValidForm(tester);
 
@@ -1091,8 +1172,10 @@ void main() {
       await save(tester);
 
       expect(service.created.single.bookingReference, 'X7KQ9R');
-      expect(service.created.single.toInsertJson('u')['booking_reference'],
-          'X7KQ9R');
+      expect(
+        service.created.single.toInsertJson('u')['booking_reference'],
+        'X7KQ9R',
+      );
     });
 
     for (final ok in ['ABC12', 'ABCDEFG8']) {
@@ -1114,14 +1197,17 @@ void main() {
 
       await save(tester);
 
-      expect(errorText(tester),
-          'Booking reference must be 5–8 letters or numbers.');
+      expect(
+        errorText(tester),
+        'Booking reference must be 5–8 letters or numbers.',
+      );
       expect(service.created, isEmpty);
       expect(service.uploaded, isEmpty);
     });
 
-    testWidgets('the error clears when the user edits the field',
-        (tester) async {
+    testWidgets('the error clears when the user edits the field', (
+      tester,
+    ) async {
       await pump(tester);
       await fillValidForm(tester);
       await typeRef(tester, 'AB12');
@@ -1141,8 +1227,10 @@ void main() {
 
       await save(tester);
 
-      expect(errorText(tester),
-          'Booking reference must be 5–8 letters or numbers.');
+      expect(
+        errorText(tester),
+        'Booking reference must be 5–8 letters or numbers.',
+      );
     });
 
     testWidgets('Clear empties it', (tester) async {
@@ -1156,8 +1244,7 @@ void main() {
 
     group('when editing', () {
       testWidgets('is pre-filled from the trip', (tester) async {
-        await pump(tester,
-            trip: sampleMyTrip(bookingReference: 'X7KQ9R'));
+        await pump(tester, trip: sampleMyTrip(bookingReference: 'X7KQ9R'));
 
         expect(refText(tester), 'X7KQ9R');
       });
@@ -1169,8 +1256,10 @@ void main() {
       });
 
       testWidgets('can be changed', (tester) async {
-        await pump(tester,
-            trip: sampleMyTrip(id: 't1', bookingReference: 'OLD123'));
+        await pump(
+          tester,
+          trip: sampleMyTrip(id: 't1', bookingReference: 'OLD123'),
+        );
         await typeRef(tester, 'new456');
 
         await save(tester);
@@ -1187,23 +1276,31 @@ void main() {
         expect(service.updated.single.draft.bookingReference, 'X7KQ9R');
       });
 
-      testWidgets('can be removed, which clears it on the trip',
-          (tester) async {
-        await pump(tester,
-            trip: sampleMyTrip(id: 't1', bookingReference: 'X7KQ9R'));
+      testWidgets('can be removed, which clears it on the trip', (
+        tester,
+      ) async {
+        await pump(
+          tester,
+          trip: sampleMyTrip(id: 't1', bookingReference: 'X7KQ9R'),
+        );
         await typeRef(tester, '');
 
         await save(tester);
 
         expect(service.updated.single.draft.bookingReference, isNull);
-        expect(service.updated.single.draft.toUpdateJson()['booking_reference'],
-            isNull);
+        expect(
+          service.updated.single.draft.toUpdateJson()['booking_reference'],
+          isNull,
+        );
       });
 
-      testWidgets('an unchanged reference is sent back as it was',
-          (tester) async {
-        await pump(tester,
-            trip: sampleMyTrip(id: 't1', bookingReference: 'X7KQ9R'));
+      testWidgets('an unchanged reference is sent back as it was', (
+        tester,
+      ) async {
+        await pump(
+          tester,
+          trip: sampleMyTrip(id: 't1', bookingReference: 'X7KQ9R'),
+        );
 
         await save(tester);
 

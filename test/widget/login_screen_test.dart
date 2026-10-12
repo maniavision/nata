@@ -78,20 +78,23 @@ void main() {
       expect(find.widgetWithText(ElevatedButton, 'Sign In'), findsOneWidget);
     });
 
-    testWidgets('Sign In button enabled (phone field empty → shows error not crash)',
-        (tester) async {
-      await tester.pumpWidget(buildLogin());
-      await tester.pump();
+    testWidgets(
+      'Sign In button enabled (phone field empty → shows error not crash)',
+      (tester) async {
+        await tester.pumpWidget(buildLogin());
+        await tester.pump();
 
-      // Button should be tappable (not null onPressed) since _loading is false
-      final btn = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Sign In'),
-      );
-      expect(btn.onPressed, isNotNull);
-    });
+        // Button should be tappable (not null onPressed) since _loading is false
+        final btn = tester.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, 'Sign In'),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
 
-    testWidgets('tapping Sign In with empty phone shows error banner',
-        (tester) async {
+    testWidgets('tapping Sign In with empty phone shows error banner', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildLogin());
       await tester.pump();
 

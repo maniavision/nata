@@ -83,13 +83,18 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await (widget.authService ?? AuthService()).sendOtp(e164);
+      // Logging in never creates an account: the number must already exist.
+      await (widget.authService ?? AuthService()).sendOtp(
+        e164,
+        createUser: false,
+      );
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => OtpScreen(
             phone: e164,
             isSignUp: false,
+            authService: widget.authService,
             onSuccess: () {
               // Signing in with "Remember me" ticked switches Face ID on for
               // the next time; without it, Face ID stays off.
@@ -99,6 +104,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       );
+    } on AccountNotFoundException {
+      if (mounted) setState(() => _error = context.l10n.errAccountNotFound);
     } on Exception catch (e) {
       setState(() {
         _error = _friendlyError(e.toString());
@@ -217,8 +224,17 @@ class _LoginScreenState extends State<LoginScreen> {
           bottomRight: Radius.circular(32),
         ),
         boxShadow: [
-          BoxShadow(color: Color(0x1A000000), blurRadius: 3, offset: Offset(0, 1)),
-          BoxShadow(color: Color(0x1A000000), blurRadius: 2, spreadRadius: -1, offset: Offset(0, 1)),
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 2,
+            spreadRadius: -1,
+            offset: Offset(0, 1),
+          ),
         ],
       ),
       child: Stack(
@@ -275,8 +291,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: AppColors.accent,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send,
-                          color: Colors.white, size: 13),
+                      child: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                        size: 13,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -340,15 +359,17 @@ class _LoginScreenState extends State<LoginScreen> {
             border: Border.all(color: AppColors.border),
             boxShadow: const [
               BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 15,
-                  spreadRadius: -3,
-                  offset: Offset(0, 10)),
+                color: Color(0x1A000000),
+                blurRadius: 15,
+                spreadRadius: -3,
+                offset: Offset(0, 10),
+              ),
               BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 6,
-                  spreadRadius: -4,
-                  offset: Offset(0, 4)),
+                color: Color(0x1A000000),
+                blurRadius: 6,
+                spreadRadius: -4,
+                offset: Offset(0, 4),
+              ),
             ],
           ),
           padding: const EdgeInsets.all(20),
@@ -368,19 +389,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: AppColors.destructive.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: AppColors.destructive.withValues(alpha: 0.3)),
+                      color: AppColors.destructive.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded,
-                          size: 16, color: AppColors.destructive),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        size: 16,
+                        color: AppColors.destructive,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(_error!,
-                            style: GoogleFonts.dmSans(
-                              fontSize: 12,
-                              color: AppColors.destructive,
-                            )),
+                        child: Text(
+                          _error!,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: AppColors.destructive,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -404,12 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
-      child: Row(
-        children: [
-          _tab(context.l10n.signIn, 0),
-          _tab('Sign Up', 1),
-        ],
-      ),
+      child: Row(children: [_tab(context.l10n.signIn, 0), _tab('Sign Up', 1)]),
     );
   }
 
@@ -435,14 +457,16 @@ class _LoginScreenState extends State<LoginScreen> {
             boxShadow: active
                 ? const [
                     BoxShadow(
-                        color: Color(0x1A000000),
-                        blurRadius: 3,
-                        offset: Offset(0, 1)),
+                      color: Color(0x1A000000),
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
                     BoxShadow(
-                        color: Color(0x1A000000),
-                        blurRadius: 2,
-                        spreadRadius: -1,
-                        offset: Offset(0, 1)),
+                      color: Color(0x1A000000),
+                      blurRadius: 2,
+                      spreadRadius: -1,
+                      offset: Offset(0, 1),
+                    ),
                   ]
                 : null,
           ),
@@ -497,8 +521,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Icon(Icons.keyboard_arrow_down_rounded,
-                        size: 12, color: AppColors.mutedForeground),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 12,
+                      color: AppColors.mutedForeground,
+                    ),
                   ],
                 ),
               ),
@@ -509,8 +536,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _phoneController,
                 hintText: '801 234 5678',
                 keyboardType: TextInputType.phone,
-                prefixIcon: const Icon(Icons.phone_rounded,
-                    size: 16, color: AppColors.mutedForeground),
+                prefixIcon: const Icon(
+                  Icons.phone_rounded,
+                  size: 16,
+                  color: AppColors.mutedForeground,
+                ),
               ),
             ),
           ],
@@ -537,7 +567,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   onChanged: (v) => setState(() => _rememberMe = v ?? false),
                   activeColor: AppColors.accent,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4)),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                   side: const BorderSide(color: AppColors.border),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
@@ -566,10 +597,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppColors.accent),
+                        strokeWidth: 2,
+                        color: AppColors.accent,
+                      ),
                     )
-                  : const Icon(Icons.face_retouching_natural,
-                      color: AppColors.accent, size: 18),
+                  : const Icon(
+                      Icons.face_retouching_natural,
+                      color: AppColors.accent,
+                      size: 18,
+                    ),
               const SizedBox(width: 6),
               Text(
                 context.l10n.faceId,
@@ -605,7 +641,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: Colors.white),
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -619,7 +657,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                 ],
               ),
       ),
@@ -638,12 +680,16 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 context.l10n.newToNata + ' ',
                 style: GoogleFonts.dmSans(
-                    fontSize: 11, color: AppColors.mutedForeground),
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
               ),
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const SignUpScreen(),
+                    ),
                   );
                 },
                 child: Text(
@@ -739,8 +785,9 @@ class _CountryCodePickerSheetState extends State<_CountryCodePickerSheet> {
     super.initState();
     _loadCountries();
     _searchCtrl.addListener(_onSearch);
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _focusNode.requestFocus());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _focusNode.requestFocus(),
+    );
   }
 
   Future<void> _loadCountries() async {
@@ -780,11 +827,11 @@ class _CountryCodePickerSheetState extends State<_CountryCodePickerSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: ClipRRect(
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         child: Container(
           height: MediaQuery.of(context).size.height * 0.80,
           color: AppColors.card,
@@ -804,8 +851,7 @@ class _CountryCodePickerSheetState extends State<_CountryCodePickerSheet> {
               ),
               // Header
               Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: Row(
                   children: [
                     Expanded(
@@ -827,9 +873,11 @@ class _CountryCodePickerSheetState extends State<_CountryCodePickerSheet> {
                           color: AppColors.secondary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.close_rounded,
-                            size: 18,
-                            color: AppColors.mutedForeground),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: AppColors.mutedForeground,
+                        ),
                       ),
                     ),
                   ],
@@ -837,21 +885,21 @@ class _CountryCodePickerSheetState extends State<_CountryCodePickerSheet> {
               ),
               // Search bar
               Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.input,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.border),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   child: Row(
                     children: [
-                      const Icon(Icons.search_rounded,
-                          size: 18,
-                          color: AppColors.mutedForeground),
+                      const Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: AppColors.mutedForeground,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
@@ -871,19 +919,20 @@ class _CountryCodePickerSheetState extends State<_CountryCodePickerSheet> {
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                const EdgeInsets.symmetric(
-                                    vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ),
                       if (_searchCtrl.text.isNotEmpty)
                         GestureDetector(
-                          onTap: () => setState(
-                              () => _searchCtrl.clear()),
-                          child: const Icon(Icons.close_rounded,
-                              size: 16,
-                              color: AppColors.mutedForeground),
+                          onTap: () => setState(() => _searchCtrl.clear()),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: AppColors.mutedForeground,
+                          ),
                         ),
                     ],
                   ),
@@ -900,85 +949,86 @@ class _CountryCodePickerSheetState extends State<_CountryCodePickerSheet> {
                         ),
                       )
                     : _filtered.isEmpty
-                        ? Center(
-                            child: Text('No countries found',
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 14,
-                                  color: AppColors.mutedForeground,
-                                )),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8),
-                            itemCount: _filtered.length,
-                            separatorBuilder: (_, __) => const Divider(
-                                color: AppColors.border,
-                                height: 1,
-                                indent: 20,
-                                endIndent: 20),
-                            itemBuilder: (context, i) {
-                              final country = _filtered[i];
-                              final isSelected = country.isoCode ==
-                                  widget.selected.isoCode;
-                              return GestureDetector(
-                                onTap: () =>
-                                    widget.onSelected(country),
-                                child: Container(
-                                  color: isSelected
-                                      ? AppColors.accent
-                                          .withValues(alpha: 0.06)
-                                      : Colors.transparent,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 14),
-                                  child: Row(
-                                    children: [
-                                      // Flag
-                                      Text(
-                                        _flagEmoji(country.isoCode),
-                                        style: const TextStyle(
-                                            fontSize: 24),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      // Name
-                                      Expanded(
-                                        child: Text(
-                                          country.name,
-                                          style: GoogleFonts.dmSans(
-                                            fontWeight: isSelected
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
-                                            fontSize: 14,
-                                            color: isSelected
-                                                ? AppColors.accent
-                                                : AppColors.foreground,
-                                          ),
-                                        ),
-                                      ),
-                                      // Phone code
-                                      Text(
-                                        country.phoneCode,
-                                        style: GoogleFonts.dmSans(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13,
-                                          color: isSelected
-                                              ? AppColors.accent
-                                              : AppColors
-                                                  .mutedForeground,
-                                        ),
-                                      ),
-                                      if (isSelected) ...[
-                                        const SizedBox(width: 8),
-                                        const Icon(
-                                            Icons.check_rounded,
-                                            size: 18,
-                                            color: AppColors.accent),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                    ? Center(
+                        child: Text(
+                          'No countries found',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 14,
+                            color: AppColors.mutedForeground,
                           ),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: _filtered.length,
+                        separatorBuilder: (_, __) => const Divider(
+                          color: AppColors.border,
+                          height: 1,
+                          indent: 20,
+                          endIndent: 20,
+                        ),
+                        itemBuilder: (context, i) {
+                          final country = _filtered[i];
+                          final isSelected =
+                              country.isoCode == widget.selected.isoCode;
+                          return GestureDetector(
+                            onTap: () => widget.onSelected(country),
+                            child: Container(
+                              color: isSelected
+                                  ? AppColors.accent.withValues(alpha: 0.06)
+                                  : Colors.transparent,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 14,
+                              ),
+                              child: Row(
+                                children: [
+                                  // Flag
+                                  Text(
+                                    _flagEmoji(country.isoCode),
+                                    style: const TextStyle(fontSize: 24),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  // Name
+                                  Expanded(
+                                    child: Text(
+                                      country.name,
+                                      style: GoogleFonts.dmSans(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        fontSize: 14,
+                                        color: isSelected
+                                            ? AppColors.accent
+                                            : AppColors.foreground,
+                                      ),
+                                    ),
+                                  ),
+                                  // Phone code
+                                  Text(
+                                    country.phoneCode,
+                                    style: GoogleFonts.dmSans(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: isSelected
+                                          ? AppColors.accent
+                                          : AppColors.mutedForeground,
+                                    ),
+                                  ),
+                                  if (isSelected) ...[
+                                    const SizedBox(width: 8),
+                                    const Icon(
+                                      Icons.check_rounded,
+                                      size: 18,
+                                      color: AppColors.accent,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -1135,16 +1185,14 @@ class _StyledTextField extends StatelessWidget {
                 child: prefixIcon,
               )
             : null,
-        prefixIconConstraints:
-            const BoxConstraints(minWidth: 0, minHeight: 0),
+        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixIcon: suffixIcon != null
             ? Padding(
                 padding: const EdgeInsets.only(right: 14),
                 child: suffixIcon,
               )
             : null,
-        suffixIconConstraints:
-            const BoxConstraints(minWidth: 0, minHeight: 0),
+        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         contentPadding: const EdgeInsets.fromLTRB(14, 16, 12, 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
@@ -1157,7 +1205,9 @@ class _StyledTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-              color: AppColors.ring.withValues(alpha: 0.4), width: 2),
+            color: AppColors.ring.withValues(alpha: 0.4),
+            width: 2,
+          ),
         ),
       ),
     );

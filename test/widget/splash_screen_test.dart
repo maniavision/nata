@@ -24,11 +24,10 @@ void main() {
     Widget buildSplash({
       Locale locale = const Locale('en'),
       DetectedRegion? detected,
-    }) =>
-        appWrapper(
-          SplashScreen(regionService: FakeRegionService(region: detected)),
-          locale: locale,
-        );
+    }) => appWrapper(
+      SplashScreen(regionService: FakeRegionService(region: detected)),
+      locale: locale,
+    );
 
     testWidgets('renders language selector heading in English', (tester) async {
       await tester.pumpWidget(buildSplash());
@@ -114,8 +113,9 @@ void main() {
       expect(find.byIcon(Icons.check_circle), findsWidgets);
     });
 
-    testWidgets('Quick Apply button is present once a region is detected',
-        (tester) async {
+    testWidgets('Quick Apply button is present once a region is detected', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSplash(detected: region()));
       await tester.pumpAndSettle();
 
@@ -155,7 +155,8 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
-          appWrapper(SplashScreen(regionService: service), locale: locale));
+        appWrapper(SplashScreen(regionService: service), locale: locale),
+      );
       if (settle) await tester.pumpAndSettle();
     }
 
@@ -183,12 +184,15 @@ void main() {
       testWidgets('and never shows made-up values', (tester) async {
         await pump(tester, FakeRegionService(region: null));
 
-        expect(find.textContaining('United States · English & USD'),
-            findsNothing);
+        expect(
+          find.textContaining('United States · English & USD'),
+          findsNothing,
+        );
       });
 
-      testWidgets('the rest of the page still works without it',
-          (tester) async {
+      testWidgets('the rest of the page still works without it', (
+        tester,
+      ) async {
         await pump(tester, FakeRegionService(region: null));
 
         expect(find.text('Select Language & Currency'), findsOneWidget);
@@ -219,23 +223,27 @@ void main() {
         expect(find.text('DETECTED REGION'), findsOneWidget);
       });
 
-      testWidgets('showing the detected country, language and currency',
-          (tester) async {
+      testWidgets('showing the detected country, language and currency', (
+        tester,
+      ) async {
         await pump(
-            tester,
-            FakeRegionService(
-                region: region(
+          tester,
+          FakeRegionService(
+            region: region(
               iso: 'FR',
               name: 'France',
               language: AppLanguage.french,
               currency: AppCurrency.eur,
-            )));
+            ),
+          ),
+        );
 
         expect(find.text('France · Français & EUR'), findsOneWidget);
       });
 
-      testWidgets('for the USA it reads "United States · English & USD"',
-          (tester) async {
+      testWidgets('for the USA it reads "United States · English & USD"', (
+        tester,
+      ) async {
         await pump(tester, FakeRegionService(region: region()));
 
         expect(find.text('United States · English & USD'), findsOneWidget);
@@ -243,31 +251,42 @@ void main() {
 
       testWidgets('for a CFA-franc country it shows XOF', (tester) async {
         await pump(
-            tester,
-            FakeRegionService(
-                region: region(
+          tester,
+          FakeRegionService(
+            region: region(
               iso: 'SN',
               name: 'Senegal',
               language: AppLanguage.french,
               currency: AppCurrency.xof,
-            )));
+            ),
+          ),
+        );
 
         expect(find.text('Senegal · Français & XOF'), findsOneWidget);
       });
 
       testWidgets('the detected text follows the app language', (tester) async {
-        await pump(tester, FakeRegionService(region: region()),
-            locale: const Locale('es'));
+        await pump(
+          tester,
+          FakeRegionService(region: region()),
+          locale: const Locale('es'),
+        );
         expect(find.text('United States · English y USD'), findsOneWidget);
 
-        await pump(tester, FakeRegionService(region: region()),
-            locale: const Locale('fr'));
+        await pump(
+          tester,
+          FakeRegionService(region: region()),
+          locale: const Locale('fr'),
+        );
         expect(find.text('United States · English et USD'), findsOneWidget);
       });
 
       testWidgets('the label and button are translated', (tester) async {
-        await pump(tester, FakeRegionService(region: region()),
-            locale: const Locale('es'));
+        await pump(
+          tester,
+          FakeRegionService(region: region()),
+          locale: const Locale('es'),
+        );
 
         expect(find.text('REGIÓN DETECTADA'), findsOneWidget);
         expect(find.text('Aplicar'), findsOneWidget);
@@ -275,17 +294,20 @@ void main() {
     });
 
     group('Quick Apply', () {
-      testWidgets('applies the language and currency of the detected country',
-          (tester) async {
+      testWidgets('applies the language and currency of the detected country', (
+        tester,
+      ) async {
         await pump(
-            tester,
-            FakeRegionService(
-                region: region(
+          tester,
+          FakeRegionService(
+            region: region(
               iso: 'FR',
               name: 'France',
               language: AppLanguage.french,
               currency: AppCurrency.eur,
-            )));
+            ),
+          ),
+        );
         expect(PreferencesService().language, AppLanguage.english);
         expect(PreferencesService().currency, AppCurrency.usd);
 
@@ -300,14 +322,16 @@ void main() {
         PreferencesService().setLanguage(AppLanguage.english);
         PreferencesService().setCurrency(AppCurrency.usd);
         await pump(
-            tester,
-            FakeRegionService(
-                region: region(
+          tester,
+          FakeRegionService(
+            region: region(
               iso: 'MX',
               name: 'Mexico',
               language: AppLanguage.spanish,
               currency: AppCurrency.usd,
-            )));
+            ),
+          ),
+        );
 
         await tester.tap(find.byKey(const ValueKey('quick-apply')));
         await tester.pumpAndSettle();
@@ -317,13 +341,15 @@ void main() {
 
       testWidgets('for the UK it selects British pounds', (tester) async {
         await pump(
-            tester,
-            FakeRegionService(
-                region: region(
+          tester,
+          FakeRegionService(
+            region: region(
               iso: 'GB',
               name: 'United Kingdom',
               currency: AppCurrency.gbp,
-            )));
+            ),
+          ),
+        );
 
         await tester.tap(find.byKey(const ValueKey('quick-apply')));
         await tester.pumpAndSettle();
@@ -332,19 +358,22 @@ void main() {
         expect(PreferencesService().language, AppLanguage.english);
       });
 
-      testWidgets('switches the whole page to the detected language',
-          (tester) async {
+      testWidgets('switches the whole page to the detected language', (
+        tester,
+      ) async {
         // The page follows PreferencesService in the real app (NataApp); here
         // we only check the preference changed for the next screens.
         await pump(
-            tester,
-            FakeRegionService(
-                region: region(
+          tester,
+          FakeRegionService(
+            region: region(
               iso: 'ES',
               name: 'Spain',
               language: AppLanguage.spanish,
               currency: AppCurrency.eur,
-            )));
+            ),
+          ),
+        );
 
         await tester.tap(find.byKey(const ValueKey('quick-apply')));
         await tester.pumpAndSettle();
@@ -372,8 +401,9 @@ void main() {
       expect(service.detectCalls, 1);
     });
 
-    testWidgets('leaving the page before the lookup finishes is safe',
-        (tester) async {
+    testWidgets('leaving the page before the lookup finishes is safe', (
+      tester,
+    ) async {
       final gate = Completer<void>();
       final service = FakeRegionService(region: region())..gate = gate;
       await pump(tester, service, settle: false);
