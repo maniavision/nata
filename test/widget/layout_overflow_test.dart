@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'package:carrywise_app/screens/add_trip_screen.dart';
 import 'package:carrywise_app/screens/checkout_escrow_screen.dart';
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
+import 'package:carrywise_app/screens/delivery_task_screen.dart';
 import 'package:carrywise_app/screens/delivery_request_screen.dart';
 import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/screens/identity_verification_screen.dart';
@@ -278,6 +279,8 @@ void main() {
       ),
     ),
     'Requests': () => const RequestsScreen(),
+    'Delivery task details': () =>
+        DeliveryTaskScreen(delivery: sampleDelivery()),
     'Profile (verified)': () => ProfileScreen(authService: FakeAuthService()),
     'Profile (pending)': () => ProfileScreen(
       authService: FakeAuthService()
@@ -408,8 +411,22 @@ void main() {
           build: () => const IdentityVerificationScreen(initialStep: 1),
           act: (t) async {},
         ),
+        'Identity verification (emergency contact step)': (
+          build: () => IdentityVerificationScreen(
+            initialStep: 2,
+            emergencyService: FakeEmergencyContactService(),
+          ),
+          act: (t) async {},
+        ),
+        'Identity verification (emergency contact, error shown)': (
+          build: () => IdentityVerificationScreen(
+            initialStep: 2,
+            emergencyService: FakeEmergencyContactService(),
+          ),
+          act: (t) => _tap(t, const ValueKey('contact-finish')),
+        ),
         'Identity verification (success step)': (
-          build: () => const IdentityVerificationScreen(initialStep: 2),
+          build: () => const IdentityVerificationScreen(initialStep: 3),
           act: (t) async {},
         ),
         'Delivery confirmation (photo added)': (

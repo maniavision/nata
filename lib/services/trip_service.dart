@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'region_service.dart';
 
 /// Values of `nata.trips.status`.
 class TripStatus {
@@ -200,6 +201,18 @@ class TripDraft {
 
   /// What the database accepts (`trips_booking_reference_check`).
   static final bookingReferencePattern = RegExp(r'^[A-Z0-9]{5,8}$');
+
+  /// Whether a trip asks for a booking reference (PNR). Every international
+  /// trip does; a domestic trip within an African or South American country
+  /// doesn't. Other domestic trips still do.
+  static bool asksForBookingReference(
+    String departureCountryCode,
+    String arrivalCountryCode,
+  ) {
+    final from = departureCountryCode.trim().toUpperCase();
+    final to = arrivalCountryCode.trim().toUpperCase();
+    return from != to || !RegionService.isAfricanOrSouthAmerican(from);
+  }
 
   const TripDraft({
     required this.departureCityId,

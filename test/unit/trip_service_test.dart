@@ -619,4 +619,47 @@ void main() {
       });
     });
   });
+
+  group('TripDraft.asksForBookingReference', () {
+    test('every international trip asks for one', () {
+      expect(TripDraft.asksForBookingReference('NG', 'GB'), isTrue);
+      expect(TripDraft.asksForBookingReference('CM', 'NG'), isTrue);
+      expect(TripDraft.asksForBookingReference('BR', 'AR'), isTrue);
+      expect(TripDraft.asksForBookingReference('US', 'FR'), isTrue);
+    });
+
+    test('a domestic trip in Africa or South America does not', () {
+      for (final iso in [
+        'NG',
+        'CM',
+        'CG',
+        'CD',
+        'ZA',
+        'EG',
+        'BR',
+        'CO',
+        'AR',
+      ]) {
+        expect(
+          TripDraft.asksForBookingReference(iso, iso),
+          isFalse,
+          reason: iso,
+        );
+      }
+    });
+
+    test('a domestic trip elsewhere still does', () {
+      for (final iso in ['US', 'GB', 'FR', 'MX', 'CA']) {
+        expect(
+          TripDraft.asksForBookingReference(iso, iso),
+          isTrue,
+          reason: iso,
+        );
+      }
+    });
+
+    test('ignores case and spaces in the country codes', () {
+      expect(TripDraft.asksForBookingReference(' ng', 'NG '), isFalse);
+    });
+  });
 }

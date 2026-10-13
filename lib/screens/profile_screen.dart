@@ -900,12 +900,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         trailing: _verificationStatus == 'pending'
             ? context.l10n.verificationReviewing
             : null,
-        onTap: () {
-          Navigator.of(context).push(
+        onTap: () async {
+          await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const IdentityVerificationScreen(),
             ),
           );
+          // Show the new verification status right away instead of waiting
+          // for the next profile poll.
+          if (mounted) _loadProfile();
         },
       ),
       _SettingsItem(

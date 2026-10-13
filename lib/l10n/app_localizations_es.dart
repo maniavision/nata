@@ -905,7 +905,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get biometricLocalNote =>
-      'Los escaneos faciales biométricos se procesan localmente para coincidir con tu pasaporte.';
+      'Tu selfie se compara con la foto de tu documento mediante nuestro servicio de verificación seguro y se guarda de forma privada.';
 
   @override
   String get fullyVerified => '¡Estás completamente verificado!';
@@ -1369,6 +1369,297 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errItemName => 'Indica qué es el artículo.';
+
+  @override
+  String get emergencyContactLabel => 'Contacto de emergencia';
+
+  @override
+  String get ecStepOf => 'Paso 2 de 2';
+
+  @override
+  String get ecTitle => 'Añade un contacto de emergencia';
+
+  @override
+  String get ecBody =>
+      'Alguien a quien podamos contactar si algo sale mal durante una entrega.';
+
+  @override
+  String get ecFullName => 'Nombre completo';
+
+  @override
+  String get ecFullNameHint => 'Nombre completo del contacto';
+
+  @override
+  String get ecPhone => 'Número de teléfono';
+
+  @override
+  String get ecPhoneHint => 'p. ej. 7700 900123';
+
+  @override
+  String get ecRelationship => 'Relación';
+
+  @override
+  String get relFriend => 'Amigo/a';
+
+  @override
+  String get relRelative => 'Familiar';
+
+  @override
+  String get relPartner => 'Pareja';
+
+  @override
+  String get relColleague => 'Colega';
+
+  @override
+  String get ecPrivacy =>
+      'Tu contacto de emergencia nunca se muestra a remitentes ni viajeros y solo lo usa nuestro equipo de soporte si no podemos contactarte.';
+
+  @override
+  String get ecFinish => 'Finalizar verificación';
+
+  @override
+  String get ecFootnote =>
+      'Tus datos se guardan de forma segura y solo se usan por motivos de seguridad.';
+
+  @override
+  String get errContactName => 'Introduce el nombre completo del contacto.';
+
+  @override
+  String get errContactPhone =>
+      'Introduce un número válido para el prefijo de país seleccionado.';
+
+  @override
+  String get errIdNotRecognized =>
+      'Esto no parece un documento de identidad. Sube una foto clara de la página completa del documento.';
+
+  @override
+  String get errIdNoFace =>
+      'No encontramos la foto del documento. Sube una imagen clara de la página donde aparece tu rostro.';
+
+  @override
+  String get errIdUnreadable =>
+      'No pudimos leer el texto de este documento. Sube una foto nítida y bien iluminada del documento completo.';
+
+  @override
+  String get idTypePassport => 'pasaporte';
+
+  @override
+  String get idTypeDriversLicense => 'licencia de conducir';
+
+  @override
+  String get idTypeNationalId => 'documento nacional de identidad';
+
+  @override
+  String errIdWrongType(String document) {
+    return 'Este documento no parece ser del tipo «$document». Elige el tipo correcto arriba o sube el documento adecuado.';
+  }
+
+  @override
+  String get faceScanIntro =>
+      'Te pediremos que parpadees y gires la cabeza; luego compararemos tu rostro con la foto de tu documento.';
+
+  @override
+  String get livenessNoFace => 'Coloca tu rostro dentro del óvalo';
+
+  @override
+  String get livenessMultipleFaces => 'Solo tú debes aparecer en la imagen';
+
+  @override
+  String get livenessBlink => 'Parpadea despacio';
+
+  @override
+  String get livenessTurnHead =>
+      'Gira la cabeza a la izquierda y luego a la derecha';
+
+  @override
+  String get livenessLookStraight =>
+      'Mira directamente a la cámara y no te muevas';
+
+  @override
+  String get faceScanVerifying => 'Comparando tu rostro con tu documento…';
+
+  @override
+  String get faceScanVerified => 'Rostro verificado. ¡Ya estás verificado!';
+
+  @override
+  String faceScanNoMatch(int count) {
+    return 'Tu rostro no coincide con la foto de tu documento. Intentos restantes: $count.';
+  }
+
+  @override
+  String faceScanNoFace(int count) {
+    return 'No pudimos ver bien tu rostro. Inténtalo de nuevo con buena luz. Intentos restantes: $count.';
+  }
+
+  @override
+  String get faceScanManualReview =>
+      'No pudimos confirmar tu rostro automáticamente. Nuestro equipo revisará tu documento.';
+
+  @override
+  String get faceScanTimeout =>
+      'Se acabó el tiempo. Asegúrate de tener buena luz e inténtalo de nuevo.';
+
+  @override
+  String get faceScanCameraDenied =>
+      'Permite el acceso a la cámara en Ajustes para escanear tu rostro.';
+
+  @override
+  String get faceScanError => 'Algo salió mal. Inténtalo de nuevo.';
+
+  @override
+  String get faceScanTryAgain => 'Intentar de nuevo';
+
+  @override
+  String get faceScanContinue => 'Continuar';
+
+  @override
+  String get faceScanSkip =>
+      'Continuar sin verificación facial (revisión manual)';
+
+  @override
+  String get acceptedInProgress => 'Aceptadas y en curso';
+
+  @override
+  String activeCount(int count) {
+    return '$count activa(s)';
+  }
+
+  @override
+  String get yourPayout => 'Tu pago';
+
+  @override
+  String get tripLabel => 'Viaje:';
+
+  @override
+  String get nextAction => 'Siguiente paso:';
+
+  @override
+  String get attachReceivedPhoto => 'Adjuntar foto de recepción';
+
+  @override
+  String get manageDeliveryAttachProof => 'Gestionar entrega y adjuntar prueba';
+
+  @override
+  String pendingRequestsCount(int count) {
+    return 'SOLICITUDES PENDIENTES ($count)';
+  }
+
+  @override
+  String get awaitingYourResponse => 'Esperan tu respuesta';
+
+  @override
+  String get deliveryTaskDetails => 'Detalles de la entrega';
+
+  @override
+  String orderNumber(String id) {
+    return 'Pedido #$id';
+  }
+
+  @override
+  String get inProgress => 'En curso';
+
+  @override
+  String get senderVerifiedIdentity => 'Remitente · Identidad verificada';
+
+  @override
+  String get inEscrow => '(En depósito)';
+
+  @override
+  String get deliveryRoute => 'Ruta de entrega';
+
+  @override
+  String get itemToCarry => 'Artículo a llevar';
+
+  @override
+  String get itemReceivedFromSender => 'Artículo recibido del remitente';
+
+  @override
+  String get attached => 'Adjunta';
+
+  @override
+  String get itemReceivedNote =>
+      'Comprueba que el producto está completamente sellado en su caja de fábrica antes de hacerte cargo.';
+
+  @override
+  String get retake => 'Repetir';
+
+  @override
+  String get itemDeliveredToRecipient => 'Artículo entregado al destinatario';
+
+  @override
+  String get pendingDelivery => 'Entrega pendiente';
+
+  @override
+  String handoverNote(String city) {
+    return 'Adjunta una foto de la entrega al destinatario en $city para liberar al instante el pago en depósito.';
+  }
+
+  @override
+  String get takeOrUploadHandoverPhoto => 'Tomar o subir foto de la entrega';
+
+  @override
+  String get handoverPhotoHint =>
+      'Foto con el destinatario o en el lugar de entrega';
+
+  @override
+  String get handoverPhotoAttached => 'Foto de la entrega adjunta';
+
+  @override
+  String get recipientNameLabel => 'Nombre del destinatario:';
+
+  @override
+  String get recipientPhoneLabel => 'Teléfono del destinatario:';
+
+  @override
+  String get meetingSpotLabel => 'Punto de encuentro:';
+
+  @override
+  String confirmDeliveryClaim(String amount) {
+    return 'Confirmar entrega y cobrar $amount';
+  }
+
+  @override
+  String get escrowReleaseNote =>
+      'Los fondos en depósito se liberarán de inmediato en tu billetera.';
+
+  @override
+  String get attachHandoverFirst => 'Primero adjunta la foto de la entrega.';
+
+  @override
+  String get errIdNameMismatch =>
+      'El nombre de este documento no coincide con el de tu perfil. Sube un documento que muestre tu nombre y apellido, o actualiza el nombre de tu perfil.';
+
+  @override
+  String get errContactSave =>
+      'No se pudo guardar el contacto. Inténtalo de nuevo.';
+
+  @override
+  String get updateAvailableTitle => 'Actualización disponible';
+
+  @override
+  String updateAvailableBody(String latest, String current) {
+    return 'Nata $latest ya está disponible. Estás usando la versión $current.';
+  }
+
+  @override
+  String get updateRequiredTitle => 'Actualización necesaria';
+
+  @override
+  String get updateRequiredBody =>
+      'Esta versión de Nata ya no es compatible. Actualiza para seguir usando la app.';
+
+  @override
+  String get updateWhatsNew => 'Novedades';
+
+  @override
+  String get updateNow => 'Actualizar';
+
+  @override
+  String get updateLater => 'Más tarde';
+
+  @override
+  String get updateOpenFailed =>
+      'No se pudo abrir la tienda. Busca Nata en tu tienda de aplicaciones.';
 
   @override
   String get errAccountNotFound =>

@@ -120,8 +120,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   // ── Hero ───────────────────────────────────────────────────────────────────
   Widget _buildHero(AppLocalizations l) {
+    // The design's hero is 224 px with the top bar 24 px down. On a phone the
+    // status bar sits on top of the image too, so add its height instead of
+    // squeezing the content (which made the brand pill overlap the title).
+    final topInset = MediaQuery.of(context).padding.top;
     return Container(
-      height: 224,
+      height: 224 + topInset,
       width: double.infinity,
       decoration: const BoxDecoration(
         color: AppColors.primary,
@@ -180,92 +184,102 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
           ),
           // Top Bar
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Brand pill
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 6,
+          Positioned(
+            top: topInset + 24,
+            left: 20,
+            right: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Brand pill
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: const BoxDecoration(
-                                color: AppColors.accent,
-                                shape: BoxShape.circle,
-                              ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              // rounded-lg (20 px) on 24 px: a circle.
+                              shape: BoxShape.circle,
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x0D000000),
+                                  offset: Offset(0, 1),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Transform.rotate(
+                              angle: -0.785, // -45°: plane flying up-right
                               child: const Icon(
                                 Icons.send_rounded,
                                 color: Colors.white,
                                 size: 14,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Nata',
-                              style: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
-                                color: Colors.white,
-                                letterSpacing: -0.35,
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Nata',
+                            style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: Colors.white,
+                              letterSpacing: -0.35,
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Countries badge
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Text(
+                        '180+ Countries',
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ),
                   ),
-                  // Countries badge
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
-                        ),
-                        child: Text(
-                          '180+ Countries',
-                          style: GoogleFonts.dmSans(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           // Bottom text content
@@ -391,7 +405,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           ElevatedButton(
             key: const ValueKey('quick-apply'),
             onPressed: () {
@@ -405,8 +419,10 @@ class _SplashScreenState extends State<SplashScreen> {
               backgroundColor: AppColors.card,
               foregroundColor: AppColors.accent,
               elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: const Size(0, 28),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              shadowColor: const Color(0x0D000000),
               shape: StadiumBorder(side: BorderSide(color: AppColors.border)),
             ),
             child: Text(
@@ -458,7 +474,7 @@ class _SplashScreenState extends State<SplashScreen> {
               Row(
                 children: [
                   const Icon(
-                    Icons.public_rounded,
+                    Icons.language_rounded,
                     size: 15,
                     color: AppColors.primary,
                   ),
@@ -620,8 +636,8 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               child: selected
                   ? const Icon(
-                      Icons.check_rounded,
-                      size: 14,
+                      Icons.done_all_rounded,
+                      size: 13,
                       color: Colors.white,
                     )
                   : null,
@@ -700,8 +716,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
   // ── Footer ─────────────────────────────────────────────────────────────────
   Widget _buildFooter(AppLocalizations l) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        bottomInset + 8 > 32 ? bottomInset + 8 : 32,
+      ),
       decoration: const BoxDecoration(color: AppColors.background),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -731,7 +753,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded, size: 18),
+                  const Icon(Icons.arrow_forward, size: 18),
                 ],
               ),
             ),

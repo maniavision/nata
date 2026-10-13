@@ -898,7 +898,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get biometricLocalNote =>
-      'Biometric face scans are processed locally to match against your passport.';
+      'Your selfie is compared with your ID photo by our secure verification service and stored privately.';
 
   @override
   String get fullyVerified => 'You\'re Fully Verified!';
@@ -1353,6 +1353,295 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errItemName => 'Tell us what the item is.';
+
+  @override
+  String get emergencyContactLabel => 'Emergency Contact';
+
+  @override
+  String get ecStepOf => 'Step 2 of 2';
+
+  @override
+  String get ecTitle => 'Add an emergency contact';
+
+  @override
+  String get ecBody =>
+      'Someone we can reach if something goes wrong during a delivery.';
+
+  @override
+  String get ecFullName => 'Full Name';
+
+  @override
+  String get ecFullNameHint => 'Contact\'s full name';
+
+  @override
+  String get ecPhone => 'Telephone Number';
+
+  @override
+  String get ecPhoneHint => 'e.g. 7700 900123';
+
+  @override
+  String get ecRelationship => 'Relationship';
+
+  @override
+  String get relFriend => 'Friend';
+
+  @override
+  String get relRelative => 'Relative';
+
+  @override
+  String get relPartner => 'Partner';
+
+  @override
+  String get relColleague => 'Colleague';
+
+  @override
+  String get ecPrivacy =>
+      'Your emergency contact is never shown to senders or travelers and is only used by our support team if we cannot reach you.';
+
+  @override
+  String get ecFinish => 'Finish Verification';
+
+  @override
+  String get ecFootnote =>
+      'Your details are stored securely and used only for safety purposes.';
+
+  @override
+  String get errContactName => 'Enter the contact\'s full name.';
+
+  @override
+  String get errContactPhone =>
+      'Enter a valid phone number for the selected country code.';
+
+  @override
+  String get errIdNotRecognized =>
+      'This doesn\'t look like an ID document. Upload a clear photo of the whole ID page.';
+
+  @override
+  String get errIdNoFace =>
+      'We couldn\'t find the ID photo. Upload a clear picture of the page showing your face.';
+
+  @override
+  String get errIdUnreadable =>
+      'We couldn\'t read the text on this ID. Upload a sharp, well-lit photo of the whole ID.';
+
+  @override
+  String get idTypePassport => 'passport';
+
+  @override
+  String get idTypeDriversLicense => 'driver\'s license';
+
+  @override
+  String get idTypeNationalId => 'national ID card';
+
+  @override
+  String errIdWrongType(String document) {
+    return 'This doesn\'t look like a $document. Choose the right ID type above, or upload your $document.';
+  }
+
+  @override
+  String get faceScanIntro =>
+      'You\'ll be asked to blink and turn your head, then we\'ll compare your face with your ID photo.';
+
+  @override
+  String get livenessNoFace => 'Position your face in the oval';
+
+  @override
+  String get livenessMultipleFaces => 'Only you should be in the frame';
+
+  @override
+  String get livenessBlink => 'Blink slowly';
+
+  @override
+  String get livenessTurnHead =>
+      'Turn your head to the left, then to the right';
+
+  @override
+  String get livenessLookStraight =>
+      'Look straight at the camera and hold still';
+
+  @override
+  String get faceScanVerifying => 'Comparing your face with your ID…';
+
+  @override
+  String get faceScanVerified => 'Face matched. You\'re verified!';
+
+  @override
+  String faceScanNoMatch(int count) {
+    return 'Your face didn\'t match the photo on your ID. Attempts left: $count.';
+  }
+
+  @override
+  String faceScanNoFace(int count) {
+    return 'We couldn\'t see your face clearly. Try again in good light. Attempts left: $count.';
+  }
+
+  @override
+  String get faceScanManualReview =>
+      'We couldn\'t confirm your face automatically. Our team will review your ID.';
+
+  @override
+  String get faceScanTimeout =>
+      'Time\'s up. Make sure your face is well lit and try again.';
+
+  @override
+  String get faceScanCameraDenied =>
+      'Allow camera access in Settings to scan your face.';
+
+  @override
+  String get faceScanError => 'Something went wrong. Please try again.';
+
+  @override
+  String get faceScanTryAgain => 'Try again';
+
+  @override
+  String get faceScanContinue => 'Continue';
+
+  @override
+  String get faceScanSkip => 'Continue without face match (manual review)';
+
+  @override
+  String get acceptedInProgress => 'Accepted & In Progress';
+
+  @override
+  String activeCount(int count) {
+    return '$count Active';
+  }
+
+  @override
+  String get yourPayout => 'Your payout';
+
+  @override
+  String get tripLabel => 'Trip:';
+
+  @override
+  String get nextAction => 'Next Action:';
+
+  @override
+  String get attachReceivedPhoto => 'Attach Received Photo';
+
+  @override
+  String get manageDeliveryAttachProof => 'Manage Delivery & Attach Proof';
+
+  @override
+  String pendingRequestsCount(int count) {
+    return 'PENDING REQUESTS ($count)';
+  }
+
+  @override
+  String get awaitingYourResponse => 'Awaiting your response';
+
+  @override
+  String get deliveryTaskDetails => 'Delivery Task Details';
+
+  @override
+  String orderNumber(String id) {
+    return 'Order #$id';
+  }
+
+  @override
+  String get inProgress => 'In Progress';
+
+  @override
+  String get senderVerifiedIdentity => 'Sender · Verified Identity';
+
+  @override
+  String get inEscrow => '(In Escrow)';
+
+  @override
+  String get deliveryRoute => 'Delivery Route';
+
+  @override
+  String get itemToCarry => 'Item To Carry';
+
+  @override
+  String get itemReceivedFromSender => 'Item Received from Sender';
+
+  @override
+  String get attached => 'Attached';
+
+  @override
+  String get itemReceivedNote =>
+      'Verify that the product is completely sealed in its factory box before taking custody.';
+
+  @override
+  String get retake => 'Retake';
+
+  @override
+  String get itemDeliveredToRecipient => 'Item Delivered to Recipient';
+
+  @override
+  String get pendingDelivery => 'Pending Delivery';
+
+  @override
+  String handoverNote(String city) {
+    return 'Attach a photo of handover to recipient at the $city destination to unlock instant escrow payout.';
+  }
+
+  @override
+  String get takeOrUploadHandoverPhoto => 'Take or Upload Handover Photo';
+
+  @override
+  String get handoverPhotoHint =>
+      'Attach photo with recipient or at delivery spot';
+
+  @override
+  String get handoverPhotoAttached => 'Handover photo attached';
+
+  @override
+  String get recipientNameLabel => 'Recipient Name:';
+
+  @override
+  String get recipientPhoneLabel => 'Recipient Phone:';
+
+  @override
+  String get meetingSpotLabel => 'Meeting Spot:';
+
+  @override
+  String confirmDeliveryClaim(String amount) {
+    return 'Confirm Delivery & Claim $amount Payout';
+  }
+
+  @override
+  String get escrowReleaseNote =>
+      'Funds held safely in escrow will be released immediately to your wallet.';
+
+  @override
+  String get attachHandoverFirst => 'Attach the handover photo first.';
+
+  @override
+  String get errIdNameMismatch =>
+      'The name on this ID doesn\'t match the name on your profile. Upload an ID showing your first and last name, or update your profile name.';
+
+  @override
+  String get errContactSave => 'Could not save the contact. Please try again.';
+
+  @override
+  String get updateAvailableTitle => 'Update available';
+
+  @override
+  String updateAvailableBody(String latest, String current) {
+    return 'Nata $latest is available. You are using version $current.';
+  }
+
+  @override
+  String get updateRequiredTitle => 'Update required';
+
+  @override
+  String get updateRequiredBody =>
+      'This version of Nata is no longer supported. Please update to keep using the app.';
+
+  @override
+  String get updateWhatsNew => 'What\'s new';
+
+  @override
+  String get updateNow => 'Update';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String get updateOpenFailed =>
+      'Could not open the store. Please search for Nata in your app store.';
 
   @override
   String get errAccountNotFound =>

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:carrywise_app/services/app_update_service.dart';
 import 'package:carrywise_app/services/auth_service.dart';
 import 'package:carrywise_app/services/biometric_service.dart';
 import 'package:carrywise_app/services/city_service.dart';
+import 'package:carrywise_app/services/emergency_contact_service.dart';
 import 'package:carrywise_app/services/exchange_rate_service.dart';
 import 'package:carrywise_app/services/message_service.dart';
 import 'package:carrywise_app/services/notification_service.dart';
@@ -14,6 +16,7 @@ import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:carrywise_app/screens/delivery_task_screen.dart';
 
 /// A traveler trip for tests. Every field has a sensible default.
 TravelerTrip sampleTrip({
@@ -745,4 +748,68 @@ ExchangeRates sampleRates({DateTime? updatedAt}) => ExchangeRates(
     'XAF': 585.399478,
   },
   updatedAt: updatedAt ?? DateTime.utc(2030, 6, 21, 12, 2),
+);
+
+/// Remembers the contact it was asked to save; can be made to fail or wait.
+class FakeEmergencyContactService extends Fake
+    implements EmergencyContactService {
+  final List<EmergencyContact> saved = [];
+  Object? fail;
+  Completer<void>? gate;
+  int attempts = 0;
+
+  @override
+  Future<void> save(EmergencyContact contact) async {
+    attempts++;
+    if (gate != null) await gate!.future;
+    if (fail != null) throw fail!;
+    saved.add(contact);
+  }
+}
+
+/// Reports the update you give it, and remembers "Later".
+class FakeAppUpdateService extends Fake implements AppUpdateService {
+  FakeAppUpdateService({this.update});
+
+  AppUpdate? update;
+  bool throwOnCheck = false;
+  bool prompt = true;
+  int checks = 0;
+  final List<AppUpdate> postponed = [];
+
+  @override
+  Future<AppUpdate?> check() async {
+    checks++;
+    if (throwOnCheck) throw Exception('check failed');
+    return update;
+  }
+
+  @override
+  Future<bool> shouldPrompt(AppUpdate update) async => prompt;
+
+  @override
+  Future<void> postpone(AppUpdate update) async => postponed.add(update);
+}
+
+/// A delivery the traveler accepted, as on the Requests page.
+AcceptedDelivery sampleDelivery() => const AcceptedDelivery(
+  orderId: 'DEL-8842',
+  senderName: 'Sarah Adeleke',
+  senderPhotoUrl: 'https://example.com/sarah.jpg',
+  senderSubtitle: 'Sender · Escrow Funded',
+  senderPhone: '+234 803 555 0142',
+  payout: '\$38.00',
+  trip: 'Lagos (LOS) → London (LHR)',
+  routeCodes: 'LOS → LHR',
+  travelDate: 'Jun 22, 2025',
+  destinationCity: 'London',
+  itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
+  itemName: 'iPad Mini 64GB (Space Gray)',
+  itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
+  receivedPhotoUrl: 'https://example.com/box.jpg',
+  receivedPhotoName: 'received_sealed_box.jpg',
+  receivedPhotoCaption: 'Captured at Lagos Airport · Jun 22, 10:14 AM',
+  recipientName: 'David Adeleke (London)',
+  recipientPhone: '+44 7700 900456',
+  meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
 );

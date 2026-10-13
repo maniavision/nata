@@ -1242,6 +1242,60 @@ void main() {
       expect(refText(tester), isEmpty);
     });
 
+    group('depends on the route', () {
+      Finder card() => find.text('BOOKING REFERENCE');
+
+      testWidgets('shows before the countries are picked', (tester) async {
+        await pump(tester);
+
+        expect(card(), findsOneWidget);
+      });
+
+      testWidgets('shows for an international trip', (tester) async {
+        await pump(tester);
+        await fillValidForm(tester); // Lagos -> London
+
+        expect(card(), findsOneWidget);
+      });
+
+      for (final (from, to) in [
+        (
+          city('Lagos', 'NG', 'Nigeria', 11),
+          city('Abuja', 'NG', 'Nigeria', 12),
+        ),
+        (
+          city('Sao Paulo', 'BR', 'Brazil', 13),
+          city('Rio de Janeiro', 'BR', 'Brazil', 14),
+        ),
+      ]) {
+        testWidgets('hides for a domestic trip in ${from.country}', (
+          tester,
+        ) async {
+          lagos = from;
+          london = to;
+          await pump(tester);
+          await typeRef(tester, 'X7KQ9R');
+          await fillValidForm(tester);
+
+          expect(card(), findsNothing);
+
+          await save(tester);
+
+          // What was typed before the route was picked is not saved.
+          expect(service.created.single.bookingReference, isNull);
+        });
+      }
+
+      testWidgets('shows for a domestic trip elsewhere (US)', (tester) async {
+        lagos = city('New York', 'US', 'United States', 15);
+        london = city('Chicago', 'US', 'United States', 16);
+        await pump(tester);
+        await fillValidForm(tester);
+
+        expect(card(), findsOneWidget);
+      });
+    });
+
     group('when editing', () {
       testWidgets('is pre-filled from the trip', (tester) async {
         await pump(tester, trip: sampleMyTrip(bookingReference: 'X7KQ9R'));

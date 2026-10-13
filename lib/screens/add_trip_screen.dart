@@ -325,12 +325,30 @@ class _AddTripScreenState extends State<AddTripScreen> {
       return l.errAttachReceipt;
     }
     // The booking reference is optional, but if given it must be valid.
-    final ref = _refCtrl.text.trim();
-    if (ref.isNotEmpty && !TripDraft.bookingReferencePattern.hasMatch(ref)) {
+    final ref = _bookingReference;
+    if (ref != null && !TripDraft.bookingReferencePattern.hasMatch(ref)) {
       return l.errBookingReference;
     }
     if (_parsedPrice == null) return l.errPrice;
     return null;
+  }
+
+  /// Whether the booking reference card is shown: until both countries are
+  /// picked, and then for every trip except a domestic one within Africa or
+  /// South America.
+  bool get _asksForBookingReference {
+    final from = _departure?.countryCode;
+    final to = _arrival?.countryCode;
+    if (from == null || to == null) return true;
+    return TripDraft.asksForBookingReference(from, to);
+  }
+
+  /// What is saved: the typed reference, or null when there is none or the
+  /// card is hidden (what was typed is kept in case the route changes back).
+  String? get _bookingReference {
+    if (!_asksForBookingReference) return null;
+    final ref = _refCtrl.text.trim();
+    return ref.isEmpty ? null : ref;
   }
 
   Future<void> _save() async {
@@ -369,9 +387,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             .$2,
         maxSize: _maxSize,
         ticketReceiptPath: receiptPath,
-        bookingReference: _refCtrl.text.trim().isEmpty
-            ? null
-            : _refCtrl.text.trim(),
+        bookingReference: _bookingReference,
       );
 
       if (_editing) {
@@ -425,8 +441,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
                     const SizedBox(height: 16),
                     _buildTicketCard(),
                     const SizedBox(height: 16),
-                    _buildBookingReferenceCard(),
-                    const SizedBox(height: 16),
+                    if (_asksForBookingReference) ...[
+                      _buildBookingReferenceCard(),
+                      const SizedBox(height: 16),
+                    ],
                     _buildCapacityCard(),
                     const SizedBox(height: 16),
                     _buildInfoBanner(),

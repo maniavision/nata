@@ -1819,7 +1819,7 @@ abstract class AppLocalizations {
   /// No description provided for @biometricLocalNote.
   ///
   /// In en, this message translates to:
-  /// **'Biometric face scans are processed locally to match against your passport.'**
+  /// **'Your selfie is compared with your ID photo by our secure verification service and stored privately.'**
   String get biometricLocalNote;
 
   /// No description provided for @fullyVerified.
@@ -2623,6 +2623,510 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tell us what the item is.'**
   String get errItemName;
+
+  /// No description provided for @emergencyContactLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Contact'**
+  String get emergencyContactLabel;
+
+  /// No description provided for @ecStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 2 of 2'**
+  String get ecStepOf;
+
+  /// No description provided for @ecTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an emergency contact'**
+  String get ecTitle;
+
+  /// No description provided for @ecBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone we can reach if something goes wrong during a delivery.'**
+  String get ecBody;
+
+  /// No description provided for @ecFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get ecFullName;
+
+  /// No description provided for @ecFullNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact\'s full name'**
+  String get ecFullNameHint;
+
+  /// No description provided for @ecPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Telephone Number'**
+  String get ecPhone;
+
+  /// No description provided for @ecPhoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 7700 900123'**
+  String get ecPhoneHint;
+
+  /// No description provided for @ecRelationship.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship'**
+  String get ecRelationship;
+
+  /// No description provided for @relFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend'**
+  String get relFriend;
+
+  /// No description provided for @relRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'Relative'**
+  String get relRelative;
+
+  /// No description provided for @relPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner'**
+  String get relPartner;
+
+  /// No description provided for @relColleague.
+  ///
+  /// In en, this message translates to:
+  /// **'Colleague'**
+  String get relColleague;
+
+  /// No description provided for @ecPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Your emergency contact is never shown to senders or travelers and is only used by our support team if we cannot reach you.'**
+  String get ecPrivacy;
+
+  /// No description provided for @ecFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish Verification'**
+  String get ecFinish;
+
+  /// No description provided for @ecFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are stored securely and used only for safety purposes.'**
+  String get ecFootnote;
+
+  /// No description provided for @errContactName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the contact\'s full name.'**
+  String get errContactName;
+
+  /// No description provided for @errContactPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid phone number for the selected country code.'**
+  String get errContactPhone;
+
+  /// No description provided for @errIdNotRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'This doesn\'t look like an ID document. Upload a clear photo of the whole ID page.'**
+  String get errIdNotRecognized;
+
+  /// No description provided for @errIdNoFace.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find the ID photo. Upload a clear picture of the page showing your face.'**
+  String get errIdNoFace;
+
+  /// No description provided for @errIdUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t read the text on this ID. Upload a sharp, well-lit photo of the whole ID.'**
+  String get errIdUnreadable;
+
+  /// No description provided for @idTypePassport.
+  ///
+  /// In en, this message translates to:
+  /// **'passport'**
+  String get idTypePassport;
+
+  /// No description provided for @idTypeDriversLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'driver\'s license'**
+  String get idTypeDriversLicense;
+
+  /// No description provided for @idTypeNationalId.
+  ///
+  /// In en, this message translates to:
+  /// **'national ID card'**
+  String get idTypeNationalId;
+
+  /// No description provided for @errIdWrongType.
+  ///
+  /// In en, this message translates to:
+  /// **'This doesn\'t look like a {document}. Choose the right ID type above, or upload your {document}.'**
+  String errIdWrongType(String document);
+
+  /// No description provided for @faceScanIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be asked to blink and turn your head, then we\'ll compare your face with your ID photo.'**
+  String get faceScanIntro;
+
+  /// No description provided for @livenessNoFace.
+  ///
+  /// In en, this message translates to:
+  /// **'Position your face in the oval'**
+  String get livenessNoFace;
+
+  /// No description provided for @livenessMultipleFaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you should be in the frame'**
+  String get livenessMultipleFaces;
+
+  /// No description provided for @livenessBlink.
+  ///
+  /// In en, this message translates to:
+  /// **'Blink slowly'**
+  String get livenessBlink;
+
+  /// No description provided for @livenessTurnHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn your head to the left, then to the right'**
+  String get livenessTurnHead;
+
+  /// No description provided for @livenessLookStraight.
+  ///
+  /// In en, this message translates to:
+  /// **'Look straight at the camera and hold still'**
+  String get livenessLookStraight;
+
+  /// No description provided for @faceScanVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparing your face with your ID…'**
+  String get faceScanVerifying;
+
+  /// No description provided for @faceScanVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Face matched. You\'re verified!'**
+  String get faceScanVerified;
+
+  /// No description provided for @faceScanNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Your face didn\'t match the photo on your ID. Attempts left: {count}.'**
+  String faceScanNoMatch(int count);
+
+  /// No description provided for @faceScanNoFace.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t see your face clearly. Try again in good light. Attempts left: {count}.'**
+  String faceScanNoFace(int count);
+
+  /// No description provided for @faceScanManualReview.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t confirm your face automatically. Our team will review your ID.'**
+  String get faceScanManualReview;
+
+  /// No description provided for @faceScanTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Time\'s up. Make sure your face is well lit and try again.'**
+  String get faceScanTimeout;
+
+  /// No description provided for @faceScanCameraDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access in Settings to scan your face.'**
+  String get faceScanCameraDenied;
+
+  /// No description provided for @faceScanError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get faceScanError;
+
+  /// No description provided for @faceScanTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get faceScanTryAgain;
+
+  /// No description provided for @faceScanContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get faceScanContinue;
+
+  /// No description provided for @faceScanSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without face match (manual review)'**
+  String get faceScanSkip;
+
+  /// No description provided for @acceptedInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted & In Progress'**
+  String get acceptedInProgress;
+
+  /// No description provided for @activeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Active'**
+  String activeCount(int count);
+
+  /// No description provided for @yourPayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payout'**
+  String get yourPayout;
+
+  /// No description provided for @tripLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip:'**
+  String get tripLabel;
+
+  /// No description provided for @nextAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Action:'**
+  String get nextAction;
+
+  /// No description provided for @attachReceivedPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach Received Photo'**
+  String get attachReceivedPhoto;
+
+  /// No description provided for @manageDeliveryAttachProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Delivery & Attach Proof'**
+  String get manageDeliveryAttachProof;
+
+  /// No description provided for @pendingRequestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'PENDING REQUESTS ({count})'**
+  String pendingRequestsCount(int count);
+
+  /// No description provided for @awaitingYourResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting your response'**
+  String get awaitingYourResponse;
+
+  /// No description provided for @deliveryTaskDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Task Details'**
+  String get deliveryTaskDetails;
+
+  /// No description provided for @orderNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{id}'**
+  String orderNumber(String id);
+
+  /// No description provided for @inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get inProgress;
+
+  /// No description provided for @senderVerifiedIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender · Verified Identity'**
+  String get senderVerifiedIdentity;
+
+  /// No description provided for @inEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'(In Escrow)'**
+  String get inEscrow;
+
+  /// No description provided for @deliveryRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Route'**
+  String get deliveryRoute;
+
+  /// No description provided for @itemToCarry.
+  ///
+  /// In en, this message translates to:
+  /// **'Item To Carry'**
+  String get itemToCarry;
+
+  /// No description provided for @itemReceivedFromSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Received from Sender'**
+  String get itemReceivedFromSender;
+
+  /// No description provided for @attached.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached'**
+  String get attached;
+
+  /// No description provided for @itemReceivedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify that the product is completely sealed in its factory box before taking custody.'**
+  String get itemReceivedNote;
+
+  /// No description provided for @retake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get retake;
+
+  /// No description provided for @itemDeliveredToRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Delivered to Recipient'**
+  String get itemDeliveredToRecipient;
+
+  /// No description provided for @pendingDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Delivery'**
+  String get pendingDelivery;
+
+  /// No description provided for @handoverNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a photo of handover to recipient at the {city} destination to unlock instant escrow payout.'**
+  String handoverNote(String city);
+
+  /// No description provided for @takeOrUploadHandoverPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take or Upload Handover Photo'**
+  String get takeOrUploadHandoverPhoto;
+
+  /// No description provided for @handoverPhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach photo with recipient or at delivery spot'**
+  String get handoverPhotoHint;
+
+  /// No description provided for @handoverPhotoAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover photo attached'**
+  String get handoverPhotoAttached;
+
+  /// No description provided for @recipientNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient Name:'**
+  String get recipientNameLabel;
+
+  /// No description provided for @recipientPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient Phone:'**
+  String get recipientPhoneLabel;
+
+  /// No description provided for @meetingSpotLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting Spot:'**
+  String get meetingSpotLabel;
+
+  /// No description provided for @confirmDeliveryClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Delivery & Claim {amount} Payout'**
+  String confirmDeliveryClaim(String amount);
+
+  /// No description provided for @escrowReleaseNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds held safely in escrow will be released immediately to your wallet.'**
+  String get escrowReleaseNote;
+
+  /// No description provided for @attachHandoverFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach the handover photo first.'**
+  String get attachHandoverFirst;
+
+  /// No description provided for @errIdNameMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The name on this ID doesn\'t match the name on your profile. Upload an ID showing your first and last name, or update your profile name.'**
+  String get errIdNameMismatch;
+
+  /// No description provided for @errContactSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the contact. Please try again.'**
+  String get errContactSave;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata {latest} is available. You are using version {current}.'**
+  String updateAvailableBody(String latest, String current);
+
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Nata is no longer supported. Please update to keep using the app.'**
+  String get updateRequiredBody;
+
+  /// No description provided for @updateWhatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get updateWhatsNew;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateNow;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the store. Please search for Nata in your app store.'**
+  String get updateOpenFailed;
 
   /// No description provided for @errAccountNotFound.
   ///

@@ -3,11 +3,7 @@ library;
 
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
-
-// Mirror the id type mapping from VerificationService
-const _idTypeValues = ['passport', 'national_id', 'drivers_license'];
-
-String idTypeFromIndex(int index) => _idTypeValues[index.clamp(0, 2)];
+import 'package:carrywise_app/services/verification_service.dart';
 
 String mimeFromExt(String ext) {
   switch (ext.toLowerCase()) {
@@ -23,25 +19,46 @@ String mimeFromExt(String ext) {
 }
 
 void main() {
-  group('ID type mapping', () {
-    test('index 0 → passport', () {
-      expect(idTypeFromIndex(0), 'passport');
+  group('VerificationService.idDocumentFileName', () {
+    test('one fixed name per user, keeping the file type', () {
+      expect(
+        VerificationService.idDocumentFileName('passport.jpg'),
+        'id_document.jpg',
+      );
+      expect(
+        VerificationService.idDocumentFileName('BIOMETRIC_CARD_5YRS.PDF'),
+        'id_document.pdf',
+      );
+      expect(
+        VerificationService.idDocumentFileName('IMG 0042.heic'),
+        'id_document.heic',
+      );
     });
 
-    test('index 1 → national_id', () {
-      expect(idTypeFromIndex(1), 'national_id');
+    test('a missing or odd extension falls back to jpg', () {
+      expect(VerificationService.idDocumentFileName('scan'), 'id_document.jpg');
+      expect(
+        VerificationService.idDocumentFileName('x.j/../pg'),
+        'id_document.jpg',
+      );
+    });
+  });
+
+  group('IdDocumentType', () {
+    // The ID screen's buttons are Passport, Driver's Lic., National ID, and
+    // the screen picks the type by index: the enum must keep that order.
+    test('follows the order of the ID screen buttons', () {
+      expect(IdDocumentType.values, [
+        IdDocumentType.passport,
+        IdDocumentType.driversLicense,
+        IdDocumentType.nationalId,
+      ]);
     });
 
-    test('index 2 → drivers_license', () {
-      expect(idTypeFromIndex(2), 'drivers_license');
-    });
-
-    test('negative index clamps to passport', () {
-      expect(idTypeFromIndex(-1), 'passport');
-    });
-
-    test('out-of-range index clamps to drivers_license', () {
-      expect(idTypeFromIndex(99), 'drivers_license');
+    test('stores the values the database accepts', () {
+      expect(IdDocumentType.passport.dbValue, 'passport');
+      expect(IdDocumentType.driversLicense.dbValue, 'drivers_license');
+      expect(IdDocumentType.nationalId.dbValue, 'national_id');
     });
   });
 

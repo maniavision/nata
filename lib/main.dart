@@ -6,6 +6,7 @@ import 'package:carrywise_app/l10n/app_localizations.dart';
 import 'config/supabase_config.dart';
 import 'services/preferences_service.dart';
 import 'screens/splash_screen.dart';
+import 'widgets/app_update_listener.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +55,9 @@ class _NataAppState extends State<NataApp> {
   // LocaleNotifier.of(context).value = ... still works.
   late final ValueNotifier<Locale> _localeNotifier;
 
+  /// Lets the update notice reach the navigator from outside of it.
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -79,29 +83,33 @@ class _NataAppState extends State<NataApp> {
   Widget build(BuildContext context) {
     return LocaleNotifier(
       notifier: _localeNotifier,
-      child: MaterialApp(
-        title: 'Nata',
-        debugShowCheckedModeBanner: false,
-        locale: _prefs.locale,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        theme: ThemeData(
-          colorScheme: const ColorScheme.light(
-            surface: AppColors.card,
-            primary: AppColors.primary,
-            secondary: AppColors.secondary,
-            onPrimary: AppColors.primaryForeground,
-            onSurface: AppColors.foreground,
+      child: AppUpdateListener(
+        navigatorKey: _navigatorKey,
+        child: MaterialApp(
+          navigatorKey: _navigatorKey,
+          title: 'Nata',
+          debugShowCheckedModeBanner: false,
+          locale: _prefs.locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: ThemeData(
+            colorScheme: const ColorScheme.light(
+              surface: AppColors.card,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              onPrimary: AppColors.primaryForeground,
+              onSurface: AppColors.foreground,
+            ),
+            textTheme: GoogleFonts.dmSansTextTheme(),
+            useMaterial3: true,
           ),
-          textTheme: GoogleFonts.dmSansTextTheme(),
-          useMaterial3: true,
+          home: const SplashScreen(),
         ),
-        home: const SplashScreen(),
       ),
     );
   }

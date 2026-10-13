@@ -219,6 +219,92 @@ class RegionService {
     'GW',
   };
 
+  /// African countries and territories (ISO 3166-1 alpha-2).
+  static const _africa = {
+    'DZ',
+    'AO',
+    'BJ',
+    'BW',
+    'BF',
+    'BI',
+    'CV',
+    'CM',
+    'CF',
+    'TD',
+    'KM',
+    'CG',
+    'CD',
+    'CI',
+    'DJ',
+    'EG',
+    'GQ',
+    'ER',
+    'SZ',
+    'ET',
+    'GA',
+    'GM',
+    'GH',
+    'GN',
+    'GW',
+    'KE',
+    'LS',
+    'LR',
+    'LY',
+    'MG',
+    'MW',
+    'ML',
+    'MR',
+    'MU',
+    'MA',
+    'MZ',
+    'NA',
+    'NE',
+    'NG',
+    'RW',
+    'ST',
+    'SN',
+    'SC',
+    'SL',
+    'SO',
+    'ZA',
+    'SS',
+    'SD',
+    'TZ',
+    'TG',
+    'TN',
+    'UG',
+    'ZM',
+    'ZW',
+    'EH',
+    'RE',
+    'YT',
+    'SH',
+  };
+
+  /// South American countries and territories (ISO 3166-1 alpha-2).
+  static const _southAmerica = {
+    'AR',
+    'BO',
+    'BR',
+    'CL',
+    'CO',
+    'EC',
+    'GY',
+    'PY',
+    'PE',
+    'SR',
+    'UY',
+    'VE',
+    'GF',
+    'FK',
+  };
+
+  /// True for a country in Africa or South America.
+  static bool isAfricanOrSouthAmerican(String isoCode) {
+    final iso = isoCode.trim().toUpperCase();
+    return _africa.contains(iso) || _southAmerica.contains(iso);
+  }
+
   /// The app's language for a country (English unless Spanish or French is the
   /// usual language there).
   static AppLanguage languageForCountry(String isoCode) {

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'checkout_escrow_screen.dart';
+import 'delivery_task_screen.dart';
 import 'messages_screen.dart';
 import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
@@ -18,10 +19,36 @@ class _RequestsScreenState extends State<RequestsScreen> {
   int _tab = 0; // 0 = Incoming, 1 = Outgoing
 
   // ── Incoming request data ──────────────────────────────────────────────────
+  /// Requests the traveler accepted that are still under way.
+  static const _accepted = [
+    AcceptedDelivery(
+      orderId: 'DEL-8842',
+      senderName: 'Sarah Adeleke',
+      senderPhotoUrl: 'https://randomuser.me/api/portraits/women/33.jpg',
+      senderSubtitle: 'Sender · Escrow Funded',
+      senderPhone: '+234 803 555 0142',
+      payout: '\$38.00',
+      trip: 'Lagos (LOS) → London (LHR)',
+      routeCodes: 'LOS → LHR',
+      travelDate: 'Jun 22, 2025',
+      destinationCity: 'London',
+      itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
+      itemName: 'iPad Mini 64GB (Space Gray)',
+      itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
+      receivedPhotoUrl:
+          'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/2lLrBm6d5EN.jpeg',
+      receivedPhotoName: 'received_sealed_box.jpg',
+      receivedPhotoCaption: 'Captured at Lagos Airport · Jun 22, 10:14 AM',
+      recipientName: 'David Adeleke (London)',
+      recipientPhone: '+44 7700 900456',
+      meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
+    ),
+  ];
+
   static const _incoming = [
     _IncomingRequest(
       name: 'Chioma Eze',
-      subtitle: 'Sender · 5 successful deliveries',
+      subtitle: 'Sender · 5 deliveries',
       amount: '\$32.00',
       trip: 'Lagos (LOS) → London (LHR)',
       date: 'Jun 22, 2025',
@@ -32,13 +59,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
     ),
     _IncomingRequest(
       name: 'Tunde Adeleke',
-      subtitle: 'Sender · 2 successful deliveries',
+      subtitle: 'Sender · 2 deliveries',
       amount: '\$26.50',
       trip: 'Lagos (LOS) → London (LHR)',
       date: 'Jun 22, 2025',
       item: 'Sony WH-1000XM5 (Retail Box)',
-      weight: '0.85 kg · 22 × 18 × 7 cm',
-      photos: '2 sealed box photos attached',
       imageUrl: 'https://randomuser.me/api/portraits/men/45.jpg',
     ),
   ];
@@ -146,7 +171,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
             _tabButton(
               context.l10n.incoming,
               0,
-              badge: '2',
+              badge: '${_accepted.length + _incoming.length}',
               badgeBg: AppColors.accent,
             ),
             _tabButton(
@@ -231,18 +256,67 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   // ── Incoming section ───────────────────────────────────────────────────────
   Widget _buildIncomingSection() {
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_accepted.isNotEmpty) ...[
+          _acceptedHeader(),
+          const SizedBox(height: 10),
+          for (final r in _accepted)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: _AcceptedCard(request: r),
+            ),
+        ],
         _sectionHeader(
-          context.l10n.incomingSection,
-          '2 ${context.l10n.pendingReview}',
+          l.pendingRequestsCount(_incoming.length),
+          l.awaitingYourResponse,
         ),
         const SizedBox(height: 10),
         ..._incoming.map(
           (r) => Padding(
             padding: const EdgeInsets.only(bottom: 14),
             child: _IncomingCard(request: r),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _acceptedHeader() {
+    final l = context.l10n;
+    return Row(
+      children: [
+        const Icon(Icons.inventory_rounded, size: 16, color: _green),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            l.acceptedInProgress.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              letterSpacing: 1.68,
+              color: AppColors.foreground,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          decoration: BoxDecoration(
+            color: _greenBg,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            l.activeCount(_accepted.length),
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              color: _green,
+            ),
           ),
         ),
       ],
@@ -304,8 +378,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w700,
-              fontSize: 10,
-              letterSpacing: 1.4,
+              fontSize: 12,
+              letterSpacing: 1.68,
               color: AppColors.mutedForeground,
             ),
           ),
@@ -387,14 +461,14 @@ class _IncomingCardState extends State<_IncomingCard> {
                       widget.request.name,
                       style: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                        fontSize: 14,
                         color: AppColors.foreground,
                       ),
                     ),
                     Text(
                       widget.request.subtitle,
                       style: GoogleFonts.dmSans(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: AppColors.mutedForeground,
                       ),
                     ),
@@ -426,55 +500,60 @@ class _IncomingCardState extends State<_IncomingCard> {
           const SizedBox(height: 12),
           // Details
           _detailRow(context.l10n.yourTrip, widget.request.trip),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           _detailRow(context.l10n.travelDate, widget.request.date),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           _detailRow(context.l10n.item, widget.request.item),
-          const SizedBox(height: 6),
-          _detailRow(context.l10n.weightAndSize, widget.request.weight),
+          if (widget.request.weight != null) ...[
+            const SizedBox(height: 8),
+            _detailRow(context.l10n.weightAndSize, widget.request.weight!),
+          ],
           const SizedBox(height: 12),
           // Photo row
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.camera_alt_rounded,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.request.photos,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      color: AppColors.foreground,
+          if (widget.request.photos != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.camera_alt_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.request.photos!,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        color: AppColors.foreground,
+                      ),
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Text(
-                    widget.request.photos.startsWith('2')
-                        ? context.l10n.viewPhotos
-                        : context.l10n.viewPhoto,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      color: AppColors.accent,
+                  GestureDetector(
+                    onTap: () {},
+                    child: Text(
+                      widget.request.photos!.startsWith('2')
+                          ? context.l10n.viewPhotos
+                          : context.l10n.viewPhoto,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        color: AppColors.accent,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ] else
+            const SizedBox(height: 4),
           // Action buttons
           Row(
             children: [
@@ -492,7 +571,7 @@ class _IncomingCardState extends State<_IncomingCard> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
-                          Icons.cancel_outlined,
+                          Icons.cancel_rounded,
                           size: 16,
                           color: AppColors.mutedForeground,
                         ),
@@ -921,15 +1000,10 @@ class _OutgoingCard extends StatelessWidget {
 
 // ── Data models ────────────────────────────────────────────────────────────
 class _IncomingRequest {
-  final String name,
-      subtitle,
-      amount,
-      trip,
-      date,
-      item,
-      weight,
-      photos,
-      imageUrl;
+  final String name, subtitle, amount, trip, date, item, imageUrl;
+
+  /// Shown only when the sender gave them.
+  final String? weight, photos;
   const _IncomingRequest({
     required this.name,
     required this.subtitle,
@@ -937,8 +1011,255 @@ class _IncomingRequest {
     required this.trip,
     required this.date,
     required this.item,
-    required this.weight,
-    required this.photos,
     required this.imageUrl,
+    this.weight,
+    this.photos,
   });
+}
+
+const _green = Color(0xFF168A68);
+const _greenBg = Color(0xFFE4F4EE);
+
+// ── Accepted request card ──────────────────────────────────────────────────
+class _AcceptedCard extends StatelessWidget {
+  final AcceptedDelivery request;
+  const _AcceptedCard({required this.request});
+
+  void _open(BuildContext context) => Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (context) => DeliveryTaskScreen(delivery: request),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return GestureDetector(
+      key: const ValueKey('accepted-request-card'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _open(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _green.withValues(alpha: 0.3), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Sender row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _green.withValues(alpha: 0.4),
+                      width: 2,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      request.senderPhotoUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stack) => Container(
+                        color: AppColors.secondary,
+                        child: const Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            request.senderName,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _greenBg,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              l.accepted,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 10,
+                                color: _green,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        request.senderSubtitle,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _greenBg,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        request.payout,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          color: _green,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l.yourPayout,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(color: AppColors.border, height: 1),
+            const SizedBox(height: 12),
+            _row(l.tripLabel, Text(request.trip, style: _value)),
+            const SizedBox(height: 8),
+            _row(l.item, Text(request.itemSummary, style: _value)),
+            const SizedBox(height: 8),
+            _row(
+              l.nextAction,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.add_a_photo_rounded,
+                    size: 13,
+                    color: AppColors.accent,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      l.attachReceivedPhoto,
+                      textAlign: TextAlign.right,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Material(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                key: const ValueKey('manage-delivery'),
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _open(context),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l.manageDeliveryAttachProof,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: AppColors.primaryForeground,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.arrow_forward,
+                        size: 15,
+                        color: AppColors.primaryForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static final _value = GoogleFonts.dmSans(
+    fontWeight: FontWeight.w600,
+    fontSize: 12,
+    color: AppColors.foreground,
+  );
+
+  Widget _row(String label, Widget value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Align(alignment: Alignment.centerRight, child: value),
+        ),
+      ],
+    );
+  }
 }

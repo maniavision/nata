@@ -1,31 +1,56 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../main.dart';
+import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/country_service.dart';
+import '../services/emergency_contact_service.dart';
+import '../services/face_verification_service.dart';
+import '../services/id_document_check_service.dart';
+import '../services/preferences_service.dart';
+import '../services/request_service.dart' show RequestInput;
+import '../widgets/country_code_picker_sheet.dart';
+import '../widgets/face_scan_step.dart';
 import '../services/verification_service.dart';
 import 'home_screen.dart';
+import 'profile_screen.dart';
 
 class IdentityVerificationScreen extends StatefulWidget {
-  /// Which step to open on: 0 = ID upload, 1 = face scan, 2 = success.
+  /// Which step to open on: 0 = ID upload, 1 = face scan (not part of the flow
+  /// at the moment), 2 = emergency contact, 3 = success.
   /// Only tests use anything other than the default.
   @visibleForTesting
   final int initialStep;
 
-  const IdentityVerificationScreen({super.key, this.initialStep = 0});
+  /// Override for tests; defaults to the real [EmergencyContactService].
+  final EmergencyContactService? emergencyService;
+
+  /// Override for tests; defaults to the real [IdDocumentCheckService].
+  final IdDocumentCheckService? idCheck;
+
+  /// Override for tests; defaults to the real [FaceVerificationService].
+  final FaceVerificationService? faceService;
+
+  const IdentityVerificationScreen({
+    super.key,
+    this.initialStep = 0,
+    this.emergencyService,
+    this.idCheck,
+    this.faceService,
+  });
 
   @override
   State<IdentityVerificationScreen> createState() =>
       _IdentityVerificationScreenState();
 }
 
-class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
-    with SingleTickerProviderStateMixin {
-  late int _step = widget.initialStep; // 0=ID upload, 1=face scan, 2=success
-  int _idType = 0; // 0=passport, 1=driver's lic, 2=national id
+class _IdentityVerificationScreenState
+    extends State<IdentityVerificationScreen> {
+  late int _step = widget.initialStep; // 0=ID, 1=face scan, 2=contact, 3=done
+  int _idType = 0; // index into IdDocumentType.values (the buttons' order)
 
   // Document picked by the user in Step 1
   Uint8List? _documentBytes;
@@ -34,28 +59,6 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
 
   bool _submitting = false;
   String? _submitError;
-
-  late final AnimationController _pulseCtrl;
-  late final Animation<double> _pulseAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(
-      begin: 0.6,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    super.dispose();
-  }
 
   void _onDocumentPicked(Uint8List bytes, String fileName, String mimeType) {
     setState(() {
@@ -80,20 +83,80 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
     });
 
     try {
-      // 1. Upload document to Supabase Storage
-      final path = await VerificationService().uploadDocument(
+      // 1. On-device checks: the document's text must be readable and hold
+      //    ID labels and the profile name, and it must show a face. If face
+      //    detection can't run, it goes through as pending for manual review.
+      final idType = IdDocumentType.values[_idType];
+      final check = await (widget.idCheck ?? IdDocumentCheckService()).check(
         bytes: _documentBytes!,
         fileName: _documentFileName!,
-        mimeType: _documentMimeType!,
+        idType: idType,
       );
+      if (!mounted) return;
+      final l = context.l10n;
+      final checkError = switch (check) {
+        IdCheckResult.notAnId => l.errIdNotRecognized,
+        IdCheckResult.wrongType => l.errIdWrongType(switch (idType) {
+          IdDocumentType.passport => l.idTypePassport,
+          IdDocumentType.driversLicense => l.idTypeDriversLicense,
+          IdDocumentType.nationalId => l.idTypeNationalId,
+        }),
+        IdCheckResult.nameMismatch => l.errIdNameMismatch,
+        IdCheckResult.noFace => l.errIdNoFace,
+        IdCheckResult.unreadable => l.errIdUnreadable,
+        IdCheckResult.passed || IdCheckResult.unverifiable => null,
+      };
+      if (checkError != null) {
+        setState(() {
+          _submitting = false;
+          _submitError = checkError;
+        });
+        return;
+      }
 
-      // 2. Create identity_verifications record
-      await VerificationService().submitVerification(
-        idTypeIndex: _idType,
-        documentPath: path,
-      );
+      // 2. Upload document to Supabase Storage
+      final path = await VerificationService()
+          .uploadDocument(
+            bytes: _documentBytes!,
+            fileName: VerificationService.idDocumentFileName(
+              _documentFileName!,
+            ),
+            mimeType: _documentMimeType!,
+          )
+          .timeout(const Duration(seconds: 60));
 
-      if (mounted) setState(() => _step = 2); // Skip face scan, go to success
+      // 3. Create identity_verifications record
+      await VerificationService()
+          .submitVerification(idType: idType, documentPath: path)
+          .timeout(const Duration(seconds: 30));
+
+      // 4. The ID image the selfie will be compared with. Without one (no
+      //    face found on it) there is nothing to match: the ID goes to manual
+      //    review and the face scan is skipped.
+      var faceMatchReady = false;
+      try {
+        final idFace = await IdDocumentCheckService.faceImage(
+          _documentBytes!,
+          _documentFileName!,
+        );
+        if (idFace != null) {
+          await (widget.faceService ?? FaceVerificationService()).uploadIdFace(
+            idFace,
+          );
+          faceMatchReady = true;
+        }
+      } catch (e) {
+        debugPrint('[VerificationScreen] ID face upload error: $e');
+      }
+
+      // On to the face scan, or the emergency contact. Clear the spinner
+      // too, or coming back to this step shows it forever.
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _step = faceMatchReady ? 1 : 2;
+        });
+      }
     } catch (e) {
       debugPrint('[VerificationScreen] submit error: $e');
       if (mounted) {
@@ -139,14 +202,21 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
                   submitError: _submitError,
                 )
               : _step == 1
-              ? _Step2(
+              ? FaceScanStep(
                   key: const ValueKey(1),
-                  pulseAnim: _pulseAnim,
-                  onNext: () => setState(() => _step = 2),
+                  service: widget.faceService ?? FaceVerificationService(),
+                  onDone: () => setState(() => _step = 2),
                   onBack: () => setState(() => _step = 0),
                 )
-              : _Step3(
+              : _step == 2
+              ? _StepEmergency(
                   key: const ValueKey(2),
+                  service: widget.emergencyService ?? EmergencyContactService(),
+                  onBack: () => setState(() => _step = 0),
+                  onDone: () => setState(() => _step = 3),
+                )
+              : _Step3(
+                  key: const ValueKey(3),
                   onContinue: () {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
@@ -154,6 +224,23 @@ class _IdentityVerificationScreenState extends State<IdentityVerificationScreen>
                       ),
                       (route) => false,
                     );
+                  },
+                  onViewProfile: () {
+                    // Same stack as opening Profile from the bottom nav: Home
+                    // at the root, Profile on top. Profile loads fresh, so it
+                    // shows the new verification status.
+                    Navigator.of(context)
+                      ..pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => const HomeScreen(),
+                        ),
+                        (route) => false,
+                      )
+                      ..push(
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileScreen(),
+                        ),
+                      );
                   },
                 ),
         ),
@@ -936,502 +1023,16 @@ class _Step1 extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Step 2 — Face Scan
-// ══════════════════════════════════════════════════════════════════════════════
-class _Step2 extends StatelessWidget {
-  final Animation<double> pulseAnim;
-  final VoidCallback onNext;
-  final VoidCallback onBack;
-
-  const _Step2({
-    super.key,
-    required this.pulseAnim,
-    required this.onNext,
-    required this.onBack,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildHeader(context),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            child: Column(
-              children: [
-                _buildStep1DoneBanner(context),
-                const SizedBox(height: 16),
-                Text(
-                  context.l10n.faceScanTitle,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 24,
-                    letterSpacing: -0.5,
-                    color: AppColors.foreground,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.faceScanBody,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildFaceCard(context),
-                const SizedBox(height: 16),
-                _buildSecurityRow(context),
-              ],
-            ),
-          ),
-        ),
-        _buildFooter(
-          buttonLabel: context.l10n.startBiometricScan,
-          buttonColor: AppColors.accent,
-          footnote: context.l10n.biometricLocalNote,
-          onTap: onNext,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: onBack,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: AppColors.foreground,
-                    size: 20,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          context.l10n.almostDone,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.dmSans(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            color: const Color(0xFF168A68),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      AnimatedBuilder(
-                        animation: pulseAnim,
-                        builder: (context, child) => Opacity(
-                          opacity: pulseAnim.value,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF168A68),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Text(
-                  context.l10n.cancel,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildProgressBar(step: 1, context: context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep1DoneBanner(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFE4F4EE),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF168A68).withValues(alpha: 0.3),
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4),
-        ],
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: Color(0xFF168A68),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check_circle_rounded,
-              size: 18,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.step1Completed,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.foreground,
-                  ),
-                ),
-                Text(
-                  context.l10n.passportVerified,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
-                    color: const Color(0xFF168A68),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {},
-            child: Text(
-              context.l10n.editId,
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                color: AppColors.mutedForeground,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFaceCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: AppColors.accent.withValues(alpha: 0.4),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Face frame
-          AnimatedBuilder(
-            animation: pulseAnim,
-            builder: (context, child) => Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 192,
-                  height: 192,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.accent.withValues(
-                        alpha: pulseAnim.value,
-                      ),
-                      width: 4,
-                      style: BorderStyle.solid,
-                    ),
-                    color: AppColors.secondary.withValues(alpha: 0.4),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Pulsing inner ring
-                      Container(
-                        width: 184,
-                        height: 184,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.accent.withValues(
-                              alpha: 0.3 * pulseAnim.value,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Photo
-                      ClipOval(
-                        child: Container(
-                          width: 144,
-                          height: 144,
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.network(
-                                'https://lh3.googleusercontent.com/a/ACg8ocJ97aGjnJ1qNWsqUS-lOIkKvwls8WK-SI54YY8POZz7eBd4JRE=s96-c',
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stack) =>
-                                    Container(
-                                      color: AppColors.secondary,
-                                      child: const Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                              ),
-                              Container(
-                                color: AppColors.accent.withValues(alpha: 0.08),
-                              ),
-                              Center(
-                                child: Container(
-                                  width: 112,
-                                  height: 112,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                      width: 2,
-                                      style: BorderStyle.solid,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Scan icon badge
-                Positioned(
-                  top: 0,
-                  right: 20,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.accent.withValues(alpha: 0.4),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.face_retouching_natural,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Instruction card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.visibility_rounded,
-                      size: 16,
-                      color: AppColors.accent,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        context.l10n.holdStill,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                          color: AppColors.foreground,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.nodHead,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 11,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Tips grid
-          Row(
-            children: [
-              _tipTile(
-                Icons.wb_sunny_rounded,
-                context.l10n.goodLight,
-                const Color(0xFFF59E0B),
-              ),
-              const SizedBox(width: 8),
-              _tipTile(
-                Icons.remove_red_eye_outlined,
-                context.l10n.noGlasses,
-                AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-              _tipTile(
-                Icons.sentiment_neutral_rounded,
-                context.l10n.neutralFace,
-                const Color(0xFF168A68),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tipTile(IconData icon, String label, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: AppColors.input,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.dmSans(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSecurityRow(BuildContext context) {
-    // A Wrap: the two notes sit side by side when there is room and stack
-    // when there is not (longer translations, small phones, large text).
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 16,
-      runSpacing: 6,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.lock_rounded, size: 14, color: Color(0xFF168A68)),
-            const SizedBox(width: 4),
-            Text(
-              context.l10n.encrypted256,
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.verified_user_rounded,
-              size: 14,
-              color: Color(0xFF168A68),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              context.l10n.gdprCompliant,
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
 // Step 3 — Verified success
 // ══════════════════════════════════════════════════════════════════════════════
 class _Step3 extends StatelessWidget {
   final VoidCallback onContinue;
-  const _Step3({super.key, required this.onContinue});
+  final VoidCallback onViewProfile;
+  const _Step3({
+    super.key,
+    required this.onContinue,
+    required this.onViewProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1635,7 +1236,8 @@ class _Step3 extends StatelessWidget {
                 width: double.infinity,
                 height: 44,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  key: const ValueKey('view-public-profile'),
+                  onPressed: onViewProfile,
                   icon: const Icon(
                     Icons.account_circle_rounded,
                     size: 16,
@@ -2012,4 +1614,665 @@ Widget _buildFooter({
       );
     },
   );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Emergency contact (last step)
+// ══════════════════════════════════════════════════════════════════════════════
+class _StepEmergency extends StatefulWidget {
+  final EmergencyContactService service;
+  final VoidCallback onBack;
+
+  /// Called once the contact is saved, or when the user chooses to skip.
+  final VoidCallback onDone;
+
+  const _StepEmergency({
+    super.key,
+    required this.service,
+    required this.onBack,
+    required this.onDone,
+  });
+
+  @override
+  State<_StepEmergency> createState() => _StepEmergencyState();
+}
+
+class _StepEmergencyState extends State<_StepEmergency> {
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  // Starts on the user's own country (as on the login screen); any other
+  // country can be picked.
+  Country _country = const Country(
+    isoCode: 'US',
+    name: 'United States',
+    phoneCode: '+1',
+  );
+  bool _countryChosenByUser = false;
+  EmergencyRelationship _relationship = EmergencyRelationship.friend;
+  bool _saving = false;
+  String? _error;
+
+  static const _icons = {
+    EmergencyRelationship.friend: Icons.group_rounded,
+    EmergencyRelationship.relative: Icons.diversity_3_rounded,
+    EmergencyRelationship.partner: Icons.favorite_rounded,
+    EmergencyRelationship.colleague: Icons.work_rounded,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _applyUserCountry();
+  }
+
+  Future<void> _applyUserCountry() async {
+    final iso = PreferencesService().countryIsoCode;
+    if (iso == _country.isoCode) return;
+    final country = await CountryService().byIsoCode(iso);
+    if (country == null || !mounted || _countryChosenByUser) return;
+    setState(() => _country = country);
+  }
+
+  Future<void> _pickCountry() async {
+    final country = await showCountryCodePicker(context, _country);
+    if (country == null || !mounted) return;
+    setState(() {
+      _country = country;
+      _countryChosenByUser = true;
+      _error = null;
+    });
+  }
+
+  /// The number in international format: the picked country code plus the
+  /// local number (its leading trunk "0" dropped, e.g. UK 07700 -> +44 7700).
+  /// A number typed with its own "+" code is taken as is.
+  static String? _internationalPhone(String phoneCode, String input) {
+    final typed = input.trim();
+    if (typed.startsWith('+')) return RequestInput.normalizePhone(typed);
+    final local = typed
+        .replaceAll(RegExp(r'[\s\-().]'), '')
+        .replaceFirst(RegExp(r'^0+'), '');
+    if (local.isEmpty) return null;
+    return RequestInput.normalizePhone('$phoneCode$local');
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  String _relationshipName(EmergencyRelationship r) {
+    final l = context.l10n;
+    switch (r) {
+      case EmergencyRelationship.friend:
+        return l.relFriend;
+      case EmergencyRelationship.relative:
+        return l.relRelative;
+      case EmergencyRelationship.partner:
+        return l.relPartner;
+      case EmergencyRelationship.colleague:
+        return l.relColleague;
+    }
+  }
+
+  Future<void> _finish() async {
+    if (_saving) return;
+    final l = context.l10n;
+    final name = _nameCtrl.text.trim();
+    if (name.length < 2) {
+      setState(() => _error = l.errContactName);
+      return;
+    }
+    final phone = _internationalPhone(_country.phoneCode, _phoneCtrl.text);
+    if (phone == null) {
+      setState(() => _error = l.errContactPhone);
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.service.save(
+        EmergencyContact(
+          fullName: name,
+          phone: phone,
+          relationship: _relationship,
+        ),
+      );
+      if (mounted) widget.onDone();
+    } catch (e) {
+      debugPrint('[EmergencyContact] save error: $e');
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error = context.l10n.errContactSave;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Column(
+      children: [
+        _header(l),
+        Expanded(
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.ecTitle,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 24,
+                    letterSpacing: -0.5,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l.ecBody,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _formCard(l),
+                const SizedBox(height: 16),
+                _privacyNote(l),
+              ],
+            ),
+          ),
+        ),
+        _footer(l),
+      ],
+    );
+  }
+
+  Widget _header(AppLocalizations l) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                key: const ValueKey('contact-back'),
+                onTap: widget.onBack,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: AppColors.foreground,
+                    size: 20,
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    l.required,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      letterSpacing: 1.4,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.accent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                key: const ValueKey('contact-skip'),
+                behavior: HitTestBehavior.opaque,
+                onTap: _saving ? null : widget.onDone,
+                child: Text(
+                  l.skipForNowId,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  l.emergencyContactLabel.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l.ecStepOf,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              for (var i = 0; i < 2; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _formCard(AppLocalizations l) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(l.ecFullName),
+          const SizedBox(height: 6),
+          _field(
+            fieldKey: 'contact-name',
+            icon: Icons.person_rounded,
+            controller: _nameCtrl,
+            hint: l.ecFullNameHint,
+            capitalization: TextCapitalization.words,
+            maxLength: 80,
+          ),
+          const SizedBox(height: 14),
+          _label(l.ecPhone),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              GestureDetector(
+                key: const ValueKey('contact-country'),
+                onTap: _pickCountry,
+                child: Container(
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.input,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        flagEmoji(_country.isoCode),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _country.phoneCode,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 16,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _field(
+                  fieldKey: 'contact-phone',
+                  icon: Icons.phone_rounded,
+                  controller: _phoneCtrl,
+                  hint: l.ecPhoneHint,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 24,
+                  formatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().\s]')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _label(l.ecRelationship),
+          const SizedBox(height: 8),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 3.6,
+            children: [
+              for (final r in EmergencyRelationship.values) _relTile(r),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _relTile(EmergencyRelationship r) {
+    final active = _relationship == r;
+    return GestureDetector(
+      key: ValueKey('contact-rel-${r.name}'),
+      onTap: () => setState(() {
+        _relationship = r;
+        _error = null;
+      }),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: active ? AppColors.primary : AppColors.input,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: active ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              _icons[r],
+              size: 16,
+              color: active ? Colors.white : AppColors.mutedForeground,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _relationshipName(r),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.dmSans(
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 12,
+                  color: active ? Colors.white : AppColors.foreground,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _privacyNote(AppLocalizations l) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(
+              Icons.verified_user_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              l.ecPrivacy,
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                height: 1.6,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _footer(AppLocalizations l) {
+    return Container(
+      color: AppColors.background,
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_error != null) ...[
+            Container(
+              key: const ValueKey('contact-error'),
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.destructive.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.destructive.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 16,
+                    color: AppColors.destructive,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _error!,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 12,
+                        color: AppColors.destructive,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              key: const ValueKey('contact-finish'),
+              onPressed: _saving ? null : _finish,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.primary.withValues(
+                  alpha: 0.6,
+                ),
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shape: const StadiumBorder(),
+              ),
+              child: _saving
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            l.ecFinish,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.ecFootnote,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _label(String text) => Text(
+    text.toUpperCase(),
+    maxLines: 2,
+    overflow: TextOverflow.ellipsis,
+    style: GoogleFonts.dmSans(
+      fontWeight: FontWeight.w700,
+      fontSize: 11,
+      letterSpacing: 1.3,
+      color: AppColors.mutedForeground,
+    ),
+  );
+
+  Widget _field({
+    required String fieldKey,
+    required IconData icon,
+    required TextEditingController controller,
+    required String hint,
+    TextInputType? keyboardType,
+    TextCapitalization capitalization = TextCapitalization.none,
+    int? maxLength,
+    List<TextInputFormatter>? formatters,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.input,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              key: ValueKey(fieldKey),
+              controller: controller,
+              keyboardType: keyboardType,
+              textCapitalization: capitalization,
+              maxLength: maxLength,
+              inputFormatters: formatters,
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.foreground,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  color: AppColors.mutedForeground,
+                ),
+                counterText: '',
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
