@@ -122,7 +122,7 @@ void main() {
       expect(find.text('New'), findsOneWidget);
     });
 
-    testWidgets('renders route, price and capacity for the trip', (
+    testWidgets('renders route and capacity for the trip, without a price', (
       tester,
     ) async {
       await tester.pumpWidget(buildTravelerProfile());
@@ -132,9 +132,11 @@ void main() {
       expect(find.text('London'), findsOneWidget);
       expect(find.text('NG · Jun 22'), findsOneWidget);
       expect(find.text('GB · Jun 23'), findsOneWidget);
-      expect(find.text('USD 35.00'), findsOneWidget);
+      expect(find.text('USD 35.00'), findsNothing);
       expect(find.text('Up to 3.0 kg'), findsOneWidget);
-      expect(find.text('Shoebox (30×20×15 cm)'), findsOneWidget);
+      // The size over its dimensions, as in the design.
+      expect(find.text('Shoebox'), findsOneWidget);
+      expect(find.text('Max 30×20×15 cm'), findsOneWidget);
     });
 
     testWidgets('renders send request button', (tester) async {
@@ -142,6 +144,25 @@ void main() {
       await tester.pump();
 
       expect(find.text('Send Request'), findsOneWidget);
+    });
+
+    testWidgets('Message is locked until payment', (tester) async {
+      await tester.pumpWidget(buildTravelerProfile());
+      await tester.pump();
+
+      final locked = find.byKey(const ValueKey('profile-message-locked'));
+      expect(locked, findsOneWidget);
+      expect(
+        find.descendant(of: locked, matching: find.byIcon(Icons.lock_rounded)),
+        findsOneWidget,
+      );
+
+      await tester.tap(locked);
+      await tester.pump();
+
+      expect(find.text('Messaging unlocks after payment.'), findsOneWidget);
+      // Nothing opened.
+      expect(find.text('Traveler Profile'), findsOneWidget);
     });
   });
 
@@ -201,14 +222,92 @@ void main() {
       expect(find.text('Upcoming trips'), findsOneWidget);
     });
 
-    testWidgets('shows pricing text and the trip price', (tester) async {
+    testWidgets('shows how pricing is calculated but no price amount', (
+      tester,
+    ) async {
       await pump(tester);
 
       expect(
-        find.textContaining('Pricing:', findRichText: true),
+        find.textContaining(
+          'Pricing: Calculated per distance, item size & weight',
+          findRichText: true,
+        ),
         findsOneWidget,
       );
-      expect(find.text('USD 35.00'), findsOneWidget);
+      expect(find.textContaining('USD'), findsNothing);
+      expect(find.textContaining('35'), findsNothing);
+    });
+
+    group('delivery timing', () {
+      Future<void> pumpDates(
+        WidgetTester tester,
+        DateTime departure,
+        DateTime arrival, {
+        Locale locale = const Locale('en'),
+      }) async {
+        tester.view.physicalSize = const Size(900, 2600);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          appWrapper(
+            TravelerProfileScreen(
+              trip: sampleTrip(departureDate: departure, arrivalDate: arrival),
+              service: FakeTravelerService(),
+            ),
+            locale: locale,
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('same-day arrival shows "Same day delivery"', (tester) async {
+        await pumpDates(
+          tester,
+          DateTime(2030, 6, 22, 14, 30),
+          DateTime(2030, 6, 22, 21, 5),
+        );
+
+        expect(find.text('Same day delivery'), findsOneWidget);
+        expect(find.textContaining('Deliver in'), findsNothing);
+      });
+
+      testWidgets('next-day arrival shows "Deliver in 1 day"', (tester) async {
+        // Overnight flight: under 24h apart but on different dates.
+        await pumpDates(
+          tester,
+          DateTime(2030, 6, 22, 23, 0),
+          DateTime(2030, 6, 23, 6, 0),
+        );
+
+        expect(find.text('Deliver in 1 day'), findsOneWidget);
+        expect(find.text('Same day delivery'), findsNothing);
+      });
+
+      testWidgets('multi-day gap shows "Deliver in N days"', (tester) async {
+        await pumpDates(tester, DateTime(2030, 6, 22), DateTime(2030, 6, 25));
+
+        expect(find.text('Deliver in 3 days'), findsOneWidget);
+      });
+
+      testWidgets('is localized in French', (tester) async {
+        await pumpDates(
+          tester,
+          DateTime(2030, 6, 22),
+          DateTime(2030, 6, 22),
+          locale: const Locale('fr'),
+        );
+        expect(find.text('Livraison le même jour'), findsOneWidget);
+      });
+
+      testWidgets('is localized in Spanish', (tester) async {
+        await pumpDates(
+          tester,
+          DateTime(2030, 6, 22),
+          DateTime(2030, 6, 24),
+          locale: const Locale('es'),
+        );
+        expect(find.text('Entrega en 2 días'), findsOneWidget);
+      });
     });
 
     testWidgets('does not show invented reviews', (tester) async {
@@ -321,29 +420,31 @@ void main() {
         expect(find.text('UPCOMING TRIPS'), findsNothing);
       });
 
-      testWidgets('picking another trip switches the route, price and limits', (
-        tester,
-      ) async {
-        await pump(
-          tester,
-          trip: lagosLondon,
-          profile: sampleProfile([lagosLondon, abujaDubai]),
-        );
-        expect(find.text('USD 35.00'), findsOneWidget);
+      testWidgets(
+        'picking another trip switches the route, timing and limits',
+        (tester) async {
+          await pump(
+            tester,
+            trip: lagosLondon,
+            profile: sampleProfile([lagosLondon, abujaDubai]),
+          );
+          expect(find.text('Same day delivery'), findsOneWidget);
 
-        await tester.tap(find.byKey(const ValueKey('upcoming-trip-trip-b')));
-        await tester.pumpAndSettle();
+          await tester.tap(find.byKey(const ValueKey('upcoming-trip-trip-b')));
+          await tester.pumpAndSettle();
 
-        expect(find.text('USD 50.00'), findsOneWidget);
-        expect(find.text('Up to 10.0 kg'), findsOneWidget);
-        expect(find.text('Backpack size'), findsOneWidget);
-        expect(find.text('AE · Jul 5'), findsOneWidget);
-        // Subtitle follows the selected trip too.
-        expect(
-          find.text('Frequent traveler on Abuja ⇄ Dubai route'),
-          findsOneWidget,
-        );
-      });
+          expect(find.text('Deliver in 1 day'), findsOneWidget);
+          expect(find.text('USD 50.00'), findsNothing);
+          expect(find.text('Up to 10.0 kg'), findsOneWidget);
+          expect(find.text('Backpack size'), findsOneWidget);
+          expect(find.text('AE · Jul 5'), findsOneWidget);
+          // Subtitle follows the selected trip too.
+          expect(
+            find.text('Frequent traveler on Abuja ⇄ Dubai route'),
+            findsOneWidget,
+          );
+        },
+      );
 
       testWidgets('the loaded profile name replaces the search-result name', (
         tester,

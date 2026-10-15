@@ -7,6 +7,7 @@ import '../main.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
 import 'delivery_request_screen.dart';
+import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 
 /// Shows a traveler's profile and the trip the user picked.
@@ -38,6 +39,19 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   int get _delivered => _profile?.itemsDelivered ?? widget.trip.itemsDelivered;
 
   static String _fmtDate(DateTime d) => DateFormat('MMM d').format(d);
+
+  /// "Same day delivery" when departure and arrival fall on the same calendar
+  /// day, otherwise "Deliver in N days" based on the calendar-day gap.
+  String _deliveryTiming(AppLocalizations l) {
+    final dep = _trip.departureDate;
+    final arr = _trip.arrivalDate;
+    final days = DateTime.utc(
+      arr.year,
+      arr.month,
+      arr.day,
+    ).difference(DateTime.utc(dep.year, dep.month, dep.day)).inDays;
+    return days <= 0 ? l.sameDayDelivery : l.deliverInDays(days);
+  }
 
   @override
   void initState() {
@@ -461,6 +475,25 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
           Row(
             children: [
               const Icon(
+                Icons.access_time_filled_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _deliveryTiming(l),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(
                 Icons.local_offer_rounded,
                 size: 16,
                 color: AppColors.accent,
@@ -484,15 +517,6 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                     fontSize: 12,
                     color: AppColors.mutedForeground,
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${_trip.currency} ${_trip.price.toStringAsFixed(2)}',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                  color: AppColors.foreground,
                 ),
               ),
             ],
@@ -521,19 +545,22 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             children: [
               Expanded(
                 child: _capacityTile(
-                  label: 'WEIGHT LIMIT',
+                  label: l.weightLimit.toUpperCase(),
                   value: _trip.maxWeightKg == null
                       ? '—'
-                      : 'Up to ${_trip.maxWeightKg!.toStringAsFixed(1)} kg',
+                      : l.upToKg(_trip.maxWeightKg!.toStringAsFixed(1)),
                   sub: l.checkBaggage,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _capacityTile(
-                  label: 'SIZE LIMIT',
-                  value: _trip.maxSize ?? '—',
-                  sub: '',
+                  label: l.sizeLimit.toUpperCase(),
+                  // "Shoebox" over "Max 30×20×15 cm", as in the design.
+                  value: l
+                      .tripSize(_trip.maxSize)
+                      .replaceAll(RegExp(r'\s*\(.*\)'), ''),
+                  sub: _sizeDims == null ? '' : l.maxDims(_sizeDims!),
                 ),
               ),
             ],
@@ -745,7 +772,59 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
     );
   }
 
+  /// "30×20×15 cm" from "Shoebox (30×20×15 cm)", if the size has them.
+  String? get _sizeDims =>
+      RegExp(r'\((.*)\)').firstMatch(_trip.maxSize ?? '')?.group(1)?.trim();
+
   // ── Send request bar ───────────────────────────────────────────────────────
+  /// Messaging stays locked until the sender has paid for a delivery; chat
+  /// then opens from Messages.
+  Widget _buildLockedMessageButton(BuildContext context) {
+    final l = context.l10n;
+    return Semantics(
+      button: true,
+      enabled: false,
+      label: '${l.messageLocked}. ${l.messageUnlocksAfterPayment}',
+      child: GestureDetector(
+        key: const ValueKey('profile-message-locked'),
+        onTap: () => ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l.messageUnlocksAfterPayment))),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.lock_rounded,
+                size: 16,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  l.messageLocked,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSendRequestBar(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
@@ -761,38 +840,46 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             16,
             16 + MediaQuery.of(context).padding.bottom,
           ),
-          child: SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => DeliveryRequestScreen(trip: _trip),
+          child: Row(
+            children: [
+              Expanded(child: _buildLockedMessageButton(context)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              DeliveryRequestScreen(trip: _trip),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.send_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      context.l10n.sendRequest,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.white,
+                      elevation: 1,
+                      shadowColor: const Color(0x33000000),
+                      shape: const StadiumBorder(),
+                    ),
                   ),
-                );
-              },
-              icon: const Icon(
-                Icons.send_outlined,
-                size: 18,
-                color: Colors.white,
-              ),
-              label: Text(
-                context.l10n.sendRequest,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: Colors.white,
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                elevation: 1,
-                shadowColor: const Color(0x33000000),
-                shape: const StadiumBorder(),
-              ),
-            ),
+            ],
           ),
         ),
       ),

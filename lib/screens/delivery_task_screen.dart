@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
+import '../services/payment_service.dart';
+import 'delivery_confirm_screen.dart';
 import 'messages_screen.dart';
 
 /// A request the traveler accepted and is now carrying. Sample data for now,
@@ -41,6 +43,10 @@ class AcceptedDelivery {
   final String recipientPhone;
   final String meetingSpot;
 
+  /// The 4-digit code the sender gave the recipient, which the recipient
+  /// tells the traveler at handoff. Sample data: checked on the device.
+  final String? deliveryPin;
+
   const AcceptedDelivery({
     required this.orderId,
     required this.senderName,
@@ -61,6 +67,7 @@ class AcceptedDelivery {
     required this.recipientName,
     required this.recipientPhone,
     required this.meetingSpot,
+    this.deliveryPin,
   });
 }
 
@@ -78,33 +85,19 @@ class DeliveryTaskScreen extends StatefulWidget {
   /// Override for tests; defaults to a camera / library sheet.
   final PhotoPicker? photoPicker;
 
+  /// Passed on to Delivery & Payout Release (tests); defaults to the real
+  /// [PaymentService].
+  final PaymentService? paymentService;
+
   const DeliveryTaskScreen({
     super.key,
     required this.delivery,
     this.photoPicker,
+    this.paymentService,
   });
 
-  @override
-  State<DeliveryTaskScreen> createState() => _DeliveryTaskScreenState();
-}
-
-class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
-  /// The handover photo the traveler attached (step 2), if any.
-  Uint8List? _handoverPhoto;
-  String? _error;
-
-  AcceptedDelivery get d => widget.delivery;
-
-  Future<void> _attachHandoverPhoto() async {
-    final photo = await (widget.photoPicker ?? _pickPhoto)(context);
-    if (photo == null || !mounted) return;
-    setState(() {
-      _handoverPhoto = photo;
-      _error = null;
-    });
-  }
-
-  static Future<Uint8List?> _pickPhoto(BuildContext context) async {
+  /// Takes a photo or picks one from the library (camera / library sheet).
+  static Future<Uint8List?> pickPhoto(BuildContext context) async {
     final l = context.l10n;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -151,15 +144,46 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
     }
   }
 
+  @override
+  State<DeliveryTaskScreen> createState() => _DeliveryTaskScreenState();
+}
+
+class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
+  /// The handover photo the traveler attached (step 2), if any.
+  Uint8List? _handoverPhoto;
+  String? _error;
+
+  AcceptedDelivery get d => widget.delivery;
+
+  Future<void> _attachHandoverPhoto() async {
+    final photo = await (widget.photoPicker ?? DeliveryTaskScreen.pickPhoto)(
+      context,
+    );
+    if (photo == null || !mounted) return;
+    setState(() {
+      _handoverPhoto = photo;
+      _error = null;
+    });
+  }
+
   void _call(String phone) {
     launchUrl(Uri(scheme: 'tel', path: phone.replaceAll(' ', '')));
   }
 
+  /// Opens Delivery & Payout Release: the handoff is confirmed there with
+  /// the recipient's PIN or this handoff photo.
   void _confirmDelivery() {
-    if (_handoverPhoto == null) {
-      setState(() => _error = context.l10n.attachHandoverFirst);
-    }
-    // Releasing the escrow payout is not connected yet (sample data).
+    setState(() => _error = null);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DeliveryConfirmScreen(
+          delivery: d,
+          handoverPhoto: _handoverPhoto,
+          photoPicker: widget.photoPicker,
+          paymentService: widget.paymentService,
+        ),
+      ),
+    );
   }
 
   @override

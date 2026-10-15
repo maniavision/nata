@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:carrywise_app/screens/otp_screen.dart';
+import 'package:carrywise_app/services/preferences_service.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../helpers/app_wrapper.dart';
+import '../helpers/mock_auth_service.dart';
 
 void main() {
+  languageAfterSignInTests();
   group('OtpScreen UI', () {
     Widget buildOtp({bool isSignUp = false, VoidCallback? onSuccess}) {
       return appWrapper(
@@ -121,6 +126,85 @@ void main() {
 
       expect(find.text('Verify Phone'), findsOneWidget);
       expect(find.byType(TextField), findsNWidgets(6));
+    });
+  });
+}
+
+void languageAfterSignInTests() {
+  group('Language after signing in', () {
+    late MockAuthService auth;
+    late int saves;
+    late bool signedIn;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      await PreferencesService().resetAll();
+      auth = MockAuthService();
+      when(
+        () => auth.verifyOtp(any(), any()),
+      ).thenAnswer((_) async => fakeAuthResponse());
+      when(
+        () => auth.updateProfile(
+          firstName: any(named: 'firstName'),
+          lastName: any(named: 'lastName'),
+        ),
+      ).thenAnswer((_) async {});
+      saves = 0;
+      signedIn = false;
+    });
+    tearDown(() => PreferencesService().resetAll());
+
+    Future<void> signIn(WidgetTester tester, {bool isSignUp = false}) async {
+      await tester.pumpWidget(
+        appWrapper(
+          OtpScreen(
+            phone: '+2348034567890',
+            isSignUp: isSignUp,
+            firstName: isSignUp ? 'Fortune' : '',
+            lastName: isSignUp ? 'Niama' : '',
+            authService: auth,
+            saveSettings: () async => saves++,
+            onSuccess: () => signedIn = true,
+          ),
+        ),
+      );
+      await tester.pump();
+      final boxes = find.byType(TextField);
+      for (var i = 0; i < 6; i++) {
+        await tester.enterText(boxes.at(i), '${i + 1}');
+        await tester.pump();
+      }
+      // The last digit submits the code. (The spinner keeps turning, as the
+      // test does not leave the screen, so no pumpAndSettle.)
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    testWidgets('the language picked before signing in is kept and saved', (
+      tester,
+    ) async {
+      // Picked on the language & currency screen.
+      PreferencesService().setLanguage(AppLanguage.french);
+      PreferencesService().setCurrency(AppCurrency.eur);
+
+      await signIn(tester);
+
+      expect(signedIn, isTrue);
+      expect(PreferencesService().language, AppLanguage.french);
+      expect(PreferencesService().currency, AppCurrency.eur);
+      // Saved to the account, not replaced by what the account had.
+      expect(saves, 1);
+    });
+
+    testWidgets('signing up saves it too', (tester) async {
+      PreferencesService().setLanguage(AppLanguage.spanish);
+
+      await signIn(tester, isSignUp: true);
+
+      expect(signedIn, isTrue);
+      expect(PreferencesService().language, AppLanguage.spanish);
+      expect(saves, 1);
     });
   });
 }

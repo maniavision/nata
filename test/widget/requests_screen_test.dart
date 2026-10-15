@@ -47,7 +47,7 @@ void main() {
       expect(inCard('Sarah Adeleke'), findsOneWidget);
       expect(inCard('Accepted'), findsOneWidget);
       expect(inCard('Sender · Escrow Funded'), findsOneWidget);
-      expect(inCard('\$38.00'), findsOneWidget);
+      expect(inCard('\$38'), findsOneWidget);
       expect(inCard('Your payout'), findsOneWidget);
       expect(inCard('Lagos (LOS) → London (LHR)'), findsOneWidget);
       expect(inCard('iPad Mini (Sealed Box · 0.6 kg)'), findsOneWidget);

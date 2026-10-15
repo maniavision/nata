@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../l10n/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
@@ -159,8 +160,8 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   }
 
   String get _hintText => _step == 0
-      ? 'Search country...'
-      : 'Search city in ${_selectedCountry?.name}...';
+      ? context.l10n.searchCountryHint
+      : context.l10n.searchCityIn(_selectedCountry?.name ?? '');
 
   String _flagEmoji(String isoCode) {
     if (isoCode.length != 2) return '🌍';
@@ -235,7 +236,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
           ),
         Expanded(
           child: Text(
-            _step == 0 ? widget.title : 'Select City',
+            _step == 0 ? widget.title : context.l10n.selectCityTitle,
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w800,
               fontSize: 18,
@@ -346,7 +347,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
           color: AppColors.mutedForeground,
         ),
         Text(
-          'Select city',
+          context.l10n.selectCity,
           style: GoogleFonts.dmSans(
             fontSize: 13,
             color: AppColors.mutedForeground,
@@ -380,8 +381,8 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
             const SizedBox(height: 8),
             Text(
               _step == 0
-                  ? 'No countries found'
-                  : 'No cities found in ${_selectedCountry?.name}',
+                  ? context.l10n.noCountriesFound
+                  : context.l10n.noCitiesFoundIn(_selectedCountry?.name ?? ''),
               style: GoogleFonts.dmSans(
                 fontSize: 14,
                 color: AppColors.mutedForeground,

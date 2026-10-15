@@ -1,0 +1,180 @@
+import 'package:carrywise_app/screens/payment_settings_screen.dart';
+import 'package:carrywise_app/screens/profile_screen.dart';
+import 'package:carrywise_app/services/payment_service.dart';
+import 'package:carrywise_app/services/preferences_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../helpers/app_wrapper.dart';
+import '../helpers/fakes.dart';
+
+void main() {
+  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
+  tearDown(() => PreferencesService().setCurrency(AppCurrency.usd));
+
+  void bigScreen(WidgetTester tester) {
+    tester.view.physicalSize = const Size(900, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+  }
+
+  late FakePaymentService payments;
+  setUp(
+    () => payments = FakePaymentService(
+      methods: samplePaymentMethods(),
+      accounts: [samplePayoutAccount()],
+    ),
+  );
+
+  Future<void> pump(WidgetTester tester, {Locale? locale}) async {
+    bigScreen(tester);
+    await tester.pumpWidget(
+      appWrapper(
+        PaymentSettingsScreen(
+          availableBalance: 320,
+          escrowBalance: 180,
+          holderName: 'Fortune Niama',
+          service: payments,
+        ),
+        locale: locale ?? const Locale('en'),
+      ),
+    );
+    await tester.pump();
+  }
+
+  group('PaymentSettingsScreen', () {
+    testWidgets('shows the wallet balances it is given', (tester) async {
+      await pump(tester);
+
+      expect(find.text('Payment Settings'), findsOneWidget);
+      expect(find.text('\$320.00'), findsOneWidget);
+      expect(find.text('\$180.00 held in Escrow'), findsOneWidget);
+    });
+
+    testWidgets('shows every section of the design', (tester) async {
+      await pump(tester);
+      await tester.pumpAndSettle();
+
+      for (final t in [
+        'PAYMENT METHODS',
+        'PAYOUT ACCOUNT',
+        'PREFERENCES',
+        'TRANSACTIONS',
+        'Apple Pay',
+        "Fortune's iPhone",
+        'Visa •••• 4242',
+        'Barclays Bank',
+        'GB •••• 2093 · Fortune Niama',
+        'Add payout account',
+        'Default Currency',
+        'Payout Schedule',
+        'Automatic',
+        'MacBook Air M2 delivery',
+      ]) {
+        expect(find.text(t), findsOneWidget, reason: t);
+      }
+    });
+
+    testWidgets("the default currency is the user's", (tester) async {
+      PreferencesService().setCurrency(AppCurrency.eur);
+      await pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('EUR (€)'), findsOneWidget);
+    });
+
+    testWidgets('Remove deletes the card', (tester) async {
+      await pump(tester);
+
+      await tester.tap(
+        find.byKey(const ValueKey('payment-method-remove-visa-4242')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(payments.saved.map((m) => m.id), ['apple-pay']);
+      expect(find.text('Visa •••• 4242'), findsNothing);
+      expect(find.text('Apple Pay'), findsOneWidget);
+    });
+
+    testWidgets('no methods or payout account yet', (tester) async {
+      payments = FakePaymentService();
+      await pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('No payment method yet'), findsOneWidget);
+      expect(find.text('No payout account yet.'), findsOneWidget);
+    });
+
+    testWidgets('a load failure says so', (tester) async {
+      payments.failLoad = true;
+      await pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Could not load your payment settings. Please try again.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a failed removal keeps the card and says so', (tester) async {
+      await pump(tester);
+      await tester.pumpAndSettle();
+      payments.failSave = true;
+
+      await tester.tap(
+        find.byKey(const ValueKey('payment-method-remove-visa-4242')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Visa •••• 4242'), findsOneWidget);
+      expect(
+        find.text('Could not save the change. Please try again.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows the saved payout schedule', (tester) async {
+      payments.schedule = PayoutSchedule.weekly;
+      await pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Weekly'), findsOneWidget);
+    });
+
+    testWidgets('is translated', (tester) async {
+      await pump(tester, locale: const Locale('fr'));
+
+      expect(find.text('Paramètres de paiement'), findsOneWidget);
+      expect(find.text('MOYENS DE PAIEMENT'), findsOneWidget);
+    });
+  });
+
+  group('from Profile', () {
+    testWidgets('the Payment Settings row opens it with the balances', (
+      tester,
+    ) async {
+      bigScreen(tester);
+      await tester.pumpWidget(
+        appWrapper(ProfileScreen(authService: FakeAuthService())),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Payment Settings'), findsOneWidget);
+      expect(find.text('Payment methods & payout account'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('profile-payment-settings')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaymentSettingsScreen), findsOneWidget);
+      // FakeAuthService: 320 available, 150 in escrow.
+      expect(
+        find.descendant(
+          of: find.byType(PaymentSettingsScreen),
+          matching: find.text('\$320.00'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('\$150.00 held in Escrow'), findsWidgets);
+    });
+  });
+}

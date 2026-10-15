@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import 'home_screen.dart';
@@ -20,19 +21,27 @@ class _ReviewScreenState extends State<ReviewScreen> {
   bool _submitted = false;
 
   static const _tags = [
-    '📦 Item was intact',
-    '⏰ On time',
-    '💬 Great communicator',
-    '🔒 Followed all rules',
-    '✈️ Smooth handoff',
-    '⭐ Would use again',
+    'intact',
+    'onTime',
+    'communicator',
+    'rules',
+    'handoff',
+    'again',
   ];
 
-  final Set<String> _selectedTags = {
-    '📦 Item was intact',
-    '⏰ On time',
-    '💬 Great communicator',
-  };
+  final Set<String> _selectedTags = {'intact', 'onTime', 'communicator'};
+
+  String _tagLabel(String tag) {
+    final l = context.l10n;
+    return switch (tag) {
+      'intact' => '📦 ${l.reviewTagIntact}',
+      'onTime' => '⏰ ${l.reviewTagOnTime}',
+      'communicator' => '💬 ${l.reviewTagCommunicator}',
+      'rules' => '🔒 ${l.reviewTagRules}',
+      'handoff' => '✈️ ${l.reviewTagHandoff}',
+      _ => '⭐ ${l.reviewTagAgain}',
+    };
+  }
 
   @override
   void dispose() {
@@ -200,7 +209,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ],
                 ),
                 Text(
-                  'Delivered your iPhone 15 Pro · Jun 22',
+                  context.l10n.deliveredYourItem(
+                    'iPhone 15 Pro',
+                    DateFormat.MMMd(
+                      Localizations.localeOf(context).toString(),
+                    ).format(DateTime(2025, 6, 22)),
+                  ),
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     color: AppColors.mutedForeground,
@@ -358,7 +372,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                 ),
                 child: Text(
-                  tag,
+                  _tagLabel(tag),
                   style: GoogleFonts.dmSans(
                     fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 12,

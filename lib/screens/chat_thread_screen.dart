@@ -474,9 +474,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
         ? l.notifToday
         : diff == 1
         ? l.yesterdayLabel
-        : DateFormat(
-            day.year == now.year ? 'MMM d' : 'MMM d, yyyy',
-          ).format(day);
+        : (day.year == now.year
+                  ? DateFormat.MMMd(Localizations.localeOf(context).toString())
+                  : DateFormat.yMMMd(
+                      Localizations.localeOf(context).toString(),
+                    ))
+              .format(day);
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -614,8 +617,44 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
   }
 
   // ── Input bar ──────────────────────────────────────────────────────────────
+  /// Before payment: no input, just why.
+  Widget _buildLockedFooter() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        key: const ValueKey('chat-locked'),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withValues(alpha: 0.6),
+          border: const Border(top: BorderSide(color: AppColors.border)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.lock_rounded,
+              size: 16,
+              color: AppColors.mutedForeground,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                context.l10n.chatLockedUntilPayment,
+                style: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFooter() {
     final l = context.l10n;
+    if (!_c.chatUnlocked) return _buildLockedFooter();
     return SafeArea(
       top: false,
       child: Container(

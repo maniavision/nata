@@ -75,7 +75,15 @@ class CostCalculator {
   }
 }
 
+/// Rounds up to a whole amount. The tiny allowance keeps a value a double
+/// stores as 3.0000000000000004 (30 × 0.1) at 3, not 4.
+int ceilWhole(double value) => (value - 1e-9).ceil();
+
 /// Everything about the price of one request, in US dollars.
+///
+/// Prices are whole dollars, always rounded up: the cost is the formula's
+/// result rounded up, and the fee is 10% of that, rounded up. The database
+/// does the same (migration 20240128).
 class DeliveryQuote {
   /// Kilometres between the departure and the arrival city.
   final double distanceKm;
@@ -85,10 +93,11 @@ class DeliveryQuote {
 
   final double weightKg;
 
-  /// The delivery cost.
+  /// The delivery cost, in whole dollars.
   final double costUsd;
 
-  /// Platform protection & escrow: 10% of the cost.
+  /// Platform protection & escrow: 10% of the cost, rounded up to whole
+  /// dollars.
   final double feeUsd;
 
   const DeliveryQuote({
@@ -101,7 +110,7 @@ class DeliveryQuote {
 
   static const feeRate = 0.10;
 
-  double get totalUsd => _cents(costUsd + feeUsd);
+  double get totalUsd => costUsd + feeUsd;
 
   /// The hours from [now] to the day of departure. A trip only has a date, so
   /// whole days are counted (in UTC, the same as the database). A flight
@@ -137,14 +146,13 @@ class DeliveryQuote {
       deliveryTimeInHours: hours,
       weightKg: weightKg,
     );
+    final wholeCost = ceilWhole(cost).toDouble();
     return DeliveryQuote(
       distanceKm: distanceKm,
       hours: hours,
       weightKg: weightKg,
-      costUsd: cost,
-      feeUsd: _cents(cost * feeRate),
+      costUsd: wholeCost,
+      feeUsd: ceilWhole(wholeCost * feeRate).toDouble(),
     );
   }
-
-  static double _cents(double v) => ((v * 100) + 1e-9).round() / 100;
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -6,8 +7,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/home_search_memory.dart';
 import '../services/auth_service.dart';
+import '../services/city_service.dart';
+import '../services/country_service.dart';
 import '../services/notification_service.dart';
+import '../services/preferences_service.dart';
 import '../services/traveler_ranking.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
@@ -17,6 +22,9 @@ import 'add_trip_screen.dart';
 import 'notifications_screen.dart';
 import 'traveler_profile_screen.dart';
 import 'traveler_results_screen.dart';
+
+/// The capital of a country (by ISO code) as a departure, or null.
+typedef CapitalLookup = Future<LocationSelection?> Function(String countryCode);
 
 class HomeScreen extends StatefulWidget {
   /// Optional overrides (used by tests); default to the real services.
@@ -28,13 +36,36 @@ class HomeScreen extends StatefulWidget {
   /// seeded one).
   final Random? random;
 
+  /// Finds the default departure (the capital of the user's country); tests
+  /// replace it.
+  final CapitalLookup? capitalLookup;
+
   const HomeScreen({
     super.key,
     this.authService,
     this.travelerService,
     this.notificationService,
     this.random,
+    this.capitalLookup,
   });
+
+  /// The capital in nata.cities (is_capital), named like the location sheet
+  /// names its picks ("Abuja, Nigeria").
+  static Future<LocationSelection?> defaultCapitalLookup(
+    String countryCode,
+  ) async {
+    final iso = countryCode.trim().toUpperCase();
+    final capital = await CityService().capitalOf(iso);
+    if (capital == null) return null;
+    final country = (await CountryService().byIsoCode(iso))?.name ?? iso;
+    return LocationSelection(
+      country: country,
+      countryCode: iso,
+      city: capital.name,
+      displayLabel: '${capital.name}, $country',
+      cityId: capital.id,
+    );
+  }
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -49,12 +80,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String? _avatarPath;
   String _displayName = '...';
 
-  LocationSelection? _departure = const LocationSelection(
-    country: 'Nigeria',
-    countryCode: 'NG',
-    city: 'Lagos',
-    displayLabel: 'Lagos, Nigeria',
-  );
+  /// Starts on the capital of the user's country of residence (see
+  /// [_loadDefaultDeparture]); null until then, or if it isn't known.
+  LocationSelection? _departure;
   LocationSelection? _destination;
 
   // Upcoming travelers for the selected route (preview list + calendar).
@@ -84,11 +112,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ? _selectedDate!.add(const Duration(days: 3))
             : _selectedDate);
 
+  /// Puts the search back as the user left it (see [HomeSearchMemory]).
+  void _restoreSearch() {
+    _departure = HomeSearchMemory.departure;
+    _destination = HomeSearchMemory.destination;
+    _selectedDate = HomeSearchMemory.dateFrom(DateTime.now());
+    _flexibleDate = _selectedDate != null && HomeSearchMemory.flexible;
+  }
+
+  void _rememberSearch() {
+    HomeSearchMemory.departure = _departure;
+    HomeSearchMemory.destination = _destination;
+    HomeSearchMemory.date = _selectedDate;
+    HomeSearchMemory.flexible = _flexibleDate;
+  }
+
   @override
   void initState() {
     super.initState();
+    _restoreSearch();
     _loadProfile();
-    _loadTravelers();
+    // Travelers are searched from the default departure, so find it first.
+    _loadDefaultDeparture().whenComplete(() {
+      if (mounted) _loadTravelers();
+    });
     // Re-read the profile when the avatar changes elsewhere (e.g. Profile).
     AvatarImage.revision.addListener(_loadProfile);
     WidgetsBinding.instance.addObserver(this);
@@ -174,6 +221,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  /// The departure the search starts from: the capital of the country of
+  /// residence saved at sign-up, or, for accounts made before that was saved,
+  /// of the country remembered on this device.
+  Future<void> _loadDefaultDeparture() async {
+    try {
+      final profile = await (widget.authService ?? AuthService()).getProfile();
+      final saved = (profile?['country_of_residence'] as String?)?.trim();
+      final country = saved != null && saved.isNotEmpty
+          ? saved
+          : PreferencesService().countryIsoCode;
+      final capital =
+          await (widget.capitalLookup ?? HomeScreen.defaultCapitalLookup)(
+            country,
+          );
+      // Keep a departure the user picked while this was loading.
+      if (capital != null && mounted && _departure == null) {
+        setState(() => _departure = capital);
+        _rememberSearch();
+      }
+    } catch (e) {
+      debugPrint('[Home] default departure: $e');
+    }
+  }
+
   Future<void> _loadProfile() async {
     final auth = widget.authService ?? AuthService();
     final profile = await auth.getProfile();
@@ -228,11 +299,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _pickDeparture() async {
     final result = await LocationSearchSheet.show(
       context,
-      title: 'Departing From',
+      title: context.l10n.departingFrom,
       initial: _departure,
     );
     if (result != null) {
       setState(() => _departure = result);
+      _rememberSearch();
       _reloadTravelers();
     }
   }
@@ -240,11 +312,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _pickDestination() async {
     final result = await LocationSearchSheet.show(
       context,
-      title: 'Destination',
+      title: context.l10n.destination,
       initial: _destination,
     );
     if (result != null) {
       setState(() => _destination = result);
+      _rememberSearch();
       _reloadTravelers();
     }
   }
@@ -257,6 +330,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       body: SafeArea(
         bottom: false,
         child: Stack(
+          // Fill the screen so the bottom nav sits at the bottom even when
+          // the content is shorter than the screen.
+          fit: StackFit.expand,
           children: [
             SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 90),
@@ -347,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello,',
+                  context.l10n.hello,
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     color: AppColors.mutedForeground,
@@ -412,7 +488,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Where are you sending?',
+            context.l10n.whereAreYouSending,
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w700,
               fontSize: 15,
@@ -426,8 +502,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: _locationRow(
               icon: Icons.location_on_outlined,
               iconColor: AppColors.mutedForeground,
-              label: 'DEPARTURE',
-              value: _departure?.displayLabel ?? 'Where are you sending from?',
+              label: context.l10n.departure.toUpperCase(),
+              value: _departure?.displayLabel ?? context.l10n.whereSendingFrom,
               hasValue: _departure != null,
             ),
           ),
@@ -438,23 +514,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: _locationRow(
               icon: Icons.location_on,
               iconColor: AppColors.accent,
-              label: 'DESTINATION',
+              label: context.l10n.destination.toUpperCase(),
               value:
-                  _destination?.displayLabel ?? 'e.g. London, United Kingdom',
+                  _destination?.displayLabel ?? context.l10n.destinationExample,
               hasValue: _destination != null,
             ),
           ),
           const SizedBox(height: 10),
           // Date
           GestureDetector(
+            key: const ValueKey('home-date-field'),
             onTap: () => _showDateSheet(context),
             child: _locationRow(
               icon: Icons.calendar_today_outlined,
               iconColor: AppColors.mutedForeground,
-              label: 'DELIVERY DATE',
+              label: context.l10n.deliveryDate,
               value: _selectedDate != null
-                  ? '${_fmtDate(_selectedDate!)}${_flexibleDate ? ' (±3d)' : ''}'
-                  : 'Anytime this month',
+                  ? '${_fmtDate(_selectedDate!)}${_flexibleDate ? ' ${context.l10n.flexibleShort}' : ''}'
+                  : context.l10n.anytimeThisMonth,
               hasValue: _selectedDate != null,
             ),
           ),
@@ -481,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 color: Colors.white,
               ),
               label: Text(
-                'Search Travelers',
+                context.l10n.searchTravelersButton,
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
@@ -580,7 +657,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(width: 8),
             Text(
-              'Add a Trip',
+              context.l10n.addATripTitle,
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
@@ -602,7 +679,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Available Travelers',
+              context.l10n.availableTravelers,
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
@@ -622,7 +699,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 );
               },
               child: Text(
-                'View all',
+                context.l10n.viewAll,
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
@@ -661,7 +738,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           children: [
             Expanded(
               child: Text(
-                'Could not load travelers.',
+                context.l10n.errLoadTravelers,
                 key: const ValueKey('home-travelers-error'),
                 style: GoogleFonts.dmSans(
                   fontSize: 12,
@@ -669,7 +746,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            TextButton(onPressed: _reloadTravelers, child: const Text('Retry')),
+            TextButton(
+              onPressed: _reloadTravelers,
+              child: Text(context.l10n.retry),
+            ),
           ],
         ),
       );
@@ -678,7 +758,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Text(
-          'No travelers on this route yet.',
+          context.l10n.noTravelersOnRoute,
           key: const ValueKey('home-travelers-empty'),
           style: GoogleFonts.dmSans(
             fontSize: 12,
@@ -714,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _showDateSheet(BuildContext context) async {
     final result = await DatePickerSheet.show(
       context,
-      title: 'Desired Delivery Date',
+      title: context.l10n.desiredDeliveryDateTitle,
       initialDate: _selectedDate,
       initialFlexible: _flexibleDate,
       flightCounts: _flightCounts,
@@ -726,27 +806,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _selectedDate = result.date;
       _flexibleDate = result.date != null && result.flexible;
     });
+    _rememberSearch();
   }
 
-  String _fmtDate(DateTime d) {
-    const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return '${days[d.weekday - 1]}, ${months[d.month]} ${d.day}';
-  }
+  /// "Mon, Jun 22", in the app's language.
+  String _fmtDate(DateTime d) => DateFormat(
+    'EEE, MMM d',
+    Localizations.localeOf(context).toString(),
+  ).format(d);
 }
 
 // ── Traveler row ───────────────────────────────────────────────────────────
@@ -754,22 +821,6 @@ class _TravelerRow extends StatelessWidget {
   final TravelerTrip trip;
   final VoidCallback onTap;
   const _TravelerRow({required this.trip, required this.onTap});
-
-  static const _months = [
-    '',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
 
   /// "Amara Kalu" -> "Amara K."
   String get _shortName {
@@ -864,18 +915,23 @@ class _TravelerRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        trip.avgRating?.toStringAsFixed(1) ?? 'New',
+                        trip.avgRating?.toStringAsFixed(1) ??
+                            context.l10n.newTravelerRating,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w700,
                           fontSize: 11,
                           color: AppColors.foreground,
                         ),
                       ),
-                      Text(
-                        '  •  ${trip.itemsDelivered} deliveries',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
+                      Flexible(
+                        child: Text(
+                          '  •  ${context.l10n.deliveriesCount(trip.itemsDelivered)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11,
+                            color: AppColors.mutedForeground,
+                          ),
                         ),
                       ),
                     ],
@@ -896,7 +952,9 @@ class _TravelerRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    '${_months[trip.departureDate.month]} ${trip.departureDate.day}',
+                    DateFormat.MMMd(
+                      Localizations.localeOf(context).toString(),
+                    ).format(trip.departureDate),
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
@@ -908,7 +966,9 @@ class _TravelerRow extends StatelessWidget {
                 Text(
                   trip.maxWeightKg == null
                       ? ''
-                      : 'Up to ${trip.maxWeightKg!.toStringAsFixed(1)} kg',
+                      : context.l10n.upToKg(
+                          trip.maxWeightKg!.toStringAsFixed(1),
+                        ),
                   style: GoogleFonts.dmSans(
                     fontSize: 11,
                     color: AppColors.mutedForeground,

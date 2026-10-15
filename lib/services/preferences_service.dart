@@ -39,9 +39,8 @@ enum AppCurrency {
 
 /// Holds the user's language + currency selections in memory.
 ///
-/// These are set on the splash screen and persisted to nata.profiles
-/// when the user completes sign-up. On subsequent launches the values
-/// are reloaded from the database.
+/// These are set on the language & currency screen the app opens on, and
+/// saved to nata.user_settings when the user signs up or signs in.
 class PreferencesService extends ChangeNotifier {
   // ── Singleton ──────────────────────────────────────────────────────────────
   static final PreferencesService _instance = PreferencesService._();
@@ -159,11 +158,11 @@ class PreferencesService extends ChangeNotifier {
   /// Uses upsert so it works for both new sign-ups and returning users.
   /// Ensures the parent nata.profiles row exists first (FK requirement).
   Future<void> saveToProfile() async {
-    final client = Supabase.instance.client;
-    final userId = client.auth.currentUser?.id;
-    if (userId == null) return;
-
     try {
+      final client = Supabase.instance.client;
+      final userId = client.auth.currentUser?.id;
+      if (userId == null) return;
+
       // Ensure nata.profiles row exists (trigger may not have fired yet)
       await client.schema('nata').from('profiles').upsert({
         'id': userId,
@@ -177,35 +176,6 @@ class PreferencesService extends ChangeNotifier {
       }, onConflict: 'user_id');
     } catch (e) {
       debugPrint('PreferencesService.saveToProfile: $e');
-    }
-  }
-
-  /// Loads preferences from nata.user_settings and applies them in-memory.
-  /// Call this after sign-in to restore saved preferences.
-  Future<void> loadFromProfile() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
-
-    try {
-      final row = await Supabase.instance.client
-          .schema('nata')
-          .from('user_settings')
-          .select('language, currency_code')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (row == null) return;
-      if (row['language'] != null) {
-        _language = AppLanguage.fromCode(row['language'] as String);
-      }
-      if (row['currency_code'] != null) {
-        _currency = AppCurrency.fromCode(
-          (row['currency_code'] as String).trim(),
-        );
-      }
-      notifyListeners();
-    } catch (e) {
-      debugPrint('PreferencesService.loadFromProfile: $e');
     }
   }
 

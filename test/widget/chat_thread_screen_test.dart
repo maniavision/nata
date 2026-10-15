@@ -847,4 +847,50 @@ void main() {
       expect(find.text('No enviado · toca para reintentar'), findsOneWidget);
     });
   });
+
+  group('Locked until payment', () {
+    for (final status in ['pending', 'accepted']) {
+      testWidgets('$status: no input, and it says why', (tester) async {
+        service = FakeMessageService(
+          conversations: [sampleConversation(status: status)],
+        );
+        await tester.pumpWidget(
+          appWrapper(
+            ChatThreadScreen(
+              conversation: sampleConversation(status: status),
+              service: service,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const ValueKey('chat-locked')), findsOneWidget);
+        expect(find.byKey(const ValueKey('chat-input')), findsNothing);
+        expect(
+          find.textContaining('Chat unlocks once the delivery is paid'),
+          findsOneWidget,
+        );
+      });
+    }
+
+    for (final status in ['paid', 'handed_off', 'delivered']) {
+      testWidgets('$status: open', (tester) async {
+        service = FakeMessageService(
+          conversations: [sampleConversation(status: status)],
+        );
+        await tester.pumpWidget(
+          appWrapper(
+            ChatThreadScreen(
+              conversation: sampleConversation(status: status),
+              service: service,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
+        expect(find.byKey(const ValueKey('chat-locked')), findsNothing);
+      });
+    }
+  });
 }

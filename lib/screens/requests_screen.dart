@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
+import '../services/preferences_service.dart';
+import '../services/exchange_rate_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../main.dart';
+import '../services/request_service.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/avatar_image.dart';
 import 'checkout_escrow_screen.dart';
+import 'delivery_request_screen.dart';
 import 'delivery_task_screen.dart';
 import 'messages_screen.dart';
 import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
 
 class RequestsScreen extends StatefulWidget {
-  const RequestsScreen({super.key});
+  /// Override for tests; defaults to the real [RequestService].
+  final RequestService? requestService;
+
+  /// Override for tests; defaults to the real [ExchangeRateService].
+  final ExchangeRateService? exchangeRates;
+
+  const RequestsScreen({super.key, this.requestService, this.exchangeRates});
 
   @override
   State<RequestsScreen> createState() => _RequestsScreenState();
@@ -18,19 +30,167 @@ class RequestsScreen extends StatefulWidget {
 class _RequestsScreenState extends State<RequestsScreen> {
   int _tab = 0; // 0 = Incoming, 1 = Outgoing
 
+  /// The user's sent requests (Outgoing); null while loading.
+  List<SentRequest>? _sent;
+  bool _sentFailed = false;
+
+  /// Amounts are stored in dollars and shown in the user's currency; dollars
+  /// until the rate is known (or if it can't be had).
+  PriceFormatter _money = PriceFormatter.usd;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSent();
+    _loadRates();
+  }
+
+  Future<void> _loadRates() async {
+    final currency = PreferencesService().currency.code;
+    if (currency == 'USD') return;
+    try {
+      final rates = await (widget.exchangeRates ?? ExchangeRateService())
+          .rates();
+      if (!mounted) return;
+      setState(
+        () => _money = PriceFormatter.forCurrency(
+          currency,
+          rates?.rateFor(currency),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Requests] exchange rates: $e');
+    }
+  }
+
+  Future<void> _loadSent() async {
+    setState(() {
+      _sentFailed = false;
+      _sent = null;
+    });
+    try {
+      final sent = await (widget.requestService ?? RequestService())
+          .myRequests();
+      if (mounted) setState(() => _sent = sent);
+    } catch (e) {
+      debugPrint('[Requests] sent requests: $e');
+      if (mounted) {
+        setState(() {
+          _sent = const [];
+          _sentFailed = true;
+        });
+      }
+    }
+  }
+
+  /// Opens checkout for an accepted request; reloads on return (the ticket
+  /// check, or a payment, changes the request).
+  Future<void> _pay(SentRequest request) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CheckoutEscrowScreen(
+          request: request,
+          money: _money,
+          service: widget.requestService,
+        ),
+      ),
+    );
+    if (mounted) _loadSent();
+  }
+
+  /// Opens a pending request in the request form; reloads once it is saved.
+  Future<void> _edit(SentRequest request) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => DeliveryRequestScreen(
+          trip: request.trip,
+          editing: request,
+          service: widget.requestService,
+        ),
+      ),
+    );
+    if (saved == true && mounted) _loadSent();
+  }
+
+  /// Asks for confirmation (showing the fee, if any), cancels the request and
+  /// reloads the list.
+  Future<void> _cancel(SentRequest request) async {
+    final l = context.l10n;
+    final fee = request.cancellationFeeNow;
+    if (fee == null) return;
+    // Fixed in the sender's currency once the traveler accepted.
+    final feeText =
+        request.fixedCancellationFeeText ??
+        (_money.currency == 'USD'
+            ? _money.format(fee)
+            : '≈ ${_money.format(fee)}');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('cancel-request-dialog'),
+        title: Text(l.cancelRequestTitle),
+        content: Text(
+          fee > 0 ? l.cancelRequestFeeBody(feeText) : l.cancelRequestFreeBody,
+        ),
+        actions: [
+          TextButton(
+            key: const ValueKey('cancel-request-keep'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.keepRequest),
+          ),
+          TextButton(
+            key: const ValueKey('cancel-request-confirm'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: Text(fee > 0 ? l.cancelWithFee(feeText) : l.cancelRequest),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await (widget.requestService ?? RequestService()).cancel(request);
+      messenger.showSnackBar(SnackBar(content: Text(l.requestCancelled)));
+    } on RequestException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(switch (e.reason) {
+            RequestFailure.feeChanged => l.errFeeChanged,
+            RequestFailure.notCancellable => l.errNotCancellable,
+            RequestFailure.notSignedIn => l.errSessionExpired,
+            RequestFailure.requestNotFound => l.errRequestNotFound,
+            _ => l.errCancelFailed,
+          }),
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errCancelFailed)));
+    }
+    // Reload either way: the status may have changed under us.
+    if (mounted) _loadSent();
+  }
+
   // ── Incoming request data ──────────────────────────────────────────────────
   /// Requests the traveler accepted that are still under way.
-  static const _accepted = [
+  // Sample data until incoming requests come from the database. The labels
+  // are built in the app's language; names and items are what senders typed.
+  String _date(DateTime d) =>
+      DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(d);
+
+  List<AcceptedDelivery> get _accepted => [
     AcceptedDelivery(
       orderId: 'DEL-8842',
       senderName: 'Sarah Adeleke',
       senderPhotoUrl: 'https://randomuser.me/api/portraits/women/33.jpg',
-      senderSubtitle: 'Sender · Escrow Funded',
+      senderSubtitle: context.l10n.senderEscrowFunded,
       senderPhone: '+234 803 555 0142',
-      payout: '\$38.00',
+      payout: _money.format(38),
       trip: 'Lagos (LOS) → London (LHR)',
       routeCodes: 'LOS → LHR',
-      travelDate: 'Jun 22, 2025',
+      travelDate: _date(DateTime(2025, 6, 22)),
       destinationCity: 'London',
       itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
       itemName: 'iPad Mini 64GB (Space Gray)',
@@ -38,31 +198,37 @@ class _RequestsScreenState extends State<RequestsScreen> {
       receivedPhotoUrl:
           'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/2lLrBm6d5EN.jpeg',
       receivedPhotoName: 'received_sealed_box.jpg',
-      receivedPhotoCaption: 'Captured at Lagos Airport · Jun 22, 10:14 AM',
+      receivedPhotoCaption: context.l10n.capturedAt(
+        'Lagos Airport',
+        DateFormat.MMMd(
+          Localizations.localeOf(context).toString(),
+        ).add_jm().format(DateTime(2025, 6, 22, 10, 14)),
+      ),
       recipientName: 'David Adeleke (London)',
       recipientPhone: '+44 7700 900456',
       meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
+      deliveryPin: '7492',
     ),
   ];
 
-  static const _incoming = [
+  List<_IncomingRequest> get _incoming => [
     _IncomingRequest(
       name: 'Chioma Eze',
-      subtitle: 'Sender · 5 deliveries',
-      amount: '\$32.00',
+      subtitle: context.l10n.senderDeliveries(5),
+      amount: _money.format(32),
       trip: 'Lagos (LOS) → London (LHR)',
-      date: 'Jun 22, 2025',
+      date: _date(DateTime(2025, 6, 22)),
       item: 'Apple Watch Series 9 (Sealed Box)',
       weight: '0.45 kg · 15 × 8 × 4 cm',
-      photos: '1 factory-sealed photo attached',
+      photoCount: 1,
       imageUrl: 'https://randomuser.me/api/portraits/women/65.jpg',
     ),
     _IncomingRequest(
       name: 'Tunde Adeleke',
-      subtitle: 'Sender · 2 deliveries',
-      amount: '\$26.50',
+      subtitle: context.l10n.senderDeliveries(2),
+      amount: _money.format(26.5),
       trip: 'Lagos (LOS) → London (LHR)',
-      date: 'Jun 22, 2025',
+      date: _date(DateTime(2025, 6, 22)),
       item: 'Sony WH-1000XM5 (Retail Box)',
       imageUrl: 'https://randomuser.me/api/portraits/men/45.jpg',
     ),
@@ -177,7 +343,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
             _tabButton(
               context.l10n.outgoing,
               1,
-              badge: '3',
+              badge: '${_sent?.length ?? 0}',
               badgeBg: AppColors.border,
             ),
           ],
@@ -325,44 +491,68 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   // ── Outgoing section ───────────────────────────────────────────────────────
   Widget _buildOutgoingSection() {
+    final l = context.l10n;
+    final sent = _sent;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(context.l10n.outgoingSection, '3 ${context.l10n.total}'),
+        _sectionHeader(
+          l.sentRequestsCount(sent?.length ?? 0),
+          (sent ?? const []).any((r) => r.status == 'pending')
+              ? l.waitingForTraveler
+              : '',
+        ),
         const SizedBox(height: 10),
-        _OutgoingCard(
-          name: 'Amara Kalu',
-          imageUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
-          statusLabel: context.l10n.pending,
-          statusColor: const Color(0xFFD97706),
-          statusBg: const Color(0xFFFEF3C7),
-          item: 'AirPods Max · Lagos → London (Jun 22)',
-          amount: '\$27.50',
-        ),
-        const SizedBox(height: 12),
-        _OutgoingCard(
-          name: 'Daniel Okafor',
-          imageUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
-          statusLabel: context.l10n.accepted,
-          statusColor: const Color(0xFF168A68),
-          statusBg: const Color(0xFFE4F4EE),
-          item: 'Kindle Paperwhite · Accra → Paris (Jun 24)',
-          amount: '\$19.00',
-          payCountdown: 'Pay in 23h 48m',
-          payAmount: '\$19',
-        ),
-        const SizedBox(height: 12),
-        _OutgoingCard(
-          name: 'Maya Tariq',
-          imageUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
-          statusLabel: context.l10n.declined,
-          statusColor: AppColors.destructive,
-          statusBg: const Color(0xFFFDE8E8),
-          item: 'Luggage capacity full · Nairobi → Dubai',
-          amount: '\$22.00',
-          dimmed: true,
-          refundNote: context.l10n.refundCredited,
-        ),
+        if (sent == null)
+          const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accent,
+                strokeWidth: 2,
+              ),
+            ),
+          )
+        else if (_sentFailed)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.errLoadRequests,
+                key: const ValueKey('outgoing-error'),
+                style: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  color: AppColors.destructive,
+                ),
+              ),
+              TextButton(
+                key: const ValueKey('outgoing-retry'),
+                onPressed: _loadSent,
+                child: Text(l.retry),
+              ),
+            ],
+          )
+        else if (sent.isEmpty)
+          Text(
+            l.noSentRequests,
+            key: const ValueKey('outgoing-empty'),
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          )
+        else
+          for (final r in sent)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _SentRequestCard(
+                request: r,
+                onTap: r.isEditable ? () => _edit(r) : null,
+                onCancel: r.isCancellable ? () => _cancel(r) : null,
+                onPay: r.awaitingPayment ? () => _pay(r) : null,
+                money: _money,
+              ),
+            ),
       ],
     );
   }
@@ -510,7 +700,7 @@ class _IncomingCardState extends State<_IncomingCard> {
           ],
           const SizedBox(height: 12),
           // Photo row
-          if (widget.request.photos != null) ...[
+          if (widget.request.photoCount != null) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
@@ -528,7 +718,9 @@ class _IncomingCardState extends State<_IncomingCard> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      widget.request.photos!,
+                      context.l10n.sealedPhotosAttached(
+                        widget.request.photoCount!,
+                      ),
                       style: GoogleFonts.dmSans(
                         fontSize: 11,
                         color: AppColors.foreground,
@@ -538,7 +730,7 @@ class _IncomingCardState extends State<_IncomingCard> {
                   GestureDetector(
                     onTap: () {},
                     child: Text(
-                      widget.request.photos!.startsWith('2')
+                      widget.request.photoCount! > 1
                           ? context.l10n.viewPhotos
                           : context.l10n.viewPhoto,
                       style: GoogleFonts.dmSans(
@@ -671,327 +863,376 @@ class _IncomingCardState extends State<_IncomingCard> {
   }
 }
 
-// ── Outgoing card ──────────────────────────────────────────────────────────
-class _OutgoingCard extends StatelessWidget {
-  final String name;
-  final String imageUrl;
-  final String statusLabel;
-  final Color statusColor;
-  final Color statusBg;
-  final String item;
-  final String amount;
-  final bool dimmed;
-  final String? payCountdown;
-  final String? payAmount;
-  final String? refundNote;
+// ── Sent request card ──────────────────────────────────────────────────────
+class _SentRequestCard extends StatelessWidget {
+  final SentRequest request;
 
-  const _OutgoingCard({
-    required this.name,
-    required this.imageUrl,
-    required this.statusLabel,
-    required this.statusColor,
-    required this.statusBg,
-    required this.item,
-    required this.amount,
-    this.dimmed = false,
-    this.payCountdown,
-    this.payAmount,
-    this.refundNote,
+  /// Opens the request for editing; null when it can't be edited.
+  final VoidCallback? onTap;
+
+  /// Cancels the request; null when it can no longer be cancelled.
+  final VoidCallback? onCancel;
+
+  /// Opens checkout for an accepted request.
+  final VoidCallback? onPay;
+
+  /// Shows the dollar amounts in the user's currency.
+  final PriceFormatter money;
+
+  /// The fixed price once the traveler accepted; before that, today's
+  /// conversion, marked as an estimate ("≈ €99"). Dollars are exact.
+  String get _totalText {
+    final fixed = request.fixedTotalText;
+    if (fixed != null) return fixed;
+    final shown = money.format(request.totalUsd);
+    return money.currency == 'USD' ? shown : '≈ $shown';
+  }
+
+  /// The cancellation fee charged, in the currency the price was fixed in.
+  String get _cancelledFeeText {
+    final local = request.displayCancellationFee;
+    final currency = request.displayCurrency;
+    if (local != null && currency != null) {
+      return PriceFormatter.write(local, currency);
+    }
+    return money.format(request.cancellationFee!);
+  }
+
+  const _SentRequestCard({
+    required this.request,
+    this.onTap,
+    this.onCancel,
+    this.onPay,
+    this.money = PriceFormatter.usd,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: dimmed ? 0.8 : 1.0,
+  static const _amber = Color(0xFFE5A83B);
+
+  ({String label, Color color, Color bg}) _status(BuildContext context) {
+    final l = context.l10n;
+    return switch (request.status) {
+      'pending' => (
+        label: l.pending,
+        color: _amber,
+        bg: _amber.withValues(alpha: 0.1),
+      ),
+      'accepted' => (label: l.accepted, color: _green, bg: _greenBg),
+      'paid' => (label: l.statusPaid, color: _green, bg: _greenBg),
+      'handed_off' => (label: l.statusInTransit, color: _green, bg: _greenBg),
+      'delivered' => (label: l.statusDelivered, color: _green, bg: _greenBg),
+      'declined' => (
+        label: l.declined,
+        color: AppColors.destructive,
+        bg: const Color(0xFFFDE8E8),
+      ),
+      'expired' => (
+        label: l.statusExpired,
+        color: AppColors.mutedForeground,
+        bg: AppColors.muted,
+      ),
+      _ => (
+        label: l.statusCancelled,
+        color: AppColors.mutedForeground,
+        bg: AppColors.muted,
+      ),
+    };
+  }
+
+  /// A full-width pill button, as in the design.
+  Widget _button({
+    required String key,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color color,
+    bool filled = false,
+  }) {
+    return GestureDetector(
+      key: ValueKey(key),
+      onTap: onTap,
       child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+          color: filled ? color : AppColors.card,
+          borderRadius: BorderRadius.circular(999),
+          border: filled
+              ? null
+              : Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: filled ? Colors.white : color),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: filled ? Colors.white : color,
+                ),
+              ),
             ),
           ],
         ),
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                // Avatar
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: ClipOval(
-                    child: ColorFiltered(
-                      colorFilter: dimmed
-                          ? const ColorFilter.matrix([
-                              0.2126,
-                              0.7152,
-                              0.0722,
-                              0,
-                              0,
-                              0.2126,
-                              0.7152,
-                              0.0722,
-                              0,
-                              0,
-                              0.2126,
-                              0.7152,
-                              0.0722,
-                              0,
-                              0,
-                              0,
-                              0,
-                              0,
-                              1,
-                              0,
-                            ])
-                          : const ColorFilter.mode(
-                              Colors.transparent,
-                              BlendMode.multiply,
-                            ),
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stack) => Container(
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value, {Key? key}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            key: key,
+            textAlign: TextAlign.right,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: AppColors.foreground,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final status = _status(context);
+    final trip = request.trip;
+    final locale = Localizations.localeOf(context).toString();
+    final closed = const [
+      'declined',
+      'expired',
+      'cancelled',
+    ].contains(request.status);
+    final weight = NumberFormat('0.##', locale).format(request.weightKg);
+
+    return GestureDetector(
+      key: ValueKey('sent-request-${request.id}'),
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Opacity(
+        opacity: closed ? 0.8 : 1,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Traveler, status and price
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border, width: 2),
+                    ),
+                    child: ClipOval(
+                      child: AvatarImage(
+                        path: trip.avatarPath,
+                        fallback: Container(
                           color: AppColors.secondary,
                           child: const Icon(
                             Icons.person,
                             color: AppColors.primary,
-                            size: 20,
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            name,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: AppColors.foreground,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusBg,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              statusLabel,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 2,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              trip.fullName,
                               style: GoogleFonts.dmSans(
                                 fontWeight: FontWeight.w700,
-                                fontSize: 10,
-                                color: statusColor,
+                                fontSize: 14,
+                                color: AppColors.foreground,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  amount,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: dimmed
-                        ? AppColors.mutedForeground
-                        : AppColors.foreground,
-                  ),
-                ),
-              ],
-            ),
-            // Pay row
-            if (payCountdown != null) ...[
-              const SizedBox(height: 10),
-              const Divider(color: AppColors.border, height: 1),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.access_time_rounded,
-                          size: 14,
-                          color: Color(0xFFB45309),
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            payCountdown!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 11,
-                              color: const Color(0xFFB45309),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: status.bg,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                status.label,
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                  color: status.color,
+                                ),
+                              ),
                             ),
+                          ],
+                        ),
+                        Text(
+                          l.travelerDeliveries(trip.itemsDelivered),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: AppColors.mutedForeground,
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const CheckoutEscrowScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _totalText,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
                         color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Pay Escrow ($payAmount)',
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.arrow_forward,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ],
                       ),
                     ),
                   ),
                 ],
               ),
-              // Chat button for accepted outgoing requests
+              const SizedBox(height: 12),
+              const Divider(color: AppColors.border, height: 1),
+              const SizedBox(height: 12),
+              // Details
+              _detailRow(
+                l.routeLabel,
+                '${trip.departureCity} → ${trip.arrivalCity}',
+              ),
               const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const MessagesScreen(),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        size: 15,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.l10n.arrangeHandoff,
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
+              _detailRow(
+                l.travelDate,
+                DateFormat.yMMMd(locale).format(trip.departureDate),
+              ),
+              const SizedBox(height: 8),
+              _detailRow(
+                l.item,
+                '${request.itemsSummary} ($weight kg)',
+                key: ValueKey('sent-request-item-${request.id}'),
+              ),
+              if (request.cancelledBySender) ...[
+                const SizedBox(height: 8),
+                Text(
+                  (request.cancellationFee ?? 0) > 0
+                      ? l.cancellationFeeCharged(_cancelledFeeText)
+                      : l.cancelledFreeOfCharge,
+                  key: ValueKey('sent-request-cancel-fee-${request.id}'),
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                    color: AppColors.mutedForeground,
                   ),
                 ),
-              ),
-            ],
-            // Refund / find another row
-            if (refundNote != null) ...[
-              const SizedBox(height: 10),
-              const Divider(color: AppColors.border, height: 1),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      refundNote!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        color: AppColors.mutedForeground,
-                      ),
+              ],
+              if (onTap != null) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.edit_rounded,
+                      size: 14,
+                      color: AppColors.accent,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const TravelerResultsScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      context.l10n.findAnotherTraveler,
+                    const SizedBox(width: 4),
+                    Text(
+                      l.tapToEdit,
                       style: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.primary,
+                        fontSize: 11,
+                        color: AppColors.accent,
                       ),
                     ),
+                  ],
+                ),
+              ],
+              // Actions
+              if (request.status == 'accepted') ...[
+                const SizedBox(height: 12),
+                _button(
+                  key: 'sent-request-pay-${request.id}',
+                  icon: Icons.lock_rounded,
+                  label: '${l.payEscrow} ($_totalText)',
+                  color: AppColors.accent,
+                  filled: true,
+                  onTap: onPay ?? () {},
+                ),
+              ],
+              if (request.status == 'declined' ||
+                  request.status == 'expired') ...[
+                const SizedBox(height: 12),
+                _button(
+                  key: 'sent-request-find-${request.id}',
+                  icon: Icons.search_rounded,
+                  label: l.findAnotherTraveler,
+                  color: AppColors.primary,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const TravelerResultsScreen(),
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
+              if (onCancel != null) ...[
+                SizedBox(height: request.status == 'accepted' ? 8 : 12),
+                _button(
+                  key: 'sent-request-cancel-${request.id}',
+                  icon: Icons.cancel_rounded,
+                  label: l.cancelRequest,
+                  color: AppColors.destructive,
+                  onTap: onCancel!,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1003,7 +1244,8 @@ class _IncomingRequest {
   final String name, subtitle, amount, trip, date, item, imageUrl;
 
   /// Shown only when the sender gave them.
-  final String? weight, photos;
+  final String? weight;
+  final int? photoCount;
   const _IncomingRequest({
     required this.name,
     required this.subtitle,
@@ -1013,7 +1255,7 @@ class _IncomingRequest {
     required this.item,
     required this.imageUrl,
     this.weight,
-    this.photos,
+    this.photoCount,
   });
 }
 

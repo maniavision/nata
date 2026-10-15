@@ -12,6 +12,7 @@ import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
 import '../widgets/avatar_image.dart';
 import 'identity_verification_screen.dart';
+import 'payment_settings_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
 
@@ -193,17 +194,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile picture updated successfully'),
-            ),
+            SnackBar(content: Text(context.l10n.profilePictureUpdated)),
           );
         }
       } catch (e) {
         debugPrint('Upload error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.errUploadImage('$e'))),
+          );
         }
       } finally {
         if (mounted) {
@@ -238,6 +237,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         bottom: false,
         child: Stack(
+          // Fill the screen so the bottom nav sits at the bottom even when
+          // the content is shorter than the screen.
+          fit: StackFit.expand,
           children: [
             SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 100),
@@ -912,6 +914,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
       ),
       _SettingsItem(
+        key: const ValueKey('profile-payment-settings'),
+        icon: Icons.account_balance_wallet_rounded,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.paymentSettings,
+        subtitle: context.l10n.paymentSettingsSub,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PaymentSettingsScreen(
+              availableBalance: _availableBalance,
+              escrowBalance: _escrowBalance,
+              holderName: _displayName,
+            ),
+          ),
+        ),
+      ),
+      _SettingsItem(
         icon: Icons.inventory_2_outlined,
         iconBg: AppColors.secondary,
         iconColor: AppColors.primary,
@@ -937,6 +956,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return Column(
             children: [
               GestureDetector(
+                key: item.key,
                 onTap: item.onTap,
                 child: Container(
                   color: Colors.transparent,
@@ -1075,6 +1095,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 // ── Data models ────────────────────────────────────────────────────────────
 class _SettingsItem {
+  final Key? key;
   final IconData icon;
   final Color iconBg;
   final Color iconColor;
@@ -1086,6 +1107,7 @@ class _SettingsItem {
   final VoidCallback? onTap;
 
   const _SettingsItem({
+    this.key,
     required this.icon,
     required this.iconBg,
     required this.iconColor,

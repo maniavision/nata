@@ -10,6 +10,7 @@ import 'login_screen.dart';
 import 'identity_verification_screen.dart';
 import 'otp_screen.dart';
 import '../l10n/l10n_ext.dart';
+import '../widgets/nata_logo.dart';
 
 class SignUpScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -116,7 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final phone = _phoneController.text.trim().replaceAll(RegExp(r'\s+'), '');
 
     if (firstName.isEmpty || lastName.isEmpty || phone.isEmpty) {
-      setState(() => _error = 'Please fill in all fields.');
+      setState(() => _error = context.l10n.errFillAllFields);
       return;
     }
 
@@ -143,6 +144,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             authService: widget.authService,
             firstName: firstName,
             lastName: lastName,
+            // The country picked for the phone number (its iso_code in
+            // nata.countries) is the user's country of residence.
+            countryOfResidence: _selectedCountry.isoCode,
             onSuccess: () {
               // After OTP verified → go to identity verification
               Navigator.of(context).pushAndRemoveUntil(
@@ -166,12 +170,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String _friendlyError(String raw) {
     if (raw.contains('rate limit') || raw.contains('too many')) {
-      return 'Too many requests. Please wait a moment and try again.';
+      return context.l10n.errTooManyRequestsRetry;
     }
     if (raw.contains('invalid') || raw.contains('phone')) {
-      return 'Invalid phone number. Please check and try again.';
+      return context.l10n.errInvalidPhone;
     }
-    return 'Something went wrong. Please try again.';
+    return context.l10n.errSomethingWrong;
   }
 
   void _goToLogin() {
@@ -269,19 +273,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 13,
-                      ),
-                    ),
+                    const NataLogo(size: 24),
                     const SizedBox(width: 8),
                     Text(
                       context.l10n.appName,
@@ -524,7 +516,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         const SizedBox(height: 12),
         // Country of Residence — autocomplete
         _buildField(
-          label: 'COUNTRY OF RESIDENCE',
+          label: context.l10n.countryOfResidenceLabel,
           child: _CountryField(
             controller: _countryController,
             focusNode: _countryFocus,
@@ -837,7 +829,7 @@ class _CountryField extends StatelessWidget {
                     color: AppColors.foreground,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Select country',
+                    hintText: context.l10n.selectCountry,
                     hintStyle: GoogleFonts.dmSans(
                       fontSize: 12,
                       color: AppColors.mutedForeground,

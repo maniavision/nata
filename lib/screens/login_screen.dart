@@ -12,6 +12,7 @@ import 'home_screen.dart';
 import 'otp_screen.dart';
 import '../widgets/country_code_picker_sheet.dart';
 import '../l10n/l10n_ext.dart';
+import '../widgets/nata_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   /// Overrides for tests; they default to the real services / Home screen.
@@ -71,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _submit() async {
     final phone = _phoneController.text.trim().replaceAll(RegExp(r'\s+'), '');
     if (phone.isEmpty) {
-      setState(() => _error = 'Please enter your phone number.');
+      setState(() => _error = context.l10n.errEnterPhone);
       return;
     }
 
@@ -187,12 +188,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String _friendlyError(String raw) {
     if (raw.contains('rate limit') || raw.contains('too many')) {
-      return 'Too many requests. Please wait a moment.';
+      return context.l10n.errTooManyRequests;
     }
     if (raw.contains('invalid') || raw.contains('phone')) {
-      return 'Invalid phone number. Please check and try again.';
+      return context.l10n.errInvalidPhone;
     }
-    return 'Something went wrong. Please try again.';
+    return context.l10n.errSomethingWrong;
   }
 
   @override
@@ -285,19 +286,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 13,
-                      ),
-                    ),
+                    const NataLogo(size: 24),
                     const SizedBox(width: 8),
                     Text(
                       context.l10n.appName,
@@ -432,7 +421,9 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
-      child: Row(children: [_tab(context.l10n.signIn, 0), _tab('Sign Up', 1)]),
+      child: Row(
+        children: [_tab(context.l10n.signIn, 0), _tab(context.l10n.signUp, 1)],
+      ),
     );
   }
 

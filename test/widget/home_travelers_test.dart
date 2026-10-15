@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:carrywise_app/services/home_search_memory.dart';
+import 'package:carrywise_app/widgets/location_search_sheet.dart';
 import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/screens/traveler_profile_screen.dart';
 import 'package:carrywise_app/screens/traveler_results_screen.dart';
@@ -9,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
+import 'package:carrywise_app/services/preferences_service.dart';
 import '../helpers/fakes.dart';
 
 /// [n] travelers with 1..n deliveries (so the last ones are "the top").
@@ -44,20 +47,111 @@ void main() {
           authService: FakeAuthService(),
           travelerService: service,
           random: random,
+          capitalLookup: fakeCapitalLookup,
         ),
       ),
     );
     if (settle) await tester.pumpAndSettle();
   }
 
+  group('Home default departure', () {
+    Future<void> pumpWith(
+      WidgetTester tester, {
+      Map<String, dynamic>? profile,
+    }) async {
+      tester.view.physicalSize = const Size(900, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(profile: profile),
+            travelerService: service,
+            capitalLookup: fakeCapitalLookup,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('is the capital of the country of residence', (tester) async {
+      await pumpWith(tester, profile: {'country_of_residence': 'CM'});
+
+      expect(find.text('Yaoundé, Cameroon'), findsOneWidget);
+      expect(service.searchCalls.first['departureCity'], 'Yaoundé');
+      expect(service.searchCalls.first['departureCountry'], 'CM');
+    });
+
+    testWidgets('a route the user picked is kept when Home opens again', (
+      tester,
+    ) async {
+      // What Home remembered from an earlier visit.
+      HomeSearchMemory.departure = const LocationSelection(
+        country: 'Ghana',
+        countryCode: 'GH',
+        city: 'Accra',
+        displayLabel: 'Accra, Ghana',
+      );
+      HomeSearchMemory.destination = const LocationSelection(
+        country: 'France',
+        countryCode: 'FR',
+        city: 'Paris',
+        displayLabel: 'Paris, France',
+      );
+
+      await pumpWith(tester, profile: {'country_of_residence': 'CM'});
+
+      expect(find.text('Accra, Ghana'), findsOneWidget);
+      expect(find.text('Paris, France'), findsOneWidget);
+      // The default departure (Yaoundé) does not replace it.
+      expect(find.text('Yaoundé, Cameroon'), findsNothing);
+      expect(service.searchCalls.first['departureCity'], 'Accra');
+      expect(service.searchCalls.first['arrivalCity'], 'Paris');
+    });
+
+    testWidgets('the default departure is remembered too', (tester) async {
+      await pumpWith(tester, profile: {'country_of_residence': 'CM'});
+
+      expect(HomeSearchMemory.departure?.city, 'Yaoundé');
+    });
+
+    testWidgets('travelers are only searched once it is known', (tester) async {
+      await pumpWith(tester, profile: {'country_of_residence': 'GB'});
+
+      // No unfiltered search before the default departure was found.
+      expect(service.searchCalls.first['departureCity'], 'London');
+    });
+
+    testWidgets('without a saved country, uses the device country', (
+      tester,
+    ) async {
+      PreferencesService().setCountry('US');
+      await pumpWith(
+        tester,
+        profile: {'first_name': 'Old', 'last_name': 'Account'},
+      );
+
+      expect(find.text('Washington, United States'), findsOneWidget);
+    });
+
+    testWidgets('no known capital: no departure, search from anywhere', (
+      tester,
+    ) async {
+      await pumpWith(tester, profile: {'country_of_residence': 'ZZ'});
+
+      expect(find.text('Where are you sending from?'), findsOneWidget);
+      expect(service.searchCalls.first['departureCountry'], isNull);
+    });
+  });
+
   group('Home "Available Travelers"', () {
-    testWidgets('loads travelers for the default route (Lagos)', (
+    testWidgets('loads travelers for the default route (the capital)', (
       tester,
     ) async {
       await pumpHome(tester);
 
       final call = service.searchCalls.first;
-      expect(call['departureCity'], 'Lagos');
+      expect(call['departureCity'], 'Abuja');
       expect(call['departureCountry'], 'NG');
       expect(call['arrivalCity'], isNull);
       expect(call['date'], isNull);
@@ -80,7 +174,8 @@ void main() {
       service.trips = manyTravelers(8);
       await pumpHome(tester);
 
-      expect(find.textContaining('deliveries'), findsNWidgets(5));
+      // "1 delivery" or "N deliveries".
+      expect(find.textContaining('deliver'), findsNWidgets(5));
     });
 
     testWidgets('lists everyone when there are fewer than five', (
@@ -225,8 +320,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(TravelerResultsScreen), findsOneWidget);
-      expect(find.text('Lagos → Anywhere'), findsOneWidget);
-      expect(service.searchCalls.last['departureCity'], 'Lagos');
+      expect(find.text('Abuja → Anywhere'), findsOneWidget);
+      expect(service.searchCalls.last['departureCity'], 'Abuja');
     });
 
     testWidgets('"Search Travelers" opens the results', (tester) async {
@@ -284,7 +379,7 @@ void main() {
 
       await afterSeconds(tester, 15);
 
-      expect(service.searchCalls.last['departureCity'], 'Lagos');
+      expect(service.searchCalls.last['departureCity'], 'Abuja');
       expect(service.searchCalls.last['limit'], 100);
     });
 

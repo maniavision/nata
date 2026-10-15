@@ -16,7 +16,11 @@ void main() {
     setUp(() => travelers = FakeTravelerService());
 
     Widget buildHome() => appWrapper(
-      HomeScreen(authService: FakeAuthService(), travelerService: travelers),
+      HomeScreen(
+        authService: FakeAuthService(),
+        travelerService: travelers,
+        capitalLookup: fakeCapitalLookup,
+      ),
     );
 
     testWidgets('renders greeting "Hello,"', (tester) async {
@@ -47,7 +51,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('DEPARTURE'), findsOneWidget);
-      expect(find.text('Lagos, Nigeria'), findsOneWidget);
+      expect(find.text('Abuja, Nigeria'), findsOneWidget);
     });
 
     testWidgets('renders Destination row', (tester) async {

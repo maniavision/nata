@@ -14,6 +14,19 @@ void main() {
       expect(find.textContaining('Verify'), findsWidgets);
     });
 
+    testWidgets('tells travelers what senders will see of their ID', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('id-shared-note')), findsOneWidget);
+      expect(
+        find.textContaining('that sender will see the photo on your ID'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('renders 3 ID type selector buttons', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pump();

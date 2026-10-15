@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n_ext.dart';
+import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../services/traveler_service.dart';
@@ -35,22 +37,6 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   String? _error;
   List<TravelerTrip> _results = const [];
 
-  static const _months = [
-    '',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -78,19 +64,23 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Could not load travelers. Please try again.';
+        _error = context.l10n.errLoadTravelersRetry;
         _loading = false;
       });
     }
   }
 
-  String _fmtShort(DateTime d) => '${_months[d.month]} ${d.day}';
+  String _fmtShort(DateTime d) =>
+      DateFormat.MMMd(Localizations.localeOf(context).toString()).format(d);
 
   /// e.g. "Lagos → London · before Jun 26"
   String get _searchSummary {
-    final from = widget.departure?.city ?? 'Anywhere';
-    final to = widget.destination?.city ?? 'Anywhere';
-    final date = widget.date == null ? '' : ' · by ${_fmtShort(widget.date!)}';
+    final l = context.l10n;
+    final from = widget.departure?.city ?? l.anywhere;
+    final to = widget.destination?.city ?? l.anywhere;
+    final date = widget.date == null
+        ? ''
+        : ' · ${l.byDate(_fmtShort(widget.date!))}';
     return '$from → $to$date';
   }
 
@@ -151,7 +141,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextButton(onPressed: _load, child: const Text('Retry')),
+              TextButton(onPressed: _load, child: Text(context.l10n.retry)),
             ],
           ),
         ),
@@ -174,7 +164,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'No travelers on this route yet',
+                    context.l10n.noTravelersOnRouteTitle,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
@@ -183,7 +173,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Try another date or route, or turn on alerts below.',
+                    context.l10n.tryAnotherDateOrRoute,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.dmSans(
                       fontSize: 12,
@@ -233,7 +223,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Travelers Found',
+                  context.l10n.travelersFound,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
                     fontSize: 18,
@@ -257,7 +247,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              _loading ? '…' : '${_results.length} available',
+              _loading ? '…' : context.l10n.availableCount(_results.length),
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
@@ -291,7 +281,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Need a different date?',
+                  context.l10n.needDifferentDate,
                   style: GoogleFonts.dmSans(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
@@ -330,7 +320,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Get notified immediately when new travelers add trips on this route.',
+            context.l10n.notifyNewTravelers,
             style: GoogleFonts.dmSans(
               fontSize: 12,
               color: AppColors.mutedForeground,
@@ -358,30 +348,15 @@ class _TravelerCard extends StatefulWidget {
 class _TravelerCardState extends State<_TravelerCard> {
   bool _pressed = false;
 
-  static const _months = [
-    '',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  String _fmt(DateTime d) => '${_months[d.month]} ${d.day}';
+  String _fmt(DateTime d) =>
+      DateFormat.MMMd(Localizations.localeOf(context).toString()).format(d);
 
   String get _dateBadge => _fmt(widget.trip.departureDate);
 
   String get _capacity {
     final w = widget.trip.maxWeightKg;
-    if (w == null) return 'Capacity not specified';
-    return 'Accepts up to ${w.toStringAsFixed(1)} kg';
+    if (w == null) return context.l10n.capacityNotSpecified;
+    return context.l10n.acceptsUpToKg(w.toStringAsFixed(1));
   }
 
   @override
@@ -514,7 +489,7 @@ class _TravelerCardState extends State<_TravelerCard> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.trip.itemsDelivered} delivered',
+                        context.l10n.deliveredCount(widget.trip.itemsDelivered),
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
@@ -535,7 +510,8 @@ class _TravelerCardState extends State<_TravelerCard> {
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        widget.trip.avgRating?.toStringAsFixed(1) ?? 'New',
+                        widget.trip.avgRating?.toStringAsFixed(1) ??
+                            context.l10n.newTravelerRating,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 12,

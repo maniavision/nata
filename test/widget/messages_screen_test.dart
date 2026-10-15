@@ -682,4 +682,19 @@ void main() {
       expect(find.text('Tú: Hola'), findsOneWidget);
     });
   });
+
+  testWidgets('a paid delivery shows that the escrow is funded', (
+    tester,
+  ) async {
+    service = FakeMessageService(conversations: mixed());
+    await tester.pumpWidget(
+      appWrapper(MessagesScreen(service: service, now: () => now)),
+    );
+    await tester.pumpAndSettle();
+
+    // Daniel's delivery is paid; Amara's is only accepted.
+    expect(find.text('Escrow funded'), findsOneWidget);
+    expect(find.text('Sony headphones'), findsNothing);
+    expect(find.text('iPhone 15 Pro (sealed)'), findsOneWidget);
+  });
 }

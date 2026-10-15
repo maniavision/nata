@@ -15,16 +15,23 @@ import '../services/preferences_service.dart';
 /// [isSignUp]    — true = new account (also saves firstName/lastName to profile)
 /// [firstName]   — only used when isSignUp = true
 /// [lastName]    — only used when isSignUp = true
+/// [countryOfResidence] — ISO code of the country picked for the phone
+///                  number; saved to the profile when isSignUp = true
 /// [onSuccess]   — callback after successful verification (navigate to next screen)
 class OtpScreen extends StatefulWidget {
   final String phone;
   final bool isSignUp;
   final String firstName;
   final String lastName;
+  final String? countryOfResidence;
   final VoidCallback onSuccess;
 
   /// Override for tests; defaults to the real [AuthService].
   final AuthService? authService;
+
+  /// Saves the language and currency to the account. Override for tests;
+  /// defaults to [PreferencesService.saveToProfile].
+  final Future<void> Function()? saveSettings;
 
   const OtpScreen({
     super.key,
@@ -32,8 +39,10 @@ class OtpScreen extends StatefulWidget {
     required this.isSignUp,
     this.firstName = '',
     this.lastName = '',
+    this.countryOfResidence,
     required this.onSuccess,
     this.authService,
+    this.saveSettings,
   });
 
   @override
@@ -116,25 +125,26 @@ class _OtpScreenState extends State<OtpScreen> {
       final response = await _auth.verifyOtp(widget.phone, _otp);
 
       if (response.session != null) {
-        final prefs = PreferencesService();
         if (widget.isSignUp) {
-          // Save name + preferences to DB for new users
+          // New users: save their name and country of residence
           if (widget.firstName.isNotEmpty || widget.lastName.isNotEmpty) {
             await _auth.updateProfile(
               firstName: widget.firstName,
               lastName: widget.lastName,
             );
           }
-          // Save language, currency, country to profile
-          await prefs.saveToProfile();
-        } else {
-          // Sign-in: load saved preferences from DB and apply to app
-          await prefs.loadFromProfile();
+          final country = widget.countryOfResidence;
+          if (country != null) await _auth.saveCountryOfResidence(country);
         }
+        // The app always starts on the language & currency screen, so what
+        // was picked there is the user's current choice. Save it to the
+        // account (sign-up and sign-in alike) instead of replacing it with
+        // what the account had before.
+        await (widget.saveSettings ?? PreferencesService().saveToProfile)();
         if (mounted) widget.onSuccess();
       } else {
         setState(() {
-          _error = 'Verification failed. Please try again.';
+          _error = context.l10n.errVerificationFailed;
           _loading = false;
         });
         _clearBoxes();
@@ -184,16 +194,16 @@ class _OtpScreenState extends State<OtpScreen> {
     final code = e.code ?? '';
     final msg = e.message.toLowerCase();
     if (code == 'otp_expired' || msg.contains('expired')) {
-      return 'Code expired. Please request a new one.';
+      return context.l10n.errCodeExpired;
     }
     if (code == 'otp_disabled') {
-      return 'Phone verification is not enabled. Please contact support.';
+      return context.l10n.errOtpDisabled;
     }
     if (code == 'user_not_found' || code == 'invalid_credentials') {
-      return 'Incorrect code. Please try again.';
+      return context.l10n.errIncorrectCode;
     }
     if (code == 'over_sms_send_rate_limit' || msg.contains('rate limit')) {
-      return 'Too many attempts. Please wait before retrying.';
+      return context.l10n.errTooManyAttempts;
     }
     return _friendlyError(e.message);
   }
@@ -201,25 +211,25 @@ class _OtpScreenState extends State<OtpScreen> {
   String _friendlyError(String raw) {
     final lower = raw.toLowerCase();
     if (lower.contains('expired') || lower.contains('token has expired')) {
-      return 'Code expired. Please request a new one.';
+      return context.l10n.errCodeExpired;
     }
     if (lower.contains('invalid') ||
         lower.contains('incorrect') ||
         lower.contains('wrong') ||
         lower.contains('otp') ||
         lower.contains('token')) {
-      return 'Incorrect code. Please try again.';
+      return context.l10n.errIncorrectCode;
     }
     if (lower.contains('rate limit') || lower.contains('too many')) {
-      return 'Too many attempts. Please wait before retrying.';
+      return context.l10n.errTooManyAttempts;
     }
     if (lower.contains('network') ||
         lower.contains('socket') ||
         lower.contains('connection')) {
-      return 'Network error. Please check your connection.';
+      return context.l10n.errNetwork;
     }
     // Show the raw message in a friendly way for unknown errors
-    return 'Incorrect code or code expired. Please try again.';
+    return context.l10n.errIncorrectOrExpiredCode;
   }
 
   // ── Formatted phone display ────────────────────────────────────────────────
@@ -262,7 +272,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Enter verification code',
+                      context.l10n.enterVerificationCode,
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w800,
                         fontSize: 24,
@@ -279,7 +289,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           height: 1.5,
                         ),
                         children: [
-                          const TextSpan(text: 'We sent a 6-digit code to '),
+                          TextSpan(text: context.l10n.otpSentToPrefix),
                           TextSpan(
                             text: _displayPhone,
                             style: GoogleFonts.dmSans(
@@ -354,7 +364,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                 ),
                               )
                             : Text(
-                                'Verify Code',
+                                context.l10n.verifyCode,
                                 style: GoogleFonts.dmSans(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
@@ -374,7 +384,9 @@ class _OtpScreenState extends State<OtpScreen> {
                                   color: AppColors.mutedForeground,
                                 ),
                                 children: [
-                                  const TextSpan(text: 'Resend code in '),
+                                  TextSpan(
+                                    text: context.l10n.resendCodeInPrefix,
+                                  ),
                                   TextSpan(
                                     text: '${_secondsLeft}s',
                                     style: GoogleFonts.dmSans(
@@ -388,7 +400,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           : GestureDetector(
                               onTap: _resend,
                               child: Text(
-                                'Resend code',
+                                context.l10n.resendCode,
                                 style: GoogleFonts.dmSans(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
@@ -419,7 +431,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Didn\'t receive the code? Check that your phone number is correct and that you have network coverage.',
+                              context.l10n.otpNotReceived,
                               style: GoogleFonts.dmSans(
                                 fontSize: 12,
                                 color: AppColors.mutedForeground,
@@ -463,7 +475,7 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            'Verify Phone',
+            context.l10n.verifyPhone,
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w700,
               fontSize: 18,

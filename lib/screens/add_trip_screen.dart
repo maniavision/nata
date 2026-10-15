@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
@@ -186,7 +187,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
     final picker = widget.locationPicker ?? _defaultLocationPicker;
     final result = await picker(
       context,
-      title: departure ? 'Departing From' : 'Arriving In',
+      title: departure ? context.l10n.departingFrom : context.l10n.arrivingIn,
       // The city field opens straight on that country's cities; the country
       // field starts from the country list.
       initial: startAtCity ? current : null,
@@ -212,7 +213,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
     final today = DateTime.now();
     final result = await DatePickerSheet.show(
       context,
-      title: departure ? 'Departure Date' : 'Arrival Date',
+      title: departure
+          ? context.l10n.departureDateTitle
+          : context.l10n.arrivalDateTitle,
       initialDate: departure ? _depDate : _arrDate,
       // A trip cannot arrive before it departs.
       firstDate: departure
@@ -239,7 +242,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
       _acceptReceipt(picked);
     } catch (e) {
       debugPrint('[AddTrip] receipt picker error: $e');
-      if (mounted) setState(() => _error = 'Could not open that file.');
+      if (mounted) setState(() => _error = context.l10n.errOpenFile);
     }
   }
 
@@ -259,7 +262,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
   void _acceptReceipt(PickedReceipt? picked) {
     if (picked == null || !mounted) return;
     if (picked.sizeBytes > _maxReceiptBytes) {
-      setState(() => _error = 'That file is too large (max 10 MB).');
+      setState(() => _error = context.l10n.errFileTooLarge);
       return;
     }
     setState(() {
@@ -639,7 +642,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
         children: [
           _cardHeader(
             icon: Icons.location_on_outlined,
-            label: 'Departure details',
+            label: context.l10n.departureDetailsTitle,
             iconColor: AppColors.primary,
             labelColor: AppColors.primary,
             badge: context.l10n.from,
@@ -661,7 +664,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-departure-country',
-                  label: 'DEPARTURE COUNTRY',
+                  label: context.l10n.departureCountryLabel,
                   icon: Icons.language_rounded,
                   iconColor: AppColors.primary,
                   value: _departure?.country,
@@ -674,7 +677,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-departure-city',
-                  label: 'DEPARTURE CITY',
+                  label: context.l10n.departureCityLabel,
                   icon: Icons.location_city_rounded,
                   iconColor: AppColors.primary,
                   value: _departure?.city,
@@ -699,7 +702,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
         children: [
           _cardHeader(
             icon: Icons.location_on,
-            label: 'Arrival details',
+            label: context.l10n.arrivalDetailsTitle,
             iconColor: AppColors.accent,
             labelColor: AppColors.accent,
             badge: context.l10n.to,
@@ -721,7 +724,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-arrival-country',
-                  label: 'ARRIVAL COUNTRY',
+                  label: context.l10n.arrivalCountryLabel,
                   icon: Icons.language_rounded,
                   iconColor: AppColors.accent,
                   value: _arrival?.country,
@@ -734,7 +737,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-arrival-city',
-                  label: 'ARRIVAL CITY',
+                  label: context.l10n.arrivalCityLabel,
                   icon: Icons.location_city_rounded,
                   iconColor: AppColors.accent,
                   value: _arrival?.city,
@@ -762,7 +765,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             : _existingReceiptPath!.split('/').last);
     final detail = _receipt != null
         ? '${_fmtSize(_receipt!.sizeBytes)}  '
-        : 'Receipt on file  ';
+        : '${context.l10n.receiptOnFile}  ';
 
     return _FormCard(
       child: Column(
@@ -839,7 +842,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                               ),
                             ),
                             Text(
-                              '✓ Attached',
+                              '✓ ${context.l10n.attached}',
                               style: GoogleFonts.dmSans(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 10,
@@ -998,7 +1001,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                       color: AppColors.foreground,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'e.g. X7KQ9R',
+                      hintText: context.l10n.bookingRefHint,
                       hintStyle: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
@@ -1037,9 +1040,17 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _buildDropdown(
                   fieldKey: 'add-trip-weight',
-                  label: 'MAX WEIGHT',
+                  label: context.l10n.maxWeight.toUpperCase(),
                   value: _maxWeightLabel,
                   options: _weightOptions.map((o) => o.$1).toList(),
+                  // Shown in the app's language; the English label is only
+                  // used to find the weight.
+                  display: (o) => context.l10n.upToKg(
+                    _weightOptions
+                        .firstWhere((w) => w.$1 == o)
+                        .$2
+                        .toStringAsFixed(1),
+                  ),
                   onChanged: (v) =>
                       setState(() => _maxWeightLabel = v ?? _maxWeightLabel),
                 ),
@@ -1048,9 +1059,11 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _buildDropdown(
                   fieldKey: 'add-trip-size',
-                  label: 'MAX ITEM SIZE',
+                  label: context.l10n.maxItemSize.toUpperCase(),
                   value: _maxSize,
                   options: _sizeOptions,
+                  // Saved in English (the database reads it), shown translated.
+                  display: context.l10n.tripSize,
                   onChanged: (v) => setState(() => _maxSize = v ?? _maxSize),
                 ),
               ),
@@ -1142,6 +1155,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
     required String value,
     required List<String> options,
     required ValueChanged<String?> onChanged,
+    String Function(String option)? display,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1186,7 +1200,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                     (o) => DropdownMenuItem(
                       value: o,
                       child: Text(
-                        o,
+                        display?.call(o) ?? o,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 11,
@@ -1494,27 +1508,12 @@ class _AddTripScreenState extends State<AddTripScreen> {
     );
   }
 
-  String _fmtDate(DateTime d) => '${_monthName(d.month)} ${d.day}, ${d.year}';
+  String _fmtDate(DateTime d) =>
+      DateFormat.yMMMMd(Localizations.localeOf(context).toString()).format(d);
 
   String _fmtSize(int bytes) => bytes >= 1024 * 1024
       ? '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB'
       : '${(bytes / 1024).clamp(0.1, double.infinity).toStringAsFixed(1)} KB';
-
-  String _monthName(int m) => const [
-    '',
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ][m];
 }
 
 /// Keeps a booking reference valid as the user types: letters and digits only,

@@ -341,7 +341,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pricingLabel => 'Pricing:';
 
   @override
-  String get pricingValue => 'Calculated per item size & weight';
+  String get pricingValue => 'Calculated per distance, item size & weight';
+
+  @override
+  String get sameDayDelivery => 'Same day delivery';
+
+  @override
+  String deliverInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Deliver in $count days',
+      one: 'Deliver in 1 day',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get itemSizeAndWeight => 'ITEM SIZE & WEIGHT LIMITS ACCEPTED';
@@ -417,7 +431,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calculatedPrice => 'Calculated Item Price';
 
   @override
-  String get sendDeliveryRequest => 'Send Delivery Request';
+  String get sendDeliveryRequest => 'Send Request';
 
   @override
   String get secureEscrowCheckout => 'Secure Escrow Checkout';
@@ -480,7 +494,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get refundBullet2 =>
-      'Free cancellation anytime before physical handoff to traveler.';
+      'Cancelling is free until the traveler accepts. After that, a 10% cancellation fee applies until handoff.';
 
   @override
   String get refundBullet3 =>
@@ -1609,6 +1623,300 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachHandoverFirst => 'Attach the handover photo first.';
 
   @override
+  String get recipientLocalPhoneHint => 'e.g. 7700 900123';
+
+  @override
+  String get paymentSettings => 'Payment Settings';
+
+  @override
+  String get paymentSettingsSub => 'Payment methods & payout account';
+
+  @override
+  String get paymentMethods => 'Payment Methods';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get defaultLabel => 'Default';
+
+  @override
+  String get payoutAccount => 'Payout Account';
+
+  @override
+  String get payoutAccountNote =>
+      'Earnings from completed deliveries are withdrawn to this account after the 3-day dispute window.';
+
+  @override
+  String get addPayoutAccount => 'Add payout account';
+
+  @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get defaultCurrency => 'Default Currency';
+
+  @override
+  String get defaultCurrencySub => 'Used for payouts and receipts';
+
+  @override
+  String get payoutSchedule => 'Payout Schedule';
+
+  @override
+  String get payoutScheduleSub => 'After delivery is confirmed';
+
+  @override
+  String get automatic => 'Automatic';
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String get addPaymentMethod => 'Add Payment Method';
+
+  @override
+  String get paymentSecurityNote =>
+      'Your payment details are encrypted and stored securely. Payments are held in escrow until delivery is confirmed.';
+
+  @override
+  String get paymentKindCard => 'Card';
+
+  @override
+  String get paymentKindCardSub => 'Debit or credit';
+
+  @override
+  String get paymentKindMobile => 'Mobile Money';
+
+  @override
+  String get paymentKindAppleSub => 'Quick checkout';
+
+  @override
+  String get cardDetails => 'Card Details';
+
+  @override
+  String get nameOnCard => 'Name on Card';
+
+  @override
+  String get nameOnCardHint => 'Full name as on card';
+
+  @override
+  String get cardNumber => 'Card Number';
+
+  @override
+  String get expiryDate => 'Expiry Date';
+
+  @override
+  String get mobileMoneyDetails => 'Mobile Money Details';
+
+  @override
+  String get provider => 'Provider';
+
+  @override
+  String get mobileNumber => 'Mobile Number';
+
+  @override
+  String get registeredName => 'Registered Name';
+
+  @override
+  String get registeredNameHint => 'Name registered with the provider';
+
+  @override
+  String get applePayNote =>
+      'Apple Pay will be linked to your Apple ID wallet. You\'ll confirm it with Face ID on your device.';
+
+  @override
+  String get setAsDefault => 'Set as default';
+
+  @override
+  String get setAsDefaultSub => 'Use this method for future requests';
+
+  @override
+  String get savePaymentMethod => 'Save Payment Method';
+
+  @override
+  String get errCardName => 'Enter the name as it appears on the card.';
+
+  @override
+  String get errCardNumber => 'Enter a valid card number.';
+
+  @override
+  String get errCardExpiry => 'Enter a valid expiry date (MM/YY).';
+
+  @override
+  String get errCardCvv => 'Enter the 3 or 4 digit security code.';
+
+  @override
+  String get errMobileNumber =>
+      'Enter the mobile number with the country code, e.g. +254 712 345 678.';
+
+  @override
+  String get errRegisteredName =>
+      'Enter the name registered with the provider.';
+
+  @override
+  String cardExpires(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String holdersIphone(String name) {
+    return '$name\'s iPhone';
+  }
+
+  @override
+  String get errPaymentSettingsLoad =>
+      'Could not load your payment settings. Please try again.';
+
+  @override
+  String get errPaymentSettingsSave =>
+      'Could not save the change. Please try again.';
+
+  @override
+  String get noPaymentMethods =>
+      'No payment method yet. Add one to pay for delivery requests.';
+
+  @override
+  String get noPayoutAccount => 'No payout account yet.';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get manual => 'Manual';
+
+  @override
+  String get faceScanLivenessNote =>
+      'Biometric AI performs real-time liveness check to confirm you are the verified document holder.';
+
+  @override
+  String get deliveryPayoutRelease => 'Delivery & Payout Release';
+
+  @override
+  String get confirmDeliveryStep => 'Step 3 of 4: Confirm Delivery';
+
+  @override
+  String get itemArrivedAtDestination => 'Item Arrived at Destination';
+
+  @override
+  String get confirmHandoffNote =>
+      'Confirm recipient handoff using the 4-digit delivery PIN or by uploading a photo of the handed-off sealed item.';
+
+  @override
+  String get pinOptionTitle => 'Option 1: 4-Digit Delivery PIN';
+
+  @override
+  String get instantRelease => 'Instant Release';
+
+  @override
+  String get pinOptionNote =>
+      'The sender gave the recipient a secret 4-digit code. Enter it below:';
+
+  @override
+  String get pinConfirmed => 'Valid recipient PIN confirmed';
+
+  @override
+  String get pinMismatch => 'This PIN doesn\'t match the recipient\'s code.';
+
+  @override
+  String get photoOptionTitle => 'Option 2: Handoff Photo Proof';
+
+  @override
+  String get alternative => 'Alternative';
+
+  @override
+  String get noHandoffPhoto => 'No handoff photo yet';
+
+  @override
+  String get handoffPhotoHint => 'A photo of the sealed item being handed over';
+
+  @override
+  String get sealIntactPhoto => 'Package seal intact';
+
+  @override
+  String get change => 'Change';
+
+  @override
+  String get payoutDestination => 'Traveler Payout Destination';
+
+  @override
+  String payoutAmount(String amount) {
+    return '+$amount Payout';
+  }
+
+  @override
+  String get noPayoutAccountForRelease =>
+      'No payout account yet. Add one in Payment Settings; the payout will be sent there.';
+
+  @override
+  String get mobileMoneyPayoutSpeed => 'Mobile money · Instant release';
+
+  @override
+  String get bankPayoutSpeed => 'Direct bank transfer · 1 business day';
+
+  @override
+  String get disputeProtectionWindow => 'Dispute Protection Window';
+
+  @override
+  String get threeDaysActive => '3 Days Active';
+
+  @override
+  String get disputeProtectionNote =>
+      'Funds are automatically disbursed to the chosen payout method once the 3-day dispute protection window concludes without contest.';
+
+  @override
+  String get reportIssue => 'Report an issue or open a dispute';
+
+  @override
+  String confirmReleasePayout(String amount) {
+    return 'Confirm & Release Payout ($amount)';
+  }
+
+  @override
+  String get requestUpdated => 'Request updated';
+
+  @override
+  String get errRequestNotFound => 'This request no longer exists.';
+
+  @override
+  String get errRequestNotEditable =>
+      'The traveler already answered this request, so it can\'t be changed anymore.';
+
+  @override
+  String get editRequest => 'Edit Request';
+
+  @override
+  String saveChangesWithPrice(String price) {
+    return 'Save changes · $price';
+  }
+
+  @override
+  String get statusExpired => 'Expired';
+
+  @override
+  String get statusPaid => 'Paid';
+
+  @override
+  String get statusInTransit => 'In transit';
+
+  @override
+  String get statusDelivered => 'Delivered';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get noSentRequests => 'You haven\'t sent any requests yet.';
+
+  @override
+  String get errLoadRequests => 'Could not load your requests.';
+
+  @override
+  String get tapToEdit => 'Tap to edit';
+
+  @override
   String get errIdNameMismatch =>
       'The name on this ID doesn\'t match the name on your profile. Upload an ID showing your first and last name, or update your profile name.';
 
@@ -1687,7 +1995,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errRecipientPhone =>
-      'Enter the recipient\'s phone number with the country code, e.g. +44 7700 900123.';
+      'Enter a valid phone number for the recipient.';
 
   @override
   String get errWeight => 'Enter the package weight, e.g. 0.9 kg.';
@@ -1709,6 +2017,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errDuplicate => 'You already have an open request on this trip.';
+
+  @override
+  String errDestinationLimit(String city) {
+    return 'You already have 5 open requests going to $city. You can send another once one of them is delivered, declined or expires.';
+  }
+
+  @override
+  String get cancelRequest => 'Cancel Request';
+
+  @override
+  String get cancelRequestTitle => 'Cancel this request?';
+
+  @override
+  String get cancelRequestFreeBody =>
+      'The traveler hasn\'t accepted yet, so cancelling is free.';
+
+  @override
+  String cancelRequestFeeBody(String fee) {
+    return 'The traveler already accepted this request. Cancelling now costs a 10% cancellation fee of $fee.';
+  }
+
+  @override
+  String get keepRequest => 'Keep request';
+
+  @override
+  String cancelWithFee(String fee) {
+    return 'Cancel and pay $fee';
+  }
+
+  @override
+  String get requestCancelled => 'Request cancelled';
+
+  @override
+  String cancellationFeeCharged(String fee) {
+    return 'Cancellation fee: $fee';
+  }
+
+  @override
+  String get cancelledFreeOfCharge => 'Cancelled free of charge';
+
+  @override
+  String get errFeeChanged =>
+      'The traveler just answered this request, so the cancellation fee has changed. Please check and try again.';
+
+  @override
+  String get errNotCancellable => 'This request can no longer be cancelled.';
+
+  @override
+  String get errCancelFailed =>
+      'Could not cancel your request. Please try again.';
+
+  @override
+  String sentRequestsCount(int count) {
+    return 'SENT REQUESTS ($count)';
+  }
+
+  @override
+  String get waitingForTraveler => 'Waiting for traveler';
+
+  @override
+  String get routeLabel => 'Route:';
+
+  @override
+  String travelerDeliveries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Traveler · $count deliveries',
+      one: 'Traveler · 1 delivery',
+      zero: 'Traveler · New',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get errSessionExpired => 'Your session expired. Please sign in again.';
@@ -1748,7 +2129,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sendRequestWithPrice(String price) {
-    return 'Send Delivery Request · $price';
+    return 'Send Request · $price';
   }
 
   @override
@@ -1772,7 +2153,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errPriceChanged =>
-      'The traveler changed their price. Go back and open the request again to see the new price.';
+      'The price has changed since you opened this request. Go back and open it again to see the new price.';
 
   @override
   String get priceEnterWeight =>
@@ -1801,4 +2182,598 @@ class AppLocalizationsEn extends AppLocalizations {
   String priceRateLine(String rate, String currency, String date) {
     return '1 USD = $rate $currency · updated $date';
   }
+
+  @override
+  String get departingFrom => 'Departing From';
+
+  @override
+  String get hello => 'Hello,';
+
+  @override
+  String get whereAreYouSending => 'Where are you sending?';
+
+  @override
+  String get whereSendingFrom => 'Where are you sending from?';
+
+  @override
+  String get destinationExample => 'e.g. London, United Kingdom';
+
+  @override
+  String get anytimeThisMonth => 'Anytime this month';
+
+  @override
+  String get flexibleShort => '(±3d)';
+
+  @override
+  String get availableTravelers => 'Available Travelers';
+
+  @override
+  String get errLoadTravelers => 'Could not load travelers.';
+
+  @override
+  String get noTravelersOnRoute => 'No travelers on this route yet.';
+
+  @override
+  String get desiredDeliveryDateTitle => 'Desired Delivery Date';
+
+  @override
+  String upToKg(String weight) {
+    return 'Up to $weight kg';
+  }
+
+  @override
+  String get dateAnytime => 'Anytime';
+
+  @override
+  String get dateThisWeek => 'This Week';
+
+  @override
+  String get dateNextWeek => 'Next Week';
+
+  @override
+  String get dateFlexible => 'Flexible (±3d)';
+
+  @override
+  String travelerFlightsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count traveler flights',
+      one: '1 traveler flight',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String flightsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count flights',
+      one: '1 flight',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get plusMinus3Days => '±3 days';
+
+  @override
+  String get anyDate => 'Any date';
+
+  @override
+  String get selectADate => 'Select a date';
+
+  @override
+  String confirmDateOn(String date) {
+    return 'Confirm Date ($date)';
+  }
+
+  @override
+  String get confirmDateAnytime => 'Confirm Date (Anytime)';
+
+  @override
+  String get searchCountryHint => 'Search country...';
+
+  @override
+  String searchCityIn(String country) {
+    return 'Search city in $country...';
+  }
+
+  @override
+  String get selectCityTitle => 'Select City';
+
+  @override
+  String get noCountriesFound => 'No countries found';
+
+  @override
+  String noCitiesFoundIn(String country) {
+    return 'No cities found in $country';
+  }
+
+  @override
+  String get selectCountryCode => 'Select Country Code';
+
+  @override
+  String get errLoadTravelersRetry =>
+      'Could not load travelers. Please try again.';
+
+  @override
+  String get anywhere => 'Anywhere';
+
+  @override
+  String byDate(String date) {
+    return 'by $date';
+  }
+
+  @override
+  String get noTravelersOnRouteTitle => 'No travelers on this route yet';
+
+  @override
+  String get tryAnotherDateOrRoute =>
+      'Try another date or route, or turn on alerts below.';
+
+  @override
+  String get travelersFound => 'Travelers Found';
+
+  @override
+  String get notifyNewTravelers =>
+      'Get notified immediately when new travelers add trips on this route.';
+
+  @override
+  String get capacityNotSpecified => 'Capacity not specified';
+
+  @override
+  String acceptsUpToKg(String weight) {
+    return 'Accepts up to $weight kg';
+  }
+
+  @override
+  String get arrivingIn => 'Arriving In';
+
+  @override
+  String get departureDateTitle => 'Departure Date';
+
+  @override
+  String get arrivalDateTitle => 'Arrival Date';
+
+  @override
+  String get errOpenFile => 'Could not open that file.';
+
+  @override
+  String get errFileTooLarge => 'That file is too large (max 10 MB).';
+
+  @override
+  String get departureDetailsTitle => 'Departure details';
+
+  @override
+  String get arrivalDetailsTitle => 'Arrival details';
+
+  @override
+  String get departureCountryLabel => 'DEPARTURE COUNTRY';
+
+  @override
+  String get departureCityLabel => 'DEPARTURE CITY';
+
+  @override
+  String get arrivalCountryLabel => 'ARRIVAL COUNTRY';
+
+  @override
+  String get arrivalCityLabel => 'ARRIVAL CITY';
+
+  @override
+  String get receiptOnFile => 'Receipt on file';
+
+  @override
+  String get bookingRefHint => 'e.g. X7KQ9R';
+
+  @override
+  String deliveriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deliveries',
+      one: '1 delivery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String availableCount(int count) {
+    return '$count available';
+  }
+
+  @override
+  String deliveredCount(int count) {
+    return '$count delivered';
+  }
+
+  @override
+  String flightsShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count flts',
+      one: '1 flt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String amountPerDelivery(String amount) {
+    return '$amount / delivery';
+  }
+
+  @override
+  String get countries180 => '180+ Countries';
+
+  @override
+  String get errEnterPhone => 'Please enter your phone number.';
+
+  @override
+  String get errTooManyRequests => 'Too many requests. Please wait a moment.';
+
+  @override
+  String get errTooManyRequestsRetry =>
+      'Too many requests. Please wait a moment and try again.';
+
+  @override
+  String get errInvalidPhone =>
+      'Invalid phone number. Please check and try again.';
+
+  @override
+  String get errSomethingWrong => 'Something went wrong. Please try again.';
+
+  @override
+  String get errFillAllFields => 'Please fill in all fields.';
+
+  @override
+  String get countryOfResidenceLabel => 'COUNTRY OF RESIDENCE';
+
+  @override
+  String get errVerificationFailed => 'Verification failed. Please try again.';
+
+  @override
+  String get errCodeExpired => 'Code expired. Please request a new one.';
+
+  @override
+  String get errOtpDisabled =>
+      'Phone verification is not enabled. Please contact support.';
+
+  @override
+  String get errIncorrectCode => 'Incorrect code. Please try again.';
+
+  @override
+  String get errTooManyAttempts =>
+      'Too many attempts. Please wait before retrying.';
+
+  @override
+  String get errNetwork => 'Network error. Please check your connection.';
+
+  @override
+  String get errIncorrectOrExpiredCode =>
+      'Incorrect code or code expired. Please try again.';
+
+  @override
+  String get enterVerificationCode => 'Enter verification code';
+
+  @override
+  String get otpSentToPrefix => 'We sent a 6-digit code to ';
+
+  @override
+  String get verifyCode => 'Verify Code';
+
+  @override
+  String get resendCodeInPrefix => 'Resend code in ';
+
+  @override
+  String get resendCode => 'Resend code';
+
+  @override
+  String get otpNotReceived =>
+      'Didn\'t receive the code? Check that your phone number is correct and that you have network coverage.';
+
+  @override
+  String get verifyPhone => 'Verify Phone';
+
+  @override
+  String get errCaptureIdFirst =>
+      'Please capture or upload your ID document first.';
+
+  @override
+  String get errUploadFailed => 'Upload failed. Please try again.';
+
+  @override
+  String get uploadingEllipsis => 'Uploading...';
+
+  @override
+  String get submitForVerification => 'Submit for Verification';
+
+  @override
+  String get documentSelected => 'Document selected';
+
+  @override
+  String errCameraDetail(String error) {
+    return 'Camera error: $error';
+  }
+
+  @override
+  String errFilePicker(String error) {
+    return 'File picker error: $error';
+  }
+
+  @override
+  String get verifiedLabel => 'Verified';
+
+  @override
+  String matchPercent(String percent) {
+    return '$percent Match';
+  }
+
+  @override
+  String get requestExpiresInPrefix => 'Request expires in ';
+
+  @override
+  String get escrowNotePart1 =>
+      'Your payment is held safely by Nata. The traveler is only paid ';
+
+  @override
+  String get escrowNotePart2 => 'after your recipient verifies delivery';
+
+  @override
+  String get escrowNotePart3 =>
+      ' with your secret 4-digit code or photo proof.';
+
+  @override
+  String get itemPlain => 'Item';
+
+  @override
+  String get weightPlain => 'Weight';
+
+  @override
+  String get refundFullBold => 'Full 100% refund';
+
+  @override
+  String get refundFullRest => 'if traveler cancels or item is not delivered.';
+
+  @override
+  String get cancelFeeBold => '10% cancellation fee';
+
+  @override
+  String get cancelFeeRest =>
+      'if you cancel after the traveler accepted, until handoff.';
+
+  @override
+  String get disputeWindowBold => '3-day dispute window';
+
+  @override
+  String get disputeWindowRest => 'after delivery before funds are finalized.';
+
+  @override
+  String get reviewTagIntact => 'Item was intact';
+
+  @override
+  String get reviewTagOnTime => 'On time';
+
+  @override
+  String get reviewTagCommunicator => 'Great communicator';
+
+  @override
+  String get reviewTagRules => 'Followed all rules';
+
+  @override
+  String get reviewTagHandoff => 'Smooth handoff';
+
+  @override
+  String get reviewTagAgain => 'Would use again';
+
+  @override
+  String deliveredYourItem(String item, String date) {
+    return 'Delivered your $item · $date';
+  }
+
+  @override
+  String get expiryHint => 'MM/YY';
+
+  @override
+  String get profilePictureUpdated => 'Profile picture updated successfully';
+
+  @override
+  String errUploadImage(String error) {
+    return 'Failed to upload image: $error';
+  }
+
+  @override
+  String get senderEscrowFunded => 'Sender · Escrow Funded';
+
+  @override
+  String senderDeliveries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sender · $count deliveries',
+      one: 'Sender · 1 delivery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sealedPhotosAttached(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count factory-sealed photos attached',
+      one: '1 factory-sealed photo attached',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String capturedAt(String place, String time) {
+    return 'Captured at $place · $time';
+  }
+
+  @override
+  String txDeliveryOf(String item) {
+    return '$item delivery';
+  }
+
+  @override
+  String txReleasedFromEscrow(String date) {
+    return 'Released from escrow · $date';
+  }
+
+  @override
+  String get txEscrowHold => 'Escrow hold';
+
+  @override
+  String txDeliveryRequest(String date) {
+    return 'Delivery request · $date';
+  }
+
+  @override
+  String priceEstimateNote(String currency) {
+    return 'This is an estimate in $currency at today\'s rate. The price is fixed when the traveler accepts.';
+  }
+
+  @override
+  String get estimateLabel => 'Estimate';
+
+  @override
+  String get errRateUnavailable =>
+      'The exchange rate isn\'t available right now, so the price can\'t be fixed. Please try again later.';
+
+  @override
+  String get errRequestNotPending => 'This request has already been answered.';
+
+  @override
+  String get chatLockedUntilPayment =>
+      'Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.';
+
+  @override
+  String get messageLocked => 'Message';
+
+  @override
+  String get messageUnlocksAfterPayment => 'Messaging unlocks after payment.';
+
+  @override
+  String get escrowFunded => 'Escrow funded';
+
+  @override
+  String maxDims(String dims) {
+    return 'Max $dims';
+  }
+
+  @override
+  String get errRequestNotPayable => 'This request can no longer be paid.';
+
+  @override
+  String get step1ValidateTicket => 'STEP 1 · VALIDATE FLIGHT TICKET';
+
+  @override
+  String get step2PaymentMethod => 'STEP 2 · SELECT PAYMENT METHOD';
+
+  @override
+  String get ticketNotValidated => 'Not validated';
+
+  @override
+  String get ticketValidated => 'Checked';
+
+  @override
+  String ticketIntro(String name) {
+    return '$name uploaded their flight ticket for this trip. Check it matches the route and date before you pay.';
+  }
+
+  @override
+  String get viewFullTicket => 'View full ticket';
+
+  @override
+  String get ticketPdf => 'Flight ticket (PDF)';
+
+  @override
+  String get ticketRoute => 'Route';
+
+  @override
+  String get ticketDeparture => 'Departure';
+
+  @override
+  String get ticketBookingRef => 'Booking reference';
+
+  @override
+  String get ticketTraveler => 'Traveler';
+
+  @override
+  String get iCheckedTicket => 'I\'ve checked this ticket';
+
+  @override
+  String get errTicketLoad => 'Could not load the ticket.';
+
+  @override
+  String get noTicketUploaded =>
+      'The traveler hasn\'t uploaded a ticket for this trip yet, so payment stays locked.';
+
+  @override
+  String get validateToUnlock => 'Validate ticket to unlock payment';
+
+  @override
+  String payAmountIntoEscrow(String amount) {
+    return 'Pay $amount into Escrow';
+  }
+
+  @override
+  String get paymentsComingSoon =>
+      'Payments aren\'t available yet. You\'ll be able to pay here soon.';
+
+  @override
+  String get requestExpiredPayment =>
+      'This request has expired and can no longer be paid.';
+
+  @override
+  String hoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String get step2VerifyId => 'STEP 2 · VERIFY TRAVELER ID';
+
+  @override
+  String get step3PaymentMethod => 'STEP 3 · SELECT PAYMENT METHOD';
+
+  @override
+  String idIntro(String name) {
+    return '$name\'s government ID was verified. Check the photo looks real and the name matches the flight ticket before you pay.';
+  }
+
+  @override
+  String get identityVerifiedBadge => 'Identity verified';
+
+  @override
+  String get nameOnId => 'Name on ID';
+
+  @override
+  String get idDocument => 'ID document';
+
+  @override
+  String get idVerifiedOn => 'Verified on';
+
+  @override
+  String get idPhotoOnlyNote =>
+      'Only the photo is shown. The rest of the ID stays private.';
+
+  @override
+  String get iCheckedId => 'I\'ve checked this ID';
+
+  @override
+  String get errIdPhotoLoad => 'Could not load the ID photo.';
+
+  @override
+  String get travelerNotVerified =>
+      'This traveler\'s identity isn\'t verified, so payment stays locked.';
+
+  @override
+  String get validateTicketAndId => 'Validate ticket and ID to unlock payment';
+
+  @override
+  String get idSharedWithSendersNote =>
+      'When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private.';
 }

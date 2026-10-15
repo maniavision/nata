@@ -58,6 +58,14 @@ class AppBottomNav extends StatelessWidget {
     }
   }
 
+  /// Switching tabs shows the new tab straight away, without the sliding
+  /// animation of opening a page (and without its swipe-back gesture).
+  static Route<T> tabRoute<T>(Widget screen) => PageRouteBuilder<T>(
+    pageBuilder: (context, animation, secondaryAnimation) => screen,
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  );
+
   Future<void> _onTap(BuildContext context, int index) async {
     if (index == current && isTabRoot) return;
 
@@ -66,15 +74,13 @@ class AppBottomNav extends StatelessWidget {
     if (index == 0) {
       // Home is the root of the app: go back to it and drop everything above.
       navigator.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        tabRoute<void>(const HomeScreen()),
         (route) => false,
       );
       return;
     }
 
-    final route = MaterialPageRoute<void>(
-      builder: (context) => _destination(index),
-    );
+    final route = tabRoute<void>(_destination(index));
 
     if (current == 0 && isTabRoot) {
       // From Home: stack the tab screen on top, refresh Home on return.

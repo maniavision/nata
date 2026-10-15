@@ -40,6 +40,23 @@ class CityService {
     return _cache[key] = CityCoordinates(lat, lon);
   }
 
+  /// The capital of the country with ISO code [countryCode]
+  /// (`nata.cities.is_capital`), or null if none is known. Throws if the
+  /// lookup itself fails.
+  Future<({int id, String name})?> capitalOf(String countryCode) async {
+    final row = await _client
+        .schema('nata')
+        .from('cities')
+        .select('id, name')
+        .eq('country_code', countryCode.trim().toUpperCase())
+        .eq('is_capital', true)
+        .order('id')
+        .limit(1)
+        .maybeSingle();
+    if (row == null) return null;
+    return (id: (row['id'] as num).toInt(), name: row['name'] as String);
+  }
+
   static double? _num(Object? v) {
     if (v is num) return v.toDouble();
     if (v is String) return double.tryParse(v);

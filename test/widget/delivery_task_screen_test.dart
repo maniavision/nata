@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:flutter/material.dart';
@@ -86,15 +87,16 @@ void main() {
       );
     });
 
-    testWidgets('confirming without a handover photo asks for one', (
+    testWidgets('Confirm Delivery & Claim opens the payout release', (
       tester,
     ) async {
       await pump(tester);
 
       await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text('Attach the handover photo first.'), findsOneWidget);
+      expect(find.byType(DeliveryConfirmScreen), findsOneWidget);
+      expect(find.text('Delivery & Payout Release'), findsOneWidget);
     });
 
     testWidgets('attaching the handover photo marks step 2 attached', (
@@ -171,8 +173,6 @@ void main() {
         0x82,
       ]);
       await pump(tester, picker: (_) async => png);
-      await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
-      await tester.pump();
 
       await tester.tap(find.byKey(const ValueKey('delivery-task-handover')));
       await tester.pump();
@@ -180,8 +180,6 @@ void main() {
       expect(find.text('Handover photo attached'), findsOneWidget);
       expect(find.text('Pending Delivery'), findsNothing);
       expect(find.text('Attached'), findsNWidgets(2));
-      // The error goes away once the photo is there.
-      expect(find.text('Attach the handover photo first.'), findsNothing);
     });
 
     testWidgets('a cancelled photo pick changes nothing', (tester) async {

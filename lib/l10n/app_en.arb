@@ -118,7 +118,16 @@
   "destination": "Destination",
   "directFlight": "Direct flight",
   "pricingLabel": "Pricing:",
-  "pricingValue": "Calculated per item size & weight",
+  "pricingValue": "Calculated per distance, item size & weight",
+  "sameDayDelivery": "Same day delivery",
+  "deliverInDays": "{count, plural, =1{Deliver in 1 day} other{Deliver in {count} days}}",
+  "@deliverInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "itemSizeAndWeight": "ITEM SIZE & WEIGHT LIMITS ACCEPTED",
   "weightLimit": "Weight Limit",
   "sizeLimit": "Size Limit",
@@ -144,7 +153,7 @@
   "photoAttached": "photo attached",
   "addPhoto": "Add photo",
   "calculatedPrice": "Calculated Item Price",
-  "sendDeliveryRequest": "Send Delivery Request",
+  "sendDeliveryRequest": "Send Request",
 
   "secureEscrowCheckout": "Secure Escrow Checkout",
   "paymentWindowActive": "PAYMENT WINDOW ACTIVE",
@@ -165,7 +174,7 @@
   "payIntoEscrow": "Pay into Escrow",
   "cancellationTitle": "Cancellation & Refund Guarantee",
   "refundBullet1": "Full 100% refund if traveler cancels or item is not delivered.",
-  "refundBullet2": "Free cancellation anytime before physical handoff to traveler.",
+  "refundBullet2": "Cancelling is free until the traveler accepts. After that, a 10% cancellation fee applies until handoff.",
   "refundBullet3": "3-day dispute window after delivery before funds are finalized.",
   "escrowEncrypted": "256-Bit Encrypted Escrow by Nata Pay",
 
@@ -625,6 +634,101 @@
   "@orderNumber": {"placeholders": {"id": {"type": "String"}}},
   "@handoverNote": {"placeholders": {"city": {"type": "String"}}},
   "@confirmDeliveryClaim": {"placeholders": {"amount": {"type": "String"}}},
+  "recipientLocalPhoneHint": "e.g. 7700 900123",
+  "paymentSettings": "Payment Settings",
+  "paymentSettingsSub": "Payment methods & payout account",
+  "paymentMethods": "Payment Methods",
+  "add": "Add",
+  "remove": "Remove",
+  "defaultLabel": "Default",
+  "payoutAccount": "Payout Account",
+  "payoutAccountNote": "Earnings from completed deliveries are withdrawn to this account after the 3-day dispute window.",
+  "addPayoutAccount": "Add payout account",
+  "preferences": "Preferences",
+  "defaultCurrency": "Default Currency",
+  "defaultCurrencySub": "Used for payouts and receipts",
+  "payoutSchedule": "Payout Schedule",
+  "payoutScheduleSub": "After delivery is confirmed",
+  "automatic": "Automatic",
+  "transactions": "Transactions",
+  "addPaymentMethod": "Add Payment Method",
+  "paymentSecurityNote": "Your payment details are encrypted and stored securely. Payments are held in escrow until delivery is confirmed.",
+  "paymentKindCard": "Card",
+  "paymentKindCardSub": "Debit or credit",
+  "paymentKindMobile": "Mobile Money",
+  "paymentKindAppleSub": "Quick checkout",
+  "cardDetails": "Card Details",
+  "nameOnCard": "Name on Card",
+  "nameOnCardHint": "Full name as on card",
+  "cardNumber": "Card Number",
+  "expiryDate": "Expiry Date",
+  "mobileMoneyDetails": "Mobile Money Details",
+  "provider": "Provider",
+  "mobileNumber": "Mobile Number",
+  "registeredName": "Registered Name",
+  "registeredNameHint": "Name registered with the provider",
+  "applePayNote": "Apple Pay will be linked to your Apple ID wallet. You'll confirm it with Face ID on your device.",
+  "setAsDefault": "Set as default",
+  "setAsDefaultSub": "Use this method for future requests",
+  "savePaymentMethod": "Save Payment Method",
+  "errCardName": "Enter the name as it appears on the card.",
+  "errCardNumber": "Enter a valid card number.",
+  "errCardExpiry": "Enter a valid expiry date (MM/YY).",
+  "errCardCvv": "Enter the 3 or 4 digit security code.",
+  "errMobileNumber": "Enter the mobile number with the country code, e.g. +254 712 345 678.",
+  "errRegisteredName": "Enter the name registered with the provider.",
+  "cardExpires": "Expires {date}",
+  "holdersIphone": "{name}'s iPhone",
+  "@cardExpires": {"placeholders": {"date": {"type": "String"}}},
+  "@holdersIphone": {"placeholders": {"name": {"type": "String"}}},
+  "errPaymentSettingsLoad": "Could not load your payment settings. Please try again.",
+  "errPaymentSettingsSave": "Could not save the change. Please try again.",
+  "noPaymentMethods": "No payment method yet. Add one to pay for delivery requests.",
+  "noPayoutAccount": "No payout account yet.",
+  "weekly": "Weekly",
+  "manual": "Manual",
+  "faceScanLivenessNote": "Biometric AI performs real-time liveness check to confirm you are the verified document holder.",
+  "deliveryPayoutRelease": "Delivery & Payout Release",
+  "confirmDeliveryStep": "Step 3 of 4: Confirm Delivery",
+  "itemArrivedAtDestination": "Item Arrived at Destination",
+  "confirmHandoffNote": "Confirm recipient handoff using the 4-digit delivery PIN or by uploading a photo of the handed-off sealed item.",
+  "pinOptionTitle": "Option 1: 4-Digit Delivery PIN",
+  "instantRelease": "Instant Release",
+  "pinOptionNote": "The sender gave the recipient a secret 4-digit code. Enter it below:",
+  "pinConfirmed": "Valid recipient PIN confirmed",
+  "pinMismatch": "This PIN doesn't match the recipient's code.",
+  "photoOptionTitle": "Option 2: Handoff Photo Proof",
+  "alternative": "Alternative",
+  "noHandoffPhoto": "No handoff photo yet",
+  "handoffPhotoHint": "A photo of the sealed item being handed over",
+  "sealIntactPhoto": "Package seal intact",
+  "change": "Change",
+  "payoutDestination": "Traveler Payout Destination",
+  "payoutAmount": "+{amount} Payout",
+  "noPayoutAccountForRelease": "No payout account yet. Add one in Payment Settings; the payout will be sent there.",
+  "mobileMoneyPayoutSpeed": "Mobile money · Instant release",
+  "bankPayoutSpeed": "Direct bank transfer · 1 business day",
+  "disputeProtectionWindow": "Dispute Protection Window",
+  "threeDaysActive": "3 Days Active",
+  "disputeProtectionNote": "Funds are automatically disbursed to the chosen payout method once the 3-day dispute protection window concludes without contest.",
+  "reportIssue": "Report an issue or open a dispute",
+  "confirmReleasePayout": "Confirm & Release Payout ({amount})",
+  "@payoutAmount": {"placeholders": {"amount": {"type": "String"}}},
+  "@confirmReleasePayout": {"placeholders": {"amount": {"type": "String"}}},
+  "requestUpdated": "Request updated",
+  "errRequestNotFound": "This request no longer exists.",
+  "errRequestNotEditable": "The traveler already answered this request, so it can't be changed anymore.",
+  "editRequest": "Edit Request",
+  "saveChangesWithPrice": "Save changes · {price}",
+  "statusExpired": "Expired",
+  "statusPaid": "Paid",
+  "statusInTransit": "In transit",
+  "statusDelivered": "Delivered",
+  "statusCancelled": "Cancelled",
+  "noSentRequests": "You haven't sent any requests yet.",
+  "errLoadRequests": "Could not load your requests.",
+  "tapToEdit": "Tap to edit",
+  "@saveChangesWithPrice": {"placeholders": {"price": {"type": "String"}}},
   "errIdNameMismatch": "The name on this ID doesn't match the name on your profile. Upload an ID showing your first and last name, or update your profile name.",
   "errContactSave": "Could not save the contact. Please try again.",
   "updateAvailableTitle": "Update available",
@@ -682,7 +786,7 @@
     }
   },
   "errRecipientName": "Enter the recipient's full name.",
-  "errRecipientPhone": "Enter the recipient's phone number with the country code, e.g. +44 7700 900123.",
+  "errRecipientPhone": "Enter a valid phone number for the recipient.",
   "errWeight": "Enter the package weight, e.g. 0.9 kg.",
   "errPhotoRequired": "Add at least one photo of the sealed item.",
   "errPhotoTooBig": "That photo is too large (max 10 MB).",
@@ -690,6 +794,65 @@
   "errTripUnavailable": "This trip is no longer available.",
   "errOwnTrip": "You can't send a parcel with your own trip.",
   "errDuplicate": "You already have an open request on this trip.",
+  "errDestinationLimit": "You already have 5 open requests going to {city}. You can send another once one of them is delivered, declined or expires.",
+  "@errDestinationLimit": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelRequest": "Cancel Request",
+  "cancelRequestTitle": "Cancel this request?",
+  "cancelRequestFreeBody": "The traveler hasn't accepted yet, so cancelling is free.",
+  "cancelRequestFeeBody": "The traveler already accepted this request. Cancelling now costs a 10% cancellation fee of {fee}.",
+  "@cancelRequestFeeBody": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "keepRequest": "Keep request",
+  "cancelWithFee": "Cancel and pay {fee}",
+  "@cancelWithFee": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCancelled": "Request cancelled",
+  "cancellationFeeCharged": "Cancellation fee: {fee}",
+  "@cancellationFeeCharged": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelledFreeOfCharge": "Cancelled free of charge",
+  "errFeeChanged": "The traveler just answered this request, so the cancellation fee has changed. Please check and try again.",
+  "errNotCancellable": "This request can no longer be cancelled.",
+  "errCancelFailed": "Could not cancel your request. Please try again.",
+  "sentRequestsCount": "SENT REQUESTS ({count})",
+  "@sentRequestsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForTraveler": "Waiting for traveler",
+  "routeLabel": "Route:",
+  "travelerDeliveries": "{count, plural, =0{Traveler · New} =1{Traveler · 1 delivery} other{Traveler · {count} deliveries}}",
+  "@travelerDeliveries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "errSessionExpired": "Your session expired. Please sign in again.",
   "errInvalidRequest": "Some details were rejected. Please check the form.",
   "errRequestFailed": "Could not send your request. Please try again.",
@@ -718,7 +881,7 @@
       }
     }
   },
-  "sendRequestWithPrice": "Send Delivery Request · {price}",
+  "sendRequestWithPrice": "Send Request · {price}",
   "@sendRequestWithPrice": {
     "placeholders": {
       "price": {
@@ -739,7 +902,7 @@
   "sizeBackpack": "Backpack",
   "errSizeRequired": "Choose the package size.",
   "errSizeTooBig": "This package is bigger than the traveler accepts.",
-  "errPriceChanged": "The traveler changed their price. Go back and open the request again to see the new price.",
+  "errPriceChanged": "The price has changed since you opened this request. Go back and open it again to see the new price.",
   "priceEnterWeight": "Enter the package weight to see the final price.",
   "priceRateUnavailable": "Exchange rate unavailable, so prices are shown in US dollars.",
   "priceCredit": "Exchange rates by Exchange Rate API",
@@ -766,5 +929,401 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "departingFrom": "Departing From",
+  "hello": "Hello,",
+  "whereAreYouSending": "Where are you sending?",
+  "whereSendingFrom": "Where are you sending from?",
+  "destinationExample": "e.g. London, United Kingdom",
+  "anytimeThisMonth": "Anytime this month",
+  "flexibleShort": "(±3d)",
+  "availableTravelers": "Available Travelers",
+  "errLoadTravelers": "Could not load travelers.",
+  "noTravelersOnRoute": "No travelers on this route yet.",
+  "desiredDeliveryDateTitle": "Desired Delivery Date",
+  "upToKg": "Up to {weight} kg",
+  "@upToKg": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+
+  "dateAnytime": "Anytime",
+  "dateThisWeek": "This Week",
+  "dateNextWeek": "Next Week",
+  "dateFlexible": "Flexible (±3d)",
+  "travelerFlightsCount": "{count, plural, =1{1 traveler flight} other{{count} traveler flights}}",
+  "@travelerFlightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "flightsCount": "{count, plural, =1{1 flight} other{{count} flights}}",
+  "@flightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plusMinus3Days": "±3 days",
+  "anyDate": "Any date",
+  "selectADate": "Select a date",
+  "confirmDateOn": "Confirm Date ({date})",
+  "@confirmDateOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDateAnytime": "Confirm Date (Anytime)",
+
+  "searchCountryHint": "Search country...",
+  "searchCityIn": "Search city in {country}...",
+  "@searchCityIn": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "selectCityTitle": "Select City",
+  "noCountriesFound": "No countries found",
+  "noCitiesFoundIn": "No cities found in {country}",
+  "@noCitiesFoundIn": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "selectCountryCode": "Select Country Code",
+
+  "errLoadTravelersRetry": "Could not load travelers. Please try again.",
+  "anywhere": "Anywhere",
+  "byDate": "by {date}",
+  "@byDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noTravelersOnRouteTitle": "No travelers on this route yet",
+  "tryAnotherDateOrRoute": "Try another date or route, or turn on alerts below.",
+  "travelersFound": "Travelers Found",
+  "notifyNewTravelers": "Get notified immediately when new travelers add trips on this route.",
+  "capacityNotSpecified": "Capacity not specified",
+  "acceptsUpToKg": "Accepts up to {weight} kg",
+  "@acceptsUpToKg": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+
+  "arrivingIn": "Arriving In",
+  "departureDateTitle": "Departure Date",
+  "arrivalDateTitle": "Arrival Date",
+  "errOpenFile": "Could not open that file.",
+  "errFileTooLarge": "That file is too large (max 10 MB).",
+  "departureDetailsTitle": "Departure details",
+  "arrivalDetailsTitle": "Arrival details",
+  "departureCountryLabel": "DEPARTURE COUNTRY",
+  "departureCityLabel": "DEPARTURE CITY",
+  "arrivalCountryLabel": "ARRIVAL COUNTRY",
+  "arrivalCityLabel": "ARRIVAL CITY",
+  "receiptOnFile": "Receipt on file",
+  "bookingRefHint": "e.g. X7KQ9R",
+
+  "deliveriesCount": "{count, plural, =1{1 delivery} other{{count} deliveries}}",
+  "@deliveriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "availableCount": "{count} available",
+  "@availableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveredCount": "{count} delivered",
+  "@deliveredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "flightsShort": "{count, plural, =1{1 flt} other{{count} flts}}",
+  "@flightsShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "amountPerDelivery": "{amount} / delivery",
+  "@amountPerDelivery": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "countries180": "180+ Countries",
+
+  "errEnterPhone": "Please enter your phone number.",
+  "errTooManyRequests": "Too many requests. Please wait a moment.",
+  "errTooManyRequestsRetry": "Too many requests. Please wait a moment and try again.",
+  "errInvalidPhone": "Invalid phone number. Please check and try again.",
+  "errSomethingWrong": "Something went wrong. Please try again.",
+  "errFillAllFields": "Please fill in all fields.",
+  "countryOfResidenceLabel": "COUNTRY OF RESIDENCE",
+  "errVerificationFailed": "Verification failed. Please try again.",
+  "errCodeExpired": "Code expired. Please request a new one.",
+  "errOtpDisabled": "Phone verification is not enabled. Please contact support.",
+  "errIncorrectCode": "Incorrect code. Please try again.",
+  "errTooManyAttempts": "Too many attempts. Please wait before retrying.",
+  "errNetwork": "Network error. Please check your connection.",
+  "errIncorrectOrExpiredCode": "Incorrect code or code expired. Please try again.",
+  "enterVerificationCode": "Enter verification code",
+  "otpSentToPrefix": "We sent a 6-digit code to ",
+  "verifyCode": "Verify Code",
+  "resendCodeInPrefix": "Resend code in ",
+  "resendCode": "Resend code",
+  "otpNotReceived": "Didn't receive the code? Check that your phone number is correct and that you have network coverage.",
+  "verifyPhone": "Verify Phone",
+
+  "errCaptureIdFirst": "Please capture or upload your ID document first.",
+  "errUploadFailed": "Upload failed. Please try again.",
+  "uploadingEllipsis": "Uploading...",
+  "submitForVerification": "Submit for Verification",
+  "documentSelected": "Document selected",
+  "errCameraDetail": "Camera error: {error}",
+  "@errCameraDetail": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errFilePicker": "File picker error: {error}",
+  "@errFilePicker": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "verifiedLabel": "Verified",
+  "matchPercent": "{percent} Match",
+  "@matchPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+
+  "requestExpiresInPrefix": "Request expires in ",
+  "escrowNotePart1": "Your payment is held safely by Nata. The traveler is only paid ",
+  "escrowNotePart2": "after your recipient verifies delivery",
+  "escrowNotePart3": " with your secret 4-digit code or photo proof.",
+  "itemPlain": "Item",
+  "weightPlain": "Weight",
+  "refundFullBold": "Full 100% refund",
+  "refundFullRest": "if traveler cancels or item is not delivered.",
+  "cancelFeeBold": "10% cancellation fee",
+  "cancelFeeRest": "if you cancel after the traveler accepted, until handoff.",
+  "disputeWindowBold": "3-day dispute window",
+  "disputeWindowRest": "after delivery before funds are finalized.",
+
+  "reviewTagIntact": "Item was intact",
+  "reviewTagOnTime": "On time",
+  "reviewTagCommunicator": "Great communicator",
+  "reviewTagRules": "Followed all rules",
+  "reviewTagHandoff": "Smooth handoff",
+  "reviewTagAgain": "Would use again",
+  "deliveredYourItem": "Delivered your {item} · {date}",
+  "@deliveredYourItem": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "expiryHint": "MM/YY",
+  "profilePictureUpdated": "Profile picture updated successfully",
+  "errUploadImage": "Failed to upload image: {error}",
+  "@errUploadImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "senderEscrowFunded": "Sender · Escrow Funded",
+  "senderDeliveries": "{count, plural, =1{Sender · 1 delivery} other{Sender · {count} deliveries}}",
+  "@senderDeliveries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sealedPhotosAttached": "{count, plural, =1{1 factory-sealed photo attached} other{{count} factory-sealed photos attached}}",
+  "@sealedPhotosAttached": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "capturedAt": "Captured at {place} · {time}",
+  "@capturedAt": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "txDeliveryOf": "{item} delivery",
+  "@txDeliveryOf": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "txReleasedFromEscrow": "Released from escrow · {date}",
+  "@txReleasedFromEscrow": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "txEscrowHold": "Escrow hold",
+  "txDeliveryRequest": "Delivery request · {date}",
+  "@txDeliveryRequest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "priceEstimateNote": "This is an estimate in {currency} at today's rate. The price is fixed when the traveler accepts.",
+  "@priceEstimateNote": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "estimateLabel": "Estimate",
+  "errRateUnavailable": "The exchange rate isn't available right now, so the price can't be fixed. Please try again later.",
+  "errRequestNotPending": "This request has already been answered.",
+
+  "chatLockedUntilPayment": "Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.",
+  "messageLocked": "Message",
+  "messageUnlocksAfterPayment": "Messaging unlocks after payment.",
+  "escrowFunded": "Escrow funded",
+  "maxDims": "Max {dims}",
+  "@maxDims": {
+    "placeholders": {
+      "dims": {
+        "type": "String"
+      }
+    }
+  },
+
+  "errRequestNotPayable": "This request can no longer be paid.",
+  "step1ValidateTicket": "STEP 1 · VALIDATE FLIGHT TICKET",
+  "step2PaymentMethod": "STEP 2 · SELECT PAYMENT METHOD",
+  "ticketNotValidated": "Not validated",
+  "ticketValidated": "Checked",
+  "ticketIntro": "{name} uploaded their flight ticket for this trip. Check it matches the route and date before you pay.",
+  "@ticketIntro": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "viewFullTicket": "View full ticket",
+  "ticketPdf": "Flight ticket (PDF)",
+  "ticketRoute": "Route",
+  "ticketDeparture": "Departure",
+  "ticketBookingRef": "Booking reference",
+  "ticketTraveler": "Traveler",
+  "iCheckedTicket": "I've checked this ticket",
+  "errTicketLoad": "Could not load the ticket.",
+  "noTicketUploaded": "The traveler hasn't uploaded a ticket for this trip yet, so payment stays locked.",
+  "validateToUnlock": "Validate ticket to unlock payment",
+  "payAmountIntoEscrow": "Pay {amount} into Escrow",
+  "@payAmountIntoEscrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentsComingSoon": "Payments aren't available yet. You'll be able to pay here soon.",
+  "requestExpiredPayment": "This request has expired and can no longer be paid.",
+  "hoursMinutes": "{hours}h {minutes}m",
+  "@hoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "step2VerifyId": "STEP 2 · VERIFY TRAVELER ID",
+  "step3PaymentMethod": "STEP 3 · SELECT PAYMENT METHOD",
+  "idIntro": "{name}'s government ID was verified. Check the photo looks real and the name matches the flight ticket before you pay.",
+  "@idIntro": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "identityVerifiedBadge": "Identity verified",
+  "nameOnId": "Name on ID",
+  "idDocument": "ID document",
+  "idVerifiedOn": "Verified on",
+  "idPhotoOnlyNote": "Only the photo is shown. The rest of the ID stays private.",
+  "iCheckedId": "I've checked this ID",
+  "errIdPhotoLoad": "Could not load the ID photo.",
+  "travelerNotVerified": "This traveler's identity isn't verified, so payment stays locked.",
+  "validateTicketAndId": "Validate ticket and ID to unlock payment",
+  "idSharedWithSendersNote": "When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private."
 }

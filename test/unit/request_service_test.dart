@@ -22,8 +22,9 @@ class MockFileApi extends Mock implements StorageFileApi {}
 class FakeFileOptions extends Fake implements FileOptions {}
 
 class FakeRpc extends Fake implements PostgrestFilterBuilder<dynamic> {
-  FakeRpc({this.error});
+  FakeRpc({this.error, this.value});
   final Object? error;
+  final Object? value;
 
   @override
   Future<U> then<U>(
@@ -32,7 +33,7 @@ class FakeRpc extends Fake implements PostgrestFilterBuilder<dynamic> {
   }) {
     final f = error != null
         ? Future<dynamic>.error(error!)
-        : Future<dynamic>.value(null);
+        : Future<dynamic>.value(value);
     return f.then(onValue, onError: onError);
   }
 }
@@ -86,26 +87,27 @@ void main() {
       expect(x.cost, 100);
       expect(x.fee, 10);
       expect(x.total, 110);
-      expect(x.totalText, r'$110.00');
-      expect(x.costText, r'$100.00');
-      expect(x.feeText, r'$10.00');
+      expect(x.totalText, r'$110');
+      expect(x.costText, r'$100');
+      expect(x.feeText, r'$10');
     });
 
-    test('euros: each line is converted', () {
+    test('euros: each line is converted and rounded up', () {
       final x = p(currency: 'EUR', rate: 0.892438);
 
-      expect(x.cost, 89.24);
-      expect(x.fee, 8.92);
-      expect(x.costText, '€89.24');
-      expect(x.feeText, '€8.92');
+      expect(x.cost, 90); // 89.24
+      expect(x.fee, 9); // 8.92
+      expect(x.total, 99);
+      expect(x.costText, '€90');
+      expect(x.feeText, '€9');
     });
 
     test('pounds', () {
       final x = p(currency: 'GBP', rate: 0.755923);
 
-      expect(x.cost, 75.59);
-      expect(x.fee, 7.56);
-      expect(x.totalText, '£83.15');
+      expect(x.cost, 76); // 75.59
+      expect(x.fee, 8); // 7.56
+      expect(x.totalText, '£84');
     });
 
     test('the CFA franc has no cents', () {
@@ -119,7 +121,6 @@ void main() {
 
     test('XAF is treated the same way', () {
       expect(p(currency: 'XAF', rate: 585.399478).totalText, 'XAF 64,394');
-      expect(RequestPricing.decimalsFor('XAF'), 0);
     });
 
     test('the converted lines always add up to the converted total', () {
@@ -131,11 +132,7 @@ void main() {
             currency: 'EUR',
             rate: rate,
           );
-          expect(
-            x.total,
-            closeTo(x.cost + x.fee, 0.0001),
-            reason: 'rate $rate cost $cost',
-          );
+          expect(x.total, x.cost + x.fee, reason: 'rate $rate cost $cost');
         }
       }
     });
@@ -148,18 +145,30 @@ void main() {
     test('large amounts get thousands separators', () {
       expect(
         p(currency: 'USD', cost: 1234.5, fee: 123.45).totalText,
-        r'$1,357.95',
+        r'$1,359', // 1,235 + 124
       );
     });
 
     test('an unlisted currency shows its code', () {
-      expect(p(currency: 'JPY', rate: 150).totalText, 'JPY 16,500.00');
+      expect(p(currency: 'JPY', rate: 150).totalText, 'JPY 16,500');
     });
 
-    test('decimals follow the currency', () {
-      expect(RequestPricing.decimalsFor('USD'), 2);
-      expect(RequestPricing.decimalsFor('EUR'), 2);
-      expect(RequestPricing.decimalsFor('xof'), 0);
+    test('every currency shows whole amounts, never rounded down', () {
+      for (final c in ['USD', 'EUR', 'GBP', 'XOF', 'JPY']) {
+        for (final rate in [0.755923, 0.892438, 1.0, 1.2345, 585.399478]) {
+          final x = p(currency: c, rate: rate, cost: 37, fee: 4);
+          for (final (shown, usd) in [(x.cost, 37.0), (x.fee, 4.0)]) {
+            expect(shown, shown.roundToDouble(), reason: '$c $rate');
+            expect(shown, greaterThanOrEqualTo(usd * rate - 1e-9));
+            expect(shown - usd * rate, lessThan(1));
+          }
+          expect(x.totalText, isNot(contains('.')), reason: '$c $rate');
+        }
+      }
+    });
+
+    test('an amount that converts to a whole number is not bumped up', () {
+      expect(p(currency: 'EUR', rate: 0.5).total, 55); // 50 + 5
     });
 
     test('built from a quote', () {
@@ -172,10 +181,10 @@ void main() {
 
       final x = RequestPricing.forQuote(q, currency: 'eur', rate: 0.9);
 
-      expect(x.costUsd, 100.68);
-      expect(x.feeUsd, 10.07);
+      expect(x.costUsd, 101);
+      expect(x.feeUsd, 11);
       expect(x.currency, 'EUR');
-      expect(x.cost, 90.61);
+      expect(x.cost, 91); // 90.90
     });
 
     test('a blank currency or a bad rate falls back to dollars', () {
@@ -470,6 +479,7 @@ void main() {
       expect(of('nata:own_trip'), RequestFailure.ownTrip);
       expect(of('nata:weight_too_heavy'), RequestFailure.weightTooHeavy);
       expect(of('nata:duplicate'), RequestFailure.duplicate);
+      expect(of('nata:destination_limit'), RequestFailure.destinationLimit);
       expect(of('nata:price_changed'), RequestFailure.priceChanged);
       expect(of('nata:size_too_big'), RequestFailure.sizeTooBig);
       for (final c in [
@@ -725,6 +735,7 @@ void main() {
       'nata:own_trip': RequestFailure.ownTrip,
       'nata:weight_too_heavy': RequestFailure.weightTooHeavy,
       'nata:duplicate': RequestFailure.duplicate,
+      'nata:destination_limit': RequestFailure.destinationLimit,
       'nata:price_changed': RequestFailure.priceChanged,
       'nata:size_too_big': RequestFailure.sizeTooBig,
       'nata:photo_required': RequestFailure.invalid,
@@ -804,5 +815,384 @@ void main() {
         ),
       );
     });
+  });
+
+  group('SentRequest.fromJson', () {
+    final row = {
+      'request_id': 'r1',
+      'status': 'pending',
+      'created_at': '2030-06-01T10:00:00Z',
+      'total_amount': 110.91,
+      'currency': 'USD',
+      'item_weight_kg': 0.9,
+      'item_size': '20 x 18 x 9',
+      'item_size_class': 'shoebox',
+      'items': [
+        {
+          'name': 'AirPods Max',
+          'category': 'electronics',
+          'description': 'Boxed',
+        },
+        {'name': 'Scarf', 'category': 'apparel', 'description': ''},
+      ],
+      'recipient_name': 'Jane Doe',
+      'recipient_phone': '+447700900123',
+      'photo_paths': ['u/r1/0.jpg'],
+      'trip_id': 't1',
+      'traveler_id': 'tr1',
+      'first_name': 'Amara',
+      'last_name': 'Kalu',
+      'avatar_path': null,
+      'avg_rating': 4.9,
+      'items_delivered_count': 28,
+      'departure_city': 'Lagos',
+      'departure_country': 'NG',
+      'arrival_city': 'London',
+      'arrival_country': 'GB',
+      'departure_date': '2030-06-22',
+      'arrival_date': '2030-06-22',
+      'price': 35,
+      'trip_currency': 'USD',
+      'max_weight_kg': 3,
+      'max_size': 'Shoebox (30×20×15 cm)',
+    };
+
+    test('reads the request, its items and its trip', () {
+      final r = SentRequest.fromJson(row);
+      expect(r.id, 'r1');
+      expect(r.isEditable, isTrue);
+      expect(r.totalUsd, 110.91);
+      expect(r.items.map((i) => i.category), [
+        RequestCategory.electronics,
+        RequestCategory.apparel,
+      ]);
+      expect(r.itemsSummary, 'AirPods Max, Scarf');
+      expect(r.sizeClass, RequestSizeClass.shoebox);
+      expect(r.photoPaths, ['u/r1/0.jpg']);
+      expect(r.trip.tripId, 't1');
+      expect(r.trip.fullName, 'Amara Kalu');
+      expect(r.trip.arrivalCountry, 'GB');
+      expect(r.trip.maxWeightKg, 3);
+    });
+
+    test('the price is an estimate until the traveler accepts', () {
+      final r = SentRequest.fromJson({...row, 'display_currency': 'XOF'});
+      expect(r.displayCurrency, 'XOF');
+      expect(r.priceFixed, isFalse);
+      expect(r.fixedTotalText, isNull);
+    });
+
+    test('reads the checkout checks and the traveler\'s verification', () {
+      final r = SentRequest.fromJson({
+        ...row,
+        'status': 'accepted',
+        'ticket_checked_at': '2030-06-21T09:00:00Z',
+        'id_checked_at': '2030-06-21T09:05:00Z',
+        'traveler_verified': true,
+        'ticket_receipt_path': 'tr1/ticket.pdf',
+        'booking_reference': ' X7KQ9R ',
+        'expires_at': '2030-06-22T09:00:00Z',
+      });
+      expect(r.ticketCheckedAt, DateTime.utc(2030, 6, 21, 9));
+      expect(r.idCheckedAt, DateTime.utc(2030, 6, 21, 9, 5));
+      expect(r.travelerVerified, isTrue);
+      expect(r.ticketReceiptPath, 'tr1/ticket.pdf');
+      expect(r.bookingReference, 'X7KQ9R');
+      expect(r.expiresAt, DateTime.utc(2030, 6, 22, 9));
+      expect(r.awaitingPayment, isTrue);
+
+      final bare = SentRequest.fromJson({...row, 'ticket_receipt_path': ''});
+      expect(bare.travelerVerified, isFalse);
+      expect(bare.ticketReceiptPath, isNull);
+      expect(bare.idCheckedAt, isNull);
+    });
+
+    test('reads the price fixed when the traveler accepted', () {
+      final r = SentRequest.fromJson({
+        ...row,
+        'status': 'accepted',
+        'display_currency': 'xof ',
+        'display_total': 65566,
+      });
+      expect(r.priceFixed, isTrue);
+      expect(r.fixedTotalText, 'XOF 65,566');
+      // 10% of 65,566, rounded up.
+      expect(r.fixedCancellationFeeText, 'XOF 6,557');
+    });
+
+    test('only pending requests are editable', () {
+      for (final s in [
+        'accepted',
+        'declined',
+        'expired',
+        'paid',
+        'delivered',
+      ]) {
+        expect(SentRequest.fromJson({...row, 'status': s}).isEditable, isFalse);
+      }
+    });
+  });
+
+  group('Cancelling', () {
+    final base = SentRequest.fromJson({
+      'request_id': 'r1',
+      'status': 'pending',
+      'created_at': '2030-06-01T10:00:00Z',
+      'total_amount': 110.91,
+      'items': const [],
+      'trip_id': 't1',
+      'traveler_id': 'tr1',
+      'first_name': 'Amara',
+      'last_name': 'Kalu',
+      'departure_city': 'Lagos',
+      'departure_country': 'NG',
+      'arrival_city': 'London',
+      'arrival_country': 'GB',
+      'departure_date': '2030-06-22',
+      'arrival_date': '2030-06-22',
+      'price': 35,
+      'trip_currency': 'USD',
+    });
+    SentRequest withStatus(String s, {Map<String, dynamic> extra = const {}}) =>
+        SentRequest.fromJson({
+          'request_id': base.id,
+          'status': s,
+          'created_at': '2030-06-01T10:00:00Z',
+          'total_amount': base.totalUsd,
+          'items': const [],
+          'trip_id': 't1',
+          'traveler_id': 'tr1',
+          'first_name': 'Amara',
+          'last_name': 'Kalu',
+          'departure_city': 'Lagos',
+          'departure_country': 'NG',
+          'arrival_city': 'London',
+          'arrival_country': 'GB',
+          'departure_date': '2030-06-22',
+          'arrival_date': '2030-06-22',
+          'price': 35,
+          'trip_currency': 'USD',
+          ...extra,
+        });
+
+    test('free before the traveler accepts', () {
+      expect(base.cancellationFeeNow, 0);
+      expect(base.isCancellable, isTrue);
+    });
+
+    test('10% of the total, rounded up to a whole dollar, once accepted', () {
+      // 10% of 110.91 is 11.091.
+      expect(withStatus('accepted').cancellationFeeNow, 12);
+      expect(withStatus('paid').cancellationFeeNow, 12);
+    });
+
+    test('not possible once handed off or over', () {
+      for (final s in [
+        'handed_off',
+        'delivered',
+        'declined',
+        'expired',
+        'cancelled',
+      ]) {
+        expect(withStatus(s).isCancellable, isFalse, reason: s);
+        expect(withStatus(s).cancellationFeeNow, isNull, reason: s);
+      }
+    });
+
+    test('reads the fee of a request the sender cancelled', () {
+      final r = withStatus(
+        'cancelled',
+        extra: {
+          'cancellation_fee': 11.09,
+          'cancelled_at': '2030-06-10T09:00:00Z',
+        },
+      );
+      expect(r.cancelledBySender, isTrue);
+      expect(r.cancellationFee, 11.09);
+      expect(r.cancelledAt, DateTime.utc(2030, 6, 10, 9));
+
+      // Cancelled by someone else (no cancelled_at): no fee line.
+      expect(withStatus('cancelled').cancelledBySender, isFalse);
+    });
+
+    test('maps the database refusals', () {
+      expect(
+        RequestService.reasonFor('nata:request_not_cancellable'),
+        RequestFailure.notCancellable,
+      );
+      expect(
+        RequestService.reasonFor('nata:fee_changed'),
+        RequestFailure.feeChanged,
+      );
+    });
+
+    group('RequestService.cancel', () {
+      late MockSupabaseClient client;
+      late MockGoTrueClient auth;
+      late RequestService service;
+
+      setUp(() {
+        client = MockSupabaseClient();
+        auth = MockGoTrueClient();
+        final user = MockUser();
+        when(() => client.auth).thenReturn(auth);
+        when(() => auth.currentUser).thenReturn(user);
+        when(() => user.id).thenReturn('user-1');
+        service = RequestService(client: client);
+      });
+
+      test(
+        'sends the fee the sender was shown and returns the charged fee',
+        () async {
+          when(
+            () => client.rpc<dynamic>(
+              'cancel_delivery_request',
+              params: any(named: 'params'),
+            ),
+          ).thenAnswer((_) => FakeRpc(value: 12));
+
+          final fee = await service.cancel(withStatus('accepted'));
+
+          expect(fee, 12);
+          final params =
+              verify(
+                    () => client.rpc<dynamic>(
+                      'cancel_delivery_request',
+                      params: captureAny(named: 'params'),
+                    ),
+                  ).captured.single
+                  as Map;
+          expect(params, {'p_id': 'r1', 'p_expected_fee': 12.0});
+        },
+      );
+
+      test('a pending request is sent with a fee of 0', () async {
+        when(
+          () => client.rpc<dynamic>(
+            'cancel_delivery_request',
+            params: any(named: 'params'),
+          ),
+        ).thenAnswer((_) => FakeRpc(value: 0));
+
+        expect(await service.cancel(base), 0);
+        final params =
+            verify(
+                  () => client.rpc<dynamic>(
+                    'cancel_delivery_request',
+                    params: captureAny(named: 'params'),
+                  ),
+                ).captured.single
+                as Map;
+        expect(params['p_expected_fee'], 0);
+      });
+
+      test('database refusals become RequestExceptions', () async {
+        when(
+          () => client.rpc<dynamic>(
+            'cancel_delivery_request',
+            params: any(named: 'params'),
+          ),
+        ).thenAnswer(
+          (_) => FakeRpc(
+            error: const PostgrestException(message: 'nata:fee_changed'),
+          ),
+        );
+
+        await expectLater(
+          service.cancel(base),
+          throwsA(
+            isA<RequestException>().having(
+              (e) => e.reason,
+              'reason',
+              RequestFailure.feeChanged,
+            ),
+          ),
+        );
+      });
+
+      test('signed out: refused before calling the database', () async {
+        when(() => auth.currentUser).thenReturn(null);
+
+        await expectLater(
+          service.cancel(base),
+          throwsA(
+            isA<RequestException>().having(
+              (e) => e.reason,
+              'reason',
+              RequestFailure.notSignedIn,
+            ),
+          ),
+        );
+        verifyNever(
+          () => client.rpc<dynamic>(any(), params: any(named: 'params')),
+        );
+      });
+    });
+  });
+
+  group('RequestService.accept', () {
+    late MockSupabaseClient client;
+    late RequestService service;
+
+    setUp(() {
+      client = MockSupabaseClient();
+      final auth = MockGoTrueClient();
+      final user = MockUser();
+      when(() => client.auth).thenReturn(auth);
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => user.id).thenReturn('traveler-1');
+      service = RequestService(client: client);
+    });
+
+    test('asks the database to accept (and fix the price)', () async {
+      when(
+        () => client.rpc<dynamic>(
+          'accept_delivery_request',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakeRpc());
+
+      await service.accept('r1');
+
+      verify(
+        () => client.rpc<dynamic>(
+          'accept_delivery_request',
+          params: {'p_id': 'r1'},
+        ),
+      ).called(1);
+    });
+
+    for (final c in {
+      'nata:rate_unavailable': RequestFailure.rateUnavailable,
+      'nata:request_not_pending': RequestFailure.notPending,
+      'nata:request_not_found': RequestFailure.requestNotFound,
+    }.entries) {
+      test('${c.key} is reported', () async {
+        when(
+          () => client.rpc<dynamic>(
+            'accept_delivery_request',
+            params: any(named: 'params'),
+          ),
+        ).thenAnswer((_) => FakeRpc(error: PostgrestException(message: c.key)));
+
+        await expectLater(
+          service.accept('r1'),
+          throwsA(
+            isA<RequestException>().having((e) => e.reason, 'reason', c.value),
+          ),
+        );
+      });
+    }
+  });
+
+  test('database refusals for edits', () {
+    expect(
+      RequestService.reasonFor('nata:request_not_editable'),
+      RequestFailure.notEditable,
+    );
+    expect(
+      RequestService.reasonFor('nata:request_not_found'),
+      RequestFailure.requestNotFound,
+    );
   });
 }

@@ -6,6 +6,7 @@
 // framework report an exception, which fails the test.
 import 'dart:typed_data';
 
+import 'package:carrywise_app/screens/add_payment_method_screen.dart';
 import 'package:carrywise_app/screens/add_trip_screen.dart';
 import 'package:carrywise_app/screens/checkout_escrow_screen.dart';
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
@@ -17,6 +18,7 @@ import 'package:carrywise_app/screens/chat_thread_screen.dart';
 import 'package:carrywise_app/screens/login_screen.dart';
 import 'package:carrywise_app/screens/messages_screen.dart';
 import 'package:carrywise_app/screens/notifications_screen.dart';
+import 'package:carrywise_app/screens/payment_settings_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/review_screen.dart';
@@ -279,8 +281,27 @@ void main() {
       ),
     ),
     'Requests': () => const RequestsScreen(),
+    'Edit request': () => DeliveryRequestScreen(
+      trip: sampleSentRequest().trip,
+      editing: sampleSentRequest(),
+      service: FakeRequestService(),
+      cityService: FakeCityService(),
+      exchangeRates: FakeExchangeRateService(),
+      now: () => DateTime.utc(2030, 6, 21, 12),
+    ),
     'Delivery task details': () =>
         DeliveryTaskScreen(delivery: sampleDelivery()),
+    'Add payment method': () =>
+        const AddPaymentMethodScreen(holderFirstName: 'Fortune'),
+    'Payment settings': () => PaymentSettingsScreen(
+      availableBalance: 320,
+      escrowBalance: 180,
+      holderName: 'Fortune Niama',
+      service: FakePaymentService(
+        methods: samplePaymentMethods(),
+        accounts: [samplePayoutAccount()],
+      ),
+    ),
     'Profile (verified)': () => ProfileScreen(authService: FakeAuthService()),
     'Profile (pending)': () => ProfileScreen(
       authService: FakeAuthService()
@@ -309,8 +330,25 @@ void main() {
         maxSize: 'Envelope / Document and other long size text',
       ),
     ),
-    'Checkout (escrow)': () => const CheckoutEscrowScreen(),
-    'Delivery confirmation': () => const DeliveryConfirmScreen(),
+    'Checkout (escrow)': () => CheckoutEscrowScreen(
+      request: sampleSentRequest(
+        status: 'accepted',
+        displayCurrency: 'XOF',
+        displayCost: 59126,
+        displayFee: 6440,
+        displayTotal: 65566,
+        expiresAt: DateTime.now().add(const Duration(hours: 23)),
+        ticketReceiptPath: 'traveler-1/ticket.pdf',
+        bookingReference: 'X7KQ9R',
+      ),
+      service: FakeRequestService(),
+    ),
+    'Delivery confirmation': () => DeliveryConfirmScreen(
+      delivery: sampleDelivery(),
+      paymentService: FakePaymentService(
+        accounts: [samplePayoutAccount(), sampleMobilePayoutAccount()],
+      ),
+    ),
     'Review': () => const ReviewScreen(),
     'Identity verification': () => const IdentityVerificationScreen(),
     'Sign in': () => const LoginScreen(),
@@ -339,7 +377,14 @@ void main() {
         ({Widget Function() build, Future<void> Function(WidgetTester) act})
       >{
         'Requests (outgoing tab)': (
-          build: () => const RequestsScreen(),
+          build: () => RequestsScreen(
+            requestService: FakeRequestService()
+              ..mine = [
+                sampleSentRequest(),
+                sampleSentRequest(id: 'r2', status: 'accepted'),
+                sampleSentRequest(id: 'r3', status: 'declined'),
+              ],
+          ),
           act: (t) => _tap(t, const ValueKey('requests-tab-1')),
         ),
         'My Trips (past tab)': (
@@ -399,7 +444,7 @@ void main() {
             travelerService: FakeTravelerService(),
           ),
           act: (t) async {
-            await t.tap(find.text('Anytime this month'));
+            await t.tap(find.byKey(const ValueKey('home-date-field')));
             await t.pump(const Duration(milliseconds: 500));
           },
         ),
@@ -429,20 +474,29 @@ void main() {
           build: () => const IdentityVerificationScreen(initialStep: 3),
           act: (t) async {},
         ),
-        'Delivery confirmation (photo added)': (
-          build: () => const DeliveryConfirmScreen(),
-          act: (t) => _tap(t, const ValueKey('handoff-photo')),
-        ),
-        'Delivery confirmation (confirming)': (
-          build: () => const DeliveryConfirmScreen(),
+        'Delivery confirmation (PIN entered)': (
+          build: () => DeliveryConfirmScreen(
+            delivery: sampleDelivery(),
+            paymentService: FakePaymentService(
+              accounts: [samplePayoutAccount()],
+            ),
+          ),
           act: (t) async {
-            await _tap(t, const ValueKey('handoff-photo'));
-            await t.tap(find.byKey(const ValueKey('delivery-confirm')));
-            await t.pump(const Duration(milliseconds: 200)); // "Confirming..."
-            // Tapping Confirm schedules a 1.2s navigation to the review
-            // screen; let it run so no timer is left pending at the end.
-            await t.pump(const Duration(milliseconds: 1500));
+            for (var i = 0; i < 4; i++) {
+              await t.enterText(
+                find.byKey(ValueKey('delivery-confirm-pin-$i')),
+                '7492'[i],
+              );
+            }
+            await t.pump();
           },
+        ),
+        'Delivery confirmation (no payout account)': (
+          build: () => DeliveryConfirmScreen(
+            delivery: sampleDelivery(),
+            paymentService: FakePaymentService(),
+          ),
+          act: (t) async {},
         ),
         'Sign in (error shown)': (
           build: () => const LoginScreen(),

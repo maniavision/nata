@@ -745,8 +745,20 @@ abstract class AppLocalizations {
   /// No description provided for @pricingValue.
   ///
   /// In en, this message translates to:
-  /// **'Calculated per item size & weight'**
+  /// **'Calculated per distance, item size & weight'**
   String get pricingValue;
+
+  /// No description provided for @sameDayDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Same day delivery'**
+  String get sameDayDelivery;
+
+  /// No description provided for @deliverInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Deliver in 1 day} other{Deliver in {count} days}}'**
+  String deliverInDays(int count);
 
   /// No description provided for @itemSizeAndWeight.
   ///
@@ -895,7 +907,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendDeliveryRequest.
   ///
   /// In en, this message translates to:
-  /// **'Send Delivery Request'**
+  /// **'Send Request'**
   String get sendDeliveryRequest;
 
   /// No description provided for @secureEscrowCheckout.
@@ -1015,7 +1027,7 @@ abstract class AppLocalizations {
   /// No description provided for @refundBullet2.
   ///
   /// In en, this message translates to:
-  /// **'Free cancellation anytime before physical handoff to traveler.'**
+  /// **'Cancelling is free until the traveler accepts. After that, a 10% cancellation fee applies until handoff.'**
   String get refundBullet2;
 
   /// No description provided for @refundBullet3.
@@ -3068,6 +3080,546 @@ abstract class AppLocalizations {
   /// **'Attach the handover photo first.'**
   String get attachHandoverFirst;
 
+  /// No description provided for @recipientLocalPhoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 7700 900123'**
+  String get recipientLocalPhoneHint;
+
+  /// No description provided for @paymentSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Settings'**
+  String get paymentSettings;
+
+  /// No description provided for @paymentSettingsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment methods & payout account'**
+  String get paymentSettingsSub;
+
+  /// No description provided for @paymentMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Methods'**
+  String get paymentMethods;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @defaultLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultLabel;
+
+  /// No description provided for @payoutAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout Account'**
+  String get payoutAccount;
+
+  /// No description provided for @payoutAccountNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings from completed deliveries are withdrawn to this account after the 3-day dispute window.'**
+  String get payoutAccountNote;
+
+  /// No description provided for @addPayoutAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add payout account'**
+  String get addPayoutAccount;
+
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @defaultCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Currency'**
+  String get defaultCurrency;
+
+  /// No description provided for @defaultCurrencySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for payouts and receipts'**
+  String get defaultCurrencySub;
+
+  /// No description provided for @payoutSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout Schedule'**
+  String get payoutSchedule;
+
+  /// No description provided for @payoutScheduleSub.
+  ///
+  /// In en, this message translates to:
+  /// **'After delivery is confirmed'**
+  String get payoutScheduleSub;
+
+  /// No description provided for @automatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get automatic;
+
+  /// No description provided for @transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactions;
+
+  /// No description provided for @addPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Payment Method'**
+  String get addPaymentMethod;
+
+  /// No description provided for @paymentSecurityNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payment details are encrypted and stored securely. Payments are held in escrow until delivery is confirmed.'**
+  String get paymentSecurityNote;
+
+  /// No description provided for @paymentKindCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get paymentKindCard;
+
+  /// No description provided for @paymentKindCardSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit or credit'**
+  String get paymentKindCardSub;
+
+  /// No description provided for @paymentKindMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Money'**
+  String get paymentKindMobile;
+
+  /// No description provided for @paymentKindAppleSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick checkout'**
+  String get paymentKindAppleSub;
+
+  /// No description provided for @cardDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Details'**
+  String get cardDetails;
+
+  /// No description provided for @nameOnCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on Card'**
+  String get nameOnCard;
+
+  /// No description provided for @nameOnCardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name as on card'**
+  String get nameOnCardHint;
+
+  /// No description provided for @cardNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Number'**
+  String get cardNumber;
+
+  /// No description provided for @expiryDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry Date'**
+  String get expiryDate;
+
+  /// No description provided for @mobileMoneyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Money Details'**
+  String get mobileMoneyDetails;
+
+  /// No description provided for @provider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get provider;
+
+  /// No description provided for @mobileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Number'**
+  String get mobileNumber;
+
+  /// No description provided for @registeredName.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered Name'**
+  String get registeredName;
+
+  /// No description provided for @registeredNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name registered with the provider'**
+  String get registeredNameHint;
+
+  /// No description provided for @applePayNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Pay will be linked to your Apple ID wallet. You\'ll confirm it with Face ID on your device.'**
+  String get applePayNote;
+
+  /// No description provided for @setAsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default'**
+  String get setAsDefault;
+
+  /// No description provided for @setAsDefaultSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this method for future requests'**
+  String get setAsDefaultSub;
+
+  /// No description provided for @savePaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Payment Method'**
+  String get savePaymentMethod;
+
+  /// No description provided for @errCardName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the name as it appears on the card.'**
+  String get errCardName;
+
+  /// No description provided for @errCardNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid card number.'**
+  String get errCardNumber;
+
+  /// No description provided for @errCardExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid expiry date (MM/YY).'**
+  String get errCardExpiry;
+
+  /// No description provided for @errCardCvv.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 3 or 4 digit security code.'**
+  String get errCardCvv;
+
+  /// No description provided for @errMobileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the mobile number with the country code, e.g. +254 712 345 678.'**
+  String get errMobileNumber;
+
+  /// No description provided for @errRegisteredName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the name registered with the provider.'**
+  String get errRegisteredName;
+
+  /// No description provided for @cardExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String cardExpires(String date);
+
+  /// No description provided for @holdersIphone.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s iPhone'**
+  String holdersIphone(String name);
+
+  /// No description provided for @errPaymentSettingsLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your payment settings. Please try again.'**
+  String get errPaymentSettingsLoad;
+
+  /// No description provided for @errPaymentSettingsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the change. Please try again.'**
+  String get errPaymentSettingsSave;
+
+  /// No description provided for @noPaymentMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment method yet. Add one to pay for delivery requests.'**
+  String get noPaymentMethods;
+
+  /// No description provided for @noPayoutAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No payout account yet.'**
+  String get noPayoutAccount;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @manual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get manual;
+
+  /// No description provided for @faceScanLivenessNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric AI performs real-time liveness check to confirm you are the verified document holder.'**
+  String get faceScanLivenessNote;
+
+  /// No description provided for @deliveryPayoutRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery & Payout Release'**
+  String get deliveryPayoutRelease;
+
+  /// No description provided for @confirmDeliveryStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 3 of 4: Confirm Delivery'**
+  String get confirmDeliveryStep;
+
+  /// No description provided for @itemArrivedAtDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Arrived at Destination'**
+  String get itemArrivedAtDestination;
+
+  /// No description provided for @confirmHandoffNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm recipient handoff using the 4-digit delivery PIN or by uploading a photo of the handed-off sealed item.'**
+  String get confirmHandoffNote;
+
+  /// No description provided for @pinOptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Option 1: 4-Digit Delivery PIN'**
+  String get pinOptionTitle;
+
+  /// No description provided for @instantRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant Release'**
+  String get instantRelease;
+
+  /// No description provided for @pinOptionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The sender gave the recipient a secret 4-digit code. Enter it below:'**
+  String get pinOptionNote;
+
+  /// No description provided for @pinConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid recipient PIN confirmed'**
+  String get pinConfirmed;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This PIN doesn\'t match the recipient\'s code.'**
+  String get pinMismatch;
+
+  /// No description provided for @photoOptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Option 2: Handoff Photo Proof'**
+  String get photoOptionTitle;
+
+  /// No description provided for @alternative.
+  ///
+  /// In en, this message translates to:
+  /// **'Alternative'**
+  String get alternative;
+
+  /// No description provided for @noHandoffPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'No handoff photo yet'**
+  String get noHandoffPhoto;
+
+  /// No description provided for @handoffPhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A photo of the sealed item being handed over'**
+  String get handoffPhotoHint;
+
+  /// No description provided for @sealIntactPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Package seal intact'**
+  String get sealIntactPhoto;
+
+  /// No description provided for @change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get change;
+
+  /// No description provided for @payoutDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler Payout Destination'**
+  String get payoutDestination;
+
+  /// No description provided for @payoutAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount} Payout'**
+  String payoutAmount(String amount);
+
+  /// No description provided for @noPayoutAccountForRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'No payout account yet. Add one in Payment Settings; the payout will be sent there.'**
+  String get noPayoutAccountForRelease;
+
+  /// No description provided for @mobileMoneyPayoutSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile money · Instant release'**
+  String get mobileMoneyPayoutSpeed;
+
+  /// No description provided for @bankPayoutSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct bank transfer · 1 business day'**
+  String get bankPayoutSpeed;
+
+  /// No description provided for @disputeProtectionWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispute Protection Window'**
+  String get disputeProtectionWindow;
+
+  /// No description provided for @threeDaysActive.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Days Active'**
+  String get threeDaysActive;
+
+  /// No description provided for @disputeProtectionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds are automatically disbursed to the chosen payout method once the 3-day dispute protection window concludes without contest.'**
+  String get disputeProtectionNote;
+
+  /// No description provided for @reportIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Report an issue or open a dispute'**
+  String get reportIssue;
+
+  /// No description provided for @confirmReleasePayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & Release Payout ({amount})'**
+  String confirmReleasePayout(String amount);
+
+  /// No description provided for @requestUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Request updated'**
+  String get requestUpdated;
+
+  /// No description provided for @errRequestNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This request no longer exists.'**
+  String get errRequestNotFound;
+
+  /// No description provided for @errRequestNotEditable.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler already answered this request, so it can\'t be changed anymore.'**
+  String get errRequestNotEditable;
+
+  /// No description provided for @editRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Request'**
+  String get editRequest;
+
+  /// No description provided for @saveChangesWithPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes · {price}'**
+  String saveChangesWithPrice(String price);
+
+  /// No description provided for @statusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get statusExpired;
+
+  /// No description provided for @statusPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get statusPaid;
+
+  /// No description provided for @statusInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'In transit'**
+  String get statusInTransit;
+
+  /// No description provided for @statusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get statusDelivered;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @noSentRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t sent any requests yet.'**
+  String get noSentRequests;
+
+  /// No description provided for @errLoadRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your requests.'**
+  String get errLoadRequests;
+
+  /// No description provided for @tapToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to edit'**
+  String get tapToEdit;
+
   /// No description provided for @errIdNameMismatch.
   ///
   /// In en, this message translates to:
@@ -3185,7 +3737,7 @@ abstract class AppLocalizations {
   /// No description provided for @errRecipientPhone.
   ///
   /// In en, this message translates to:
-  /// **'Enter the recipient\'s phone number with the country code, e.g. +44 7700 900123.'**
+  /// **'Enter a valid phone number for the recipient.'**
   String get errRecipientPhone;
 
   /// No description provided for @errWeight.
@@ -3229,6 +3781,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You already have an open request on this trip.'**
   String get errDuplicate;
+
+  /// No description provided for @errDestinationLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have 5 open requests going to {city}. You can send another once one of them is delivered, declined or expires.'**
+  String errDestinationLimit(String city);
+
+  /// No description provided for @cancelRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Request'**
+  String get cancelRequest;
+
+  /// No description provided for @cancelRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this request?'**
+  String get cancelRequestTitle;
+
+  /// No description provided for @cancelRequestFreeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler hasn\'t accepted yet, so cancelling is free.'**
+  String get cancelRequestFreeBody;
+
+  /// No description provided for @cancelRequestFeeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler already accepted this request. Cancelling now costs a 10% cancellation fee of {fee}.'**
+  String cancelRequestFeeBody(String fee);
+
+  /// No description provided for @keepRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep request'**
+  String get keepRequest;
+
+  /// No description provided for @cancelWithFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel and pay {fee}'**
+  String cancelWithFee(String fee);
+
+  /// No description provided for @requestCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Request cancelled'**
+  String get requestCancelled;
+
+  /// No description provided for @cancellationFeeCharged.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation fee: {fee}'**
+  String cancellationFeeCharged(String fee);
+
+  /// No description provided for @cancelledFreeOfCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled free of charge'**
+  String get cancelledFreeOfCharge;
+
+  /// No description provided for @errFeeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler just answered this request, so the cancellation fee has changed. Please check and try again.'**
+  String get errFeeChanged;
+
+  /// No description provided for @errNotCancellable.
+  ///
+  /// In en, this message translates to:
+  /// **'This request can no longer be cancelled.'**
+  String get errNotCancellable;
+
+  /// No description provided for @errCancelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not cancel your request. Please try again.'**
+  String get errCancelFailed;
+
+  /// No description provided for @sentRequestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'SENT REQUESTS ({count})'**
+  String sentRequestsCount(int count);
+
+  /// No description provided for @waitingForTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for traveler'**
+  String get waitingForTraveler;
+
+  /// No description provided for @routeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Route:'**
+  String get routeLabel;
+
+  /// No description provided for @travelerDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Traveler · New} =1{Traveler · 1 delivery} other{Traveler · {count} deliveries}}'**
+  String travelerDeliveries(int count);
 
   /// No description provided for @errSessionExpired.
   ///
@@ -3275,7 +3929,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendRequestWithPrice.
   ///
   /// In en, this message translates to:
-  /// **'Send Delivery Request · {price}'**
+  /// **'Send Request · {price}'**
   String sendRequestWithPrice(String price);
 
   /// No description provided for @packageSize.
@@ -3317,7 +3971,7 @@ abstract class AppLocalizations {
   /// No description provided for @errPriceChanged.
   ///
   /// In en, this message translates to:
-  /// **'The traveler changed their price. Go back and open the request again to see the new price.'**
+  /// **'The price has changed since you opened this request. Go back and open it again to see the new price.'**
   String get errPriceChanged;
 
   /// No description provided for @priceEnterWeight.
@@ -3361,6 +4015,960 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'1 USD = {rate} {currency} · updated {date}'**
   String priceRateLine(String rate, String currency, String date);
+
+  /// No description provided for @departingFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Departing From'**
+  String get departingFrom;
+
+  /// No description provided for @hello.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello,'**
+  String get hello;
+
+  /// No description provided for @whereAreYouSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Where are you sending?'**
+  String get whereAreYouSending;
+
+  /// No description provided for @whereSendingFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Where are you sending from?'**
+  String get whereSendingFrom;
+
+  /// No description provided for @destinationExample.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. London, United Kingdom'**
+  String get destinationExample;
+
+  /// No description provided for @anytimeThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Anytime this month'**
+  String get anytimeThisMonth;
+
+  /// No description provided for @flexibleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'(±3d)'**
+  String get flexibleShort;
+
+  /// No description provided for @availableTravelers.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Travelers'**
+  String get availableTravelers;
+
+  /// No description provided for @errLoadTravelers.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load travelers.'**
+  String get errLoadTravelers;
+
+  /// No description provided for @noTravelersOnRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'No travelers on this route yet.'**
+  String get noTravelersOnRoute;
+
+  /// No description provided for @desiredDeliveryDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Desired Delivery Date'**
+  String get desiredDeliveryDateTitle;
+
+  /// No description provided for @upToKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {weight} kg'**
+  String upToKg(String weight);
+
+  /// No description provided for @dateAnytime.
+  ///
+  /// In en, this message translates to:
+  /// **'Anytime'**
+  String get dateAnytime;
+
+  /// No description provided for @dateThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get dateThisWeek;
+
+  /// No description provided for @dateNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Week'**
+  String get dateNextWeek;
+
+  /// No description provided for @dateFlexible.
+  ///
+  /// In en, this message translates to:
+  /// **'Flexible (±3d)'**
+  String get dateFlexible;
+
+  /// No description provided for @travelerFlightsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 traveler flight} other{{count} traveler flights}}'**
+  String travelerFlightsCount(int count);
+
+  /// No description provided for @flightsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 flight} other{{count} flights}}'**
+  String flightsCount(int count);
+
+  /// No description provided for @plusMinus3Days.
+  ///
+  /// In en, this message translates to:
+  /// **'±3 days'**
+  String get plusMinus3Days;
+
+  /// No description provided for @anyDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Any date'**
+  String get anyDate;
+
+  /// No description provided for @selectADate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a date'**
+  String get selectADate;
+
+  /// No description provided for @confirmDateOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Date ({date})'**
+  String confirmDateOn(String date);
+
+  /// No description provided for @confirmDateAnytime.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Date (Anytime)'**
+  String get confirmDateAnytime;
+
+  /// No description provided for @searchCountryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search country...'**
+  String get searchCountryHint;
+
+  /// No description provided for @searchCityIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Search city in {country}...'**
+  String searchCityIn(String country);
+
+  /// No description provided for @selectCityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select City'**
+  String get selectCityTitle;
+
+  /// No description provided for @noCountriesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No countries found'**
+  String get noCountriesFound;
+
+  /// No description provided for @noCitiesFoundIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No cities found in {country}'**
+  String noCitiesFoundIn(String country);
+
+  /// No description provided for @selectCountryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Country Code'**
+  String get selectCountryCode;
+
+  /// No description provided for @errLoadTravelersRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load travelers. Please try again.'**
+  String get errLoadTravelersRetry;
+
+  /// No description provided for @anywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Anywhere'**
+  String get anywhere;
+
+  /// No description provided for @byDate.
+  ///
+  /// In en, this message translates to:
+  /// **'by {date}'**
+  String byDate(String date);
+
+  /// No description provided for @noTravelersOnRouteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No travelers on this route yet'**
+  String get noTravelersOnRouteTitle;
+
+  /// No description provided for @tryAnotherDateOrRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another date or route, or turn on alerts below.'**
+  String get tryAnotherDateOrRoute;
+
+  /// No description provided for @travelersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Travelers Found'**
+  String get travelersFound;
+
+  /// No description provided for @notifyNewTravelers.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified immediately when new travelers add trips on this route.'**
+  String get notifyNewTravelers;
+
+  /// No description provided for @capacityNotSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity not specified'**
+  String get capacityNotSpecified;
+
+  /// No description provided for @acceptsUpToKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepts up to {weight} kg'**
+  String acceptsUpToKg(String weight);
+
+  /// No description provided for @arrivingIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Arriving In'**
+  String get arrivingIn;
+
+  /// No description provided for @departureDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure Date'**
+  String get departureDateTitle;
+
+  /// No description provided for @arrivalDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival Date'**
+  String get arrivalDateTitle;
+
+  /// No description provided for @errOpenFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open that file.'**
+  String get errOpenFile;
+
+  /// No description provided for @errFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is too large (max 10 MB).'**
+  String get errFileTooLarge;
+
+  /// No description provided for @departureDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure details'**
+  String get departureDetailsTitle;
+
+  /// No description provided for @arrivalDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival details'**
+  String get arrivalDetailsTitle;
+
+  /// No description provided for @departureCountryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DEPARTURE COUNTRY'**
+  String get departureCountryLabel;
+
+  /// No description provided for @departureCityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DEPARTURE CITY'**
+  String get departureCityLabel;
+
+  /// No description provided for @arrivalCountryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ARRIVAL COUNTRY'**
+  String get arrivalCountryLabel;
+
+  /// No description provided for @arrivalCityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ARRIVAL CITY'**
+  String get arrivalCityLabel;
+
+  /// No description provided for @receiptOnFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt on file'**
+  String get receiptOnFile;
+
+  /// No description provided for @bookingRefHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. X7KQ9R'**
+  String get bookingRefHint;
+
+  /// No description provided for @deliveriesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 delivery} other{{count} deliveries}}'**
+  String deliveriesCount(int count);
+
+  /// No description provided for @availableCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} available'**
+  String availableCount(int count);
+
+  /// No description provided for @deliveredCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} delivered'**
+  String deliveredCount(int count);
+
+  /// No description provided for @flightsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 flt} other{{count} flts}}'**
+  String flightsShort(int count);
+
+  /// No description provided for @amountPerDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} / delivery'**
+  String amountPerDelivery(String amount);
+
+  /// No description provided for @countries180.
+  ///
+  /// In en, this message translates to:
+  /// **'180+ Countries'**
+  String get countries180;
+
+  /// No description provided for @errEnterPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your phone number.'**
+  String get errEnterPhone;
+
+  /// No description provided for @errTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment.'**
+  String get errTooManyRequests;
+
+  /// No description provided for @errTooManyRequestsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment and try again.'**
+  String get errTooManyRequestsRetry;
+
+  /// No description provided for @errInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone number. Please check and try again.'**
+  String get errInvalidPhone;
+
+  /// No description provided for @errSomethingWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errSomethingWrong;
+
+  /// No description provided for @errFillAllFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in all fields.'**
+  String get errFillAllFields;
+
+  /// No description provided for @countryOfResidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'COUNTRY OF RESIDENCE'**
+  String get countryOfResidenceLabel;
+
+  /// No description provided for @errVerificationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification failed. Please try again.'**
+  String get errVerificationFailed;
+
+  /// No description provided for @errCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expired. Please request a new one.'**
+  String get errCodeExpired;
+
+  /// No description provided for @errOtpDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone verification is not enabled. Please contact support.'**
+  String get errOtpDisabled;
+
+  /// No description provided for @errIncorrectCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect code. Please try again.'**
+  String get errIncorrectCode;
+
+  /// No description provided for @errTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait before retrying.'**
+  String get errTooManyAttempts;
+
+  /// No description provided for @errNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Please check your connection.'**
+  String get errNetwork;
+
+  /// No description provided for @errIncorrectOrExpiredCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect code or code expired. Please try again.'**
+  String get errIncorrectOrExpiredCode;
+
+  /// No description provided for @enterVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter verification code'**
+  String get enterVerificationCode;
+
+  /// No description provided for @otpSentToPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit code to '**
+  String get otpSentToPrefix;
+
+  /// No description provided for @verifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Code'**
+  String get verifyCode;
+
+  /// No description provided for @resendCodeInPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in '**
+  String get resendCodeInPrefix;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get resendCode;
+
+  /// No description provided for @otpNotReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive the code? Check that your phone number is correct and that you have network coverage.'**
+  String get otpNotReceived;
+
+  /// No description provided for @verifyPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Phone'**
+  String get verifyPhone;
+
+  /// No description provided for @errCaptureIdFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please capture or upload your ID document first.'**
+  String get errCaptureIdFirst;
+
+  /// No description provided for @errUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed. Please try again.'**
+  String get errUploadFailed;
+
+  /// No description provided for @uploadingEllipsis.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get uploadingEllipsis;
+
+  /// No description provided for @submitForVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit for Verification'**
+  String get submitForVerification;
+
+  /// No description provided for @documentSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Document selected'**
+  String get documentSelected;
+
+  /// No description provided for @errCameraDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera error: {error}'**
+  String errCameraDetail(String error);
+
+  /// No description provided for @errFilePicker.
+  ///
+  /// In en, this message translates to:
+  /// **'File picker error: {error}'**
+  String errFilePicker(String error);
+
+  /// No description provided for @verifiedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get verifiedLabel;
+
+  /// No description provided for @matchPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} Match'**
+  String matchPercent(String percent);
+
+  /// No description provided for @requestExpiresInPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Request expires in '**
+  String get requestExpiresInPrefix;
+
+  /// No description provided for @escrowNotePart1.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payment is held safely by Nata. The traveler is only paid '**
+  String get escrowNotePart1;
+
+  /// No description provided for @escrowNotePart2.
+  ///
+  /// In en, this message translates to:
+  /// **'after your recipient verifies delivery'**
+  String get escrowNotePart2;
+
+  /// No description provided for @escrowNotePart3.
+  ///
+  /// In en, this message translates to:
+  /// **' with your secret 4-digit code or photo proof.'**
+  String get escrowNotePart3;
+
+  /// No description provided for @itemPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get itemPlain;
+
+  /// No description provided for @weightPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get weightPlain;
+
+  /// No description provided for @refundFullBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Full 100% refund'**
+  String get refundFullBold;
+
+  /// No description provided for @refundFullRest.
+  ///
+  /// In en, this message translates to:
+  /// **'if traveler cancels or item is not delivered.'**
+  String get refundFullRest;
+
+  /// No description provided for @cancelFeeBold.
+  ///
+  /// In en, this message translates to:
+  /// **'10% cancellation fee'**
+  String get cancelFeeBold;
+
+  /// No description provided for @cancelFeeRest.
+  ///
+  /// In en, this message translates to:
+  /// **'if you cancel after the traveler accepted, until handoff.'**
+  String get cancelFeeRest;
+
+  /// No description provided for @disputeWindowBold.
+  ///
+  /// In en, this message translates to:
+  /// **'3-day dispute window'**
+  String get disputeWindowBold;
+
+  /// No description provided for @disputeWindowRest.
+  ///
+  /// In en, this message translates to:
+  /// **'after delivery before funds are finalized.'**
+  String get disputeWindowRest;
+
+  /// No description provided for @reviewTagIntact.
+  ///
+  /// In en, this message translates to:
+  /// **'Item was intact'**
+  String get reviewTagIntact;
+
+  /// No description provided for @reviewTagOnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'On time'**
+  String get reviewTagOnTime;
+
+  /// No description provided for @reviewTagCommunicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Great communicator'**
+  String get reviewTagCommunicator;
+
+  /// No description provided for @reviewTagRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Followed all rules'**
+  String get reviewTagRules;
+
+  /// No description provided for @reviewTagHandoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Smooth handoff'**
+  String get reviewTagHandoff;
+
+  /// No description provided for @reviewTagAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Would use again'**
+  String get reviewTagAgain;
+
+  /// No description provided for @deliveredYourItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered your {item} · {date}'**
+  String deliveredYourItem(String item, String date);
+
+  /// No description provided for @expiryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'MM/YY'**
+  String get expiryHint;
+
+  /// No description provided for @profilePictureUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile picture updated successfully'**
+  String get profilePictureUpdated;
+
+  /// No description provided for @errUploadImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload image: {error}'**
+  String errUploadImage(String error);
+
+  /// No description provided for @senderEscrowFunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender · Escrow Funded'**
+  String get senderEscrowFunded;
+
+  /// No description provided for @senderDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Sender · 1 delivery} other{Sender · {count} deliveries}}'**
+  String senderDeliveries(int count);
+
+  /// No description provided for @sealedPhotosAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 factory-sealed photo attached} other{{count} factory-sealed photos attached}}'**
+  String sealedPhotosAttached(int count);
+
+  /// No description provided for @capturedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Captured at {place} · {time}'**
+  String capturedAt(String place, String time);
+
+  /// No description provided for @txDeliveryOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{item} delivery'**
+  String txDeliveryOf(String item);
+
+  /// No description provided for @txReleasedFromEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Released from escrow · {date}'**
+  String txReleasedFromEscrow(String date);
+
+  /// No description provided for @txEscrowHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Escrow hold'**
+  String get txEscrowHold;
+
+  /// No description provided for @txDeliveryRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery request · {date}'**
+  String txDeliveryRequest(String date);
+
+  /// No description provided for @priceEstimateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This is an estimate in {currency} at today\'s rate. The price is fixed when the traveler accepts.'**
+  String priceEstimateNote(String currency);
+
+  /// No description provided for @estimateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate'**
+  String get estimateLabel;
+
+  /// No description provided for @errRateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The exchange rate isn\'t available right now, so the price can\'t be fixed. Please try again later.'**
+  String get errRateUnavailable;
+
+  /// No description provided for @errRequestNotPending.
+  ///
+  /// In en, this message translates to:
+  /// **'This request has already been answered.'**
+  String get errRequestNotPending;
+
+  /// No description provided for @chatLockedUntilPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.'**
+  String get chatLockedUntilPayment;
+
+  /// No description provided for @messageLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get messageLocked;
+
+  /// No description provided for @messageUnlocksAfterPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Messaging unlocks after payment.'**
+  String get messageUnlocksAfterPayment;
+
+  /// No description provided for @escrowFunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Escrow funded'**
+  String get escrowFunded;
+
+  /// No description provided for @maxDims.
+  ///
+  /// In en, this message translates to:
+  /// **'Max {dims}'**
+  String maxDims(String dims);
+
+  /// No description provided for @errRequestNotPayable.
+  ///
+  /// In en, this message translates to:
+  /// **'This request can no longer be paid.'**
+  String get errRequestNotPayable;
+
+  /// No description provided for @step1ValidateTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 1 · VALIDATE FLIGHT TICKET'**
+  String get step1ValidateTicket;
+
+  /// No description provided for @step2PaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 2 · SELECT PAYMENT METHOD'**
+  String get step2PaymentMethod;
+
+  /// No description provided for @ticketNotValidated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not validated'**
+  String get ticketNotValidated;
+
+  /// No description provided for @ticketValidated.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked'**
+  String get ticketValidated;
+
+  /// No description provided for @ticketIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uploaded their flight ticket for this trip. Check it matches the route and date before you pay.'**
+  String ticketIntro(String name);
+
+  /// No description provided for @viewFullTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'View full ticket'**
+  String get viewFullTicket;
+
+  /// No description provided for @ticketPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight ticket (PDF)'**
+  String get ticketPdf;
+
+  /// No description provided for @ticketRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get ticketRoute;
+
+  /// No description provided for @ticketDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure'**
+  String get ticketDeparture;
+
+  /// No description provided for @ticketBookingRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking reference'**
+  String get ticketBookingRef;
+
+  /// No description provided for @ticketTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler'**
+  String get ticketTraveler;
+
+  /// No description provided for @iCheckedTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve checked this ticket'**
+  String get iCheckedTicket;
+
+  /// No description provided for @errTicketLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the ticket.'**
+  String get errTicketLoad;
+
+  /// No description provided for @noTicketUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler hasn\'t uploaded a ticket for this trip yet, so payment stays locked.'**
+  String get noTicketUploaded;
+
+  /// No description provided for @validateToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Validate ticket to unlock payment'**
+  String get validateToUnlock;
+
+  /// No description provided for @payAmountIntoEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount} into Escrow'**
+  String payAmountIntoEscrow(String amount);
+
+  /// No description provided for @paymentsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments aren\'t available yet. You\'ll be able to pay here soon.'**
+  String get paymentsComingSoon;
+
+  /// No description provided for @requestExpiredPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'This request has expired and can no longer be paid.'**
+  String get requestExpiredPayment;
+
+  /// No description provided for @hoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String hoursMinutes(int hours, int minutes);
+
+  /// No description provided for @step2VerifyId.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 2 · VERIFY TRAVELER ID'**
+  String get step2VerifyId;
+
+  /// No description provided for @step3PaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 3 · SELECT PAYMENT METHOD'**
+  String get step3PaymentMethod;
+
+  /// No description provided for @idIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s government ID was verified. Check the photo looks real and the name matches the flight ticket before you pay.'**
+  String idIntro(String name);
+
+  /// No description provided for @identityVerifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity verified'**
+  String get identityVerifiedBadge;
+
+  /// No description provided for @nameOnId.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on ID'**
+  String get nameOnId;
+
+  /// No description provided for @idDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'ID document'**
+  String get idDocument;
+
+  /// No description provided for @idVerifiedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified on'**
+  String get idVerifiedOn;
+
+  /// No description provided for @idPhotoOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the photo is shown. The rest of the ID stays private.'**
+  String get idPhotoOnlyNote;
+
+  /// No description provided for @iCheckedId.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve checked this ID'**
+  String get iCheckedId;
+
+  /// No description provided for @errIdPhotoLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the ID photo.'**
+  String get errIdPhotoLoad;
+
+  /// No description provided for @travelerNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'This traveler\'s identity isn\'t verified, so payment stays locked.'**
+  String get travelerNotVerified;
+
+  /// No description provided for @validateTicketAndId.
+  ///
+  /// In en, this message translates to:
+  /// **'Validate ticket and ID to unlock payment'**
+  String get validateTicketAndId;
+
+  /// No description provided for @idSharedWithSendersNote.
+  ///
+  /// In en, this message translates to:
+  /// **'When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private.'**
+  String get idSharedWithSendersNote;
 }
 
 class _AppLocalizationsDelegate

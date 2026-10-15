@@ -1,3 +1,4 @@
+import 'home_search_memory.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -104,6 +105,24 @@ class AuthService {
       // Non-fatal — profile name can be updated later in settings
       debugPrint('[AuthService] updateProfile error: $e');
       rethrow;
+    }
+  }
+
+  /// Saves the user's country of residence (ISO code, e.g. "NG") to
+  /// nata.profiles.country_of_residence. Never throws: the account works
+  /// without it, the home screen then falls back to the device's country.
+  Future<void> saveCountryOfResidence(String isoCode) async {
+    final userId = currentUser?.id;
+    final iso = isoCode.trim().toUpperCase();
+    if (userId == null || iso.length != 2) return;
+    try {
+      await _client
+          .schema('nata')
+          .from('profiles')
+          .update({'country_of_residence': iso})
+          .eq('id', userId);
+    } catch (e) {
+      debugPrint('[AuthService] saveCountryOfResidence error: $e');
     }
   }
 
@@ -408,5 +427,7 @@ class AuthService {
   /// Signs the current user out and clears the session.
   Future<void> signOut() async {
     await _client.auth.signOut();
+    // The next person to sign in on this device starts with an empty search.
+    HomeSearchMemory.clear();
   }
 }

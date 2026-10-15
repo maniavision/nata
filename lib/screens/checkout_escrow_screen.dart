@@ -1,12 +1,36 @@
 import 'dart:async';
 
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/request_service.dart';
+import '../widgets/avatar_image.dart';
 
+/// Pays for an accepted request. Step 1: the sender checks the traveler's
+/// flight ticket; step 2: the photo on the traveler's ID and their verified
+/// name; step 3: they pay into escrow (payment itself is not live yet).
 class CheckoutEscrowScreen extends StatefulWidget {
-  const CheckoutEscrowScreen({super.key});
+  final SentRequest request;
+
+  /// Shows amounts that are not fixed yet in the user's currency.
+  final PriceFormatter money;
+
+  /// Override for tests; defaults to the real [RequestService].
+  final RequestService? service;
+
+  /// Override for tests; defaults to [DateTime.now].
+  final DateTime Function()? now;
+
+  const CheckoutEscrowScreen({
+    super.key,
+    required this.request,
+    this.money = PriceFormatter.usd,
+    this.service,
+    this.now,
+  });
 
   @override
   State<CheckoutEscrowScreen> createState() => _CheckoutEscrowScreenState();
@@ -15,20 +39,95 @@ class CheckoutEscrowScreen extends StatefulWidget {
 class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   int _paymentMethod = 0; // 0=Apple Pay, 1=Card, 2=Mobile Money
 
-  // Countdown timer — 23h 48m 12s
-  int _seconds = 23 * 3600 + 48 * 60 + 12;
+  SentRequest get _r => widget.request;
+  RequestService get _service => widget.service ?? RequestService();
+  DateTime _now() => (widget.now ?? DateTime.now)();
+
+  /// Seconds left to pay; null when there is no deadline.
+  int? _seconds;
   Timer? _timer;
+
+  /// The ticket: a link to show it, or a failure to load it.
+  String? _ticketUrl;
+  bool _ticketFailed = false;
+
+  /// The sender confirmed the ticket (now, or on an earlier visit).
+  late bool _ticketChecked = _r.ticketCheckedAt != null;
+  bool _confirming = false;
+
+  /// The photo on the traveler's ID; null while loading or unavailable.
+  TravelerIdPhoto? _idPhoto;
+  bool _idPhotoLoading = false;
+  bool _idPhotoFailed = false;
+  late bool _idChecked = _r.idCheckedAt != null;
+  bool _confirmingId = false;
+
+  bool get _hasTicket => _r.ticketReceiptPath != null;
+  bool get _expired => _seconds != null && _seconds! <= 0;
+  bool get _ticketIsPdf =>
+      (_r.ticketReceiptPath ?? '').toLowerCase().endsWith('.pdf');
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_seconds > 0) {
-        setState(() => _seconds--);
-      } else {
-        _timer?.cancel();
-      }
+    final expires = _r.expiresAt;
+    if (expires != null) {
+      _seconds = expires.difference(_now()).inSeconds.clamp(0, 1 << 31);
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if ((_seconds ?? 0) > 0) {
+          setState(() => _seconds = _seconds! - 1);
+        } else {
+          _timer?.cancel();
+        }
+      });
+    }
+    if (_hasTicket) _loadTicket();
+    if (_r.travelerVerified) _loadIdPhoto();
+  }
+
+  Future<void> _loadIdPhoto() async {
+    setState(() {
+      _idPhotoLoading = true;
+      _idPhotoFailed = false;
     });
+    try {
+      final photo = await _service.travelerIdPhoto(_r.id);
+      if (!mounted) return;
+      setState(() {
+        _idPhoto = photo;
+        _idPhotoFailed = photo == null;
+      });
+    } catch (e) {
+      debugPrint('[Checkout] ID photo: $e');
+      if (mounted) setState(() => _idPhotoFailed = true);
+    } finally {
+      if (mounted) setState(() => _idPhotoLoading = false);
+    }
+  }
+
+  Future<void> _confirmId() async {
+    if (_confirmingId || _idChecked) return;
+    setState(() => _confirmingId = true);
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _service.confirmIdChecked(_r.id);
+      if (mounted) setState(() => _idChecked = true);
+    } on RequestException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.reason == RequestFailure.notPayable
+                ? l.errRequestNotPayable
+                : l.errRequestFailed,
+          ),
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+    } finally {
+      if (mounted) setState(() => _confirmingId = false);
+    }
   }
 
   @override
@@ -37,10 +136,87 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     super.dispose();
   }
 
+  Future<void> _loadTicket() async {
+    setState(() => _ticketFailed = false);
+    try {
+      final url = await _service.ticketUrl(_r.ticketReceiptPath!);
+      if (mounted) setState(() => _ticketUrl = url);
+    } catch (e) {
+      debugPrint('[Checkout] ticket: $e');
+      if (mounted) setState(() => _ticketFailed = true);
+    }
+  }
+
+  Future<void> _confirmTicket() async {
+    if (_confirming || _ticketChecked) return;
+    setState(() => _confirming = true);
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _service.confirmTicketChecked(_r.id);
+      if (mounted) setState(() => _ticketChecked = true);
+    } on RequestException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.reason == RequestFailure.notPayable
+                ? l.errRequestNotPayable
+                : l.errRequestFailed,
+          ),
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+    } finally {
+      if (mounted) setState(() => _confirming = false);
+    }
+  }
+
+  /// Opens the ticket full screen (an image) or in the browser (a PDF).
+  void _openTicket() {
+    final url = _ticketUrl;
+    if (url == null) return;
+    if (_ticketIsPdf) {
+      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.network(url, key: const ValueKey('ticket-full')),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The fixed price once the traveler accepted (it always is by now);
+  /// otherwise today's conversion of the dollar total, as an estimate.
+  String _amount(double? fixed, double? usd) {
+    final currency = _r.displayCurrency;
+    if (fixed != null && currency != null) {
+      return PriceFormatter.write(fixed, currency);
+    }
+    if (usd == null) return '—';
+    final shown = widget.money.format(usd);
+    return widget.money.currency == 'USD' ? shown : '≈ $shown';
+  }
+
+  String get _totalText => _r.fixedTotalText ?? _amount(null, _r.totalUsd);
+
   String get _countdownLabel {
-    final h = _seconds ~/ 3600;
-    final m = (_seconds % 3600) ~/ 60;
-    final s = _seconds % 60;
+    final left = _seconds ?? 0;
+    final h = left ~/ 3600;
+    final m = (left % 3600) ~/ 60;
+    final s = left % 60;
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
@@ -56,11 +232,17 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
               child: Column(
                 children: [
-                  _buildCountdownBanner(),
-                  const SizedBox(height: 16),
+                  if (_seconds != null) ...[
+                    _buildCountdownBanner(),
+                    const SizedBox(height: 16),
+                  ],
                   _buildEscrowExplainerCard(),
                   const SizedBox(height: 16),
                   _buildOrderSummaryCard(),
+                  const SizedBox(height: 16),
+                  _buildTicketCard(),
+                  const SizedBox(height: 16),
+                  _buildIdCard(),
                   const SizedBox(height: 16),
                   _buildPaymentMethodCard(),
                   const SizedBox(height: 16),
@@ -199,9 +381,12 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                       color: const Color(0xFF92400E),
                     ),
                     children: [
-                      const TextSpan(text: 'Request expires in '),
+                      TextSpan(text: context.l10n.requestExpiresInPrefix),
                       TextSpan(
-                        text: '23h 48m',
+                        text: context.l10n.hoursMinutes(
+                          (_seconds ?? 0) ~/ 3600,
+                          ((_seconds ?? 0) % 3600) ~/ 60,
+                        ),
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF92400E),
@@ -306,21 +491,15 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                           height: 1.5,
                         ),
                         children: [
-                          const TextSpan(
-                            text:
-                                'Your payment is held safely by Nata. The traveler is only paid ',
-                          ),
+                          TextSpan(text: context.l10n.escrowNotePart1),
                           TextSpan(
-                            text: 'after your recipient verifies delivery',
+                            text: context.l10n.escrowNotePart2,
                             style: GoogleFonts.dmSans(
                               fontWeight: FontWeight.w600,
                               color: AppColors.accent,
                             ),
                           ),
-                          const TextSpan(
-                            text:
-                                ' with your secret 4-digit code or photo proof.',
-                          ),
+                          TextSpan(text: context.l10n.escrowNotePart3),
                         ],
                       ),
                     ),
@@ -358,10 +537,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: ClipOval(
-                  child: Image.network(
-                    'https://randomuser.me/api/portraits/women/44.jpg',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => Container(
+                  child: AvatarImage(
+                    path: _r.trip.avatarPath,
+                    fallback: Container(
                       color: AppColors.secondary,
                       child: const Icon(
                         Icons.person,
@@ -377,39 +555,16 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Amara K.',
-                          style: GoogleFonts.dmSans(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                            color: AppColors.foreground,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE4F4EE),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            'Verified',
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10,
-                              color: const Color(0xFF168A68),
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      _r.trip.fullName,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        color: AppColors.foreground,
+                      ),
                     ),
                     Text(
-                      'Lagos (LOS) → London (LHR) · Jun 22',
+                      '${_r.trip.departureCity} → ${_r.trip.arrivalCity} · ${DateFormat.MMMd(Localizations.localeOf(context).toString()).format(_r.trip.departureDate)}',
                       style: GoogleFonts.dmSans(
                         fontSize: 11,
                         color: AppColors.mutedForeground,
@@ -419,7 +574,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 ),
               ),
               Text(
-                'Accepted',
+                context.l10n.accepted,
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
@@ -433,11 +588,15 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           const SizedBox(height: 12),
           _summaryRow(
             Icons.inventory_2_outlined,
-            'Item',
-            'MacBook Air M2 (Sealed Box)',
+            context.l10n.itemPlain,
+            _r.itemsSummary,
           ),
           const SizedBox(height: 8),
-          _summaryRow(Icons.monitor_weight_outlined, 'Weight', '1.24 kg'),
+          _summaryRow(
+            Icons.monitor_weight_outlined,
+            context.l10n.weightPlain,
+            '${NumberFormat('0.##', Localizations.localeOf(context).toString()).format(_r.weightKg)} kg',
+          ),
         ],
       ),
     );
@@ -445,27 +604,27 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
 
   Widget _summaryRow(IconData icon, String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(icon, size: 14, color: AppColors.mutedForeground),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-          ],
-        ),
+        Icon(icon, size: 14, color: AppColors.mutedForeground),
+        const SizedBox(width: 6),
         Text(
-          value,
+          label,
           style: GoogleFonts.dmSans(
-            fontWeight: FontWeight.w700,
             fontSize: 12,
-            color: AppColors.foreground,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              color: AppColors.foreground,
+            ),
           ),
         ),
       ],
@@ -514,7 +673,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.selectPaymentMethod,
+            context.l10n.step3PaymentMethod,
             style: GoogleFonts.dmSans(
               fontWeight: FontWeight.w700,
               fontSize: 11,
@@ -657,9 +816,17 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _breakdownRow(context.l10n.travelerReward, '\$45.00'),
-          const SizedBox(height: 8),
-          _breakdownRow(context.l10n.platformFee, '\$5.00'),
+          if (_r.displayCost != null && _r.displayFee != null) ...[
+            _breakdownRow(
+              context.l10n.travelerReward,
+              _amount(_r.displayCost, null),
+            ),
+            const SizedBox(height: 8),
+            _breakdownRow(
+              context.l10n.platformFee,
+              _amount(_r.displayFee, null),
+            ),
+          ],
           const SizedBox(height: 12),
           const Divider(color: AppColors.border, height: 1),
           const SizedBox(height: 12),
@@ -680,7 +847,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                '\$50.00',
+                _totalText,
+                key: const ValueKey('checkout-total'),
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w800,
                   fontSize: 20,
@@ -757,18 +925,15 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           ),
           const SizedBox(height: 8),
           _bulletPoint(
-            'Full 100% refund',
-            'if traveler cancels or item is not delivered.',
+            context.l10n.refundFullBold,
+            context.l10n.refundFullRest,
           ),
           const SizedBox(height: 4),
-          _bulletPoint(
-            'Free cancellation',
-            'anytime before physical handoff to traveler.',
-          ),
+          _bulletPoint(context.l10n.cancelFeeBold, context.l10n.cancelFeeRest),
           const SizedBox(height: 4),
           _bulletPoint(
-            '3-day dispute window',
-            'after delivery before funds are finalized.',
+            context.l10n.disputeWindowBold,
+            context.l10n.disputeWindowRest,
           ),
         ],
       ),
@@ -801,27 +966,583 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
 
   // ── Pay button ─────────────────────────────────────────────────────────────
   Widget _buildPayButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: () => Navigator.of(context).pop(),
-        icon: const Icon(Icons.lock_rounded, size: 18, color: Colors.white),
-        label: Text(
-          context.l10n.payIntoEscrow,
-          style: GoogleFonts.dmSans(
-            fontWeight: FontWeight.w800,
-            fontSize: 14,
-            color: Colors.white,
+    final l = context.l10n;
+    final unlocked = _ticketChecked && _idChecked && !_expired;
+    return Column(
+      children: [
+        if (_expired) ...[
+          Text(
+            l.requestExpiredPayment,
+            key: const ValueKey('checkout-expired'),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.destructive,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton.icon(
+            key: const ValueKey('checkout-pay'),
+            // Payment is not live yet: say so rather than pretend.
+            onPressed: unlocked
+                ? () => ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(content: Text(l.paymentsComingSoon)),
+                    )
+                : null,
+            icon: Icon(
+              Icons.lock_rounded,
+              size: 18,
+              color: unlocked ? Colors.white : AppColors.mutedForeground,
+            ),
+            label: Text(
+              unlocked
+                  ? l.payAmountIntoEscrow(_totalText)
+                  : l.validateTicketAndId,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: unlocked ? Colors.white : AppColors.mutedForeground,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.muted,
+              elevation: unlocked ? 3 : 0,
+              shadowColor: AppColors.accent.withValues(alpha: 0.4),
+              shape: const StadiumBorder(),
+            ),
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
-          foregroundColor: Colors.white,
-          elevation: 3,
-          shadowColor: AppColors.accent.withValues(alpha: 0.4),
-          shape: const StadiumBorder(),
+      ],
+    );
+  }
+
+  // ── Step 2: the photo on the traveler's ID ─────────────────────────────────
+  String _idTypeName(String? type) {
+    final l = context.l10n;
+    final name = switch (type) {
+      'passport' => l.idTypePassport,
+      'drivers_license' => l.idTypeDriversLicense,
+      'national_id' => l.idTypeNationalId,
+      _ => null,
+    };
+    if (name == null || name.isEmpty) return '—';
+    return name[0].toUpperCase() + name.substring(1);
+  }
+
+  Widget _buildIdCard() {
+    final l = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    Widget detail(String label, String value) => Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: AppColors.foreground,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Widget photo;
+    if (_idPhotoFailed) {
+      photo = Row(
+        children: [
+          Expanded(
+            child: Text(
+              l.errIdPhotoLoad,
+              key: const ValueKey('id-photo-error'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.destructive,
+              ),
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('id-photo-retry'),
+            onPressed: _loadIdPhoto,
+            child: Text(l.retry),
+          ),
+        ],
+      );
+    } else if (_idPhotoLoading || _idPhoto == null) {
+      photo = const SizedBox(
+        height: 144,
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.accent,
+          ),
         ),
+      );
+    } else {
+      photo = Center(
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                key: const ValueKey('id-photo'),
+                width: 132,
+                height: 160,
+                color: AppColors.secondary,
+                child: Image.network(
+                  _idPhoto!.url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => const Icon(
+                    Icons.person,
+                    size: 48,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 6,
+              left: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE4F4EE),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: const Color(0xFF168A68).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.verified_rounded,
+                      size: 11,
+                      color: Color(0xFF168A68),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      l.identityVerifiedBadge,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 9,
+                        color: const Color(0xFF168A68),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      key: const ValueKey('id-card'),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.step2VerifyId,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                key: const ValueKey('id-status'),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _idChecked
+                      ? const Color(0xFFE4F4EE)
+                      : const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  _idChecked ? l.ticketValidated : l.ticketNotValidated,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    color: _idChecked
+                        ? const Color(0xFF168A68)
+                        : const Color(0xFF92400E),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (!_r.travelerVerified)
+            Text(
+              l.travelerNotVerified,
+              key: const ValueKey('id-not-verified'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            )
+          else ...[
+            Text(
+              l.idIntro(_r.trip.firstName),
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                height: 1.4,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 10),
+            photo,
+            const SizedBox(height: 4),
+            // The profile name was checked against the ID when it was
+            // uploaded, so it is the name on the ID.
+            detail(l.nameOnId, _r.trip.fullName),
+            if (_idPhoto?.idDocumentType != null)
+              detail(l.idDocument, _idTypeName(_idPhoto!.idDocumentType)),
+            if (_idPhoto?.verifiedAt != null)
+              detail(
+                l.idVerifiedOn,
+                DateFormat.yMMMd(
+                  locale,
+                ).format(_idPhoto!.verifiedAt!.toLocal()),
+              ),
+            const SizedBox(height: 8),
+            Text(
+              l.idPhotoOnlyNote,
+              style: GoogleFonts.dmSans(
+                fontSize: 10,
+                fontStyle: FontStyle.italic,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            if (!_idChecked) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: const ValueKey('id-confirm'),
+                  onPressed: _confirmingId || _expired || _idPhoto == null
+                      ? null
+                      : _confirmId,
+                  icon: const Icon(Icons.check_circle_rounded, size: 16),
+                  label: Text(
+                    l.iCheckedId,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                    backgroundColor: AppColors.accent.withValues(alpha: 0.1),
+                    side: const BorderSide(color: AppColors.accent),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Step 1: the traveler's ticket ──────────────────────────────────────────
+  Widget _buildTicketCard() {
+    final l = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    Widget detail(String label, String value) => Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: AppColors.foreground,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Widget preview;
+    if (_ticketFailed) {
+      preview = Row(
+        children: [
+          Expanded(
+            child: Text(
+              l.errTicketLoad,
+              key: const ValueKey('ticket-error'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.destructive,
+              ),
+            ),
+          ),
+          TextButton(onPressed: _loadTicket, child: Text(l.retry)),
+        ],
+      );
+    } else if (_ticketUrl == null) {
+      preview = const SizedBox(
+        height: 144,
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.accent,
+          ),
+        ),
+      );
+    } else {
+      preview = GestureDetector(
+        key: const ValueKey('ticket-preview'),
+        onTap: _openTicket,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            height: 144,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.secondary,
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (_ticketIsPdf)
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.picture_as_pdf_rounded,
+                        size: 36,
+                        color: AppColors.accent,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l.ticketPdf,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Image.network(
+                    _ticketUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, s) => const Icon(
+                      Icons.broken_image_outlined,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.card.withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.open_in_full_rounded,
+                          size: 12,
+                          color: AppColors.foreground,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          l.viewFullTicket,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      key: const ValueKey('ticket-card'),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.step1ValidateTicket,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                key: const ValueKey('ticket-status'),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _ticketChecked
+                      ? const Color(0xFFE4F4EE)
+                      : const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  _ticketChecked ? l.ticketValidated : l.ticketNotValidated,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    color: _ticketChecked
+                        ? const Color(0xFF168A68)
+                        : const Color(0xFF92400E),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (!_hasTicket)
+            Text(
+              l.noTicketUploaded,
+              key: const ValueKey('ticket-missing'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            )
+          else ...[
+            Text(
+              l.ticketIntro(_r.trip.firstName),
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                height: 1.4,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 10),
+            preview,
+            const SizedBox(height: 4),
+            detail(
+              l.ticketRoute,
+              '${_r.trip.departureCity} → ${_r.trip.arrivalCity}',
+            ),
+            detail(
+              l.ticketDeparture,
+              DateFormat.yMMMd(locale).format(_r.trip.departureDate),
+            ),
+            if (_r.bookingReference != null)
+              detail(l.ticketBookingRef, _r.bookingReference!),
+            detail(l.ticketTraveler, _r.trip.fullName),
+            if (!_ticketChecked) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: const ValueKey('ticket-confirm'),
+                  onPressed: _confirming || _expired || _ticketUrl == null
+                      ? null
+                      : _confirmTicket,
+                  icon: const Icon(Icons.check_circle_rounded, size: 16),
+                  label: Text(
+                    l.iCheckedTicket,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                    backgroundColor: AppColors.accent.withValues(alpha: 0.1),
+                    side: const BorderSide(color: AppColors.accent),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ],
       ),
     );
   }

@@ -17,6 +17,7 @@ import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
+import 'package:carrywise_app/services/payment_service.dart';
 
 /// A traveler trip for tests. Every field has a sensible default.
 TravelerTrip sampleTrip({
@@ -167,6 +168,7 @@ class FakeAuthService extends Fake implements AuthService {
       'avatar_path': null,
       'verification_status': 'verified',
       'created_at': '2025-03-01T10:00:00+00:00',
+      'country_of_residence': 'NG',
     },
     this.balances = const {'available': 320.0, 'escrow': 150.0},
     this.stats = const {'trips': 4, 'parcels': 7},
@@ -192,6 +194,14 @@ class FakeAuthService extends Fake implements AuthService {
   /// For each request, whether the number was allowed to create an account.
   final List<bool> otpCreateUser = [];
   Object? otpError;
+
+  /// Countries saved with [saveCountryOfResidence].
+  final List<String> countriesSaved = [];
+
+  @override
+  Future<void> saveCountryOfResidence(String isoCode) async {
+    countriesSaved.add(isoCode);
+  }
 
   @override
   Future<void> sendOtp(String phone, {bool createUser = true}) async {
@@ -516,7 +526,8 @@ ConversationSummary sampleConversation({
   String from = 'Lagos',
   String to = 'London',
   String item = 'iPhone 15 Pro (sealed)',
-  String status = 'accepted',
+  // Chat opens once the delivery is paid.
+  String status = 'paid',
   String? lastBody = 'Meeting you at the gate tomorrow.',
   String? lastAttachment,
   DateTime? lastAt,
@@ -691,7 +702,172 @@ class FakeRequestService extends Fake implements RequestService {
     sent.add((id: requestId, draft: draft, photos: photos));
     return requestId;
   }
+
+  /// The user's sent requests, for the Outgoing tab.
+  List<SentRequest> mine = [];
+  bool failList = false;
+  int listCalls = 0;
+
+  @override
+  Future<List<SentRequest>> myRequests() async {
+    listCalls++;
+    if (failList) throw StateError('list failed');
+    return mine;
+  }
+
+  /// Saved edits: the request, the new draft and the new photos (null =
+  /// unchanged).
+  final List<
+    ({SentRequest request, RequestDraft draft, List<PickedReceipt>? photos})
+  >
+  updated = [];
+
+  @override
+  Future<void> update(
+    SentRequest request,
+    RequestDraft draft, {
+    List<PickedReceipt>? photos,
+  }) async {
+    attempts++;
+    if (fail != null) throw fail!;
+    updated.add((request: request, draft: draft, photos: photos));
+  }
+
+  /// Ticket checks confirmed (request ids); [failTicket] makes them fail.
+  final List<String> ticketChecks = [];
+  RequestException? failTicket;
+
+  /// When set, loading the ticket link fails.
+  bool failTicketUrl = false;
+
+  /// ID checks confirmed (request ids); [failId] makes them fail.
+  final List<String> idChecks = [];
+  RequestException? failId;
+
+  /// What travelerIdPhoto returns; [failIdPhoto] makes it throw.
+  TravelerIdPhoto? idPhoto = TravelerIdPhoto(
+    url: 'https://example.test/signed/id_photo.jpg',
+    idDocumentType: 'passport',
+    verifiedAt: DateTime.utc(2030, 5, 2, 9),
+  );
+  bool failIdPhoto = false;
+  final List<String> idPhotoCalls = [];
+
+  @override
+  Future<DateTime> confirmIdChecked(String requestId) async {
+    if (failId != null) throw failId!;
+    idChecks.add(requestId);
+    return DateTime(2030, 6, 21, 12);
+  }
+
+  @override
+  Future<TravelerIdPhoto?> travelerIdPhoto(String requestId) async {
+    idPhotoCalls.add(requestId);
+    if (failIdPhoto) throw StateError('no photo');
+    return idPhoto;
+  }
+
+  @override
+  Future<DateTime> confirmTicketChecked(String requestId) async {
+    if (failTicket != null) throw failTicket!;
+    ticketChecks.add(requestId);
+    return DateTime(2030, 6, 21, 12);
+  }
+
+  @override
+  Future<String> ticketUrl(String path) async {
+    if (failTicketUrl) throw StateError('no link');
+    return 'https://example.test/signed/$path';
+  }
+
+  /// Requests cancelled, in order. On success the matching request in [mine]
+  /// becomes cancelled with the fee, as the database would do.
+  final List<SentRequest> cancelled = [];
+
+  @override
+  Future<double> cancel(SentRequest request) async {
+    attempts++;
+    if (fail != null) throw fail!;
+    final fee = request.cancellationFeeNow ?? 0;
+    cancelled.add(request);
+    mine = [
+      for (final r in mine)
+        r.id == request.id
+            ? sampleSentRequest(
+                id: r.id,
+                status: 'cancelled',
+                cancellationFee: fee,
+                cancelledAt: DateTime(2030, 6, 10),
+              )
+            : r,
+    ];
+    return fee;
+  }
+
+  @override
+  Future<List<PickedReceipt>> downloadPhotos(List<String> paths) async => [
+    for (final p in paths)
+      PickedReceipt(
+        bytes: Uint8List(1024),
+        name: p.split('/').last,
+        extension: 'jpg',
+      ),
+  ];
 }
+
+/// A request the user sent, by default pending, for [sampleTrip].
+SentRequest sampleSentRequest({
+  String id = 'req-1',
+  String status = 'pending',
+  List<RequestItem>? items,
+  double? cancellationFee,
+  DateTime? cancelledAt,
+  String? displayCurrency,
+  double? displayTotal,
+  double? displayCancellationFee,
+  double? displayCost,
+  double? displayFee,
+  DateTime? expiresAt,
+  DateTime? ticketCheckedAt,
+  DateTime? idCheckedAt,
+  bool travelerVerified = false,
+  String? ticketReceiptPath,
+  String? bookingReference,
+}) => SentRequest(
+  id: id,
+  status: status,
+  createdAt: DateTime(2030, 6, 1),
+  totalUsd: 110.91,
+  cancellationFee: cancellationFee,
+  cancelledAt: cancelledAt,
+  displayCurrency: displayCurrency,
+  displayTotal: displayTotal,
+  displayCancellationFee: displayCancellationFee,
+  displayCost: displayCost,
+  displayFee: displayFee,
+  expiresAt: expiresAt,
+  ticketCheckedAt: ticketCheckedAt,
+  idCheckedAt: idCheckedAt,
+  travelerVerified: travelerVerified,
+  ticketReceiptPath: ticketReceiptPath,
+  bookingReference: bookingReference,
+  items:
+      items ??
+      const [
+        RequestItem(
+          name: 'AirPods Max',
+          category: RequestCategory.electronics,
+          description: 'Sealed box',
+        ),
+      ],
+  weightKg: 0.9,
+  dimensions: '20 x 18 x 9',
+  sizeClass: RequestSizeClass.shoebox,
+  recipientName: 'Jane Doe',
+  recipientPhone: '+447700900123',
+  photoPaths: const ['u/req-1/0.jpg'],
+  trip: sampleTrip(),
+);
 
 // ── Delivery pricing inputs ───────────────────────────────────────────────────
 
@@ -812,4 +988,127 @@ AcceptedDelivery sampleDelivery() => const AcceptedDelivery(
   recipientName: 'David Adeleke (London)',
   recipientPhone: '+44 7700 900456',
   meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
+  deliveryPin: '7492',
+);
+
+/// Capitals by country, standing in for nata.cities.is_capital.
+const _capitals = {
+  'NG': ('Nigeria', 'Abuja', 101),
+  'GB': ('United Kingdom', 'London', 102),
+  'US': ('United States', 'Washington', 103),
+  'CM': ('Cameroon', 'Yaoundé', 104),
+};
+
+/// A [HomeScreen.capitalLookup] backed by [_capitals]; records the lookups.
+final List<String> capitalLookups = [];
+Future<LocationSelection?> fakeCapitalLookup(String countryCode) async {
+  capitalLookups.add(countryCode);
+  final c = _capitals[countryCode];
+  if (c == null) return null;
+  return LocationSelection(
+    country: c.$1,
+    countryCode: countryCode,
+    city: c.$2,
+    displayLabel: '${c.$2}, ${c.$1}',
+    cityId: c.$3,
+  );
+}
+
+/// Stand-in for [PaymentService], keeping one default like the database does
+/// (first method added, or the last one marked default; deleting the default
+/// promotes the most recent one left).
+class FakePaymentService extends Fake implements PaymentService {
+  FakePaymentService({
+    List<PaymentMethod>? methods,
+    this.accounts = const [],
+    this.schedule = PayoutSchedule.automatic,
+  }) : saved = [...?methods];
+
+  final List<PaymentMethod> saved;
+  List<PayoutAccount> accounts;
+  PayoutSchedule schedule;
+  bool failLoad = false;
+  bool failSave = false;
+  int _nextId = 1;
+
+  @override
+  Future<List<PaymentMethod>> methods() async {
+    if (failLoad) throw StateError('load failed');
+    return List.of(saved);
+  }
+
+  @override
+  Future<PaymentMethod> addMethod(PaymentMethod method) async {
+    if (failSave) throw StateError('save failed');
+    final makeDefault = method.isDefault || saved.isEmpty;
+    if (makeDefault) {
+      for (var i = 0; i < saved.length; i++) {
+        saved[i] = saved[i].copyWith(isDefault: false);
+      }
+    }
+    final stored = PaymentMethod.fromJson({
+      ...method.toInsertJson('u'),
+      'id': 'm${_nextId++}',
+      'is_default': makeDefault,
+    });
+    saved.add(stored);
+    return stored;
+  }
+
+  @override
+  Future<void> removeMethod(String id) async {
+    if (failSave) throw StateError('save failed');
+    final wasDefault = saved.any((m) => m.id == id && m.isDefault);
+    saved.removeWhere((m) => m.id == id);
+    if (wasDefault && saved.isNotEmpty) {
+      saved[saved.length - 1] = saved.last.copyWith(isDefault: true);
+    }
+  }
+
+  @override
+  Future<List<PayoutAccount>> payoutAccounts() async {
+    if (failLoad) throw StateError('load failed');
+    return accounts;
+  }
+
+  @override
+  Future<PayoutSchedule> payoutSchedule() async => schedule;
+}
+
+/// The design's sample: Apple Pay (default) and a Visa card.
+List<PaymentMethod> samplePaymentMethods() => const [
+  PaymentMethod(
+    id: 'apple-pay',
+    kind: PaymentMethodKind.applePay,
+    isDefault: true,
+    walletDeviceLabel: "Fortune's iPhone",
+  ),
+  PaymentMethod(
+    id: 'visa-4242',
+    kind: PaymentMethodKind.card,
+    cardBrand: 'Visa',
+    cardLast4: '4242',
+    cardExpMonth: 8,
+    cardExpYear: 2027,
+    cardHolderName: 'Fortune Niama',
+  ),
+];
+
+PayoutAccount samplePayoutAccount() => const PayoutAccount(
+  id: 'barclays',
+  institutionName: 'Barclays Bank',
+  countryCode: 'GB',
+  accountLast4: '2093',
+  holderName: 'Fortune Niama',
+  isDefault: true,
+);
+
+/// A mobile money payout account, next to [samplePayoutAccount]'s bank.
+PayoutAccount sampleMobilePayoutAccount() => const PayoutAccount(
+  id: 'mpesa',
+  kind: PayoutAccountKind.mobileMoney,
+  institutionName: 'M-Pesa',
+  countryCode: 'KE',
+  accountLast4: '5678',
+  holderName: 'Fortune Niama',
 );
