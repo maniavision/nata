@@ -2140,18 +2140,6 @@ abstract class AppLocalizations {
   /// **'Select date'**
   String get selectDate;
 
-  /// No description provided for @tripPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'PRICE PER ITEM'**
-  String get tripPrice;
-
-  /// No description provided for @tripPriceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Your fee for carrying one item'**
-  String get tripPriceHint;
-
   /// No description provided for @errPickDeparture.
   ///
   /// In en, this message translates to:
@@ -2193,12 +2181,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Attach your flight receipt.'**
   String get errAttachReceipt;
-
-  /// No description provided for @errPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid price.'**
-  String get errPrice;
 
   /// No description provided for @errSaveFailed.
   ///
@@ -4969,6 +4951,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private.'**
   String get idSharedWithSendersNote;
+
+  /// No description provided for @errTicketNameMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The name on this ticket doesn\'t match your profile name. Upload a ticket in your name, or update your profile name.'**
+  String get errTicketNameMismatch;
+
+  /// No description provided for @errTicketDateMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This ticket isn\'t for {date}. Check the trip\'s dates, or upload the ticket for this flight.'**
+  String errTicketDateMismatch(String date);
+
+  /// No description provided for @errTicketUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t read this ticket. Upload a sharp photo or the PDF of your boarding pass or e-ticket.'**
+  String get errTicketUnreadable;
+
+  /// No description provided for @checkingTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your ticket…'**
+  String get checkingTicket;
 }
 
 class _AppLocalizationsDelegate

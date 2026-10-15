@@ -1088,12 +1088,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectDate => 'Choisir une date';
 
   @override
-  String get tripPrice => 'PRIX PAR ARTICLE';
-
-  @override
-  String get tripPriceHint => 'Vos frais pour transporter un article';
-
-  @override
   String get errPickDeparture => 'Choisissez votre lieu de départ.';
 
   @override
@@ -1115,9 +1109,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errAttachReceipt => 'Joignez votre reçu de vol.';
-
-  @override
-  String get errPrice => 'Saisissez un prix valide.';
 
   @override
   String get errSaveFailed =>
@@ -2833,4 +2824,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get idSharedWithSendersNote =>
       'Lorsque vous acceptez une demande, l\'expéditeur verra la photo de votre pièce d\'identité et votre nom vérifié, pour vérifier que vous correspondez à votre billet. Le reste de votre pièce d\'identité reste privé.';
+
+  @override
+  String get errTicketNameMismatch =>
+      'Le nom sur ce billet ne correspond pas au nom de votre profil. Importez un billet à votre nom ou modifiez le nom de votre profil.';
+
+  @override
+  String errTicketDateMismatch(String date) {
+    return 'Ce billet n\'est pas pour le $date. Vérifiez les dates du trajet ou importez le billet de ce vol.';
+  }
+
+  @override
+  String get errTicketUnreadable =>
+      'Impossible de lire ce billet. Importez une photo nette ou le PDF de votre carte d\'embarquement ou billet électronique.';
+
+  @override
+  String get checkingTicket => 'Vérification de votre billet…';
 }

@@ -1076,12 +1076,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectDate => 'Select date';
 
   @override
-  String get tripPrice => 'PRICE PER ITEM';
-
-  @override
-  String get tripPriceHint => 'Your fee for carrying one item';
-
-  @override
   String get errPickDeparture => 'Choose where you are departing from.';
 
   @override
@@ -1101,9 +1095,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errAttachReceipt => 'Attach your flight receipt.';
-
-  @override
-  String get errPrice => 'Enter a valid price.';
 
   @override
   String get errSaveFailed => 'Could not save your trip. Please try again.';
@@ -2776,4 +2767,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get idSharedWithSendersNote =>
       'When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private.';
+
+  @override
+  String get errTicketNameMismatch =>
+      'The name on this ticket doesn\'t match your profile name. Upload a ticket in your name, or update your profile name.';
+
+  @override
+  String errTicketDateMismatch(String date) {
+    return 'This ticket isn\'t for $date. Check the trip\'s dates, or upload the ticket for this flight.';
+  }
+
+  @override
+  String get errTicketUnreadable =>
+      'We couldn\'t read this ticket. Upload a sharp photo or the PDF of your boarding pass or e-ticket.';
+
+  @override
+  String get checkingTicket => 'Checking your ticket…';
 }

@@ -66,6 +66,15 @@ class LocationSearchService {
 
   SupabaseClient get _client => Supabase.instance.client;
 
+  /// A to Z, ignoring case. The database is also asked for ascending order
+  /// (supabase-dart's `order()` is descending unless told otherwise), which
+  /// matters because results are capped; this keeps the list right whatever
+  /// the server sends.
+  @visibleForTesting
+  static List<T> sortByName<T>(Iterable<T> items, String Function(T) name) =>
+      items.toList()
+        ..sort((a, b) => name(a).toLowerCase().compareTo(name(b).toLowerCase()));
+
   /// Every country fits (there are fewer than 300), so the list is complete
   /// before the user types anything.
   static const _maxCountries = 300;
@@ -83,10 +92,12 @@ class LocationSearchService {
       return await _searchCountriesRemote(query);
     } catch (e) {
       debugPrint('[LocationSearch] countries error: $e');
-      return _bundledCountries
-          .where((c) => c.name.toLowerCase().contains(query.toLowerCase()))
-          .take(8)
-          .toList();
+      return sortByName(
+        _bundledCountries
+            .where((c) => c.name.toLowerCase().contains(query.toLowerCase()))
+            .take(8),
+        (c) => c.name,
+      );
     }
   }
 
@@ -100,7 +111,7 @@ class LocationSearchService {
                   .schema('nata')
                   .from('countries')
                   .select('iso_code, name, phone_code')
-                  .order('name')
+                  .order('name', ascending: true)
                   .limit(_maxCountries)
               as List<dynamic>;
     } else {
@@ -110,14 +121,15 @@ class LocationSearchService {
                   .from('countries')
                   .select('iso_code, name, phone_code')
                   .ilike('name', '%$q%')
-                  .order('name')
+                  .order('name', ascending: true)
                   .limit(_maxCountries)
               as List<dynamic>;
     }
 
-    return rows
-        .map((r) => CountryResult.fromJson(r as Map<String, dynamic>))
-        .toList();
+    return sortByName(
+      rows.map((r) => CountryResult.fromJson(r as Map<String, dynamic>)),
+      (c) => c.name,
+    );
   }
 
   // ── Cities ────────────────────────────────────────────────────────────────
@@ -151,7 +163,7 @@ class LocationSearchService {
                   .select('id, name, country_code, countries!inner(name)')
                   .eq('country_code', countryCode)
                   .ilike('name', '%$q%')
-                  .order('name')
+                  .order('name', ascending: true)
                   .limit(_maxCities)
               as List<dynamic>;
     } else if (countryCode != null) {
@@ -161,7 +173,7 @@ class LocationSearchService {
                   .from('cities')
                   .select('id, name, country_code, countries!inner(name)')
                   .eq('country_code', countryCode)
-                  .order('name')
+                  .order('name', ascending: true)
                   .limit(_maxCities)
               as List<dynamic>;
     } else if (q.isNotEmpty) {
@@ -171,7 +183,7 @@ class LocationSearchService {
                   .from('cities')
                   .select('id, name, country_code, countries!inner(name)')
                   .ilike('name', '%$q%')
-                  .order('name')
+                  .order('name', ascending: true)
                   .limit(_maxCities)
               as List<dynamic>;
     } else {
@@ -180,14 +192,15 @@ class LocationSearchService {
                   .schema('nata')
                   .from('cities')
                   .select('id, name, country_code, countries!inner(name)')
-                  .order('name')
+                  .order('name', ascending: true)
                   .limit(_maxCities)
               as List<dynamic>;
     }
 
-    return rows
-        .map((r) => CityResult.fromJson(r as Map<String, dynamic>))
-        .toList();
+    return sortByName(
+      rows.map((r) => CityResult.fromJson(r as Map<String, dynamic>)),
+      (c) => c.name,
+    );
   }
 
   // ── Bundled fallback (subset of major cities) ─────────────────────────────

@@ -71,7 +71,7 @@ class CountryService {
                   .schema('nata')
                   .from('countries')
                   .select('iso_code, name, phone_code')
-                  .order('name')
+                  .order('name', ascending: true)
               as List<dynamic>;
 
       if (rows.isNotEmpty) {

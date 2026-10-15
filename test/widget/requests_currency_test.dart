@@ -192,4 +192,34 @@ void main() {
       expect(find.text('Cancellation fee: XOF 6,557'), findsOneWidget);
     });
   });
+
+  testWidgets('accepted card: the status pill stays next to the name', (
+    tester,
+  ) async {
+    // As in the screenshot: a wide CFA payout on a phone-width screen.
+    PreferencesService().setCurrency(AppCurrency.xof);
+    tester.view.physicalSize = const Size(402, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      appWrapper(
+        RequestsScreen(
+          requestService: service,
+          exchangeRates: FakeExchangeRateService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('XOF 22,246'), findsOneWidget); // $38 at the test rate
+    final name = tester.getRect(
+      find.byKey(const ValueKey('accepted-sender-name')),
+    );
+    final pill = tester.getRect(
+      find.byKey(const ValueKey('accepted-status-pill')),
+    );
+    // Same line: the pill is to the right of the name, not below it.
+    expect(pill.left, greaterThan(name.right));
+    expect((pill.center.dy - name.center.dy).abs(), lessThan(4));
+  });
 }

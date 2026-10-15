@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:carrywise_app/services/ticket_check_service.dart';
 import 'dart:typed_data';
 
 import 'package:carrywise_app/services/app_update_service.dart';
@@ -327,6 +328,15 @@ class FakeTripService extends Fake implements TripService {
 
   @override
   Future<void> deleteReceipt(String? path) async => deletedReceipts.add(path);
+
+  /// Receipts downloaded to check them again.
+  final List<String> downloadedReceipts = [];
+
+  @override
+  Future<Uint8List> downloadReceipt(String path) async {
+    downloadedReceipts.add(path);
+    return Uint8List.fromList([1, 2, 3]);
+  }
 
   @override
   Future<void> createTrip(TripDraft draft) async {
@@ -673,6 +683,25 @@ class FakeMessageService extends Fake implements MessageService {
 }
 
 // ── Delivery requests ─────────────────────────────────────────────────────────
+
+/// The ticket check on Add Trip, answering [result] and recording what it
+/// was asked.
+class FakeTicketCheck extends Fake implements TicketCheckService {
+  TicketCheckResult result = TicketCheckResult.passed;
+  final List<({String fileName, DateTime departure, DateTime arrival})> calls =
+      [];
+
+  @override
+  Future<TicketCheckResult> check({
+    required Uint8List bytes,
+    required String fileName,
+    required DateTime departure,
+    required DateTime arrival,
+  }) async {
+    calls.add((fileName: fileName, departure: departure, arrival: arrival));
+    return result;
+  }
+}
 
 /// In-memory stand-in for [RequestService].
 class FakeRequestService extends Fake implements RequestService {

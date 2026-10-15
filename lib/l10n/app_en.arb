@@ -394,8 +394,6 @@
   "selectCountry": "Select country",
   "selectCity": "Select city",
   "selectDate": "Select date",
-  "tripPrice": "PRICE PER ITEM",
-  "tripPriceHint": "Your fee for carrying one item",
   "errPickDeparture": "Choose where you are departing from.",
   "errPickArrival": "Choose your destination.",
   "errSameCity": "Departure and arrival must be different cities.",
@@ -403,7 +401,6 @@
   "errPickArrDate": "Choose an arrival date.",
   "errArrivalBeforeDeparture": "Arrival can't be before departure.",
   "errAttachReceipt": "Attach your flight receipt.",
-  "errPrice": "Enter a valid price.",
   "errSaveFailed": "Could not save your trip. Please try again.",
   "itemsDeliveredCount": "{count, plural, =1{1 item delivered} other{{count} items delivered}}",
   "@itemsDeliveredCount": {
@@ -1325,5 +1322,17 @@
   "errIdPhotoLoad": "Could not load the ID photo.",
   "travelerNotVerified": "This traveler's identity isn't verified, so payment stays locked.",
   "validateTicketAndId": "Validate ticket and ID to unlock payment",
-  "idSharedWithSendersNote": "When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private."
+  "idSharedWithSendersNote": "When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private.",
+
+  "errTicketNameMismatch": "The name on this ticket doesn't match your profile name. Upload a ticket in your name, or update your profile name.",
+  "errTicketDateMismatch": "This ticket isn't for {date}. Check the trip's dates, or upload the ticket for this flight.",
+  "@errTicketDateMismatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errTicketUnreadable": "We couldn't read this ticket. Upload a sharp photo or the PDF of your boarding pass or e-ticket.",
+  "checkingTicket": "Checking your ticket…"
 }

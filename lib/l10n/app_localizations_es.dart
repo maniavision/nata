@@ -1085,12 +1085,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get selectDate => 'Selecciona una fecha';
 
   @override
-  String get tripPrice => 'PRECIO POR ARTÍCULO';
-
-  @override
-  String get tripPriceHint => 'Tu tarifa por llevar un artículo';
-
-  @override
   String get errPickDeparture => 'Elige desde dónde sales.';
 
   @override
@@ -1112,9 +1106,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errAttachReceipt => 'Adjunta tu recibo de vuelo.';
-
-  @override
-  String get errPrice => 'Introduce un precio válido.';
 
   @override
   String get errSaveFailed =>
@@ -2818,4 +2809,20 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get idSharedWithSendersNote =>
       'Cuando aceptes una solicitud, ese remitente verá la foto de tu documento y tu nombre verificado, para comprobar que coincides con tu billete. El resto de tu documento sigue siendo privado.';
+
+  @override
+  String get errTicketNameMismatch =>
+      'El nombre de este billete no coincide con el de tu perfil. Sube un billete a tu nombre o actualiza el nombre de tu perfil.';
+
+  @override
+  String errTicketDateMismatch(String date) {
+    return 'Este billete no es para el $date. Revisa las fechas del viaje o sube el billete de este vuelo.';
+  }
+
+  @override
+  String get errTicketUnreadable =>
+      'No pudimos leer este billete. Sube una foto nítida o el PDF de tu tarjeta de embarque o billete electrónico.';
+
+  @override
+  String get checkingTicket => 'Comprobando tu billete…';
 }

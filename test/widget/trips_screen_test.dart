@@ -460,10 +460,6 @@ void main() {
       expect(find.text('Edit Trip'), findsWidgets);
       expect(find.text('Save changes'), findsOneWidget);
       expect(find.text('Lagos'), findsOneWidget);
-      final price = tester.widget<TextField>(
-        find.byKey(const ValueKey('add-trip-price')),
-      );
-      expect(price.controller!.text, '42');
     });
 
     testWidgets('the list refreshes after a trip is edited', (tester) async {

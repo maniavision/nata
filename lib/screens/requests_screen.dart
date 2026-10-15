@@ -1076,19 +1076,21 @@ class _SentRequestCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 2,
-                          crossAxisAlignment: WrapCrossAlignment.center,
+                        Row(
                           children: [
-                            Text(
-                              trip.fullName,
-                              style: GoogleFonts.dmSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                                color: AppColors.foreground,
+                            Flexible(
+                              child: Text(
+                                trip.fullName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: AppColors.foreground,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -1330,19 +1332,26 @@ class _AcceptedCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Wrap(
-                        spacing: 6,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      // Name and status on one line, as in the design; a long
+                      // name is shortened rather than pushing the pill down.
+                      Row(
                         children: [
-                          Text(
-                            request.senderName,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: AppColors.foreground,
+                          Flexible(
+                            child: Text(
+                              request.senderName,
+                              key: const ValueKey('accepted-sender-name'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: AppColors.foreground,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 6),
                           Container(
+                            key: const ValueKey('accepted-status-pill'),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,

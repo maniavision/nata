@@ -338,6 +338,11 @@ class TripService {
   }
 
   /// Best-effort removal of a receipt that was replaced or never used.
+  /// The receipt already on file, to check it again when a trip's dates are
+  /// changed.
+  Future<Uint8List> downloadReceipt(String path) =>
+      _client.storage.from('trip-receipts').download(path);
+
   Future<void> deleteReceipt(String? path) async {
     if (path == null || path.isEmpty) return;
     if (!path.startsWith('$_userId/')) return; // only the user's own files

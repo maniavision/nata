@@ -394,8 +394,6 @@
   "selectCountry": "Selecciona un país",
   "selectCity": "Selecciona una ciudad",
   "selectDate": "Selecciona una fecha",
-  "tripPrice": "PRECIO POR ARTÍCULO",
-  "tripPriceHint": "Tu tarifa por llevar un artículo",
   "errPickDeparture": "Elige desde dónde sales.",
   "errPickArrival": "Elige tu destino.",
   "errSameCity": "La salida y la llegada deben ser ciudades distintas.",
@@ -403,7 +401,6 @@
   "errPickArrDate": "Elige una fecha de llegada.",
   "errArrivalBeforeDeparture": "La llegada no puede ser anterior a la salida.",
   "errAttachReceipt": "Adjunta tu recibo de vuelo.",
-  "errPrice": "Introduce un precio válido.",
   "errSaveFailed": "No se pudo guardar tu viaje. Inténtalo de nuevo.",
   "itemsDeliveredCount": "{count, plural, =1{1 artículo entregado} other{{count} artículos entregados}}",
   "@itemsDeliveredCount": {
@@ -1312,5 +1309,17 @@
   "errIdPhotoLoad": "No se pudo cargar la foto del documento.",
   "travelerNotVerified": "La identidad de este viajero no está verificada, así que el pago sigue bloqueado.",
   "validateTicketAndId": "Verifica el billete y el documento para desbloquear el pago",
-  "idSharedWithSendersNote": "Cuando aceptes una solicitud, ese remitente verá la foto de tu documento y tu nombre verificado, para comprobar que coincides con tu billete. El resto de tu documento sigue siendo privado."
+  "idSharedWithSendersNote": "Cuando aceptes una solicitud, ese remitente verá la foto de tu documento y tu nombre verificado, para comprobar que coincides con tu billete. El resto de tu documento sigue siendo privado.",
+
+  "errTicketNameMismatch": "El nombre de este billete no coincide con el de tu perfil. Sube un billete a tu nombre o actualiza el nombre de tu perfil.",
+  "errTicketDateMismatch": "Este billete no es para el {date}. Revisa las fechas del viaje o sube el billete de este vuelo.",
+  "@errTicketDateMismatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errTicketUnreadable": "No pudimos leer este billete. Sube una foto nítida o el PDF de tu tarjeta de embarque o billete electrónico.",
+  "checkingTicket": "Comprobando tu billete…"
 }

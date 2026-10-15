@@ -394,8 +394,6 @@
   "selectCountry": "Choisir un pays",
   "selectCity": "Choisir une ville",
   "selectDate": "Choisir une date",
-  "tripPrice": "PRIX PAR ARTICLE",
-  "tripPriceHint": "Vos frais pour transporter un article",
   "errPickDeparture": "Choisissez votre lieu de départ.",
   "errPickArrival": "Choisissez votre destination.",
   "errSameCity": "Le départ et l'arrivée doivent être des villes différentes.",
@@ -403,7 +401,6 @@
   "errPickArrDate": "Choisissez une date d'arrivée.",
   "errArrivalBeforeDeparture": "L'arrivée ne peut pas précéder le départ.",
   "errAttachReceipt": "Joignez votre reçu de vol.",
-  "errPrice": "Saisissez un prix valide.",
   "errSaveFailed": "Impossible d'enregistrer votre trajet. Réessayez.",
   "itemsDeliveredCount": "{count, plural, =1{1 article livré} other{{count} articles livrés}}",
   "@itemsDeliveredCount": {
@@ -1312,5 +1309,17 @@
   "errIdPhotoLoad": "Impossible de charger la photo d'identité.",
   "travelerNotVerified": "L'identité de ce voyageur n'est pas vérifiée, le paiement reste donc bloqué.",
   "validateTicketAndId": "Vérifiez le billet et la pièce d'identité pour débloquer le paiement",
-  "idSharedWithSendersNote": "Lorsque vous acceptez une demande, l'expéditeur verra la photo de votre pièce d'identité et votre nom vérifié, pour vérifier que vous correspondez à votre billet. Le reste de votre pièce d'identité reste privé."
+  "idSharedWithSendersNote": "Lorsque vous acceptez une demande, l'expéditeur verra la photo de votre pièce d'identité et votre nom vérifié, pour vérifier que vous correspondez à votre billet. Le reste de votre pièce d'identité reste privé.",
+
+  "errTicketNameMismatch": "Le nom sur ce billet ne correspond pas au nom de votre profil. Importez un billet à votre nom ou modifiez le nom de votre profil.",
+  "errTicketDateMismatch": "Ce billet n'est pas pour le {date}. Vérifiez les dates du trajet ou importez le billet de ce vol.",
+  "@errTicketDateMismatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errTicketUnreadable": "Impossible de lire ce billet. Importez une photo nette ou le PDF de votre carte d'embarquement ou billet électronique.",
+  "checkingTicket": "Vérification de votre billet…"
 }
