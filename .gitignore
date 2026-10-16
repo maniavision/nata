@@ -45,4 +45,4 @@ app.*.map.json
 /android/app/release
 
 # Supabase CLI local state
-supabase/.temp/
+**/supabase/.temp/
