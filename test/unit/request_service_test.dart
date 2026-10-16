@@ -889,21 +889,30 @@ void main() {
         'ticket_checked_at': '2030-06-21T09:00:00Z',
         'id_checked_at': '2030-06-21T09:05:00Z',
         'traveler_verified': true,
-        'ticket_receipt_path': 'tr1/ticket.pdf',
-        'booking_reference': ' X7KQ9R ',
+        'ticket_on_file': true,
+        'ticket_shared_path': 'tr1/ticket-shared.jpg',
+        'has_booking_reference': true,
         'expires_at': '2030-06-22T09:00:00Z',
       });
       expect(r.ticketCheckedAt, DateTime.utc(2030, 6, 21, 9));
       expect(r.idCheckedAt, DateTime.utc(2030, 6, 21, 9, 5));
       expect(r.travelerVerified, isTrue);
-      expect(r.ticketReceiptPath, 'tr1/ticket.pdf');
-      expect(r.bookingReference, 'X7KQ9R');
+      expect(r.ticketReceiptPath, 'tr1/ticket-shared.jpg');
+      expect(r.hasTicket, isTrue);
+      expect(r.hasBookingReference, isTrue);
       expect(r.expiresAt, DateTime.utc(2030, 6, 22, 9));
       expect(r.awaitingPayment, isTrue);
 
-      final bare = SentRequest.fromJson({...row, 'ticket_receipt_path': ''});
+      final bare = SentRequest.fromJson({...row, 'ticket_shared_path': ''});
       expect(bare.travelerVerified, isFalse);
       expect(bare.ticketReceiptPath, isNull);
+      expect(bare.hasTicket, isFalse);
+      expect(bare.hasBookingReference, isFalse);
+
+      // A ticket on file without a blurred copy: described, not shown.
+      final noCopy = SentRequest.fromJson({...row, 'ticket_on_file': true});
+      expect(noCopy.hasTicket, isTrue);
+      expect(noCopy.ticketReceiptPath, isNull);
       expect(bare.idCheckedAt, isNull);
     });
 

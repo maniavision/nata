@@ -339,7 +339,7 @@ void main() {
         displayTotal: 65566,
         expiresAt: DateTime.now().add(const Duration(hours: 23)),
         ticketReceiptPath: 'traveler-1/ticket.pdf',
-        bookingReference: 'X7KQ9R',
+        hasBookingReference: true,
       ),
       service: FakeRequestService(),
     ),

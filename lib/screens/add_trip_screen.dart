@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../services/ticket_check_service.dart';
+import '../services/ticket_redaction_service.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
 
@@ -42,6 +43,7 @@ class AddTripScreen extends StatefulWidget {
   final ReceiptPicker? receiptPicker;
   final ReceiptCamera? receiptCamera;
   final TicketCheckService? ticketCheck;
+  final TicketRedactionService? ticketRedaction;
 
   const AddTripScreen({
     super.key,
@@ -51,6 +53,7 @@ class AddTripScreen extends StatefulWidget {
     this.receiptPicker,
     this.receiptCamera,
     this.ticketCheck,
+    this.ticketRedaction,
   });
 
   @override
@@ -362,6 +365,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
     TripService? service;
     String? uploadedPath;
+    String? uploadedSharedPath;
     try {
       service = widget.service ?? TripService();
 
@@ -382,6 +386,25 @@ class _AddTripScreenState extends State<AddTripScreen> {
         receiptPath = uploadedPath;
       }
 
+      // The copy senders see, with the booking reference blurred. Kept when
+      // the ticket and reference are unchanged; made again otherwise.
+      var sharedPath = widget.trip?.ticketSharedPath;
+      final remake =
+          _receipt != null ||
+          sharedPath == null ||
+          _bookingReference != widget.trip?.bookingReference;
+      if (receiptPath.isNotEmpty && remake) {
+        final shared = await _sharedCopy(service, receiptPath);
+        sharedPath = null;
+        if (shared != null) {
+          uploadedSharedPath = await service.uploadReceipt(
+            shared,
+            suffix: '-shared',
+          );
+          sharedPath = uploadedSharedPath;
+        }
+      }
+
       final draft = TripDraft(
         departureCityId: _departure!.cityId!,
         arrivalCityId: _arrival!.cityId!,
@@ -396,6 +419,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             .$2,
         maxSize: _maxSize,
         ticketReceiptPath: receiptPath,
+        ticketSharedPath: sharedPath,
         bookingReference: _bookingReference,
       );
 
@@ -404,6 +428,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
         // The old receipt is no longer referenced once a new one replaced it.
         if (uploadedPath != null) {
           unawaited(service.deleteReceipt(widget.trip!.ticketReceiptPath));
+        }
+        final oldShared = widget.trip!.ticketSharedPath;
+        if (oldShared != null && oldShared != sharedPath) {
+          unawaited(service.deleteReceipt(oldShared));
         }
       } else {
         await service.createTrip(draft);
@@ -419,11 +447,42 @@ class _AddTripScreenState extends State<AddTripScreen> {
       debugPrint('[AddTrip] save failed: $e');
       // Do not leave an orphaned upload behind.
       if (uploadedPath != null) unawaited(service?.deleteReceipt(uploadedPath));
+      if (uploadedSharedPath != null) {
+        unawaited(service?.deleteReceipt(uploadedSharedPath));
+      }
       if (!mounted) return;
       setState(() {
         _saving = false;
         _error = context.l10n.errSaveFailed;
       });
+    }
+  }
+
+  /// The ticket with its booking reference blurred, for senders; null when
+  /// the reference could not be found (the ticket is then not shown to
+  /// senders) or the copy could not be made. Never blocks saving.
+  Future<PickedReceipt?> _sharedCopy(
+    TripService service,
+    String receiptPath,
+  ) async {
+    try {
+      final picked = _receipt;
+      final bytes = picked?.bytes ?? await service.downloadReceipt(receiptPath);
+      final name = picked?.name ?? receiptPath;
+      final copy = await (widget.ticketRedaction ?? TicketRedactionService())
+          .redact(bytes, name, bookingReference: _bookingReference)
+          .timeout(const Duration(seconds: 30));
+      if (copy == null) return null;
+      // JPEG starts FF D8; otherwise the PNG it could not compress.
+      final jpeg = copy.length > 1 && copy[0] == 0xFF && copy[1] == 0xD8;
+      return PickedReceipt(
+        bytes: copy,
+        name: 'ticket-shared.${jpeg ? 'jpg' : 'png'}',
+        extension: jpeg ? 'jpg' : 'png',
+      );
+    } catch (e) {
+      debugPrint('[AddTrip] could not make the shared ticket copy: $e');
+      return null;
     }
   }
 

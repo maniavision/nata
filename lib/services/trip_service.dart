@@ -28,6 +28,11 @@ class Trip {
   final double? maxWeightKg;
   final String? maxSize;
   final String ticketReceiptPath;
+
+  /// The copy of the ticket senders see, with the booking reference
+  /// blurred. Null when there is none (it could not be made, or the ticket
+  /// was uploaded before copies existed).
+  final String? ticketSharedPath;
   final String status;
 
   /// Flight booking reference (PNR), 5-8 letters or digits. Optional.
@@ -54,6 +59,7 @@ class Trip {
     required this.maxWeightKg,
     required this.maxSize,
     required this.ticketReceiptPath,
+    this.ticketSharedPath,
     required this.status,
     this.bookingReference,
     this.requestsCount = 0,
@@ -64,7 +70,8 @@ class Trip {
   /// country names.
   static const selectColumns =
       'id, departure_city_id, arrival_city_id, departure_date, arrival_date, '
-      'price, currency, max_weight_kg, max_size, ticket_receipt_path, status, '
+      'price, currency, max_weight_kg, max_size, ticket_receipt_path, '
+      'ticket_shared_path, status, '
       'booking_reference, '
       'departure:departure_city_id(id, name, country_code, countries(name)), '
       'arrival:arrival_city_id(id, name, country_code, countries(name))';
@@ -97,6 +104,7 @@ class Trip {
       maxWeightKg: numOrNull(j['max_weight_kg']),
       maxSize: j['max_size'] as String?,
       ticketReceiptPath: (j['ticket_receipt_path'] as String?) ?? '',
+      ticketSharedPath: _cleanReference(j['ticket_shared_path'] as String?),
       status: (j['status'] as String?) ?? TripStatus.pendingReview,
       bookingReference: _cleanReference(j['booking_reference'] as String?),
     );
@@ -124,6 +132,7 @@ class Trip {
     maxWeightKg: maxWeightKg,
     maxSize: maxSize,
     ticketReceiptPath: ticketReceiptPath,
+    ticketSharedPath: ticketSharedPath,
     status: status,
     bookingReference: bookingReference,
     requestsCount: requests,
@@ -196,6 +205,9 @@ class TripDraft {
   /// Storage path of the uploaded receipt.
   final String ticketReceiptPath;
 
+  /// Storage path of the copy senders see (booking reference blurred).
+  final String? ticketSharedPath;
+
   /// Flight booking reference (PNR); null when the traveler left it blank.
   final String? bookingReference;
 
@@ -224,6 +236,7 @@ class TripDraft {
     required this.maxWeightKg,
     required this.maxSize,
     required this.ticketReceiptPath,
+    this.ticketSharedPath,
     this.bookingReference,
   });
 
@@ -242,6 +255,7 @@ class TripDraft {
     'max_weight_kg': maxWeightKg,
     'max_size': maxSize,
     'ticket_receipt_path': ticketReceiptPath,
+    'ticket_shared_path': ticketSharedPath,
     // null clears the reference when a traveler removes it while editing.
     'booking_reference': bookingReference,
   };
@@ -323,10 +337,13 @@ class TripService {
   }
 
   /// Uploads a flight receipt to the private `trip-receipts` bucket and
-  /// returns its storage path.
-  Future<String> uploadReceipt(PickedReceipt receipt) async {
+  /// returns its storage path. [suffix] tells copies apart ("-shared").
+  Future<String> uploadReceipt(
+    PickedReceipt receipt, {
+    String suffix = '',
+  }) async {
     final path =
-        '$_userId/${DateTime.now().millisecondsSinceEpoch}.${receipt.extension.toLowerCase()}';
+        '$_userId/${DateTime.now().millisecondsSinceEpoch}$suffix.${receipt.extension.toLowerCase()}';
     await _client.storage
         .from('trip-receipts')
         .uploadBinary(

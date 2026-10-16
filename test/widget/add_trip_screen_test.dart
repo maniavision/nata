@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:carrywise_app/screens/add_trip_screen.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
@@ -32,10 +33,12 @@ void main() {
   bool? popResult;
   bool popped = false;
   late FakeTicketCheck ticketCheck;
+  late FakeTicketRedaction redaction;
 
   setUp(() {
     service = FakeTripService();
     ticketCheck = FakeTicketCheck();
+    redaction = FakeTicketRedaction();
     pickerCalls = [];
     lagos = city('Lagos', 'NG', 'Nigeria', 1);
     london = city('London', 'GB', 'United Kingdom', 2);
@@ -88,6 +91,7 @@ void main() {
                         receiptPicker: fakeReceiptPicker,
                         receiptCamera: fakeReceiptCamera,
                         ticketCheck: ticketCheck,
+                        ticketRedaction: redaction,
                       ),
                     ),
                   );
@@ -698,6 +702,59 @@ void main() {
   });
 
   group('saving a new trip', () {
+    testWidgets('uploads a copy with the booking reference blurred', (
+      tester,
+    ) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      nextReceipt = sampleReceipt(name: 'ticket.pdf');
+      await pump(tester);
+      await fillValidForm(tester);
+      await tester.enterText(
+        find.byKey(const ValueKey('add-trip-booking-reference')),
+        'X7KQ9R',
+      );
+
+      await save(tester);
+
+      expect(redaction.calls.single.fileName, 'ticket.pdf');
+      expect(redaction.calls.single.reference, 'X7KQ9R');
+      expect(service.uploaded.map((r) => r.name), [
+        'ticket.pdf',
+        'ticket-shared.jpg',
+      ]);
+      final d = service.created.single;
+      expect(d.ticketReceiptPath, FakeTripService.uploadedPath);
+      expect(d.ticketSharedPath, FakeTripService.sharedPath);
+    });
+
+    testWidgets('no reference found: the trip is saved without a copy', (
+      tester,
+    ) async {
+      nextReceipt = sampleReceipt(name: 'ticket.pdf');
+      await pump(tester);
+      await fillValidForm(tester);
+
+      await save(tester);
+
+      expect(service.uploaded, hasLength(1));
+      expect(service.created.single.ticketSharedPath, isNull);
+      expect(popResult, isTrue);
+    });
+
+    testWidgets('a failed save removes both uploads', (tester) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      service.failSave = true;
+      await pump(tester);
+      await fillValidForm(tester);
+
+      await save(tester);
+
+      expect(
+        service.deletedReceipts,
+        containsAll([FakeTripService.uploadedPath, FakeTripService.sharedPath]),
+      );
+    });
+
     testWidgets('uploads the receipt, then creates the trip', (tester) async {
       nextReceipt = sampleReceipt(name: 'ticket.pdf');
       await pump(tester);
@@ -949,6 +1006,62 @@ void main() {
         FakeTripService.uploadedPath,
       );
       expect(service.deletedReceipts, contains('user-1/old.pdf'));
+    });
+
+    testWidgets('the blurred copy is kept when the ticket is unchanged', (
+      tester,
+    ) async {
+      await pump(tester, trip: trip);
+
+      await save(tester);
+
+      expect(redaction.calls, isEmpty);
+      expect(
+        service.updated.single.draft.ticketSharedPath,
+        'user-1/111-shared.jpg',
+      );
+      expect(service.deletedReceipts, isEmpty);
+    });
+
+    testWidgets('a new ticket replaces the blurred copy too', (tester) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      await pump(tester, trip: trip);
+
+      await tapKey(tester, 'add-trip-upload-receipt');
+      await save(tester);
+
+      expect(
+        service.updated.single.draft.ticketSharedPath,
+        FakeTripService.sharedPath,
+      );
+      expect(
+        service.deletedReceipts,
+        containsAll(['user-1/old.pdf', 'user-1/111-shared.jpg']),
+      );
+    });
+
+    testWidgets('an older trip without a copy gets one when saved', (
+      tester,
+    ) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      await pump(
+        tester,
+        trip: sampleMyTrip(
+          id: 'trip-7',
+          receipt: 'user-1/old.pdf',
+          sharedTicket: null,
+        ),
+      );
+
+      await save(tester);
+
+      expect(service.downloadedReceipts, ['user-1/old.pdf']);
+      expect(redaction.calls.single.fileName, 'user-1/old.pdf');
+      expect(service.uploaded.single.name, 'ticket-shared.jpg');
+      expect(
+        service.updated.single.draft.ticketSharedPath,
+        FakeTripService.sharedPath,
+      );
     });
 
     testWidgets('removing the receipt without a new one is not allowed', (

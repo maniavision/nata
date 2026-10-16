@@ -1288,7 +1288,6 @@
       }
     }
   },
-  "paymentsComingSoon": "Payments aren't available yet. You'll be able to pay here soon.",
   "requestExpiredPayment": "This request has expired and can no longer be paid.",
   "hoursMinutes": "{hours}h {minutes}m",
   "@hoursMinutes": {
@@ -1415,5 +1414,35 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "ticketImageHidden": "The ticket itself isn't shown because its booking reference couldn't be hidden. Nata checked the traveler's name and travel date on it when it was uploaded.",
+  "bookingRefHidden": "Hidden to protect the traveler's booking",
+
+  "completeYourPayment": "Complete your payment",
+  "completeYourPaymentSub": "Finish paying on the Flutterwave page. This page updates by itself once the payment goes through.",
+  "openPaymentPage": "Open payment page",
+  "iPaidCheckNow": "I've paid, check now",
+  "chooseAnotherWayToPay": "Choose another way to pay",
+  "paymentReceived": "Payment received. The money is held in escrow until the delivery is done.",
+  "paymentNotReceivedYet": "We haven't received the payment yet. If you just paid, it can take a minute.",
+  "errPaymentFailed": "The payment didn't go through. Please try again or choose another way to pay.",
+  "errPaymentStart": "Couldn't open the payment page. Please try again.",
+  "errPaymentsUnavailable": "Payments aren't available right now. Please try again later.",
+
+  "mobileMoneyCountry": "Mobile money country",
+  "chooseCountry": "Choose a country",
+  "mobileMoneyChargedAs": "Charged in your wallet's currency at today's rate: {local}. The delivery price stays {price}.",
+  "@mobileMoneyChargedAs": {
+    "placeholders": {
+      "local": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errMobileMoneyUnavailable": "Mobile money isn't available for this country. Please choose another country or pay by card.",
+  "errMobileMoneyOptions": "Couldn't load the mobile money countries."
 }

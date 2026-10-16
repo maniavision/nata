@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:carrywise_app/services/ticket_redaction_service.dart';
 import 'package:carrywise_app/services/ticket_check_service.dart';
 import 'dart:typed_data';
 
@@ -275,6 +276,9 @@ Trip sampleMyTrip({
   double? maxWeightKg = 3,
   String? maxSize = 'Shoebox (30×20×15 cm)',
   String receipt = 'user-1/111.pdf',
+
+  /// The blurred copy senders see; null for a trip that has none yet.
+  String? sharedTicket = 'user-1/111-shared.jpg',
   String? bookingReference,
   int requests = 0,
   int delivered = 0,
@@ -299,6 +303,7 @@ Trip sampleMyTrip({
     maxWeightKg: maxWeightKg,
     maxSize: maxSize,
     ticketReceiptPath: receipt,
+    ticketSharedPath: sharedTicket,
     status: status,
     bookingReference: bookingReference,
     requestsCount: requests,
@@ -325,6 +330,7 @@ class FakeTripService extends Fake implements TripService {
   final List<String?> deletedReceipts = [];
 
   static const uploadedPath = 'user-1/999.pdf';
+  static const sharedPath = 'user-1/999-shared.jpg';
 
   @override
   Future<List<Trip>> myTrips() async {
@@ -334,10 +340,13 @@ class FakeTripService extends Fake implements TripService {
   }
 
   @override
-  Future<String> uploadReceipt(PickedReceipt receipt) async {
+  Future<String> uploadReceipt(
+    PickedReceipt receipt, {
+    String suffix = '',
+  }) async {
     if (failUpload) throw Exception('upload failed');
     uploaded.add(receipt);
-    return uploadedPath;
+    return suffix == '-shared' ? sharedPath : uploadedPath;
   }
 
   @override
@@ -696,6 +705,23 @@ class FakeMessageService extends Fake implements MessageService {
   }
 }
 
+/// Makes the blurred ticket copy on Add Trip: answers [result] (null: the
+/// booking reference could not be found) and records what it was asked.
+class FakeTicketRedaction extends Fake implements TicketRedactionService {
+  Uint8List? result;
+  final List<({String fileName, String? reference})> calls = [];
+
+  @override
+  Future<Uint8List?> redact(
+    Uint8List bytes,
+    String fileName, {
+    String? bookingReference,
+  }) async {
+    calls.add((fileName: fileName, reference: bookingReference));
+    return result;
+  }
+}
+
 // ── Delivery requests ─────────────────────────────────────────────────────────
 
 /// The ticket check on Add Trip, answering [result] and recording what it
@@ -818,6 +844,64 @@ class FakeRequestService extends Fake implements RequestService {
   @override
   Future<String> photoUrl(String path) async =>
       'https://example.test/signed/$path';
+
+  /// Payments started (request id and method); [failStartPayment] makes
+  /// starting fail. [paymentStatuses] are answered in order, the last one
+  /// repeating.
+  final List<({String id, PayMethod method, String? country})> paymentsStarted =
+      [];
+  RequestException? failStartPayment;
+  PaymentLink nextPayment = PaymentLink(
+    Uri.parse('https://checkout.flutterwave.test/pay/abc'),
+    'nata-req-1-tx',
+  );
+  List<PaymentStatus> paymentStatuses = [PaymentStatus.pending];
+  final List<String> paymentChecks = [];
+
+  @override
+  Future<PaymentLink> startPayment(
+    String requestId,
+    PayMethod method, {
+    String? country,
+  }) async {
+    if (failStartPayment != null) throw failStartPayment!;
+    paymentsStarted.add((id: requestId, method: method, country: country));
+    return nextPayment;
+  }
+
+  /// Mobile money countries offered at checkout; [failMobileOptions] makes
+  /// loading them fail.
+  List<MobileMoneyOption> mobileOptions = const [
+    MobileMoneyOption(
+      countryCode: 'GH',
+      countryName: 'Ghana',
+      currency: 'GHS',
+      amount: 1210,
+    ),
+    MobileMoneyOption(
+      countryCode: 'KE',
+      countryName: 'Kenya',
+      currency: 'KES',
+      amount: 14230,
+      suggested: true,
+    ),
+  ];
+  bool failMobileOptions = false;
+
+  @override
+  Future<List<MobileMoneyOption>> mobileMoneyOptions(String requestId) async {
+    if (failMobileOptions) throw StateError('options failed');
+    return mobileOptions;
+  }
+
+  @override
+  Future<PaymentStatus> paymentStatus(String txRef) async {
+    paymentChecks.add(txRef);
+    final i = paymentChecks.length - 1;
+    return paymentStatuses[i < paymentStatuses.length
+        ? i
+        : paymentStatuses.length - 1];
+  }
 
   /// Receipts confirmed and reviews sent; [failReview] makes both fail.
   final List<String> receiptsConfirmed = [];
@@ -996,7 +1080,8 @@ SentRequest sampleSentRequest({
   DateTime? idCheckedAt,
   bool travelerVerified = false,
   String? ticketReceiptPath,
-  String? bookingReference,
+  bool? hasTicket,
+  bool hasBookingReference = false,
   DateTime? receiptConfirmedAt,
   bool reviewed = false,
 }) => SentRequest(
@@ -1016,7 +1101,8 @@ SentRequest sampleSentRequest({
   idCheckedAt: idCheckedAt,
   travelerVerified: travelerVerified,
   ticketReceiptPath: ticketReceiptPath,
-  bookingReference: bookingReference,
+  hasTicket: hasTicket,
+  hasBookingReference: hasBookingReference,
   receiptConfirmedAt: receiptConfirmedAt,
   reviewed: reviewed,
   items:

@@ -480,6 +480,27 @@ class IdDocumentCheckService {
     return null;
   }
 
+  /// The first pages of a PDF as PNGs (also used to blur a flight ticket).
+  static Future<List<Uint8List>> renderPdfPages(
+    Uint8List bytes,
+    String fileName,
+  ) => _renderPdfPages(bytes, fileName);
+
+  /// A photo turned upright and scaled to at most [maxSide] px, as JPEG.
+  static Future<Uint8List?> uprightJpeg(
+    Uint8List bytes,
+    String fileName, {
+    int maxSide = 2000,
+  }) =>
+      _invokeOnFile<Uint8List>('toJpeg', bytes, fileName, {'maxSide': maxSide});
+
+  /// Each word read on an image and each barcode found, with their positions
+  /// (see IdTextRecognizer.swift / MainActivity.kt). Null if it could not run.
+  static Future<Map<Object?, Object?>?> textBoxes(
+    Uint8List bytes,
+    String fileName,
+  ) => _invokeOnFile<Map<Object?, Object?>>('textBoxes', bytes, fileName);
+
   /// An ID is at most a few pages (front, back); don't render a whole book.
   static const _maxPdfPages = 3;
 

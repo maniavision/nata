@@ -1,17 +1,20 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
+import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
 
 /// Pays for an accepted request. Step 1: the sender checks the traveler's
 /// flight ticket; step 2: the photo on the traveler's ID and their verified
-/// name; step 3: they pay into escrow (payment itself is not live yet).
+/// name; step 3: they pay into escrow on Flutterwave's page, which this
+/// screen watches until the payment goes through.
 class CheckoutEscrowScreen extends StatefulWidget {
   final SentRequest request;
 
@@ -24,12 +27,21 @@ class CheckoutEscrowScreen extends StatefulWidget {
   /// Override for tests; defaults to [DateTime.now].
   final DateTime Function()? now;
 
+  /// Overrides for tests: opening and closing Flutterwave's payment page
+  /// (an in-app browser by default), and how often the payment is checked.
+  final Future<bool> Function(Uri link)? openPaymentPage;
+  final Future<void> Function()? closePaymentPage;
+  final Duration pollInterval;
+
   const CheckoutEscrowScreen({
     super.key,
     required this.request,
     this.money = PriceFormatter.usd,
     this.service,
     this.now,
+    this.openPaymentPage,
+    this.closePaymentPage,
+    this.pollInterval = const Duration(seconds: 3),
   });
 
   @override
@@ -38,6 +50,49 @@ class CheckoutEscrowScreen extends StatefulWidget {
 
 class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   int _paymentMethod = 0; // 0=Apple Pay, 1=Card, 2=Mobile Money
+  static const _payMethods = [
+    PayMethod.applePay,
+    PayMethod.card,
+    PayMethod.mobileMoney,
+  ];
+
+  /// The payment in progress on Flutterwave's page, checked every
+  /// [CheckoutEscrowScreen.pollInterval] for up to [_maxPolls] times.
+  PaymentLink? _payment;
+  bool _startingPayment = false;
+  bool _checkingPayment = false;
+  Timer? _poll;
+  int _polls = 0;
+  static const _maxPolls = 300;
+
+  /// Mobile money: the countries offered (loaded when it is chosen) and the
+  /// one picked, whose currency the price is converted into.
+  List<MobileMoneyOption>? _mobileOptions;
+  bool _mobileLoading = false;
+  bool _mobileFailed = false;
+  MobileMoneyOption? _mobileChoice;
+  bool get _payingByMobile => _paymentMethod == 2;
+
+  Future<void> _loadMobileOptions() async {
+    if (_mobileLoading || _mobileOptions != null) return;
+    setState(() {
+      _mobileLoading = true;
+      _mobileFailed = false;
+    });
+    try {
+      final options = await _service.mobileMoneyOptions(_r.id);
+      if (!mounted) return;
+      setState(() {
+        _mobileOptions = options;
+        _mobileChoice ??= options.where((o) => o.suggested).firstOrNull;
+      });
+    } catch (e) {
+      debugPrint('[Checkout] mobile money options: $e');
+      if (mounted) setState(() => _mobileFailed = true);
+    } finally {
+      if (mounted) setState(() => _mobileLoading = false);
+    }
+  }
 
   SentRequest get _r => widget.request;
   RequestService get _service => widget.service ?? RequestService();
@@ -62,7 +117,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   late bool _idChecked = _r.idCheckedAt != null;
   bool _confirmingId = false;
 
-  bool get _hasTicket => _r.ticketReceiptPath != null;
+  bool get _hasTicket => _r.hasTicket;
+
+  /// The copy of the ticket with the booking reference blurred; a ticket
+  /// without one is described but not shown.
+  bool get _hasTicketImage => _r.ticketReceiptPath != null;
   bool get _expired => _seconds != null && _seconds! <= 0;
   bool get _ticketIsPdf =>
       (_r.ticketReceiptPath ?? '').toLowerCase().endsWith('.pdf');
@@ -81,8 +140,137 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         }
       });
     }
-    if (_hasTicket) _loadTicket();
+    if (_hasTicketImage) _loadTicket();
     if (_r.travelerVerified) _loadIdPhoto();
+  }
+
+  // ── Paying ─────────────────────────────────────────────────────────────────
+  Future<void> _startPayment() async {
+    if (_startingPayment) return;
+    setState(() => _startingPayment = true);
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final payment = await _service.startPayment(
+        _r.id,
+        _payMethods[_paymentMethod],
+        country: _payingByMobile ? _mobileChoice?.countryCode : null,
+      );
+      if (!mounted) return;
+      setState(() => _payment = payment);
+      _startPolling();
+      await _openPaymentPage();
+    } on RequestException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(switch (e.reason) {
+            RequestFailure.notPayable => l.errRequestNotPayable,
+            RequestFailure.paymentsUnavailable => l.errPaymentsUnavailable,
+            RequestFailure.mobileMoneyUnavailable =>
+              l.errMobileMoneyUnavailable,
+            RequestFailure.rateUnavailable => l.errRateUnavailable,
+            RequestFailure.notSignedIn => l.errSessionExpired,
+            _ => l.errPaymentStart,
+          }),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Checkout] start payment: $e');
+      messenger.showSnackBar(SnackBar(content: Text(l.errPaymentStart)));
+    } finally {
+      if (mounted) setState(() => _startingPayment = false);
+    }
+  }
+
+  Future<void> _openPaymentPage() async {
+    final payment = _payment;
+    if (payment == null) return;
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    var opened = false;
+    try {
+      opened = await (widget.openPaymentPage ?? _openInApp)(payment.link);
+    } catch (e) {
+      debugPrint('[Checkout] open payment page: $e');
+    }
+    if (!opened) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errPaymentStart)));
+    }
+  }
+
+  static Future<bool> _openInApp(Uri link) =>
+      launchUrl(link, mode: LaunchMode.inAppBrowserView);
+
+  static Future<void> _closeInApp() async {
+    try {
+      if (await supportsCloseForLaunchMode(LaunchMode.inAppBrowserView)) {
+        await closeInAppWebView();
+      }
+    } catch (_) {
+      // Already closed.
+    }
+  }
+
+  void _startPolling() {
+    _poll?.cancel();
+    _polls = 0;
+    _poll = Timer.periodic(widget.pollInterval, (_) {
+      if (++_polls > _maxPolls) {
+        _poll?.cancel();
+        return;
+      }
+      _checkPayment();
+    });
+  }
+
+  /// Asks where the payment stands. [manual] when the sender tapped "I've
+  /// paid", to tell them if it isn't there yet.
+  Future<void> _checkPayment({bool manual = false}) async {
+    final payment = _payment;
+    if (payment == null || _checkingPayment) return;
+    _checkingPayment = true;
+    if (manual) setState(() {});
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      final status = await _service.paymentStatus(payment.txRef);
+      if (!mounted || _payment != payment) return;
+      switch (status) {
+        case PaymentStatus.successful:
+          _poll?.cancel();
+          await (widget.closePaymentPage ?? _closeInApp)();
+          messenger.showSnackBar(SnackBar(content: Text(l.paymentReceived)));
+          navigator.pop(true);
+        case PaymentStatus.failed:
+          _poll?.cancel();
+          await (widget.closePaymentPage ?? _closeInApp)();
+          setState(() => _payment = null);
+          messenger.showSnackBar(SnackBar(content: Text(l.errPaymentFailed)));
+        case PaymentStatus.pending:
+          if (manual) {
+            messenger.showSnackBar(
+              SnackBar(content: Text(l.paymentNotReceivedYet)),
+            );
+            // Keep watching after a manual check.
+            if (!(_poll?.isActive ?? false)) _startPolling();
+          }
+      }
+    } catch (e) {
+      debugPrint('[Checkout] payment status: $e');
+      if (manual) {
+        messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+      }
+    } finally {
+      _checkingPayment = false;
+      if (manual && mounted) setState(() {});
+    }
+  }
+
+  /// Leaves the payment in progress, to pick another way to pay.
+  void _abandonPayment() {
+    _poll?.cancel();
+    setState(() => _payment = null);
   }
 
   Future<void> _loadIdPhoto() async {
@@ -133,6 +321,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _poll?.cancel();
     super.dispose();
   }
 
@@ -689,7 +878,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 bottom: e.key < methods.length - 1 ? 8 : 0,
               ),
               child: GestureDetector(
-                onTap: () => setState(() => _paymentMethod = e.key),
+                onTap: () {
+                  setState(() => _paymentMethod = e.key);
+                  if (e.key == 2) _loadMobileOptions();
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
                   decoration: BoxDecoration(
@@ -785,9 +977,102 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               ),
             );
           }),
+          if (_payingByMobile) _buildMobileMoneyPanel(),
         ],
       ),
     );
+  }
+
+  /// The wallet's country, and the amount it will be charged in its currency.
+  Widget _buildMobileMoneyPanel() {
+    final l = context.l10n;
+    final options = _mobileOptions;
+    final Widget body;
+    if (_mobileLoading || (options == null && !_mobileFailed)) {
+      body = const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accent,
+            ),
+          ),
+        ),
+      );
+    } else if (_mobileFailed || options!.isEmpty) {
+      body = Row(
+        children: [
+          Expanded(
+            child: Text(
+              _mobileFailed
+                  ? l.errMobileMoneyOptions
+                  : l.errMobileMoneyUnavailable,
+              key: const ValueKey('mobile-money-error'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.destructive,
+              ),
+            ),
+          ),
+          if (_mobileFailed)
+            TextButton(onPressed: _loadMobileOptions, child: Text(l.retry)),
+        ],
+      );
+    } else {
+      final choice = _mobileChoice;
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonFormField<String>(
+            key: const ValueKey('mobile-money-country'),
+            initialValue: choice?.countryCode,
+            isExpanded: true,
+            hint: Text(l.chooseCountry),
+            decoration: InputDecoration(
+              labelText: l.mobileMoneyCountry,
+              isDense: true,
+              filled: true,
+              fillColor: AppColors.input,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+            ),
+            items: [
+              for (final o in options)
+                DropdownMenuItem(
+                  value: o.countryCode,
+                  child: Text(
+                    '${o.countryName} · ${o.currency}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            onChanged: (code) => setState(
+              () => _mobileChoice = options.firstWhere(
+                (o) => o.countryCode == code,
+              ),
+            ),
+          ),
+          if (choice != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              l.mobileMoneyChargedAs(choice.amountText, _totalText),
+              key: const ValueKey('mobile-money-charge'),
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                height: 1.4,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+    return Padding(padding: const EdgeInsets.only(top: 12), child: body);
   }
 
   // ── Breakdown ──────────────────────────────────────────────────────────────
@@ -966,7 +1251,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   // ── Pay button ─────────────────────────────────────────────────────────────
   Widget _buildPayButton(BuildContext context) {
     final l = context.l10n;
-    final unlocked = _ticketChecked && _idChecked && !_expired;
+    final checked = _ticketChecked && _idChecked && !_expired;
+    final unlocked = checked && (!_payingByMobile || _mobileChoice != null);
+    // Mobile money is charged in the wallet's currency.
+    final amount = _payingByMobile && _mobileChoice != null
+        ? _mobileChoice!.amountText
+        : _totalText;
+    if (_payment != null) return _buildPaymentInProgress(l);
     return Column(
       children: [
         if (_expired) ...[
@@ -986,22 +1277,26 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           height: 52,
           child: ElevatedButton.icon(
             key: const ValueKey('checkout-pay'),
-            // Payment is not live yet: say so rather than pretend.
-            onPressed: unlocked
-                ? () => ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(content: Text(l.paymentsComingSoon)),
-                    )
-                : null,
-            icon: Icon(
-              Icons.lock_rounded,
-              size: 18,
-              color: unlocked ? Colors.white : AppColors.mutedForeground,
-            ),
+            onPressed: unlocked && !_startingPayment ? _startPayment : null,
+            icon: _startingPayment
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.mutedForeground,
+                    ),
+                  )
+                : Icon(
+                    Icons.lock_rounded,
+                    size: 18,
+                    color: unlocked ? Colors.white : AppColors.mutedForeground,
+                  ),
             label: Text(
               unlocked
-                  ? l.payAmountIntoEscrow(_totalText)
+                  ? l.payAmountIntoEscrow(amount)
+                  : checked
+                  ? l.chooseCountry
                   : l.validateTicketAndId,
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w800,
@@ -1020,6 +1315,110 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// While the sender pays on Flutterwave's page.
+  Widget _buildPaymentInProgress(AppLocalizations l) {
+    return Container(
+      key: const ValueKey('checkout-payment-in-progress'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accent,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l.completeYourPayment,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l.completeYourPaymentSub,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              height: 1.4,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              key: const ValueKey('checkout-check-payment'),
+              onPressed: _checkingPayment
+                  ? null
+                  : () => _checkPayment(manual: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                shape: const StadiumBorder(),
+              ),
+              child: Text(
+                l.iPaidCheckNow,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 44,
+            child: OutlinedButton(
+              key: const ValueKey('checkout-open-payment'),
+              onPressed: _openPaymentPage,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.accent,
+                side: const BorderSide(color: AppColors.accent),
+                shape: const StadiumBorder(),
+              ),
+              child: Text(
+                l.openPaymentPage,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('checkout-abandon-payment'),
+            onPressed: _abandonPayment,
+            child: Text(
+              l.chooseAnotherWayToPay,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1284,6 +1683,54 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     );
   }
 
+  /// The booking reference row: blurred placeholder letters, never the
+  /// reference (senders aren't given it).
+  Widget _hiddenBookingRef(AppLocalizations l) => Padding(
+    key: const ValueKey('ticket-booking-ref-hidden'),
+    padding: const EdgeInsets.only(top: 8),
+    child: Semantics(
+      label: '${l.ticketBookingRef}: ${l.bookingRefHidden}',
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          Text(
+            l.ticketBookingRef,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const Spacer(),
+          Tooltip(
+            message: l.bookingRefHidden,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.lock_rounded,
+                  size: 12,
+                  color: AppColors.mutedForeground,
+                ),
+                const SizedBox(width: 6),
+                ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Text(
+                    'XXXXXX',
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
   // ── Step 1: the traveler's ticket ──────────────────────────────────────────
   Widget _buildTicketCard() {
     final l = context.l10n;
@@ -1500,7 +1947,18 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            preview,
+            if (_hasTicketImage)
+              preview
+            else
+              Text(
+                l.ticketImageHidden,
+                key: const ValueKey('ticket-image-hidden'),
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  height: 1.4,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
             const SizedBox(height: 4),
             detail(
               l.ticketRoute,
@@ -1510,8 +1968,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               l.ticketDeparture,
               DateFormat.yMMMd(locale).format(_r.trip.departureDate),
             ),
-            if (_r.bookingReference != null)
-              detail(l.ticketBookingRef, _r.bookingReference!),
+            if (_r.hasBookingReference) _hiddenBookingRef(l),
             detail(l.ticketTraveler, _r.trip.fullName),
             if (!_ticketChecked) ...[
               const SizedBox(height: 12),
@@ -1519,7 +1976,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   key: const ValueKey('ticket-confirm'),
-                  onPressed: _confirming || _expired || _ticketUrl == null
+                  onPressed:
+                      _confirming ||
+                          _expired ||
+                          (_hasTicketImage && _ticketUrl == null)
                       ? null
                       : _confirmTicket,
                   icon: const Icon(Icons.check_circle_rounded, size: 16),

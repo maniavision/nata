@@ -1275,7 +1275,6 @@
       }
     }
   },
-  "paymentsComingSoon": "Les paiements ne sont pas encore disponibles. Vous pourrez bientôt payer ici.",
   "requestExpiredPayment": "Cette demande a expiré et ne peut plus être payée.",
   "hoursMinutes": "{hours} h {minutes} min",
   "@hoursMinutes": {
@@ -1402,5 +1401,35 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "ticketImageHidden": "Le billet n'est pas affiché car sa référence de réservation n'a pas pu être masquée. Nata a vérifié le nom du voyageur et la date du voyage lors de son envoi.",
+  "bookingRefHidden": "Masquée pour protéger la réservation du voyageur",
+
+  "completeYourPayment": "Finalisez votre paiement",
+  "completeYourPaymentSub": "Terminez le paiement sur la page Flutterwave. Cette page se met à jour toute seule dès que le paiement est passé.",
+  "openPaymentPage": "Ouvrir la page de paiement",
+  "iPaidCheckNow": "J'ai payé, vérifier",
+  "chooseAnotherWayToPay": "Choisir un autre moyen de paiement",
+  "paymentReceived": "Paiement reçu. L'argent est conservé en séquestre jusqu'à la livraison.",
+  "paymentNotReceivedYet": "Nous n'avons pas encore reçu le paiement. Si vous venez de payer, cela peut prendre une minute.",
+  "errPaymentFailed": "Le paiement n'a pas abouti. Réessayez ou choisissez un autre moyen de paiement.",
+  "errPaymentStart": "Impossible d'ouvrir la page de paiement. Veuillez réessayer.",
+  "errPaymentsUnavailable": "Les paiements ne sont pas disponibles pour le moment. Veuillez réessayer plus tard.",
+
+  "mobileMoneyCountry": "Pays du mobile money",
+  "chooseCountry": "Choisissez un pays",
+  "mobileMoneyChargedAs": "Débité dans la devise de votre portefeuille au taux du jour : {local}. Le prix de la livraison reste {price}.",
+  "@mobileMoneyChargedAs": {
+    "placeholders": {
+      "local": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errMobileMoneyUnavailable": "Le mobile money n'est pas disponible pour ce pays. Choisissez un autre pays ou payez par carte.",
+  "errMobileMoneyOptions": "Impossible de charger les pays du mobile money."
 }

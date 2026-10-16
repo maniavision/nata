@@ -98,15 +98,12 @@ void main() {
 
   group('LocationSearchService.sortByName', () {
     test('countries come A to Z, whatever order the server sent', () {
-      final sorted = LocationSearchService.sortByName(
-        const [
-          CountryResult(isoCode: 'ZW', name: 'Zimbabwe', phoneCode: '+263'),
-          CountryResult(isoCode: 'ZM', name: 'Zambia', phoneCode: '+260'),
-          CountryResult(isoCode: 'AF', name: 'Afghanistan', phoneCode: '+93'),
-          CountryResult(isoCode: 'NG', name: 'Nigeria', phoneCode: '+234'),
-        ],
-        (c) => c.name,
-      );
+      final sorted = LocationSearchService.sortByName(const [
+        CountryResult(isoCode: 'ZW', name: 'Zimbabwe', phoneCode: '+263'),
+        CountryResult(isoCode: 'ZM', name: 'Zambia', phoneCode: '+260'),
+        CountryResult(isoCode: 'AF', name: 'Afghanistan', phoneCode: '+93'),
+        CountryResult(isoCode: 'NG', name: 'Nigeria', phoneCode: '+234'),
+      ], (c) => c.name);
       expect(sorted.map((c) => c.name), [
         'Afghanistan',
         'Nigeria',
@@ -116,10 +113,12 @@ void main() {
     });
 
     test('ignores case', () {
-      final sorted = LocationSearchService.sortByName(
-        ['lagos', 'Abuja', 'kano', 'Ibadan'],
-        (s) => s,
-      );
+      final sorted = LocationSearchService.sortByName([
+        'lagos',
+        'Abuja',
+        'kano',
+        'Ibadan',
+      ], (s) => s);
       expect(sorted, ['Abuja', 'Ibadan', 'kano', 'lagos']);
     });
   });

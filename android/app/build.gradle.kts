@@ -47,4 +47,5 @@ dependencies {
     // On-device OCR and face detection for the ID check (see MainActivity).
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("com.google.mlkit:face-detection:16.1.7")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }

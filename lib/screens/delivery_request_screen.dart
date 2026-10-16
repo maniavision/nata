@@ -555,6 +555,10 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errNotCancellable;
       case RequestFailure.feeChanged:
         return l.errFeeChanged;
+      case RequestFailure.mobileMoneyUnavailable:
+        return l.errMobileMoneyUnavailable;
+      case RequestFailure.paymentsUnavailable:
+        return l.errPaymentsUnavailable;
       case RequestFailure.notDelivered:
         return l.errNotDelivered;
       case RequestFailure.alreadyReviewed:

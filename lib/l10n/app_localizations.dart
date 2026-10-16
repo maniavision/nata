@@ -4850,12 +4850,6 @@ abstract class AppLocalizations {
   /// **'Pay {amount} into Escrow'**
   String payAmountIntoEscrow(String amount);
 
-  /// No description provided for @paymentsComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Payments aren\'t available yet. You\'ll be able to pay here soon.'**
-  String get paymentsComingSoon;
-
   /// No description provided for @requestExpiredPayment.
   ///
   /// In en, this message translates to:
@@ -5239,6 +5233,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 review} other{{count} reviews}}'**
   String reviewsCount(int count);
+
+  /// No description provided for @ticketImageHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'The ticket itself isn\'t shown because its booking reference couldn\'t be hidden. Nata checked the traveler\'s name and travel date on it when it was uploaded.'**
+  String get ticketImageHidden;
+
+  /// No description provided for @bookingRefHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden to protect the traveler\'s booking'**
+  String get bookingRefHidden;
+
+  /// No description provided for @completeYourPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your payment'**
+  String get completeYourPayment;
+
+  /// No description provided for @completeYourPaymentSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish paying on the Flutterwave page. This page updates by itself once the payment goes through.'**
+  String get completeYourPaymentSub;
+
+  /// No description provided for @openPaymentPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open payment page'**
+  String get openPaymentPage;
+
+  /// No description provided for @iPaidCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve paid, check now'**
+  String get iPaidCheckNow;
+
+  /// No description provided for @chooseAnotherWayToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another way to pay'**
+  String get chooseAnotherWayToPay;
+
+  /// No description provided for @paymentReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment received. The money is held in escrow until the delivery is done.'**
+  String get paymentReceived;
+
+  /// No description provided for @paymentNotReceivedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'We haven\'t received the payment yet. If you just paid, it can take a minute.'**
+  String get paymentNotReceivedYet;
+
+  /// No description provided for @errPaymentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment didn\'t go through. Please try again or choose another way to pay.'**
+  String get errPaymentFailed;
+
+  /// No description provided for @errPaymentStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the payment page. Please try again.'**
+  String get errPaymentStart;
+
+  /// No description provided for @errPaymentsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments aren\'t available right now. Please try again later.'**
+  String get errPaymentsUnavailable;
+
+  /// No description provided for @mobileMoneyCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile money country'**
+  String get mobileMoneyCountry;
+
+  /// No description provided for @chooseCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a country'**
+  String get chooseCountry;
+
+  /// No description provided for @mobileMoneyChargedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Charged in your wallet\'s currency at today\'s rate: {local}. The delivery price stays {price}.'**
+  String mobileMoneyChargedAs(String local, String price);
+
+  /// No description provided for @errMobileMoneyUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile money isn\'t available for this country. Please choose another country or pay by card.'**
+  String get errMobileMoneyUnavailable;
+
+  /// No description provided for @errMobileMoneyOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the mobile money countries.'**
+  String get errMobileMoneyOptions;
 }
 
 class _AppLocalizationsDelegate

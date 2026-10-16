@@ -2709,10 +2709,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get paymentsComingSoon =>
-      'Payments aren\'t available yet. You\'ll be able to pay here soon.';
-
-  @override
   String get requestExpiredPayment =>
       'This request has expired and can no longer be paid.';
 
@@ -2940,4 +2936,66 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get ticketImageHidden =>
+      'The ticket itself isn\'t shown because its booking reference couldn\'t be hidden. Nata checked the traveler\'s name and travel date on it when it was uploaded.';
+
+  @override
+  String get bookingRefHidden => 'Hidden to protect the traveler\'s booking';
+
+  @override
+  String get completeYourPayment => 'Complete your payment';
+
+  @override
+  String get completeYourPaymentSub =>
+      'Finish paying on the Flutterwave page. This page updates by itself once the payment goes through.';
+
+  @override
+  String get openPaymentPage => 'Open payment page';
+
+  @override
+  String get iPaidCheckNow => 'I\'ve paid, check now';
+
+  @override
+  String get chooseAnotherWayToPay => 'Choose another way to pay';
+
+  @override
+  String get paymentReceived =>
+      'Payment received. The money is held in escrow until the delivery is done.';
+
+  @override
+  String get paymentNotReceivedYet =>
+      'We haven\'t received the payment yet. If you just paid, it can take a minute.';
+
+  @override
+  String get errPaymentFailed =>
+      'The payment didn\'t go through. Please try again or choose another way to pay.';
+
+  @override
+  String get errPaymentStart =>
+      'Couldn\'t open the payment page. Please try again.';
+
+  @override
+  String get errPaymentsUnavailable =>
+      'Payments aren\'t available right now. Please try again later.';
+
+  @override
+  String get mobileMoneyCountry => 'Mobile money country';
+
+  @override
+  String get chooseCountry => 'Choose a country';
+
+  @override
+  String mobileMoneyChargedAs(String local, String price) {
+    return 'Charged in your wallet\'s currency at today\'s rate: $local. The delivery price stays $price.';
+  }
+
+  @override
+  String get errMobileMoneyUnavailable =>
+      'Mobile money isn\'t available for this country. Please choose another country or pay by card.';
+
+  @override
+  String get errMobileMoneyOptions =>
+      'Couldn\'t load the mobile money countries.';
 }

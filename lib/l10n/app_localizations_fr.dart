@@ -2765,10 +2765,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get paymentsComingSoon =>
-      'Les paiements ne sont pas encore disponibles. Vous pourrez bientôt payer ici.';
-
-  @override
   String get requestExpiredPayment =>
       'Cette demande a expiré et ne peut plus être payée.';
 
@@ -3000,4 +2996,67 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get ticketImageHidden =>
+      'Le billet n\'est pas affiché car sa référence de réservation n\'a pas pu être masquée. Nata a vérifié le nom du voyageur et la date du voyage lors de son envoi.';
+
+  @override
+  String get bookingRefHidden =>
+      'Masquée pour protéger la réservation du voyageur';
+
+  @override
+  String get completeYourPayment => 'Finalisez votre paiement';
+
+  @override
+  String get completeYourPaymentSub =>
+      'Terminez le paiement sur la page Flutterwave. Cette page se met à jour toute seule dès que le paiement est passé.';
+
+  @override
+  String get openPaymentPage => 'Ouvrir la page de paiement';
+
+  @override
+  String get iPaidCheckNow => 'J\'ai payé, vérifier';
+
+  @override
+  String get chooseAnotherWayToPay => 'Choisir un autre moyen de paiement';
+
+  @override
+  String get paymentReceived =>
+      'Paiement reçu. L\'argent est conservé en séquestre jusqu\'à la livraison.';
+
+  @override
+  String get paymentNotReceivedYet =>
+      'Nous n\'avons pas encore reçu le paiement. Si vous venez de payer, cela peut prendre une minute.';
+
+  @override
+  String get errPaymentFailed =>
+      'Le paiement n\'a pas abouti. Réessayez ou choisissez un autre moyen de paiement.';
+
+  @override
+  String get errPaymentStart =>
+      'Impossible d\'ouvrir la page de paiement. Veuillez réessayer.';
+
+  @override
+  String get errPaymentsUnavailable =>
+      'Les paiements ne sont pas disponibles pour le moment. Veuillez réessayer plus tard.';
+
+  @override
+  String get mobileMoneyCountry => 'Pays du mobile money';
+
+  @override
+  String get chooseCountry => 'Choisissez un pays';
+
+  @override
+  String mobileMoneyChargedAs(String local, String price) {
+    return 'Débité dans la devise de votre portefeuille au taux du jour : $local. Le prix de la livraison reste $price.';
+  }
+
+  @override
+  String get errMobileMoneyUnavailable =>
+      'Le mobile money n\'est pas disponible pour ce pays. Choisissez un autre pays ou payez par carte.';
+
+  @override
+  String get errMobileMoneyOptions =>
+      'Impossible de charger les pays du mobile money.';
 }

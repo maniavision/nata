@@ -119,6 +119,12 @@ enum RequestFailure {
   /// The request can't be paid (not accepted, or it expired).
   notPayable,
 
+  /// Payments aren't set up on the server (no payment provider key).
+  paymentsUnavailable,
+
+  /// Mobile money isn't available in that country.
+  mobileMoneyUnavailable,
+
   /// The item isn't marked delivered yet.
   notDelivered,
 
@@ -151,6 +157,59 @@ enum RequestFailure {
 
   /// Anything else: network, server, permissions.
   other,
+}
+
+/// How the sender chose to pay on the checkout page. Flutterwave's page then
+/// offers the matching options.
+enum PayMethod {
+  applePay('apple_pay'),
+  card('card'),
+  mobileMoney('mobile_money');
+
+  const PayMethod(this.wire);
+  final String wire;
+}
+
+/// Flutterwave's payment page for one payment, and our reference for it.
+class PaymentLink {
+  final Uri link;
+  final String txRef;
+  const PaymentLink(this.link, this.txRef);
+}
+
+/// Where a payment stands.
+enum PaymentStatus { pending, successful, failed }
+
+/// A country whose mobile money the sender can pay with, and what it would
+/// charge: the fixed price converted into that country's currency.
+class MobileMoneyOption {
+  final String countryCode;
+  final String countryName;
+  final String currency;
+  final double amount;
+
+  /// The sender's own country (profile, else phone number).
+  final bool suggested;
+
+  const MobileMoneyOption({
+    required this.countryCode,
+    required this.countryName,
+    required this.currency,
+    required this.amount,
+    this.suggested = false,
+  });
+
+  factory MobileMoneyOption.fromJson(Map<String, dynamic> j) =>
+      MobileMoneyOption(
+        countryCode: (j['country_code'] as String).trim(),
+        countryName: (j['country_name'] as String? ?? '').trim(),
+        currency: (j['currency'] as String).trim(),
+        amount: (j['amount'] as num).toDouble(),
+        suggested: j['suggested'] == true,
+      );
+
+  /// "KES 14,230"
+  String get amountText => PriceFormatter.write(amount, currency);
 }
 
 class RequestException implements Exception {
@@ -429,10 +488,17 @@ class SentRequest {
   /// The sender has already reviewed the traveler for this request.
   final bool reviewed;
 
-  /// The traveler's flight ticket (private bucket) and booking reference;
-  /// only given once the traveler accepted.
+  /// The copy of the traveler's flight ticket senders may open (private
+  /// bucket), with the booking reference blurred; only given once the
+  /// traveler accepted, and null when no copy could be made.
   final String? ticketReceiptPath;
-  final String? bookingReference;
+
+  /// Whether the traveler uploaded a ticket at all.
+  final bool hasTicket;
+
+  /// Whether the trip has a booking reference. The reference itself is
+  /// never given to senders.
+  final bool hasBookingReference;
   final List<RequestItem> items;
   final double weightKg;
   final String? dimensions;
@@ -463,7 +529,8 @@ class SentRequest {
     this.receiptConfirmedAt,
     this.reviewed = false,
     this.ticketReceiptPath,
-    this.bookingReference,
+    bool? hasTicket,
+    this.hasBookingReference = false,
     required this.items,
     required this.weightKg,
     required this.dimensions,
@@ -472,7 +539,7 @@ class SentRequest {
     required this.recipientPhone,
     required this.photoPaths,
     required this.trip,
-  });
+  }) : hasTicket = hasTicket ?? ticketReceiptPath != null;
 
   /// Only a request the traveler has not answered yet can be changed.
   bool get isEditable => status == 'pending';
@@ -551,8 +618,9 @@ class SentRequest {
     travelerVerified: j['traveler_verified'] == true,
     receiptConfirmedAt: _time(j['receipt_confirmed_at']),
     reviewed: j['reviewed'] == true,
-    ticketReceiptPath: _blankToNull(j['ticket_receipt_path']),
-    bookingReference: _blankToNull(j['booking_reference']),
+    ticketReceiptPath: _blankToNull(j['ticket_shared_path']),
+    hasTicket: j['ticket_on_file'] == true,
+    hasBookingReference: j['has_booking_reference'] == true,
     items: [
       for (final i in (j['items'] as List? ?? const []))
         RequestItem.fromJson(Map<String, dynamic>.from(i as Map)),
@@ -931,6 +999,71 @@ class RequestService {
       if (e.status == 404) return null;
       rethrow;
     }
+  }
+
+  /// Starts paying [requestId] into escrow: a Flutterwave payment page for
+  /// the price fixed when the traveler accepted (create-payment).
+  Future<PaymentLink> startPayment(
+    String requestId,
+    PayMethod method, {
+    String? country,
+  }) async {
+    try {
+      final response = await _client.functions.invoke(
+        'create-payment',
+        body: {
+          'request_id': requestId,
+          'method': method.wire,
+          if (country != null) 'country': country,
+        },
+      );
+      final data = Map<String, dynamic>.from(response.data as Map);
+      return PaymentLink(
+        Uri.parse(data['link'] as String),
+        data['tx_ref'] as String,
+      );
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final code = details is Map ? '${details['error']}' : '';
+      throw RequestException(switch (code) {
+        'not_payable' ||
+        'expired' ||
+        'checks_missing' ||
+        'not_allowed' => RequestFailure.notPayable,
+        'payments_unavailable' => RequestFailure.paymentsUnavailable,
+        'mobile_money_unavailable' => RequestFailure.mobileMoneyUnavailable,
+        'rate_unavailable' => RequestFailure.rateUnavailable,
+        'unauthorized' => RequestFailure.notSignedIn,
+        _ => RequestFailure.other,
+      }, e);
+    }
+  }
+
+  /// The countries whose mobile money can pay [requestId], each with the
+  /// amount in its currency at today's rate.
+  Future<List<MobileMoneyOption>> mobileMoneyOptions(String requestId) async {
+    final rows = await _client.rpc(
+      'mobile_money_options',
+      params: {'p_request_id': requestId},
+    );
+    return [
+      for (final r in (rows as List))
+        MobileMoneyOption.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Where the payment [txRef] stands, checked with Flutterwave
+  /// (verify-payment). The request becomes paid once it is successful.
+  Future<PaymentStatus> paymentStatus(String txRef) async {
+    final response = await _client.functions.invoke(
+      'verify-payment',
+      body: {'tx_ref': txRef},
+    );
+    return switch ((response.data as Map?)?['status']) {
+      'successful' => PaymentStatus.successful,
+      'failed' => PaymentStatus.failed,
+      _ => PaymentStatus.pending,
+    };
   }
 
   /// A short-lived link to the traveler's ticket (private bucket).
