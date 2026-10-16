@@ -1444,5 +1444,10 @@
     }
   },
   "errMobileMoneyUnavailable": "Mobile money isn't available for this country. Please choose another country or pay by card.",
-  "errMobileMoneyOptions": "Couldn't load the mobile money countries."
+  "errMobileMoneyOptions": "Couldn't load the mobile money countries.",
+
+  "signInToContinue": "Sign in or create an account to continue.",
+  "continueBrowsing": "Continue browsing",
+
+  "guest": "Guest"
 }

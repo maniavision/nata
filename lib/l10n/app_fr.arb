@@ -1431,5 +1431,10 @@
     }
   },
   "errMobileMoneyUnavailable": "Le mobile money n'est pas disponible pour ce pays. Choisissez un autre pays ou payez par carte.",
-  "errMobileMoneyOptions": "Impossible de charger les pays du mobile money."
+  "errMobileMoneyOptions": "Impossible de charger les pays du mobile money.",
+
+  "signInToContinue": "Connectez-vous ou créez un compte pour continuer.",
+  "continueBrowsing": "Continuer la visite",
+
+  "guest": "Invité"
 }

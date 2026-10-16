@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../services/auth_gate.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 
@@ -430,7 +431,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 Text(
-                  _displayName,
+                  AuthGate.isSignedIn() ? _displayName : context.l10n.guest,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
                     fontSize: 18,
@@ -441,28 +442,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ],
             ),
           ),
-          GestureDetector(
-            key: const ValueKey('home-notifications'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    NotificationsScreen(service: widget.notificationService),
+          // Visitors have no notifications.
+          if (AuthGate.isSignedIn())
+            GestureDetector(
+              key: const ValueKey('home-notifications'),
+              onTap: () {
+                if (!AuthGate.check(context)) return;
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => NotificationsScreen(
+                      service: widget.notificationService,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.foreground,
+                  size: 20,
+                ),
               ),
             ),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withValues(alpha: 0.8),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                color: AppColors.foreground,
-                size: 20,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -635,6 +642,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildAddTripButton(l) {
     return GestureDetector(
       onTap: () {
+        if (!AuthGate.check(context)) return;
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => const AddTripScreen()));
@@ -774,14 +782,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(bottom: 10),
               child: _TravelerRow(
                 trip: t,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => TravelerProfileScreen(
-                      trip: t,
-                      service: widget.travelerService,
+                onTap: () {
+                  if (!AuthGate.check(context)) return;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => TravelerProfileScreen(
+                        trip: t,
+                        service: widget.travelerService,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           )

@@ -202,15 +202,38 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeroSection(),
-              _buildMainContent(),
-              _buildFooter(),
-              const SizedBox(height: 32),
-            ],
-          ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHeroSection(),
+                  _buildMainContent(),
+                  _buildFooter(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+            // Opened while browsing: a way back.
+            if (Navigator.of(context).canPop())
+              Positioned(
+                top: 12,
+                left: 16,
+                child: Semantics(
+                  button: true,
+                  label: context.l10n.continueBrowsing,
+                  child: _GlassCircleButton(
+                    key: const ValueKey('auth-close'),
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -737,7 +760,7 @@ class _LoginScreenState extends State<LoginScreen> {
 class _GlassCircleButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
-  const _GlassCircleButton({required this.child, this.onTap});
+  const _GlassCircleButton({super.key, required this.child, this.onTap});
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_gate.dart';
 import '../l10n/l10n_ext.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -366,6 +367,7 @@ class _TravelerCardState extends State<_TravelerCard> {
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: () {
+        if (!AuthGate.check(context)) return;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => TravelerProfileScreen(

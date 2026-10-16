@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'home_screen.dart';
+import '../services/auth_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:carrywise_app/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,7 +15,10 @@ class SplashScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RegionService].
   final RegionService? regionService;
 
-  const SplashScreen({super.key, this.regionService});
+  /// Override for tests: the Home a visitor lands on after continuing.
+  final WidgetBuilder? guestHomeBuilder;
+
+  const SplashScreen({super.key, this.regionService, this.guestHomeBuilder});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -65,8 +70,14 @@ class _SplashScreenState extends State<SplashScreen> {
     // Keep LocaleNotifier in sync for any screens that still use it.
     LocaleNotifier.of(context).value = _prefs.locale;
 
+    // Visitors start browsing right away; someone with a saved session goes
+    // to Sign In, where Face ID unlocks it.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      MaterialPageRoute(
+        builder: (context) => AuthGate.isSignedIn()
+            ? const LoginScreen()
+            : (widget.guestHomeBuilder ?? (_) => const HomeScreen())(context),
+      ),
     );
   }
 

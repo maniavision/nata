@@ -3059,4 +3059,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errMobileMoneyOptions =>
       'Impossible de charger les pays du mobile money.';
+
+  @override
+  String get signInToContinue =>
+      'Connectez-vous ou créez un compte pour continuer.';
+
+  @override
+  String get continueBrowsing => 'Continuer la visite';
+
+  @override
+  String get guest => 'Invité';
 }

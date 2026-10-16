@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:carrywise_app/services/auth_gate.dart';
 import 'package:carrywise_app/services/home_search_memory.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,5 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// without this a search picked in one test would show up in the next.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   setUp(HomeSearchMemory.clear);
+  // Screens are tested as a signed-in user unless a test says otherwise.
+  setUp(() => AuthGate.isSignedIn = () => true);
   await testMain();
 }

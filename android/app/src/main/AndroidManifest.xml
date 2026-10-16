@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Supabase, Flutterwave and the rest of the network. Flutter only adds
+         this to debug builds, so release builds need it here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Face / fingerprint sign-in (local_auth) -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>

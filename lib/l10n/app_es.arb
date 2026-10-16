@@ -1431,5 +1431,10 @@
     }
   },
   "errMobileMoneyUnavailable": "El dinero móvil no está disponible para este país. Elige otro país o paga con tarjeta.",
-  "errMobileMoneyOptions": "No se pudieron cargar los países de dinero móvil."
+  "errMobileMoneyOptions": "No se pudieron cargar los países de dinero móvil.",
+
+  "signInToContinue": "Inicia sesión o crea una cuenta para continuar.",
+  "continueBrowsing": "Seguir explorando",
+
+  "guest": "Invitado"
 }

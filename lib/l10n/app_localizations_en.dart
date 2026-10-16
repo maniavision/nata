@@ -2998,4 +2998,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errMobileMoneyOptions =>
       'Couldn\'t load the mobile money countries.';
+
+  @override
+  String get signInToContinue => 'Sign in or create an account to continue.';
+
+  @override
+  String get continueBrowsing => 'Continue browsing';
+
+  @override
+  String get guest => 'Guest';
 }

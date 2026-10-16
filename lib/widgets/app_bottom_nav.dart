@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import '../services/auth_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -68,6 +69,8 @@ class AppBottomNav extends StatelessWidget {
 
   Future<void> _onTap(BuildContext context, int index) async {
     if (index == current && isTabRoot) return;
+    // Only Home is open to visitors who aren't signed in.
+    if (index != 0 && !AuthGate.check(context)) return;
 
     final navigator = Navigator.of(context);
 
@@ -94,6 +97,8 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Visitors who aren't signed in only browse Home: no tab bar.
+    if (!AuthGate.isSignedIn()) return const SizedBox.shrink();
     final l = context.l10n;
     final labels = [l.home, l.requests, l.trips, l.messages, l.profile];
     final bottom = MediaQuery.of(context).padding.bottom;

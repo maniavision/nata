@@ -5335,6 +5335,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load the mobile money countries.'**
   String get errMobileMoneyOptions;
+
+  /// No description provided for @signInToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or create an account to continue.'**
+  String get signInToContinue;
+
+  /// No description provided for @continueBrowsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue browsing'**
+  String get continueBrowsing;
+
+  /// No description provided for @guest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get guest;
 }
 
 class _AppLocalizationsDelegate

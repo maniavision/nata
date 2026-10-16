@@ -190,15 +190,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHero(),
-              _buildCard(),
-              _buildFooter(),
-              const SizedBox(height: 32),
-            ],
-          ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHero(),
+                  _buildCard(),
+                  _buildFooter(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+            // Opened while browsing: a way back.
+            if (Navigator.of(context).canPop())
+              Positioned(
+                top: 12,
+                left: 16,
+                child: Semantics(
+                  button: true,
+                  label: context.l10n.continueBrowsing,
+                  child: GestureDetector(
+                    key: const ValueKey('auth-close'),
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

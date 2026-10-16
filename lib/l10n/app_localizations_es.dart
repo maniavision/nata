@@ -3043,4 +3043,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errMobileMoneyOptions =>
       'No se pudieron cargar los países de dinero móvil.';
+
+  @override
+  String get signInToContinue =>
+      'Inicia sesión o crea una cuenta para continuar.';
+
+  @override
+  String get continueBrowsing => 'Seguir explorando';
+
+  @override
+  String get guest => 'Invitado';
 }
