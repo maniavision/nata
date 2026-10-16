@@ -1185,6 +1185,119 @@ void main() {
     }
   });
 
+  group('IncomingRequest.fromJson', () {
+    final row = {
+      'request_id': 'in-1',
+      'status': 'pending',
+      'created_at': '2030-06-20T09:00:00Z',
+      'expires_at': '2030-06-22T09:00:00Z',
+      'payout_usd': 101,
+      'items': [
+        {'name': 'Apple Watch', 'category': 'electronics', 'description': ''},
+      ],
+      'item_weight_kg': 0.45,
+      'item_size': ' 15 x 8 x 4 cm ',
+      'item_size_class': 'shoebox',
+      'photo_paths': ['s1/in-1/0.jpg'],
+      'sender_id': 's1',
+      'sender_first_name': 'Chioma',
+      'sender_last_name': 'Eze',
+      'sender_avatar_path': null,
+      'sender_verified': true,
+      'sender_deliveries': 5,
+      'recipient_name': null,
+      'recipient_phone': null,
+      'trip_id': 't1',
+      'departure_city': 'Lagos',
+      'departure_country': 'NG',
+      'arrival_city': 'London',
+      'arrival_country': 'GB',
+      'departure_date': '2030-06-22',
+      'arrival_date': '2030-06-22',
+    };
+
+    test('reads the request, its sender and its trip', () {
+      final r = IncomingRequest.fromJson(row);
+      expect(r.isPending, isTrue);
+      expect(r.isInProgress, isFalse);
+      expect(r.payoutUsd, 101);
+      expect(r.senderName, 'Chioma Eze');
+      expect(r.senderVerified, isTrue);
+      expect(r.senderDeliveries, 5);
+      expect(r.itemsSummary, 'Apple Watch');
+      expect(r.dimensions, '15 x 8 x 4 cm');
+      expect(r.sizeClass, RequestSizeClass.shoebox);
+      expect(r.routeLabel, 'Lagos → London');
+      expect(r.recipientName, isNull);
+      expect(r.expiresAt, DateTime.utc(2030, 6, 22, 9));
+    });
+
+    test('in progress once accepted, paid, handed off or delivered', () {
+      for (final s in ['accepted', 'paid', 'handed_off', 'delivered']) {
+        final r = IncomingRequest.fromJson({...row, 'status': s});
+        expect(r.isInProgress, isTrue, reason: s);
+        expect(r.isPending, isFalse, reason: s);
+      }
+    });
+  });
+
+  group('RequestService.decline', () {
+    late MockSupabaseClient client;
+    late RequestService service;
+
+    setUp(() {
+      client = MockSupabaseClient();
+      final auth = MockGoTrueClient();
+      final user = MockUser();
+      when(() => client.auth).thenReturn(auth);
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => user.id).thenReturn('traveler-1');
+      service = RequestService(client: client);
+    });
+
+    test('sends the request and the reason', () async {
+      when(
+        () => client.rpc<dynamic>(
+          'decline_delivery_request',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakeRpc());
+
+      await service.decline('in-1', reason: 'Bag is full');
+
+      verify(
+        () => client.rpc<dynamic>(
+          'decline_delivery_request',
+          params: {'p_id': 'in-1', 'p_reason': 'Bag is full'},
+        ),
+      ).called(1);
+    });
+
+    test('an answered request is reported', () async {
+      when(
+        () => client.rpc<dynamic>(
+          'decline_delivery_request',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer(
+        (_) => FakeRpc(
+          error: const PostgrestException(message: 'nata:request_not_pending'),
+        ),
+      );
+
+      await expectLater(
+        service.decline('in-1'),
+        throwsA(
+          isA<RequestException>().having(
+            (e) => e.reason,
+            'reason',
+            RequestFailure.notPending,
+          ),
+        ),
+      );
+    });
+  });
+
   test('database refusals for edits', () {
     expect(
       RequestService.reasonFor('nata:request_not_editable'),

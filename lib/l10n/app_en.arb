@@ -1334,5 +1334,87 @@
     }
   },
   "errTicketUnreadable": "We couldn't read this ticket. Upload a sharp photo or the PDF of your boarding pass or e-ticket.",
-  "checkingTicket": "Checking your ticket…"
+  "checkingTicket": "Checking your ticket…",
+
+  "noIncomingRequests": "No delivery requests yet. They'll appear here when senders ask you to carry something on your trips.",
+  "senderAwaitingPayment": "Sender · Awaiting payment",
+  "senderItemWithYou": "Sender · Item with you",
+  "senderDelivered": "Sender · Delivered",
+  "nextWaitPayment": "Wait for the sender's payment",
+  "nextPickUp": "Pick up the item",
+  "nextDeliver": "Deliver and enter the code",
+  "nextDone": "Payout released",
+  "viewRequest": "View Request",
+  "requestAcceptedSnack": "Request accepted. The sender has 24 hours to pay.",
+  "requestDeclinedSnack": "Request declined.",
+  "declineTitle": "Decline this request?",
+  "declineBody": "The sender will be told you can't carry it.",
+  "declineReasonHint": "Reason (optional)",
+  "keepIt": "Keep it",
+  "errAcceptFailed": "Could not accept the request. Please try again.",
+  "errDeclineFailed": "Could not decline the request. Please try again.",
+  "requestDetailsTitle": "Request Details",
+  "answerWithin": "Answer within {time}",
+  "@answerWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "payDueWithin": "The sender must pay within {time}",
+  "@payDueWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "itemPhotosTitle": "PHOTOS OF THE SEALED ITEM",
+  "recipientHiddenNote": "The recipient's name and phone are shared once you accept.",
+  "senderVerifiedBadge": "Verified",
+
+  "rateYourTraveler": "Rate Your Traveler",
+  "deliveryCompleteLabel": "DELIVERY COMPLETE",
+  "itemArrivedSafely": "Your item arrived safely",
+  "reviewHelpsOthers": "Your review helps other senders find trusted travelers.",
+  "overallRating": "OVERALL RATING",
+  "tapStarToRate": "Tap a star to rate",
+  "whatStoodOut": "WHAT STOOD OUT?",
+  "tagCommunication": "Great communication",
+  "tagCareful": "Careful with item",
+  "tagFlexiblePickup": "Flexible pickup",
+  "writtenReview": "WRITTEN REVIEW",
+  "reviewHint": "Share how the handoff and delivery went. Keep it respectful and factual.",
+  "reviewsFinal": "Reviews cannot be edited after they are published.",
+  "reviewSharedNote": "Your rating is shared with {name} after you submit, and it is added to their public delivery history.",
+  "@reviewSharedNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewThanksName": "Thanks for reviewing {name}. Your feedback helps the community stay trusted and safe.",
+  "@reviewThanksName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errReviewFailed": "Could not send your review. Please try again.",
+  "errAlreadyReviewed": "You've already reviewed this delivery.",
+  "errNotDelivered": "This item isn't marked as delivered yet.",
+  "confirmReceipt": "Confirm Receipt",
+  "youReviewed": "You reviewed this delivery",
+  "errConfirmReceiptFailed": "Could not confirm receipt. Please try again.",
+  "reviewsCount": "{count, plural, =1{1 review} other{{count} reviews}}",
+  "@reviewsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

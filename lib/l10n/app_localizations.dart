@@ -4975,6 +4975,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking your ticket…'**
   String get checkingTicket;
+
+  /// No description provided for @noIncomingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No delivery requests yet. They\'ll appear here when senders ask you to carry something on your trips.'**
+  String get noIncomingRequests;
+
+  /// No description provided for @senderAwaitingPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender · Awaiting payment'**
+  String get senderAwaitingPayment;
+
+  /// No description provided for @senderItemWithYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender · Item with you'**
+  String get senderItemWithYou;
+
+  /// No description provided for @senderDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender · Delivered'**
+  String get senderDelivered;
+
+  /// No description provided for @nextWaitPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the sender\'s payment'**
+  String get nextWaitPayment;
+
+  /// No description provided for @nextPickUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up the item'**
+  String get nextPickUp;
+
+  /// No description provided for @nextDeliver.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver and enter the code'**
+  String get nextDeliver;
+
+  /// No description provided for @nextDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout released'**
+  String get nextDone;
+
+  /// No description provided for @viewRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'View Request'**
+  String get viewRequest;
+
+  /// No description provided for @requestAcceptedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Request accepted. The sender has 24 hours to pay.'**
+  String get requestAcceptedSnack;
+
+  /// No description provided for @requestDeclinedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined.'**
+  String get requestDeclinedSnack;
+
+  /// No description provided for @declineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline this request?'**
+  String get declineTitle;
+
+  /// No description provided for @declineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The sender will be told you can\'t carry it.'**
+  String get declineBody;
+
+  /// No description provided for @declineReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get declineReasonHint;
+
+  /// No description provided for @keepIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get keepIt;
+
+  /// No description provided for @errAcceptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not accept the request. Please try again.'**
+  String get errAcceptFailed;
+
+  /// No description provided for @errDeclineFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not decline the request. Please try again.'**
+  String get errDeclineFailed;
+
+  /// No description provided for @requestDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Details'**
+  String get requestDetailsTitle;
+
+  /// No description provided for @answerWithin.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer within {time}'**
+  String answerWithin(String time);
+
+  /// No description provided for @payDueWithin.
+  ///
+  /// In en, this message translates to:
+  /// **'The sender must pay within {time}'**
+  String payDueWithin(String time);
+
+  /// No description provided for @itemPhotosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PHOTOS OF THE SEALED ITEM'**
+  String get itemPhotosTitle;
+
+  /// No description provided for @recipientHiddenNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The recipient\'s name and phone are shared once you accept.'**
+  String get recipientHiddenNote;
+
+  /// No description provided for @senderVerifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get senderVerifiedBadge;
+
+  /// No description provided for @rateYourTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Your Traveler'**
+  String get rateYourTraveler;
+
+  /// No description provided for @deliveryCompleteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DELIVERY COMPLETE'**
+  String get deliveryCompleteLabel;
+
+  /// No description provided for @itemArrivedSafely.
+  ///
+  /// In en, this message translates to:
+  /// **'Your item arrived safely'**
+  String get itemArrivedSafely;
+
+  /// No description provided for @reviewHelpsOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Your review helps other senders find trusted travelers.'**
+  String get reviewHelpsOthers;
+
+  /// No description provided for @overallRating.
+  ///
+  /// In en, this message translates to:
+  /// **'OVERALL RATING'**
+  String get overallRating;
+
+  /// No description provided for @tapStarToRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a star to rate'**
+  String get tapStarToRate;
+
+  /// No description provided for @whatStoodOut.
+  ///
+  /// In en, this message translates to:
+  /// **'WHAT STOOD OUT?'**
+  String get whatStoodOut;
+
+  /// No description provided for @tagCommunication.
+  ///
+  /// In en, this message translates to:
+  /// **'Great communication'**
+  String get tagCommunication;
+
+  /// No description provided for @tagCareful.
+  ///
+  /// In en, this message translates to:
+  /// **'Careful with item'**
+  String get tagCareful;
+
+  /// No description provided for @tagFlexiblePickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Flexible pickup'**
+  String get tagFlexiblePickup;
+
+  /// No description provided for @writtenReview.
+  ///
+  /// In en, this message translates to:
+  /// **'WRITTEN REVIEW'**
+  String get writtenReview;
+
+  /// No description provided for @reviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share how the handoff and delivery went. Keep it respectful and factual.'**
+  String get reviewHint;
+
+  /// No description provided for @reviewsFinal.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews cannot be edited after they are published.'**
+  String get reviewsFinal;
+
+  /// No description provided for @reviewSharedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rating is shared with {name} after you submit, and it is added to their public delivery history.'**
+  String reviewSharedNote(String name);
+
+  /// No description provided for @reviewThanksName.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for reviewing {name}. Your feedback helps the community stay trusted and safe.'**
+  String reviewThanksName(String name);
+
+  /// No description provided for @errReviewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send your review. Please try again.'**
+  String get errReviewFailed;
+
+  /// No description provided for @errAlreadyReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already reviewed this delivery.'**
+  String get errAlreadyReviewed;
+
+  /// No description provided for @errNotDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'This item isn\'t marked as delivered yet.'**
+  String get errNotDelivered;
+
+  /// No description provided for @confirmReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Receipt'**
+  String get confirmReceipt;
+
+  /// No description provided for @youReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'You reviewed this delivery'**
+  String get youReviewed;
+
+  /// No description provided for @errConfirmReceiptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm receipt. Please try again.'**
+  String get errConfirmReceiptFailed;
+
+  /// No description provided for @reviewsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 review} other{{count} reviews}}'**
+  String reviewsCount(int count);
 }
 
 class _AppLocalizationsDelegate

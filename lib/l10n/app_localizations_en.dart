@@ -2783,4 +2783,164 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkingTicket => 'Checking your ticket…';
+
+  @override
+  String get noIncomingRequests =>
+      'No delivery requests yet. They\'ll appear here when senders ask you to carry something on your trips.';
+
+  @override
+  String get senderAwaitingPayment => 'Sender · Awaiting payment';
+
+  @override
+  String get senderItemWithYou => 'Sender · Item with you';
+
+  @override
+  String get senderDelivered => 'Sender · Delivered';
+
+  @override
+  String get nextWaitPayment => 'Wait for the sender\'s payment';
+
+  @override
+  String get nextPickUp => 'Pick up the item';
+
+  @override
+  String get nextDeliver => 'Deliver and enter the code';
+
+  @override
+  String get nextDone => 'Payout released';
+
+  @override
+  String get viewRequest => 'View Request';
+
+  @override
+  String get requestAcceptedSnack =>
+      'Request accepted. The sender has 24 hours to pay.';
+
+  @override
+  String get requestDeclinedSnack => 'Request declined.';
+
+  @override
+  String get declineTitle => 'Decline this request?';
+
+  @override
+  String get declineBody => 'The sender will be told you can\'t carry it.';
+
+  @override
+  String get declineReasonHint => 'Reason (optional)';
+
+  @override
+  String get keepIt => 'Keep it';
+
+  @override
+  String get errAcceptFailed =>
+      'Could not accept the request. Please try again.';
+
+  @override
+  String get errDeclineFailed =>
+      'Could not decline the request. Please try again.';
+
+  @override
+  String get requestDetailsTitle => 'Request Details';
+
+  @override
+  String answerWithin(String time) {
+    return 'Answer within $time';
+  }
+
+  @override
+  String payDueWithin(String time) {
+    return 'The sender must pay within $time';
+  }
+
+  @override
+  String get itemPhotosTitle => 'PHOTOS OF THE SEALED ITEM';
+
+  @override
+  String get recipientHiddenNote =>
+      'The recipient\'s name and phone are shared once you accept.';
+
+  @override
+  String get senderVerifiedBadge => 'Verified';
+
+  @override
+  String get rateYourTraveler => 'Rate Your Traveler';
+
+  @override
+  String get deliveryCompleteLabel => 'DELIVERY COMPLETE';
+
+  @override
+  String get itemArrivedSafely => 'Your item arrived safely';
+
+  @override
+  String get reviewHelpsOthers =>
+      'Your review helps other senders find trusted travelers.';
+
+  @override
+  String get overallRating => 'OVERALL RATING';
+
+  @override
+  String get tapStarToRate => 'Tap a star to rate';
+
+  @override
+  String get whatStoodOut => 'WHAT STOOD OUT?';
+
+  @override
+  String get tagCommunication => 'Great communication';
+
+  @override
+  String get tagCareful => 'Careful with item';
+
+  @override
+  String get tagFlexiblePickup => 'Flexible pickup';
+
+  @override
+  String get writtenReview => 'WRITTEN REVIEW';
+
+  @override
+  String get reviewHint =>
+      'Share how the handoff and delivery went. Keep it respectful and factual.';
+
+  @override
+  String get reviewsFinal =>
+      'Reviews cannot be edited after they are published.';
+
+  @override
+  String reviewSharedNote(String name) {
+    return 'Your rating is shared with $name after you submit, and it is added to their public delivery history.';
+  }
+
+  @override
+  String reviewThanksName(String name) {
+    return 'Thanks for reviewing $name. Your feedback helps the community stay trusted and safe.';
+  }
+
+  @override
+  String get errReviewFailed => 'Could not send your review. Please try again.';
+
+  @override
+  String get errAlreadyReviewed => 'You\'ve already reviewed this delivery.';
+
+  @override
+  String get errNotDelivered => 'This item isn\'t marked as delivered yet.';
+
+  @override
+  String get confirmReceipt => 'Confirm Receipt';
+
+  @override
+  String get youReviewed => 'You reviewed this delivery';
+
+  @override
+  String get errConfirmReceiptFailed =>
+      'Could not confirm receipt. Please try again.';
+
+  @override
+  String reviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '1 review',
+    );
+    return '$_temp0';
+  }
 }

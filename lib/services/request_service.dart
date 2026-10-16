@@ -119,6 +119,12 @@ enum RequestFailure {
   /// The request can't be paid (not accepted, or it expired).
   notPayable,
 
+  /// The item isn't marked delivered yet.
+  notDelivered,
+
+  /// The sender already reviewed this delivery.
+  alreadyReviewed,
+
   /// The database priced the request differently from what the sender was
   /// shown (the flight got a day closer, or the app and the database price
   /// differently because a pricing migration has not been run).
@@ -417,6 +423,12 @@ class SentRequest {
   /// The traveler's identity is verified (ID checked, face matched).
   final bool travelerVerified;
 
+  /// When the sender confirmed they received the item.
+  final DateTime? receiptConfirmedAt;
+
+  /// The sender has already reviewed the traveler for this request.
+  final bool reviewed;
+
   /// The traveler's flight ticket (private bucket) and booking reference;
   /// only given once the traveler accepted.
   final String? ticketReceiptPath;
@@ -448,6 +460,8 @@ class SentRequest {
     this.ticketCheckedAt,
     this.idCheckedAt,
     this.travelerVerified = false,
+    this.receiptConfirmedAt,
+    this.reviewed = false,
     this.ticketReceiptPath,
     this.bookingReference,
     required this.items,
@@ -486,6 +500,14 @@ class SentRequest {
 
   /// Accepted and waiting for the sender's payment.
   bool get awaitingPayment => status == 'accepted';
+
+  /// Delivered, and the sender hasn't confirmed receipt yet.
+  bool get awaitingReceipt =>
+      status == 'delivered' && receiptConfirmedAt == null;
+
+  /// Delivered and confirmed, but not reviewed yet.
+  bool get canReview =>
+      status == 'delivered' && receiptConfirmedAt != null && !reviewed;
 
   /// The traveler accepted and the price is fixed in [displayCurrency].
   bool get priceFixed => displayTotal != null && displayCurrency != null;
@@ -527,6 +549,8 @@ class SentRequest {
     ticketCheckedAt: _time(j['ticket_checked_at']),
     idCheckedAt: _time(j['id_checked_at']),
     travelerVerified: j['traveler_verified'] == true,
+    receiptConfirmedAt: _time(j['receipt_confirmed_at']),
+    reviewed: j['reviewed'] == true,
     ticketReceiptPath: _blankToNull(j['ticket_receipt_path']),
     bookingReference: _blankToNull(j['booking_reference']),
     items: [
@@ -543,6 +567,134 @@ class SentRequest {
     ],
     trip: TravelerTrip.fromJson({...j, 'currency': j['trip_currency']}),
   );
+}
+
+/// A request made on one of the signed-in traveler's trips
+/// (`public.list_incoming_requests`).
+class IncomingRequest {
+  final String id;
+
+  /// pending, accepted, paid, handed_off or delivered.
+  final String status;
+  final DateTime createdAt;
+
+  /// The deadline to answer (pending) or for the sender to pay (accepted).
+  final DateTime? expiresAt;
+
+  /// What the traveler earns (the delivery cost), in US dollars.
+  final double payoutUsd;
+  final List<RequestItem> items;
+  final double weightKg;
+  final String? dimensions;
+  final RequestSizeClass? sizeClass;
+  final List<String> photoPaths;
+
+  final String senderId;
+  final String senderFirstName;
+  final String senderLastName;
+  final String? senderAvatarPath;
+  final bool senderVerified;
+
+  /// Deliveries the sender has completed before.
+  final int senderDeliveries;
+
+  /// Only given once the traveler accepted.
+  final String? recipientName;
+  final String? recipientPhone;
+
+  final String tripId;
+  final String departureCity;
+  final String departureCountry;
+  final String arrivalCity;
+  final String arrivalCountry;
+  final DateTime departureDate;
+  final DateTime arrivalDate;
+
+  const IncomingRequest({
+    required this.id,
+    required this.status,
+    required this.createdAt,
+    this.expiresAt,
+    required this.payoutUsd,
+    required this.items,
+    required this.weightKg,
+    this.dimensions,
+    this.sizeClass,
+    this.photoPaths = const [],
+    required this.senderId,
+    required this.senderFirstName,
+    required this.senderLastName,
+    this.senderAvatarPath,
+    this.senderVerified = false,
+    this.senderDeliveries = 0,
+    this.recipientName,
+    this.recipientPhone,
+    required this.tripId,
+    required this.departureCity,
+    required this.departureCountry,
+    required this.arrivalCity,
+    required this.arrivalCountry,
+    required this.departureDate,
+    required this.arrivalDate,
+  });
+
+  /// Waiting for the traveler's answer.
+  bool get isPending => status == 'pending';
+
+  /// Accepted and under way (or just delivered).
+  bool get isInProgress =>
+      const {'accepted', 'paid', 'handed_off', 'delivered'}.contains(status);
+
+  String get senderName => [
+    senderFirstName,
+    senderLastName,
+  ].where((s) => s.trim().isNotEmpty).join(' ');
+
+  /// "AirPods Max, Charger".
+  String get itemsSummary => items.map((i) => i.name).join(', ');
+
+  String get routeLabel => '$departureCity → $arrivalCity';
+
+  factory IncomingRequest.fromJson(Map<String, dynamic> j) {
+    DateTime? time(Object? v) => v == null ? null : DateTime.parse(v as String);
+    String? text(Object? v) {
+      final s = (v as String?)?.trim();
+      return s == null || s.isEmpty ? null : s;
+    }
+
+    return IncomingRequest(
+      id: j['request_id'] as String,
+      status: (j['status'] as String?) ?? 'pending',
+      createdAt: DateTime.parse(j['created_at'] as String),
+      expiresAt: time(j['expires_at']),
+      payoutUsd: (j['payout_usd'] as num?)?.toDouble() ?? 0,
+      items: [
+        for (final i in (j['items'] as List? ?? const []))
+          RequestItem.fromJson(Map<String, dynamic>.from(i as Map)),
+      ],
+      weightKg: (j['item_weight_kg'] as num?)?.toDouble() ?? 0,
+      dimensions: text(j['item_size']),
+      sizeClass: RequestSizeClass.fromDb(j['item_size_class'] as String?),
+      photoPaths: [
+        for (final p in (j['photo_paths'] as List? ?? const [])) p as String,
+      ],
+      senderId: j['sender_id'] as String,
+      senderFirstName: (j['sender_first_name'] as String?)?.trim() ?? '',
+      senderLastName: (j['sender_last_name'] as String?)?.trim() ?? '',
+      senderAvatarPath: text(j['sender_avatar_path']),
+      senderVerified: j['sender_verified'] == true,
+      senderDeliveries: (j['sender_deliveries'] as num?)?.toInt() ?? 0,
+      recipientName: text(j['recipient_name']),
+      recipientPhone: text(j['recipient_phone']),
+      tripId: j['trip_id'] as String,
+      departureCity: (j['departure_city'] as String?) ?? '',
+      departureCountry: (j['departure_country'] as String?) ?? '',
+      arrivalCity: (j['arrival_city'] as String?) ?? '',
+      arrivalCountry: (j['arrival_country'] as String?) ?? '',
+      departureDate: DateTime.parse(j['departure_date'] as String),
+      arrivalDate: DateTime.parse(j['arrival_date'] as String),
+    );
+  }
 }
 
 /// Sends delivery requests.
@@ -785,6 +937,63 @@ class RequestService {
   Future<String> ticketUrl(String path) =>
       _client.storage.from('trip-receipts').createSignedUrl(path, 600);
 
+  /// The sender confirms they received the item.
+  Future<void> confirmReceipt(String requestId) =>
+      _call('confirm_receipt', {'p_id': requestId});
+
+  /// The sender rates the traveler of a delivered request.
+  Future<void> submitReview(
+    String requestId, {
+    required int rating,
+    List<String> tags = const [],
+    String comment = '',
+  }) => _call('submit_traveler_review', {
+    'p_request_id': requestId,
+    'p_rating': rating,
+    'p_tags': tags,
+    'p_comment': comment.trim(),
+  });
+
+  Future<void> _call(String fn, Map<String, dynamic> params) async {
+    _userId;
+    try {
+      await _client.rpc(fn, params: params);
+    } on PostgrestException catch (e) {
+      throw RequestException(reasonFor(e.message), e);
+    } catch (e) {
+      throw RequestException(RequestFailure.other, e);
+    }
+  }
+
+  /// Requests made on the signed-in traveler's trips, newest first.
+  Future<List<IncomingRequest>> incomingRequests() async {
+    _userId;
+    final rows = await _client.rpc('list_incoming_requests') as List;
+    return [
+      for (final r in rows)
+        IncomingRequest.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// The traveler turns down [requestId], optionally saying why.
+  Future<void> decline(String requestId, {String? reason}) async {
+    _userId;
+    try {
+      await _client.rpc(
+        'decline_delivery_request',
+        params: {'p_id': requestId, 'p_reason': reason},
+      );
+    } on PostgrestException catch (e) {
+      throw RequestException(reasonFor(e.message), e);
+    } catch (e) {
+      throw RequestException(RequestFailure.other, e);
+    }
+  }
+
+  /// A short-lived link to one of a request's item photos.
+  Future<String> photoUrl(String path) =>
+      _client.storage.from(_bucket).createSignedUrl(path, 600);
+
   /// The traveler accepts [requestId]. The database fixes the price in the
   /// sender's currency at that day's rate in the same step.
   Future<void> accept(String requestId) async {
@@ -820,6 +1029,8 @@ class RequestService {
     if (has('rate_unavailable')) return RequestFailure.rateUnavailable;
     if (has('request_not_pending')) return RequestFailure.notPending;
     if (has('request_not_payable')) return RequestFailure.notPayable;
+    if (has('request_not_delivered')) return RequestFailure.notDelivered;
+    if (has('already_reviewed')) return RequestFailure.alreadyReviewed;
     if (has('price_changed')) return RequestFailure.priceChanged;
     if (has('size_too_big')) return RequestFailure.sizeTooBig;
     if (has('request_not_found')) return RequestFailure.requestNotFound;
@@ -836,6 +1047,7 @@ class RequestService {
       'size_required',
       'photo_required',
       'photo_invalid',
+      'review_invalid',
     ];
     if (invalid.any(has)) return RequestFailure.invalid;
     return RequestFailure.other;

@@ -7,7 +7,6 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
 import 'delivery_task_screen.dart';
-import 'review_screen.dart';
 
 const _green = Color(0xFF168A68);
 const _greenBg = Color(0xFFE4F4EE);
@@ -131,11 +130,14 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
     // Releasing the escrow payout is not connected yet (sample data).
     await Future<void>.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: widget.next ?? (context) => const ReviewScreen(),
-      ),
-    );
+    // The sender is the one who reviews (once they confirm receipt), so the
+    // traveler just goes back.
+    final next = widget.next;
+    if (next == null) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: next));
   }
 
   @override
@@ -205,10 +207,10 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               l.deliveryPayoutRelease,
-              textAlign: TextAlign.center,
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w800,
                 fontSize: 16,

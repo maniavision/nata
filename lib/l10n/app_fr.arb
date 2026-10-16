@@ -1321,5 +1321,87 @@
     }
   },
   "errTicketUnreadable": "Impossible de lire ce billet. Importez une photo nette ou le PDF de votre carte d'embarquement ou billet électronique.",
-  "checkingTicket": "Vérification de votre billet…"
+  "checkingTicket": "Vérification de votre billet…",
+
+  "noIncomingRequests": "Aucune demande pour l'instant. Elles apparaîtront ici lorsque des expéditeurs vous demanderont de transporter quelque chose.",
+  "senderAwaitingPayment": "Expéditeur · Paiement en attente",
+  "senderItemWithYou": "Expéditeur · Article avec vous",
+  "senderDelivered": "Expéditeur · Livré",
+  "nextWaitPayment": "Attendre le paiement de l'expéditeur",
+  "nextPickUp": "Récupérer l'article",
+  "nextDeliver": "Livrer et saisir le code",
+  "nextDone": "Paiement versé",
+  "viewRequest": "Voir la demande",
+  "requestAcceptedSnack": "Demande acceptée. L'expéditeur a 24 heures pour payer.",
+  "requestDeclinedSnack": "Demande refusée.",
+  "declineTitle": "Refuser cette demande ?",
+  "declineBody": "L'expéditeur sera informé que vous ne pouvez pas le transporter.",
+  "declineReasonHint": "Raison (facultatif)",
+  "keepIt": "Garder",
+  "errAcceptFailed": "Impossible d'accepter la demande. Veuillez réessayer.",
+  "errDeclineFailed": "Impossible de refuser la demande. Veuillez réessayer.",
+  "requestDetailsTitle": "Détails de la demande",
+  "answerWithin": "Répondez sous {time}",
+  "@answerWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "payDueWithin": "L'expéditeur doit payer sous {time}",
+  "@payDueWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "itemPhotosTitle": "PHOTOS DE L'ARTICLE SCELLÉ",
+  "recipientHiddenNote": "Le nom et le téléphone du destinataire sont partagés une fois que vous acceptez.",
+  "senderVerifiedBadge": "Vérifié",
+
+  "rateYourTraveler": "Évaluez votre voyageur",
+  "deliveryCompleteLabel": "LIVRAISON TERMINÉE",
+  "itemArrivedSafely": "Votre article est bien arrivé",
+  "reviewHelpsOthers": "Votre avis aide d'autres expéditeurs à trouver des voyageurs de confiance.",
+  "overallRating": "NOTE GLOBALE",
+  "tapStarToRate": "Touchez une étoile pour noter",
+  "whatStoodOut": "QU'EST-CE QUI VOUS A MARQUÉ ?",
+  "tagCommunication": "Très bonne communication",
+  "tagCareful": "Soigneux avec l'article",
+  "tagFlexiblePickup": "Remise flexible",
+  "writtenReview": "AVIS ÉCRIT",
+  "reviewHint": "Racontez comment se sont passées la remise et la livraison. Restez respectueux et factuel.",
+  "reviewsFinal": "Les avis ne peuvent plus être modifiés une fois publiés.",
+  "reviewSharedNote": "Votre note est partagée avec {name} après l'envoi et ajoutée à son historique public de livraisons.",
+  "@reviewSharedNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewThanksName": "Merci d'avoir évalué {name}. Votre avis aide la communauté à rester fiable et sûre.",
+  "@reviewThanksName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errReviewFailed": "Impossible d'envoyer votre avis. Veuillez réessayer.",
+  "errAlreadyReviewed": "Vous avez déjà évalué cette livraison.",
+  "errNotDelivered": "Cet article n'est pas encore marqué comme livré.",
+  "confirmReceipt": "Confirmer la réception",
+  "youReviewed": "Vous avez évalué cette livraison",
+  "errConfirmReceiptFailed": "Impossible de confirmer la réception. Veuillez réessayer.",
+  "reviewsCount": "{count, plural, =1{1 avis} other{{count} avis}}",
+  "@reviewsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

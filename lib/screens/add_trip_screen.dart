@@ -556,15 +556,14 @@ class _AddTripScreenState extends State<AddTripScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Center(
-              child: Text(
-                _editing ? context.l10n.editTrip : context.l10n.addATripTitle,
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: AppColors.foreground,
-                ),
+            child: Text(
+              _editing ? context.l10n.editTrip : context.l10n.addATripTitle,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.foreground,
               ),
             ),
           ),

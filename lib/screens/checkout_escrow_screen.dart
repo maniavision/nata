@@ -299,16 +299,15 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 ),
               ),
             ),
+            const SizedBox(width: 12),
             Expanded(
-              child: Center(
-                child: Text(
-                  context.l10n.secureEscrowCheckout,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                    color: AppColors.foreground,
-                    letterSpacing: -0.3,
-                  ),
+              child: Text(
+                context.l10n.secureEscrowCheckout,
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: AppColors.foreground,
+                  letterSpacing: -0.3,
                 ),
               ),
             ),

@@ -1321,5 +1321,87 @@
     }
   },
   "errTicketUnreadable": "No pudimos leer este billete. Sube una foto nítida o el PDF de tu tarjeta de embarque o billete electrónico.",
-  "checkingTicket": "Comprobando tu billete…"
+  "checkingTicket": "Comprobando tu billete…",
+
+  "noIncomingRequests": "Aún no hay solicitudes. Aparecerán aquí cuando los remitentes te pidan llevar algo en tus viajes.",
+  "senderAwaitingPayment": "Remitente · Pago pendiente",
+  "senderItemWithYou": "Remitente · Artículo contigo",
+  "senderDelivered": "Remitente · Entregado",
+  "nextWaitPayment": "Esperar el pago del remitente",
+  "nextPickUp": "Recoger el artículo",
+  "nextDeliver": "Entregar e introducir el código",
+  "nextDone": "Pago liberado",
+  "viewRequest": "Ver la solicitud",
+  "requestAcceptedSnack": "Solicitud aceptada. El remitente tiene 24 horas para pagar.",
+  "requestDeclinedSnack": "Solicitud rechazada.",
+  "declineTitle": "¿Rechazar esta solicitud?",
+  "declineBody": "Se avisará al remitente de que no puedes llevarlo.",
+  "declineReasonHint": "Motivo (opcional)",
+  "keepIt": "Mantener",
+  "errAcceptFailed": "No se pudo aceptar la solicitud. Inténtalo de nuevo.",
+  "errDeclineFailed": "No se pudo rechazar la solicitud. Inténtalo de nuevo.",
+  "requestDetailsTitle": "Detalles de la solicitud",
+  "answerWithin": "Responde en {time}",
+  "@answerWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "payDueWithin": "El remitente debe pagar en {time}",
+  "@payDueWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "itemPhotosTitle": "FOTOS DEL ARTÍCULO SELLADO",
+  "recipientHiddenNote": "El nombre y el teléfono del destinatario se comparten cuando aceptas.",
+  "senderVerifiedBadge": "Verificado",
+
+  "rateYourTraveler": "Califica a tu viajero",
+  "deliveryCompleteLabel": "ENTREGA COMPLETADA",
+  "itemArrivedSafely": "Tu artículo llegó bien",
+  "reviewHelpsOthers": "Tu reseña ayuda a otros remitentes a encontrar viajeros de confianza.",
+  "overallRating": "VALORACIÓN GENERAL",
+  "tapStarToRate": "Toca una estrella para valorar",
+  "whatStoodOut": "¿QUÉ DESTACÓ?",
+  "tagCommunication": "Gran comunicación",
+  "tagCareful": "Cuidadoso con el artículo",
+  "tagFlexiblePickup": "Recogida flexible",
+  "writtenReview": "RESEÑA ESCRITA",
+  "reviewHint": "Cuenta cómo fueron la entrega y la recogida. Sé respetuoso y objetivo.",
+  "reviewsFinal": "Las reseñas no se pueden editar una vez publicadas.",
+  "reviewSharedNote": "Tu valoración se comparte con {name} al enviarla y se añade a su historial público de entregas.",
+  "@reviewSharedNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewThanksName": "Gracias por valorar a {name}. Tu opinión ayuda a que la comunidad siga siendo de confianza y segura.",
+  "@reviewThanksName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errReviewFailed": "No se pudo enviar tu reseña. Inténtalo de nuevo.",
+  "errAlreadyReviewed": "Ya has valorado esta entrega.",
+  "errNotDelivered": "Este artículo aún no está marcado como entregado.",
+  "confirmReceipt": "Confirmar recepción",
+  "youReviewed": "Valoraste esta entrega",
+  "errConfirmReceiptFailed": "No se pudo confirmar la recepción. Inténtalo de nuevo.",
+  "reviewsCount": "{count, plural, =1{1 reseña} other{{count} reseñas}}",
+  "@reviewsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

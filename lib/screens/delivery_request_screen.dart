@@ -555,6 +555,10 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errNotCancellable;
       case RequestFailure.feeChanged:
         return l.errFeeChanged;
+      case RequestFailure.notDelivered:
+        return l.errNotDelivered;
+      case RequestFailure.alreadyReviewed:
+        return l.errAlreadyReviewed;
       case RequestFailure.other:
         return l.errRequestFailed;
     }
@@ -624,19 +628,18 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Center(
-              child: Text(
-                _editing == null
-                    ? context.l10n.deliveryRequest
-                    : context.l10n.editRequest,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: AppColors.foreground,
-                ),
+            child: Text(
+              _editing == null
+                  ? context.l10n.deliveryRequest
+                  : context.l10n.editRequest,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.foreground,
               ),
             ),
           ),

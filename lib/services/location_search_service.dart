@@ -72,8 +72,9 @@ class LocationSearchService {
   /// the server sends.
   @visibleForTesting
   static List<T> sortByName<T>(Iterable<T> items, String Function(T) name) =>
-      items.toList()
-        ..sort((a, b) => name(a).toLowerCase().compareTo(name(b).toLowerCase()));
+      items.toList()..sort(
+        (a, b) => name(a).toLowerCase().compareTo(name(b).toLowerCase()),
+      );
 
   /// Every country fits (there are fewer than 300), so the list is complete
   /// before the user types anything.

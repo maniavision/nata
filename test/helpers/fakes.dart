@@ -157,6 +157,20 @@ class FakeTravelerService extends Fake implements TravelerService {
     profileCalls.add(travelerId);
     return profile;
   }
+
+  /// The traveler's reviews, newest first, and the total count.
+  List<TravelerReview> travelerReviews = [];
+  int? reviewTotal;
+  bool failReviews = false;
+
+  @override
+  Future<TravelerReviews> reviews(String travelerId, {int limit = 10}) async {
+    if (failReviews) throw StateError('reviews failed');
+    return (
+      reviews: travelerReviews.take(limit).toList(),
+      total: reviewTotal ?? travelerReviews.length,
+    );
+  }
 }
 
 /// Stand-in for [AuthService]: knows the signed-in user's profile, wallet and
@@ -762,6 +776,76 @@ class FakeRequestService extends Fake implements RequestService {
     updated.add((request: request, draft: draft, photos: photos));
   }
 
+  /// Requests on the user's trips, for the Incoming tab.
+  List<IncomingRequest> incoming = [];
+  bool failIncoming = false;
+  int incomingCalls = 0;
+
+  /// Accepted / declined request ids (with the decline reason).
+  final List<String> accepted = [];
+  final List<({String id, String? reason})> declined = [];
+  RequestException? failAnswer;
+
+  @override
+  Future<List<IncomingRequest>> incomingRequests() async {
+    incomingCalls++;
+    if (failIncoming) throw StateError('incoming failed');
+    return incoming;
+  }
+
+  /// Answering moves the request on, as the database would.
+  void _answer(String id, String status) {
+    incoming = [
+      for (final r in incoming)
+        r.id == id ? sampleIncoming(id: r.id, status: status) : r,
+    ].where((r) => r.status != 'declined').toList();
+  }
+
+  @override
+  Future<void> accept(String requestId) async {
+    if (failAnswer != null) throw failAnswer!;
+    accepted.add(requestId);
+    _answer(requestId, 'accepted');
+  }
+
+  @override
+  Future<void> decline(String requestId, {String? reason}) async {
+    if (failAnswer != null) throw failAnswer!;
+    declined.add((id: requestId, reason: reason));
+    _answer(requestId, 'declined');
+  }
+
+  @override
+  Future<String> photoUrl(String path) async =>
+      'https://example.test/signed/$path';
+
+  /// Receipts confirmed and reviews sent; [failReview] makes both fail.
+  final List<String> receiptsConfirmed = [];
+  final List<({String id, int rating, List<String> tags, String comment})>
+  reviews = [];
+  RequestException? failReview;
+
+  /// When set, sending a review waits for it.
+  Completer<void>? reviewGate;
+
+  @override
+  Future<void> confirmReceipt(String requestId) async {
+    if (failReview != null) throw failReview!;
+    receiptsConfirmed.add(requestId);
+  }
+
+  @override
+  Future<void> submitReview(
+    String requestId, {
+    required int rating,
+    List<String> tags = const [],
+    String comment = '',
+  }) async {
+    if (reviewGate != null) await reviewGate!.future;
+    if (failReview != null) throw failReview!;
+    reviews.add((id: requestId, rating: rating, tags: tags, comment: comment));
+  }
+
   /// Ticket checks confirmed (request ids); [failTicket] makes them fail.
   final List<String> ticketChecks = [];
   RequestException? failTicket;
@@ -844,6 +928,57 @@ class FakeRequestService extends Fake implements RequestService {
   ];
 }
 
+/// A request on one of the user's trips, by default waiting for an answer.
+IncomingRequest sampleIncoming({
+  String id = 'in-1',
+  String status = 'pending',
+  String firstName = 'Chioma',
+  String lastName = 'Eze',
+  double payoutUsd = 32,
+  int senderDeliveries = 5,
+  bool senderVerified = true,
+  List<RequestItem>? items,
+  List<String> photoPaths = const ['sender-1/in-1/0.jpg'],
+  DateTime? expiresAt,
+  String? recipientName,
+  String? recipientPhone,
+}) => IncomingRequest(
+  id: id,
+  status: status,
+  createdAt: DateTime(2030, 6, 20, 9),
+  expiresAt: expiresAt,
+  payoutUsd: payoutUsd,
+  items:
+      items ??
+      const [
+        RequestItem(
+          name: 'Apple Watch Series 9',
+          category: RequestCategory.electronics,
+          description: 'Sealed box',
+        ),
+      ],
+  weightKg: 0.45,
+  dimensions: '15 x 8 x 4 cm',
+  sizeClass: RequestSizeClass.shoebox,
+  photoPaths: photoPaths,
+  senderId: 'sender-1',
+  senderFirstName: firstName,
+  senderLastName: lastName,
+  senderVerified: senderVerified,
+  senderDeliveries: senderDeliveries,
+  recipientName:
+      recipientName ?? (status == 'pending' ? null : 'David Adeleke'),
+  recipientPhone:
+      recipientPhone ?? (status == 'pending' ? null : '+447700900456'),
+  tripId: 'trip-1',
+  departureCity: 'Lagos',
+  departureCountry: 'NG',
+  arrivalCity: 'London',
+  arrivalCountry: 'GB',
+  departureDate: DateTime(2030, 6, 22),
+  arrivalDate: DateTime(2030, 6, 22),
+);
+
 /// A request the user sent, by default pending, for [sampleTrip].
 SentRequest sampleSentRequest({
   String id = 'req-1',
@@ -862,6 +997,8 @@ SentRequest sampleSentRequest({
   bool travelerVerified = false,
   String? ticketReceiptPath,
   String? bookingReference,
+  DateTime? receiptConfirmedAt,
+  bool reviewed = false,
 }) => SentRequest(
   id: id,
   status: status,
@@ -880,6 +1017,8 @@ SentRequest sampleSentRequest({
   travelerVerified: travelerVerified,
   ticketReceiptPath: ticketReceiptPath,
   bookingReference: bookingReference,
+  receiptConfirmedAt: receiptConfirmedAt,
+  reviewed: reviewed,
   items:
       items ??
       const [

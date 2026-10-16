@@ -2825,4 +2825,167 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get checkingTicket => 'Comprobando tu billete…';
+
+  @override
+  String get noIncomingRequests =>
+      'Aún no hay solicitudes. Aparecerán aquí cuando los remitentes te pidan llevar algo en tus viajes.';
+
+  @override
+  String get senderAwaitingPayment => 'Remitente · Pago pendiente';
+
+  @override
+  String get senderItemWithYou => 'Remitente · Artículo contigo';
+
+  @override
+  String get senderDelivered => 'Remitente · Entregado';
+
+  @override
+  String get nextWaitPayment => 'Esperar el pago del remitente';
+
+  @override
+  String get nextPickUp => 'Recoger el artículo';
+
+  @override
+  String get nextDeliver => 'Entregar e introducir el código';
+
+  @override
+  String get nextDone => 'Pago liberado';
+
+  @override
+  String get viewRequest => 'Ver la solicitud';
+
+  @override
+  String get requestAcceptedSnack =>
+      'Solicitud aceptada. El remitente tiene 24 horas para pagar.';
+
+  @override
+  String get requestDeclinedSnack => 'Solicitud rechazada.';
+
+  @override
+  String get declineTitle => '¿Rechazar esta solicitud?';
+
+  @override
+  String get declineBody =>
+      'Se avisará al remitente de que no puedes llevarlo.';
+
+  @override
+  String get declineReasonHint => 'Motivo (opcional)';
+
+  @override
+  String get keepIt => 'Mantener';
+
+  @override
+  String get errAcceptFailed =>
+      'No se pudo aceptar la solicitud. Inténtalo de nuevo.';
+
+  @override
+  String get errDeclineFailed =>
+      'No se pudo rechazar la solicitud. Inténtalo de nuevo.';
+
+  @override
+  String get requestDetailsTitle => 'Detalles de la solicitud';
+
+  @override
+  String answerWithin(String time) {
+    return 'Responde en $time';
+  }
+
+  @override
+  String payDueWithin(String time) {
+    return 'El remitente debe pagar en $time';
+  }
+
+  @override
+  String get itemPhotosTitle => 'FOTOS DEL ARTÍCULO SELLADO';
+
+  @override
+  String get recipientHiddenNote =>
+      'El nombre y el teléfono del destinatario se comparten cuando aceptas.';
+
+  @override
+  String get senderVerifiedBadge => 'Verificado';
+
+  @override
+  String get rateYourTraveler => 'Califica a tu viajero';
+
+  @override
+  String get deliveryCompleteLabel => 'ENTREGA COMPLETADA';
+
+  @override
+  String get itemArrivedSafely => 'Tu artículo llegó bien';
+
+  @override
+  String get reviewHelpsOthers =>
+      'Tu reseña ayuda a otros remitentes a encontrar viajeros de confianza.';
+
+  @override
+  String get overallRating => 'VALORACIÓN GENERAL';
+
+  @override
+  String get tapStarToRate => 'Toca una estrella para valorar';
+
+  @override
+  String get whatStoodOut => '¿QUÉ DESTACÓ?';
+
+  @override
+  String get tagCommunication => 'Gran comunicación';
+
+  @override
+  String get tagCareful => 'Cuidadoso con el artículo';
+
+  @override
+  String get tagFlexiblePickup => 'Recogida flexible';
+
+  @override
+  String get writtenReview => 'RESEÑA ESCRITA';
+
+  @override
+  String get reviewHint =>
+      'Cuenta cómo fueron la entrega y la recogida. Sé respetuoso y objetivo.';
+
+  @override
+  String get reviewsFinal =>
+      'Las reseñas no se pueden editar una vez publicadas.';
+
+  @override
+  String reviewSharedNote(String name) {
+    return 'Tu valoración se comparte con $name al enviarla y se añade a su historial público de entregas.';
+  }
+
+  @override
+  String reviewThanksName(String name) {
+    return 'Gracias por valorar a $name. Tu opinión ayuda a que la comunidad siga siendo de confianza y segura.';
+  }
+
+  @override
+  String get errReviewFailed =>
+      'No se pudo enviar tu reseña. Inténtalo de nuevo.';
+
+  @override
+  String get errAlreadyReviewed => 'Ya has valorado esta entrega.';
+
+  @override
+  String get errNotDelivered =>
+      'Este artículo aún no está marcado como entregado.';
+
+  @override
+  String get confirmReceipt => 'Confirmar recepción';
+
+  @override
+  String get youReviewed => 'Valoraste esta entrega';
+
+  @override
+  String get errConfirmReceiptFailed =>
+      'No se pudo confirmar la recepción. Inténtalo de nuevo.';
+
+  @override
+  String reviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reseñas',
+      one: '1 reseña',
+    );
+    return '$_temp0';
+  }
 }

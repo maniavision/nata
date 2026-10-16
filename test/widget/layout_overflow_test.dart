@@ -349,7 +349,14 @@ void main() {
         accounts: [samplePayoutAccount(), sampleMobilePayoutAccount()],
       ),
     ),
-    'Review': () => const ReviewScreen(),
+    'Review': () => ReviewScreen(
+      request: sampleSentRequest(
+        status: 'delivered',
+        travelerVerified: true,
+        receiptConfirmedAt: DateTime(2030, 6, 23),
+      ),
+      service: FakeRequestService(),
+    ),
     'Identity verification': () => const IdentityVerificationScreen(),
     'Sign in': () => const LoginScreen(),
     'Sign up': () => const SignUpScreen(),

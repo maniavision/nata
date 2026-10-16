@@ -118,12 +118,20 @@ void main() {
     });
   });
 
-  testWidgets('Incoming amounts are converted too', (tester) async {
+  testWidgets('Incoming payouts are converted too, as estimates', (
+    tester,
+  ) async {
+    service.incoming = [
+      sampleIncoming(id: 'a', status: 'paid', payoutUsd: 38),
+      sampleIncoming(id: 'b', payoutUsd: 32),
+      sampleIncoming(id: 'c', payoutUsd: 26.5),
+    ];
     await pump(tester, tab: 0);
 
-    expect(find.text('€34'), findsOneWidget); // $38 payout
-    expect(find.text('€29'), findsOneWidget); // $32
-    expect(find.text('€24'), findsOneWidget); // $26.50
+    // The payout is kept in dollars, so other currencies are estimates.
+    expect(find.text('≈ €34'), findsOneWidget); // $38
+    expect(find.text('≈ €29'), findsOneWidget); // $32
+    expect(find.text('≈ €24'), findsOneWidget); // $26.50
   });
 
   group('Once the traveler accepted, the price is fixed', () {
@@ -197,6 +205,14 @@ void main() {
     tester,
   ) async {
     // As in the screenshot: a wide CFA payout on a phone-width screen.
+    service.incoming = [
+      sampleIncoming(
+        status: 'paid',
+        firstName: 'Sarah',
+        lastName: 'Adeleke',
+        payoutUsd: 38,
+      ),
+    ];
     PreferencesService().setCurrency(AppCurrency.xof);
     tester.view.physicalSize = const Size(402, 1800);
     tester.view.devicePixelRatio = 1.0;
@@ -211,7 +227,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('XOF 22,246'), findsOneWidget); // $38 at the test rate
+    // $38 at the test rate.
+    expect(find.text('≈ XOF 22,246'), findsOneWidget);
     final name = tester.getRect(
       find.byKey(const ValueKey('accepted-sender-name')),
     );

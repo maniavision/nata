@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'incoming_request_screen.dart';
 import '../services/preferences_service.dart';
 import '../services/exchange_rate_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,8 +10,7 @@ import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'checkout_escrow_screen.dart';
 import 'delivery_request_screen.dart';
-import 'delivery_task_screen.dart';
-import 'messages_screen.dart';
+import 'review_screen.dart';
 import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
 
@@ -42,6 +42,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   void initState() {
     super.initState();
     _loadSent();
+    _loadIncoming();
     _loadRates();
   }
 
@@ -97,6 +98,42 @@ class _RequestsScreenState extends State<RequestsScreen> {
     );
     if (mounted) _loadSent();
   }
+
+  /// The sender confirms the traveler's "delivered", then rates them.
+  Future<void> _confirmReceipt(SentRequest request) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = context.l10n;
+    setState(() => _confirming.add(request.id));
+    try {
+      await (widget.requestService ?? RequestService()).confirmReceipt(
+        request.id,
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.errConfirmReceiptFailed)),
+      );
+      if (mounted) setState(() => _confirming.remove(request.id));
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _confirming.remove(request.id));
+    await _review(request);
+  }
+
+  /// Opens Rate Your Traveler; reloads afterwards either way, since receipt
+  /// may just have been confirmed.
+  Future<void> _review(SentRequest request) async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) =>
+            ReviewScreen(request: request, service: widget.requestService),
+      ),
+    );
+    if (mounted) _loadSent();
+  }
+
+  /// Requests whose receipt is being confirmed.
+  final Set<String> _confirming = {};
 
   /// Opens a pending request in the request form; reloads once it is saved.
   Future<void> _edit(SentRequest request) async {
@@ -173,66 +210,151 @@ class _RequestsScreenState extends State<RequestsScreen> {
     if (mounted) _loadSent();
   }
 
-  // ── Incoming request data ──────────────────────────────────────────────────
-  /// Requests the traveler accepted that are still under way.
-  // Sample data until incoming requests come from the database. The labels
-  // are built in the app's language; names and items are what senders typed.
+  // ── Incoming requests (the traveler's side) ────────────────────────────────
+  /// Requests made on the user's trips; null while loading.
+  List<IncomingRequest>? _incomingAll;
+  bool _incomingFailed = false;
+
+  /// Requests acted on just now (accept / decline in flight).
+  final Set<String> _busy = {};
+
+  Future<void> _loadIncoming() async {
+    try {
+      final list = await (widget.requestService ?? RequestService())
+          .incomingRequests();
+      if (mounted) {
+        setState(() {
+          _incomingAll = list;
+          _incomingFailed = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[Requests] incoming requests: $e');
+      if (mounted) {
+        setState(() {
+          _incomingAll = const [];
+          _incomingFailed = true;
+        });
+      }
+    }
+  }
+
+  /// Accepted and under way.
+  List<IncomingRequest> get _inProgress =>
+      (_incomingAll ?? const []).where((r) => r.isInProgress).toList();
+
+  /// Waiting for the traveler's answer.
+  List<IncomingRequest> get _pending =>
+      (_incomingAll ?? const []).where((r) => r.isPending).toList();
+
+  String _payoutText(IncomingRequest r) {
+    final shown = _money.format(r.payoutUsd);
+    return _money.currency == 'USD' ? shown : '≈ $shown';
+  }
+
   String _date(DateTime d) =>
       DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(d);
 
-  List<AcceptedDelivery> get _accepted => [
-    AcceptedDelivery(
-      orderId: 'DEL-8842',
-      senderName: 'Sarah Adeleke',
-      senderPhotoUrl: 'https://randomuser.me/api/portraits/women/33.jpg',
-      senderSubtitle: context.l10n.senderEscrowFunded,
-      senderPhone: '+234 803 555 0142',
-      payout: _money.format(38),
-      trip: 'Lagos (LOS) → London (LHR)',
-      routeCodes: 'LOS → LHR',
-      travelDate: _date(DateTime(2025, 6, 22)),
-      destinationCity: 'London',
-      itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
-      itemName: 'iPad Mini 64GB (Space Gray)',
-      itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
-      receivedPhotoUrl:
-          'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/2lLrBm6d5EN.jpeg',
-      receivedPhotoName: 'received_sealed_box.jpg',
-      receivedPhotoCaption: context.l10n.capturedAt(
-        'Lagos Airport',
-        DateFormat.MMMd(
-          Localizations.localeOf(context).toString(),
-        ).add_jm().format(DateTime(2025, 6, 22, 10, 14)),
+  Future<void> _openIncoming(IncomingRequest r) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => IncomingRequestScreen(
+          request: r,
+          money: _money,
+          service: widget.requestService,
+        ),
       ),
-      recipientName: 'David Adeleke (London)',
-      recipientPhone: '+44 7700 900456',
-      meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
-      deliveryPin: '7492',
-    ),
-  ];
+    );
+    if (changed == true && mounted) _loadIncoming();
+  }
 
-  List<_IncomingRequest> get _incoming => [
-    _IncomingRequest(
-      name: 'Chioma Eze',
-      subtitle: context.l10n.senderDeliveries(5),
-      amount: _money.format(32),
-      trip: 'Lagos (LOS) → London (LHR)',
-      date: _date(DateTime(2025, 6, 22)),
-      item: 'Apple Watch Series 9 (Sealed Box)',
-      weight: '0.45 kg · 15 × 8 × 4 cm',
-      photoCount: 1,
-      imageUrl: 'https://randomuser.me/api/portraits/women/65.jpg',
-    ),
-    _IncomingRequest(
-      name: 'Tunde Adeleke',
-      subtitle: context.l10n.senderDeliveries(2),
-      amount: _money.format(26.5),
-      trip: 'Lagos (LOS) → London (LHR)',
-      date: _date(DateTime(2025, 6, 22)),
-      item: 'Sony WH-1000XM5 (Retail Box)',
-      imageUrl: 'https://randomuser.me/api/portraits/men/45.jpg',
-    ),
-  ];
+  Future<void> _actOn(
+    IncomingRequest r,
+    Future<bool> Function(BuildContext, RequestService, IncomingRequest) act,
+  ) async {
+    if (_busy.contains(r.id)) return;
+    setState(() => _busy.add(r.id));
+    final changed = await act(
+      context,
+      widget.requestService ?? RequestService(),
+      r,
+    );
+    if (!mounted) return;
+    setState(() => _busy.remove(r.id));
+    if (changed) _loadIncoming();
+  }
+
+  _AcceptedView _acceptedView(IncomingRequest r) {
+    final l = context.l10n;
+    final weight = NumberFormat(
+      '0.##',
+      Localizations.localeOf(context).toString(),
+    ).format(r.weightKg);
+    final (statusLabel, subtitle, next, icon) = switch (r.status) {
+      'paid' => (
+        l.statusPaid,
+        l.senderEscrowFunded,
+        l.nextPickUp,
+        Icons.inventory_2_rounded,
+      ),
+      'handed_off' => (
+        l.statusInTransit,
+        l.senderItemWithYou,
+        l.nextDeliver,
+        Icons.pin_rounded,
+      ),
+      'delivered' => (
+        l.statusDelivered,
+        l.senderDelivered,
+        l.nextDone,
+        Icons.check_circle_rounded,
+      ),
+      _ => (
+        l.accepted,
+        l.senderAwaitingPayment,
+        l.nextWaitPayment,
+        Icons.hourglass_top_rounded,
+      ),
+    };
+    return _AcceptedView(
+      id: r.id,
+      senderName: r.senderName,
+      avatarPath: r.senderAvatarPath,
+      statusLabel: statusLabel,
+      subtitle: subtitle,
+      payout: _payoutText(r),
+      trip: r.routeLabel,
+      item: '${r.itemsSummary} ($weight kg)',
+      nextAction: next,
+      nextIcon: icon,
+      // Delivery steps come with the paid / in transit stages.
+      buttonLabel: const {'paid', 'handed_off'}.contains(r.status)
+          ? l.manageDeliveryAttachProof
+          : l.viewRequest,
+    );
+  }
+
+  _IncomingRequest _pendingView(IncomingRequest r) {
+    final weight = NumberFormat(
+      '0.##',
+      Localizations.localeOf(context).toString(),
+    ).format(r.weightKg);
+    return _IncomingRequest(
+      id: r.id,
+      name: r.senderName,
+      avatarPath: r.senderAvatarPath,
+      subtitle: context.l10n.senderDeliveries(r.senderDeliveries),
+      amount: _payoutText(r),
+      trip: r.routeLabel,
+      date: _date(r.departureDate),
+      item: r.itemsSummary,
+      weight: [
+        '$weight kg',
+        if (r.dimensions != null) r.dimensions!,
+      ].join(' · '),
+      photoCount: r.photoPaths.isEmpty ? null : r.photoPaths.length,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -337,7 +459,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
             _tabButton(
               context.l10n.incoming,
               0,
-              badge: '${_accepted.length + _incoming.length}',
+              badge: '${_inProgress.length + _pending.length}',
               badgeBg: AppColors.accent,
             ),
             _tabButton(
@@ -423,29 +545,86 @@ class _RequestsScreenState extends State<RequestsScreen> {
   // ── Incoming section ───────────────────────────────────────────────────────
   Widget _buildIncomingSection() {
     final l = context.l10n;
+    final all = _incomingAll;
+    if (all == null) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.accent,
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    }
+    if (_incomingFailed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.errLoadRequests,
+            key: const ValueKey('incoming-error'),
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.destructive,
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('incoming-retry'),
+            onPressed: () {
+              setState(() => _incomingAll = null);
+              _loadIncoming();
+            },
+            child: Text(l.retry),
+          ),
+        ],
+      );
+    }
+    if (all.isEmpty) {
+      return Text(
+        l.noIncomingRequests,
+        key: const ValueKey('incoming-empty'),
+        style: GoogleFonts.dmSans(
+          fontSize: 12,
+          color: AppColors.mutedForeground,
+        ),
+      );
+    }
+    final inProgress = _inProgress;
+    final pending = _pending;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_accepted.isNotEmpty) ...[
+        if (inProgress.isNotEmpty) ...[
           _acceptedHeader(),
           const SizedBox(height: 10),
-          for (final r in _accepted)
+          for (final r in inProgress)
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
-              child: _AcceptedCard(request: r),
+              child: _AcceptedCard(
+                request: _acceptedView(r),
+                onOpen: () => _openIncoming(r),
+              ),
             ),
         ],
-        _sectionHeader(
-          l.pendingRequestsCount(_incoming.length),
-          l.awaitingYourResponse,
-        ),
-        const SizedBox(height: 10),
-        ..._incoming.map(
-          (r) => Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: _IncomingCard(request: r),
+        if (pending.isNotEmpty) ...[
+          _sectionHeader(
+            l.pendingRequestsCount(pending.length),
+            l.awaitingYourResponse,
           ),
-        ),
+          const SizedBox(height: 10),
+          for (final r in pending)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: _IncomingCard(
+                request: _pendingView(r),
+                busy: _busy.contains(r.id),
+                onOpen: () => _openIncoming(r),
+                onAccept: () => _actOn(r, IncomingRequestActions.accept),
+                onDecline: () => _actOn(r, IncomingRequestActions.decline),
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -477,7 +656,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            l.activeCount(_accepted.length),
+            l.activeCount(_inProgress.length),
             style: GoogleFonts.dmSans(
               fontWeight: FontWeight.w700,
               fontSize: 12,
@@ -550,6 +729,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 onTap: r.isEditable ? () => _edit(r) : null,
                 onCancel: r.isCancellable ? () => _cancel(r) : null,
                 onPay: r.awaitingPayment ? () => _pay(r) : null,
+                onConfirmReceipt:
+                    r.awaitingReceipt && !_confirming.contains(r.id)
+                    ? () => _confirmReceipt(r)
+                    : null,
+                onReview: r.canReview ? () => _review(r) : null,
                 money: _money,
               ),
             ),
@@ -592,246 +776,262 @@ class _RequestsScreenState extends State<RequestsScreen> {
 // ── Incoming request card ──────────────────────────────────────────────────
 class _IncomingCard extends StatefulWidget {
   final _IncomingRequest request;
-  const _IncomingCard({required this.request});
+
+  /// Opens the request details.
+  final VoidCallback onOpen;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+
+  /// An answer is being sent: the buttons wait.
+  final bool busy;
+
+  const _IncomingCard({
+    required this.request,
+    required this.onOpen,
+    required this.onAccept,
+    required this.onDecline,
+    this.busy = false,
+  });
 
   @override
   State<_IncomingCard> createState() => _IncomingCardState();
 }
 
 class _IncomingCardState extends State<_IncomingCard> {
-  bool _dismissed = false;
-
   @override
   Widget build(BuildContext context) {
-    if (_dismissed) return const SizedBox.shrink();
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Sender row
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border, width: 2),
-                ),
-                child: ClipOval(
-                  child: Image.network(
-                    widget.request.imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => Container(
-                      color: AppColors.secondary,
-                      child: const Icon(Icons.person, color: AppColors.primary),
+    return GestureDetector(
+      key: ValueKey('incoming-request-${widget.request.id}'),
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onOpen,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Sender row
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border, width: 2),
+                  ),
+                  child: ClipOval(
+                    child: AvatarImage(
+                      path: widget.request.avatarPath,
+                      fallback: Container(
+                        color: AppColors.secondary,
+                        child: const Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.request.name,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                      Text(
+                        widget.request.subtitle,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    widget.request.amount,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(color: AppColors.border, height: 1),
+            const SizedBox(height: 12),
+            // Details
+            _detailRow(context.l10n.yourTrip, widget.request.trip),
+            const SizedBox(height: 8),
+            _detailRow(context.l10n.travelDate, widget.request.date),
+            const SizedBox(height: 8),
+            _detailRow(context.l10n.item, widget.request.item),
+            if (widget.request.weight != null) ...[
+              const SizedBox(height: 8),
+              _detailRow(context.l10n.weightAndSize, widget.request.weight!),
+            ],
+            const SizedBox(height: 12),
+            // Photo row
+            if (widget.request.photoCount != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
                   children: [
-                    Text(
-                      widget.request.name,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: AppColors.foreground,
+                    const Icon(
+                      Icons.camera_alt_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        context.l10n.sealedPhotosAttached(
+                          widget.request.photoCount!,
+                        ),
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          color: AppColors.foreground,
+                        ),
                       ),
                     ),
-                    Text(
-                      widget.request.subtitle,
-                      style: GoogleFonts.dmSans(
-                        fontSize: 12,
-                        color: AppColors.mutedForeground,
+                    GestureDetector(
+                      onTap: widget.onOpen,
+                      child: Text(
+                        widget.request.photoCount! > 1
+                            ? context.l10n.viewPhotos
+                            : context.l10n.viewPhoto,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: AppColors.accent,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  widget.request.amount,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                    color: AppColors.accent,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Divider(color: AppColors.border, height: 1),
-          const SizedBox(height: 12),
-          // Details
-          _detailRow(context.l10n.yourTrip, widget.request.trip),
-          const SizedBox(height: 8),
-          _detailRow(context.l10n.travelDate, widget.request.date),
-          const SizedBox(height: 8),
-          _detailRow(context.l10n.item, widget.request.item),
-          if (widget.request.weight != null) ...[
-            const SizedBox(height: 8),
-            _detailRow(context.l10n.weightAndSize, widget.request.weight!),
-          ],
-          const SizedBox(height: 12),
-          // Photo row
-          if (widget.request.photoCount != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.camera_alt_rounded,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      context.l10n.sealedPhotosAttached(
-                        widget.request.photoCount!,
+              const SizedBox(height: 12),
+            ] else
+              const SizedBox(height: 4),
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    key: ValueKey('incoming-decline-${widget.request.id}'),
+                    onTap: widget.busy ? null : widget.onDecline,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppColors.border),
                       ),
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        color: AppColors.foreground,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.cancel_rounded,
+                            size: 16,
+                            color: AppColors.mutedForeground,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              context.l10n.decline,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                                color: AppColors.mutedForeground,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Text(
-                      widget.request.photoCount! > 1
-                          ? context.l10n.viewPhotos
-                          : context.l10n.viewPhoto,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    key: ValueKey('incoming-accept-${widget.request.id}'),
+                    onTap: widget.busy ? null : widget.onAccept,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
                         color: AppColors.accent,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              context.l10n.acceptRequest,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-          ] else
-            const SizedBox(height: 4),
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _dismissed = true),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.card,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.cancel_rounded,
-                          size: 16,
-                          color: AppColors.mutedForeground,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            context.l10n.decline,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: AppColors.mutedForeground,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _dismissed = true);
-                    // Navigate to chat to arrange handoff
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const MessagesScreen(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            context.l10n.acceptRequest,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -876,6 +1076,12 @@ class _SentRequestCard extends StatelessWidget {
   /// Opens checkout for an accepted request.
   final VoidCallback? onPay;
 
+  /// Confirms a delivered request was received, then opens the review.
+  final VoidCallback? onConfirmReceipt;
+
+  /// Opens the review for a delivered, confirmed request.
+  final VoidCallback? onReview;
+
   /// Shows the dollar amounts in the user's currency.
   final PriceFormatter money;
 
@@ -903,6 +1109,8 @@ class _SentRequestCard extends StatelessWidget {
     this.onTap,
     this.onCancel,
     this.onPay,
+    this.onConfirmReceipt,
+    this.onReview,
     this.money = PriceFormatter.usd,
   });
 
@@ -1208,6 +1416,45 @@ class _SentRequestCard extends StatelessWidget {
                   onTap: onPay ?? () {},
                 ),
               ],
+              if (request.awaitingReceipt) ...[
+                const SizedBox(height: 12),
+                _button(
+                  key: 'sent-request-confirm-receipt-${request.id}',
+                  icon: Icons.check_circle_rounded,
+                  label: l.confirmReceipt,
+                  color: _green,
+                  filled: true,
+                  onTap: onConfirmReceipt ?? () {},
+                ),
+              ],
+              if (request.canReview) ...[
+                const SizedBox(height: 12),
+                _button(
+                  key: 'sent-request-review-${request.id}',
+                  icon: Icons.star_rounded,
+                  label: l.leaveAReview,
+                  color: AppColors.accent,
+                  onTap: onReview ?? () {},
+                ),
+              ],
+              if (request.status == 'delivered' && request.reviewed) ...[
+                const SizedBox(height: 12),
+                Row(
+                  key: ValueKey('sent-request-reviewed-${request.id}'),
+                  children: [
+                    const Icon(Icons.star_rounded, size: 14, color: _amber),
+                    const SizedBox(width: 4),
+                    Text(
+                      l.youReviewed,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               if (request.status == 'declined' ||
                   request.status == 'expired') ...[
                 const SizedBox(height: 12),
@@ -1242,22 +1489,46 @@ class _SentRequestCard extends StatelessWidget {
 }
 
 // ── Data models ────────────────────────────────────────────────────────────
+/// What a pending request card shows, ready in the user's language.
 class _IncomingRequest {
-  final String name, subtitle, amount, trip, date, item, imageUrl;
+  final String id, name, subtitle, amount, trip, date, item;
+  final String? avatarPath;
 
   /// Shown only when the sender gave them.
   final String? weight;
   final int? photoCount;
   const _IncomingRequest({
+    required this.id,
     required this.name,
+    this.avatarPath,
     required this.subtitle,
     required this.amount,
     required this.trip,
     required this.date,
     required this.item,
-    required this.imageUrl,
     this.weight,
     this.photoCount,
+  });
+}
+
+/// What an accepted request card shows, ready in the user's language.
+class _AcceptedView {
+  final String id, senderName, statusLabel, subtitle, payout, trip, item;
+  final String nextAction, buttonLabel;
+  final String? avatarPath;
+  final IconData nextIcon;
+  const _AcceptedView({
+    required this.id,
+    required this.senderName,
+    this.avatarPath,
+    required this.statusLabel,
+    required this.subtitle,
+    required this.payout,
+    required this.trip,
+    required this.item,
+    required this.nextAction,
+    required this.nextIcon,
+    required this.buttonLabel,
   });
 }
 
@@ -1266,14 +1537,13 @@ const _greenBg = Color(0xFFE4F4EE);
 
 // ── Accepted request card ──────────────────────────────────────────────────
 class _AcceptedCard extends StatelessWidget {
-  final AcceptedDelivery request;
-  const _AcceptedCard({required this.request});
+  final _AcceptedView request;
 
-  void _open(BuildContext context) => Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => DeliveryTaskScreen(delivery: request),
-    ),
-  );
+  /// Opens the request.
+  final VoidCallback onOpen;
+  const _AcceptedCard({required this.request, required this.onOpen});
+
+  void _open(BuildContext context) => onOpen();
 
   @override
   Widget build(BuildContext context) {
@@ -1314,10 +1584,9 @@ class _AcceptedCard extends StatelessWidget {
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.network(
-                      request.senderPhotoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) => Container(
+                    child: AvatarImage(
+                      path: request.avatarPath,
+                      fallback: Container(
                         color: AppColors.secondary,
                         child: const Icon(
                           Icons.person,
@@ -1361,7 +1630,7 @@ class _AcceptedCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              l.accepted,
+                              request.statusLabel,
                               style: GoogleFonts.dmSans(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 10,
@@ -1372,7 +1641,7 @@ class _AcceptedCard extends StatelessWidget {
                         ],
                       ),
                       Text(
-                        request.senderSubtitle,
+                        request.subtitle,
                         style: GoogleFonts.dmSans(
                           fontSize: 12,
                           color: AppColors.mutedForeground,
@@ -1420,22 +1689,18 @@ class _AcceptedCard extends StatelessWidget {
             const SizedBox(height: 12),
             _row(l.tripLabel, Text(request.trip, style: _value)),
             const SizedBox(height: 8),
-            _row(l.item, Text(request.itemSummary, style: _value)),
+            _row(l.item, Text(request.item, style: _value)),
             const SizedBox(height: 8),
             _row(
               l.nextAction,
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.add_a_photo_rounded,
-                    size: 13,
-                    color: AppColors.accent,
-                  ),
+                  Icon(request.nextIcon, size: 13, color: AppColors.accent),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      l.attachReceivedPhoto,
+                      request.nextAction,
                       textAlign: TextAlign.right,
                       style: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w700,
@@ -1462,7 +1727,7 @@ class _AcceptedCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          l.manageDeliveryAttachProof,
+                          request.buttonLabel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.dmSans(

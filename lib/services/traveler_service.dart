@@ -128,6 +128,54 @@ class TravelerProfile {
 
 /// Finds travelers (upcoming live trips) through `public.search_travelers`.
 /// See supabase/migrations/20240108_search_travelers_rpc.sql.
+/// One review of a traveler, as their public profile shows it.
+class TravelerReview {
+  final String id;
+  final int rating;
+
+  /// What stood out: on_time, communication, careful, flexible_pickup,
+  /// use_again.
+  final List<String> tags;
+  final String comment;
+  final DateTime createdAt;
+
+  /// "Kofi M." — first name and last initial only.
+  final String reviewerName;
+
+  const TravelerReview({
+    required this.id,
+    required this.rating,
+    this.tags = const [],
+    this.comment = '',
+    required this.createdAt,
+    required this.reviewerName,
+  });
+
+  /// "KM" for the reviewer's avatar.
+  String get initials => reviewerName
+      .split(RegExp(r'[\s.]+'))
+      .where((w) => w.isNotEmpty)
+      .map((w) => w[0].toUpperCase())
+      .take(2)
+      .join();
+
+  factory TravelerReview.fromJson(Map<String, dynamic> j) {
+    final first = (j['reviewer_first'] as String?)?.trim() ?? '';
+    final initial = (j['reviewer_initial'] as String?)?.trim() ?? '';
+    return TravelerReview(
+      id: j['review_id'] as String,
+      rating: (j['rating'] as num).toInt(),
+      tags: [for (final t in (j['tags'] as List? ?? const [])) t as String],
+      comment: (j['comment'] as String?)?.trim() ?? '',
+      createdAt: DateTime.parse(j['created_at'] as String),
+      reviewerName: initial.isEmpty ? first : '$first $initial.',
+    );
+  }
+}
+
+/// A traveler's latest reviews and how many there are in all.
+typedef TravelerReviews = ({List<TravelerReview> reviews, int total});
+
 class TravelerService {
   final SupabaseClient _client;
 
@@ -166,6 +214,24 @@ class TravelerService {
       debugPrint('[TravelerService] search error: $e');
       rethrow;
     }
+  }
+
+  /// A traveler's latest reviews, newest first, and their total count.
+  Future<TravelerReviews> reviews(String travelerId, {int limit = 10}) async {
+    final rows =
+        await _client.rpc(
+              'list_traveler_reviews',
+              params: {'p_traveler_id': travelerId, 'p_limit': limit},
+            )
+            as List;
+    final list = [
+      for (final r in rows)
+        TravelerReview.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+    final total = rows.isEmpty
+        ? 0
+        : ((rows.first as Map)['total'] as num?)?.toInt() ?? list.length;
+    return (reviews: list, total: total);
   }
 
   /// Public profile + upcoming trips of one traveler, or null if not found.

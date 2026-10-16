@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
-import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -196,47 +195,6 @@ void main() {
 
       expect(find.text('Détails de la livraison'), findsOneWidget);
       expect(find.text('Commande n° DEL-8842'), findsOneWidget);
-    });
-  });
-
-  group('from the Requests page', () {
-    Future<void> openRequests(WidgetTester tester) async {
-      bigScreen(tester);
-      await tester.pumpWidget(appWrapper(const RequestsScreen()));
-      await tester.pump();
-    }
-
-    testWidgets('tapping the accepted request opens its details', (
-      tester,
-    ) async {
-      await openRequests(tester);
-
-      await tester.tap(find.text('Sarah Adeleke'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DeliveryTaskScreen), findsOneWidget);
-      expect(find.text('Order #DEL-8842'), findsOneWidget);
-    });
-
-    testWidgets('so does Manage Delivery & Attach Proof', (tester) async {
-      await openRequests(tester);
-
-      await tester.tap(find.byKey(const ValueKey('manage-delivery')));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DeliveryTaskScreen), findsOneWidget);
-    });
-
-    testWidgets('back returns to the Requests page', (tester) async {
-      await openRequests(tester);
-      await tester.tap(find.text('Sarah Adeleke'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const ValueKey('delivery-task-back')));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DeliveryTaskScreen), findsNothing);
-      expect(find.byType(RequestsScreen), findsOneWidget);
     });
   });
 }

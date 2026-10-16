@@ -30,6 +30,7 @@ class TravelerProfileScreen extends StatefulWidget {
 class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   late TravelerTrip _trip = widget.trip;
   TravelerProfile? _profile;
+  TravelerReviews? _reviews;
 
   String get _name => _profile?.fullName.isNotEmpty == true
       ? _profile!.fullName
@@ -57,6 +58,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+    _loadReviews();
   }
 
   @override
@@ -65,7 +67,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
     if (oldWidget.trip.tripId != widget.trip.tripId) {
       _trip = widget.trip;
       _profile = null;
+      _reviews = null;
       _loadProfile();
+      _loadReviews();
     }
   }
 
@@ -77,6 +81,17 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
       setState(() => _profile = profile);
     } catch (_) {
       // Non-fatal: the screen already shows the data from the search result.
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    try {
+      final service = widget.service ?? TravelerService();
+      final reviews = await service.reviews(widget.trip.travelerId);
+      if (!mounted) return;
+      setState(() => _reviews = reviews);
+    } catch (_) {
+      // Non-fatal: the card stays on "No reviews yet".
     }
   }
 
@@ -190,15 +205,14 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Center(
-              child: Text(
-                context.l10n.travelerProfile,
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: AppColors.foreground,
-                ),
+            child: Text(
+              context.l10n.travelerProfile,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.foreground,
               ),
             ),
           ),
@@ -739,36 +753,138 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   }
 
   // ── Reviews card ───────────────────────────────────────────────────────────
-  // There is no reviews data yet, so this shows an honest empty state instead
-  // of made-up reviews. Wire it to a reviews table when one exists.
+  // What senders said after their deliveries, newest first.
   Widget _buildReviewsCard(BuildContext context) {
     final l = context.l10n;
+    final reviews = _reviews?.reviews ?? const <TravelerReview>[];
+    final total = _reviews?.total ?? 0;
     return Container(
       decoration: _cardDecoration,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle(
-            Icons.star_rounded,
-            const Color(0xFFE5A83B),
-            l.deliveryHistoryAndReviews,
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                l.noReviewsYet,
-                style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  color: AppColors.mutedForeground,
+          Row(
+            children: [
+              Expanded(
+                child: _sectionTitle(
+                  Icons.star_rounded,
+                  const Color(0xFFE5A83B),
+                  l.deliveryHistoryAndReviews,
                 ),
               ),
-            ),
+              if (total > 0)
+                Text(
+                  l.reviewsCount(total),
+                  key: const ValueKey('profile-reviews-count'),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+            ],
           ),
+          const SizedBox(height: 12),
+          if (reviews.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  l.noReviewsYet,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            )
+          else
+            for (var i = 0; i < reviews.length; i++) ...[
+              if (i > 0) const Divider(height: 20, color: AppColors.border),
+              _reviewTile(reviews[i]),
+            ],
         ],
       ),
+    );
+  }
+
+  Widget _reviewTile(TravelerReview r) {
+    final locale = Localizations.localeOf(context).toString();
+    return Row(
+      key: ValueKey('profile-review-${r.id}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: AppColors.secondary,
+          child: Text(
+            r.initials,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              fontSize: 11,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      r.reviewerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    DateFormat.yMMMd(locale).format(r.createdAt),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 10,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  for (var v = 1; v <= 5; v++)
+                    Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: v <= r.rating
+                          ? const Color(0xFFE5A83B)
+                          : AppColors.border,
+                    ),
+                ],
+              ),
+              if (r.comment.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  r.comment,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
