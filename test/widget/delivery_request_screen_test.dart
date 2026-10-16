@@ -212,7 +212,6 @@ void main() {
 
       for (final t in [
         'Delivery Request',
-        'Step 1 of 1',
         'Item Requirement',
         'WHAT IS THE ITEM?',
         'ITEM CATEGORY',
@@ -228,6 +227,8 @@ void main() {
       ]) {
         expect(find.text(t), findsOneWidget, reason: t);
       }
+      // A single page: no step counter.
+      expect(find.textContaining('Step 1'), findsNothing);
     });
 
     testWidgets('starts empty: no made-up AirPods or recipient', (

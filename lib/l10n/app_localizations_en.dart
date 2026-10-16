@@ -389,9 +389,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryRequest => 'Delivery Request';
 
   @override
-  String get step1of1 => 'Step 1 of 1';
-
-  @override
   String get selectedTraveler => 'SELECTED TRAVELER';
 
   @override

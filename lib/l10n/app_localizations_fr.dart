@@ -391,9 +391,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deliveryRequest => 'Demande de livraison';
 
   @override
-  String get step1of1 => 'Étape 1 sur 1';
-
-  @override
   String get selectedTraveler => 'VOYAGEUR SÉLECTIONNÉ';
 
   @override

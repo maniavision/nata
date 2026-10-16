@@ -643,14 +643,6 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               ),
             ),
           ),
-          Text(
-            context.l10n.step1of1,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              color: AppColors.mutedForeground,
-            ),
-          ),
         ],
       ),
     );

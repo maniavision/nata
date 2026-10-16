@@ -820,12 +820,6 @@ abstract class AppLocalizations {
   /// **'Delivery Request'**
   String get deliveryRequest;
 
-  /// No description provided for @step1of1.
-  ///
-  /// In en, this message translates to:
-  /// **'Step 1 of 1'**
-  String get step1of1;
-
   /// No description provided for @selectedTraveler.
   ///
   /// In en, this message translates to:
