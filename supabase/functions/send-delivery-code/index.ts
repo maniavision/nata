@@ -11,10 +11,13 @@
  * 404 no_code, 429 too_soon, 503 sms_unavailable (SMS not set up),
  * 502 sms_failed.
  *
- * Secrets: BIRD_API_KEY (as for the sign-in SMS) and BIRD_DELIVERY_TEMPLATE,
- * the slug of a Bird SMS template with the parameters {{code}} and
- * {{sender}}, for example: "{{sender}} sent you a parcel with Nata. Give this
- * code to the traveler when you receive it: {{code}}". SUPABASE_URL and
+ * Sent as free text: Bird's built-in templates don't fit this message, and
+ * both free text and workspace templates need a sender of our own anyway.
+ *
+ * Secrets: BIRD_API_KEY (as for the sign-in SMS), BIRD_SENDER, a sender
+ * held by the Bird workspace (SMS > Senders) such as the sender ID "Nata",
+ * and BIRD_SENDER_US, an owned number in E.164 used for +1 recipients, since
+ * the US and Canada don't accept alphanumeric senders. SUPABASE_URL and
  * SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
  */
 
@@ -40,8 +43,9 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const apiKey = Deno.env.get("BIRD_API_KEY")?.trim();
-  const template = Deno.env.get("BIRD_DELIVERY_TEMPLATE")?.trim();
-  if (!apiKey || !template) return json({ error: "sms_unavailable" }, 503);
+  const senderId = Deno.env.get("BIRD_SENDER")?.trim();
+  const senderUs = Deno.env.get("BIRD_SENDER_US")?.trim();
+  if (!apiKey || !senderId) return json({ error: "sms_unavailable" }, 503);
 
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   const { data: { user } } = token
@@ -97,6 +101,11 @@ Deno.serve(async (req: Request) => {
     .eq("id", user.id)
     .maybeSingle();
 
+  const senderName = String(sender?.first_name ?? "").trim() || "Someone";
+  const to = phone.startsWith("+") ? phone : `+${phone}`;
+  // +1 (US, Canada) only accepts numbers as senders.
+  const from = to.startsWith("+1") ? senderUs : senderId;
+  if (!from) return json({ error: "sms_unavailable" }, 503);
   const res = await fetch(BIRD_API_URL, {
     method: "POST",
     headers: {
@@ -104,14 +113,11 @@ Deno.serve(async (req: Request) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      to: phone.startsWith("+") ? phone : `+${phone}`,
-      template: {
-        slug: template,
-        parameters: {
-          code: code.code,
-          sender: String(sender?.first_name ?? "").trim() || "Nata",
-        },
-      },
+      from,
+      to,
+      text: `${senderName} sent you a parcel with Nata. Give this code ` +
+        `to the traveler when you receive it: ${code.code}`,
+      category: "transactional",
     }),
   });
   if (!res.ok) {
