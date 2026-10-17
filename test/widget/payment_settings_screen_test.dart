@@ -1,3 +1,4 @@
+import 'package:carrywise_app/screens/wallet_history_screen.dart';
 import 'package:carrywise_app/screens/payment_settings_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/services/payment_service.dart';
@@ -69,10 +70,43 @@ void main() {
         'Default Currency',
         'Payout Schedule',
         'Automatic',
-        'MacBook Air M2 delivery',
       ]) {
         expect(find.text(t), findsOneWidget, reason: t);
       }
+      // No sample transactions: nothing yet.
+      expect(
+        find.byKey(const ValueKey('payment-transactions-empty')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the latest transactions, and View all', (tester) async {
+      payments.history = [
+        for (var i = 0; i < 5; i++)
+          WalletEntry(
+            kind: WalletEntryKind.payout,
+            id: 'p$i',
+            amount: 45,
+            currency: 'USD',
+            status: WalletEntryStatus.paid,
+            date: DateTime(2030, 6, 24 - i),
+            item: 'Item $i',
+          ),
+      ];
+      await pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Payout · Item 0'), findsOneWidget);
+      expect(find.text('Payout · Item 2'), findsOneWidget);
+      expect(find.text('Payout · Item 3'), findsNothing);
+
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('payment-transactions-all')),
+      );
+      await tester.tap(find.byKey(const ValueKey('payment-transactions-all')));
+      await tester.pumpAndSettle();
+      expect(find.byType(WalletHistoryScreen), findsOneWidget);
+      expect(find.text('Payout · Item 4'), findsOneWidget);
     });
 
     testWidgets("the default currency is the user's", (tester) async {

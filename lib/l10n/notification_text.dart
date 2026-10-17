@@ -66,3 +66,23 @@ import 'app_localizations.dart';
     _ => (n.title, n.body),
   };
 }
+
+/// The Requests tab a notification is about: 0 (Incoming, the traveler's
+/// side) or 1 (Outgoing, the sender's side); null when it isn't about a
+/// request.
+int? requestsTabFor(AppNotification n) => switch (n.event) {
+  'request_new' ||
+  'request_paid' ||
+  'request_cancelled_by_sender' ||
+  'request_expired_unpaid_traveler' ||
+  'payout_paid' => 0,
+  'request_accepted' ||
+  'request_declined' ||
+  'request_expired_unanswered' ||
+  'request_expired_unpaid' ||
+  'request_cancelled_by_traveler' ||
+  'item_picked_up' ||
+  'item_delivered' ||
+  'refund_sent' => 1,
+  _ => null,
+};

@@ -1670,5 +1670,9 @@
   "errPhotoUpload": "Impossible d’envoyer la photo. Réessayez.",
 
   "notifRefundTitle": "Remboursement envoyé",
-  "notifRefundBody": "Votre remboursement de {amount} est en route."
+  "notifRefundBody": "Votre remboursement de {amount} est en route.",
+
+  "viewCode": "Voir le code",
+  "chatCodeNote": "Votre destinataire donne ce code au voyageur lors de la remise. Ne le partagez pas avant.",
+  "close": "Fermer"
 }

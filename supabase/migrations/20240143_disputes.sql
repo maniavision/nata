@@ -3,28 +3,38 @@
 -- Run AFTER 20240142_notification_events.sql. Safe to re-run.
 --
 --   * nata.disputes: one report per person per request, with what went wrong
---     and their own words. Support reads them (service role); users only see
---     their own.
+--     (not_received, damaged, wrong_item, opened, other) and their own words.
+--     Support reads them (service role); users only see their own.
 --   * public.report_problem(p_request_id, p_reason, p_details): the sender
 --     reports within 3 days of delivery; the traveler can report from pickup
 --     until 3 days after delivery. The other side is told a problem was
 --     reported. It does not hold the traveler's payout, which the delivery
 --     code has already released; support follows up from here.
 
+-- The live database already had nata.disputes (opened_by, resolution,
+-- refund_amount, statuses open / under_review / resolved / rejected), so this
+-- builds on that table: it adds the reporter's own words and one report per
+-- person per request.
 create table if not exists nata.disputes (
-  id           uuid primary key default gen_random_uuid(),
-  request_id   uuid not null references nata.delivery_requests (id) on delete cascade,
-  reporter_id  uuid not null references nata.profiles (id) on delete cascade,
-  reason       text not null
-                 check (reason in ('not_received', 'damaged', 'wrong_item',
-                                   'opened', 'other')),
-  details      text not null default '' check (char_length(details) <= 1000),
-  status       text not null default 'open'
-                 check (status in ('open', 'resolved')),
-  created_at   timestamptz not null default now(),
-  resolved_at  timestamptz,
-  unique (request_id, reporter_id)
+  id             uuid primary key default gen_random_uuid(),
+  request_id     uuid not null references nata.delivery_requests (id) on delete cascade,
+  opened_by      uuid not null references nata.profiles (id),
+  reason         text not null,
+  status         text not null default 'open'
+                   check (status in ('open', 'under_review', 'resolved', 'rejected')),
+  resolution     text,
+  refund_amount  numeric check (refund_amount >= 0),
+  resolved_at    timestamptz,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
 );
+
+alter table nata.disputes
+  add column if not exists details text not null default ''
+    check (char_length(details) <= 1000);
+
+create unique index if not exists disputes_one_per_reporter
+  on nata.disputes (request_id, opened_by);
 
 alter table nata.disputes enable row level security;
 
@@ -32,7 +42,7 @@ drop policy if exists "Reporters read their disputes" on nata.disputes;
 create policy "Reporters read their disputes"
   on nata.disputes for select
   to authenticated
-  using (reporter_id = auth.uid());
+  using (opened_by = auth.uid());
 
 revoke insert, update, delete on nata.disputes from anon, authenticated;
 grant select on nata.disputes to authenticated;
@@ -81,12 +91,16 @@ begin
     raise exception 'nata:report_window_closed';
   end if;
 
+  if p_reason not in ('not_received', 'damaged', 'wrong_item', 'opened', 'other') then
+    raise exception 'nata:invalid_reason';
+  end if;
+
   if exists (select 1 from nata.disputes d
-              where d.request_id = p_request_id and d.reporter_id = uid) then
+              where d.request_id = p_request_id and d.opened_by = uid) then
     raise exception 'nata:already_reported';
   end if;
 
-  insert into nata.disputes (request_id, reporter_id, reason, details)
+  insert into nata.disputes (request_id, opened_by, reason, details)
   values (p_request_id, uid, p_reason,
           left(trim(coalesce(p_details, '')), 1000))
   returning id into new_id;

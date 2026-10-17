@@ -13,8 +13,8 @@ import '../widgets/avatar_image.dart';
 import 'delivery_confirm_screen.dart';
 import 'messages_screen.dart';
 
-/// A request the traveler accepted and is now carrying. Sample data for now,
-/// like the rest of the Requests page.
+/// A request the traveler accepted and is now carrying, as Requests >
+/// Incoming shows it.
 class AcceptedDelivery {
   final String orderId;
   final String senderName;

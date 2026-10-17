@@ -1670,5 +1670,9 @@
   "errPhotoUpload": "No se pudo subir la foto. Inténtalo de nuevo.",
 
   "notifRefundTitle": "Reembolso enviado",
-  "notifRefundBody": "Tu reembolso de {amount} está en camino."
+  "notifRefundBody": "Tu reembolso de {amount} está en camino.",
+
+  "viewCode": "Ver código",
+  "chatCodeNote": "Tu destinatario le da este código al viajero en la entrega. No lo compartas antes.",
+  "close": "Cerrar"
 }

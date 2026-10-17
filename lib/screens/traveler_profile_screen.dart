@@ -216,23 +216,6 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Icon(
-                Icons.share_outlined,
-                color: AppColors.primary,
-                size: 20,
-              ),
-            ),
-          ),
         ],
       ),
     );

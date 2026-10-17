@@ -1,3 +1,4 @@
+import 'wallet_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'add_payout_account_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,7 +19,7 @@ const _greenBg = Color(0xFFE4F4EE);
 /// Payment methods, payout accounts and the payout schedule are saved in
 /// nata.payment_methods / payout_accounts / payment_preferences (see
 /// [PaymentService]); the default currency is the app's. Transactions are
-/// sample data until payments are connected.
+/// the latest three from the wallet history, with a link to all of them.
 class PaymentSettingsScreen extends StatefulWidget {
   final double availableBalance;
   final double escrowBalance;
@@ -61,7 +62,21 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     _load();
   }
 
+  /// The latest payouts and payments; null while loading.
+  List<WalletEntry>? _recent;
+
+  Future<void> _loadRecent() async {
+    try {
+      final all = await _service.walletHistory(limit: 3);
+      if (mounted) setState(() => _recent = all.take(3).toList());
+    } catch (e) {
+      debugPrint('[PaymentSettings] history error: $e');
+      if (mounted) setState(() => _recent = const []);
+    }
+  }
+
   Future<void> _load() async {
+    _loadRecent();
     try {
       final results = await Future.wait([
         _service.methods(),
@@ -515,36 +530,59 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
 
   // ── Transactions ───────────────────────────────────────────────────────────
   Widget _transactions(AppLocalizations l) {
-    // Sample rows until transactions come from the database.
-    String day(DateTime d) => DateFormat.MMMd(l.localeName).format(d);
+    final recent = _recent;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     return _section(
       title: l.transactions,
-      child: _list([
-        _row(
-          title: l.txDeliveryOf('MacBook Air M2'),
-          subtitle: l.txReleasedFromEscrow(day(DateTime(2025, 6, 24))),
-          trailing: Text(
-            '+\$45.00',
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
-              color: _green,
+      action: GestureDetector(
+        key: const ValueKey('payment-transactions-all'),
+        onTap: () {
+          final money = NumberFormat.currency(symbol: r'$', decimalDigits: 2);
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => WalletHistoryScreen(
+                available: money.format(widget.availableBalance),
+                inEscrow: money.format(widget.escrowBalance),
+                service: widget.service,
+              ),
             ),
+          );
+        },
+        child: Text(
+          l.viewAll,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            color: AppColors.accent,
           ),
         ),
-        _row(
-          title: l.txEscrowHold,
-          subtitle: l.txDeliveryRequest(day(DateTime(2025, 6, 22))),
-          trailing: Text(
-            '\$50.00',
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
-              color: AppColors.foreground,
+      ),
+      child: recent == null
+          ? const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.accent),
+              ),
+            )
+          : recent.isEmpty
+          ? Container(
+              key: const ValueKey('payment-transactions-empty'),
+              padding: const EdgeInsets.all(16),
+              decoration: _cardDecoration(),
+              child: Text(
+                l.walletEmpty,
+                style: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            )
+          : Column(
+              children: [
+                for (final e in recent)
+                  WalletEntryRow(entry: e, locale: locale),
+              ],
             ),
-          ),
-        ),
-      ]),
     );
   }
 

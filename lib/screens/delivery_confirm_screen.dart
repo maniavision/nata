@@ -14,13 +14,10 @@ const _green = Color(0xFF168A68);
 const _greenBg = Color(0xFFE4F4EE);
 
 /// Delivery & Payout Release, opened from the delivery task's "Confirm
-/// Delivery & Claim": the traveler confirms the handoff with the recipient's
-/// 4-digit PIN or a handoff photo, picks where the payout goes, and releases
-/// it (after the 3-day dispute window).
-///
-/// The delivery is sample data, so the PIN is checked on the device and no
-/// money moves yet; the payout accounts are the traveler's own
-/// (nata.payout_accounts).
+/// Delivery & Claim": the traveler enters the recipient's 4-digit code and
+/// picks where the payout goes. The server checks the code (wrong attempts
+/// are limited); the right one marks the request delivered and sends the
+/// payout to that account (send-payouts).
 class DeliveryConfirmScreen extends StatefulWidget {
   final AcceptedDelivery delivery;
 

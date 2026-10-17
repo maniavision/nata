@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
+import '../services/request_service.dart';
 import '../services/message_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
@@ -22,6 +23,7 @@ class ChatThreadScreen extends StatefulWidget {
 
   /// Overrides for tests.
   final MessageService? service;
+  final RequestService? requestService;
   final ChatPhotoPicker? photoPicker;
   final DateTime Function()? now;
 
@@ -32,6 +34,7 @@ class ChatThreadScreen extends StatefulWidget {
     super.key,
     required this.conversation,
     this.service,
+    this.requestService,
     this.photoPicker,
     this.now,
     this.refreshEvery = const Duration(seconds: 4),
@@ -266,6 +269,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
       body: Column(
         children: [
           _buildHeader(),
+          _buildDeliveryCard(),
           Expanded(child: _buildBody()),
           _buildFooter(),
         ],
@@ -368,6 +372,156 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Delivery card ──────────────────────────────────────────────────────────
+  /// Where the delivery stands (paid, picked up, delivered), and for the
+  /// sender a way to see the delivery code.
+  Widget _buildDeliveryCard() {
+    final l = context.l10n;
+    final status = _c.requestStatus;
+    final step = switch (status) {
+      'paid' => 1,
+      'handed_off' => 2,
+      'delivered' => 3,
+      _ => 0,
+    };
+    if (step == 0) return const SizedBox.shrink();
+    final labels = [l.statusPaid, l.pickedUp, l.statusDelivered];
+    final showCode = !_c.iAmTraveler && step < 3;
+
+    return Container(
+      key: const ValueKey('chat-delivery-card'),
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              for (var i = 0; i < labels.length; i++) ...[
+                if (i > 0)
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      color: i < step ? _green : AppColors.border,
+                    ),
+                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      i < step
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      size: 18,
+                      color: i < step ? _green : AppColors.mutedForeground,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      labels[i],
+                      style: GoogleFonts.dmSans(
+                        fontWeight: i < step
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        fontSize: 10,
+                        color: i < step
+                            ? AppColors.foreground
+                            : AppColors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          if (showCode) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 36,
+              child: OutlinedButton.icon(
+                key: const ValueKey('chat-view-code'),
+                onPressed: _showCode,
+                icon: const Icon(Icons.key_rounded, size: 16),
+                label: Text(
+                  l.viewCode,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: const StadiumBorder(),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showCode() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    DeliveryCode? code;
+    try {
+      code = await (widget.requestService ?? RequestService()).deliveryCode(
+        _c.requestId,
+      );
+    } catch (e) {
+      debugPrint('[Chat] delivery code: $e');
+    }
+    if (!mounted) return;
+    if (code == null) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+      return;
+    }
+    final value = code.code;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('chat-code-dialog'),
+        title: Text(l.deliveryCode),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value.split('').join(' '),
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 32,
+                letterSpacing: 4,
+                color: AppColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l.chatCodeNote,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(
+                fontSize: 13,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l.close),
+          ),
+        ],
       ),
     );
   }

@@ -24,14 +24,22 @@ class RequestsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [ExchangeRateService].
   final ExchangeRateService? exchangeRates;
 
-  const RequestsScreen({super.key, this.requestService, this.exchangeRates});
+  /// 0 = Incoming, 1 = Outgoing.
+  final int initialTab;
+
+  const RequestsScreen({
+    super.key,
+    this.requestService,
+    this.exchangeRates,
+    this.initialTab = 0,
+  });
 
   @override
   State<RequestsScreen> createState() => _RequestsScreenState();
 }
 
 class _RequestsScreenState extends State<RequestsScreen> {
-  int _tab = 0; // 0 = Incoming, 1 = Outgoing
+  late int _tab = widget.initialTab; // 0 = Incoming, 1 = Outgoing
 
   /// The user's sent requests (Outgoing); null while loading.
   List<SentRequest>? _sent;

@@ -275,17 +275,18 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
           ),
         );
       }
-      widgets.add(_EntryRow(entry: e, locale: locale));
+      widgets.add(WalletEntryRow(entry: e, locale: locale));
     }
     return widgets;
   }
 }
 
-class _EntryRow extends StatelessWidget {
+/// One payout or payment, as Wallet History and Payment Settings list it.
+class WalletEntryRow extends StatelessWidget {
   final WalletEntry entry;
   final String locale;
 
-  const _EntryRow({required this.entry, required this.locale});
+  const WalletEntryRow({required this.entry, required this.locale});
 
   @override
   Widget build(BuildContext context) {

@@ -3652,4 +3652,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String notifRefundBody(String amount) {
     return 'Votre remboursement de $amount est en route.';
   }
+
+  @override
+  String get viewCode => 'Voir le code';
+
+  @override
+  String get chatCodeNote =>
+      'Votre destinataire donne ce code au voyageur lors de la remise. Ne le partagez pas avant.';
+
+  @override
+  String get close => 'Fermer';
 }
