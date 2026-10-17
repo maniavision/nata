@@ -7,8 +7,8 @@
  */
 
 const BIRD_API_URL = "https://us1.platform.bird.com/v1/sms/messages";
-const BIRD_API_KEY = Deno.env.get("BIRD_API_KEY") ??
-  "bk_us1_FxwCn5LWMINmTljpUSjgTkD1aL0Fy";
+// Only from the BIRD_API_KEY secret: keys never go in the source.
+const BIRD_API_KEY = Deno.env.get("BIRD_API_KEY") ?? "";
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {

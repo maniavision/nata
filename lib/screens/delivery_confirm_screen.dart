@@ -1,4 +1,5 @@
-import 'dart:typed_data';
+import '../services/request_service.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,12 +23,9 @@ const _greenBg = Color(0xFFE4F4EE);
 class DeliveryConfirmScreen extends StatefulWidget {
   final AcceptedDelivery delivery;
 
-  /// The handoff photo attached on the delivery task page, if any.
-  final Uint8List? handoverPhoto;
-
   /// Overrides for tests.
   final PaymentService? paymentService;
-  final PhotoPicker? photoPicker;
+  final RequestService? requestService;
 
   /// Where to go once the payout is released (default: rate the sender).
   final WidgetBuilder? next;
@@ -35,9 +33,8 @@ class DeliveryConfirmScreen extends StatefulWidget {
   const DeliveryConfirmScreen({
     super.key,
     required this.delivery,
-    this.handoverPhoto,
     this.paymentService,
-    this.photoPicker,
+    this.requestService,
     this.next,
   });
 
@@ -49,7 +46,6 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
   final _pinCtrls = List.generate(4, (_) => TextEditingController());
   final _pinFocus = List.generate(4, (_) => FocusNode());
 
-  late Uint8List? _photo = widget.handoverPhoto;
   List<PayoutAccount> _accounts = const [];
   String? _payoutAccountId;
   bool _loadingAccounts = true;
@@ -60,16 +56,16 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
   String get _pin => _pinCtrls.map((c) => c.text).join();
   bool get _pinComplete => _pin.length == 4;
 
-  /// A complete PIN that matches the recipient's (any complete PIN when the
-  /// delivery has none to check against).
-  bool get _pinValid =>
-      _pinComplete && (d.deliveryPin == null || _pin == d.deliveryPin);
+  /// Why the last code was refused, if it was.
+  String? _codeError;
 
-  bool get _handoffConfirmed => _pinValid || _photo != null;
+  /// Too many wrong codes: nothing more can be entered.
+  bool _locked = false;
 
   bool get _canRelease =>
-      _handoffConfirmed &&
+      _pinComplete &&
       !_releasing &&
+      !_locked &&
       (_accounts.isEmpty || _payoutAccountId != null);
 
   @override
@@ -111,33 +107,82 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
     }
   }
 
-  Future<void> _changePhoto() async {
-    final photo = await (widget.photoPicker ?? DeliveryTaskScreen.pickPhoto)(
-      context,
-    );
-    if (photo != null && mounted) setState(() => _photo = photo);
+  /// The server checks the recipient's code: the right one marks the
+  /// request delivered and queues the payout.
+  Future<void> _release() async {
+    if (!_canRelease) return;
+    setState(() {
+      _releasing = true;
+      _codeError = null;
+    });
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final check = await (widget.requestService ?? RequestService())
+          .confirmDelivery(
+            d.requestId,
+            _pin,
+            payoutAccountId: _payoutAccountId,
+          );
+      if (!mounted) return;
+      switch (check.result) {
+        case DeliveryCheck.delivered:
+          // Send the payout now (it waits if there is no payout account).
+          unawaited(
+            (widget.paymentService ?? PaymentService())
+                .sendPayouts()
+                .catchError((Object e) {
+                  debugPrint('[DeliveryConfirm] send payouts: $e');
+                  return 0;
+                }),
+          );
+          messenger.showSnackBar(
+            SnackBar(content: Text(l.deliveredPayoutQueued(d.payout))),
+          );
+          final next = widget.next;
+          if (next == null) {
+            Navigator.of(context).pop(true);
+          } else {
+            Navigator.of(
+              context,
+            ).pushReplacement(MaterialPageRoute(builder: next));
+          }
+          return;
+        case DeliveryCheck.wrongCode:
+          _clearPin();
+          setState(() => _codeError = l.wrongCodeAttempts(check.attemptsLeft));
+        case DeliveryCheck.locked:
+          _clearPin();
+          setState(() {
+            _locked = true;
+            _codeError = l.codeLocked;
+          });
+        case DeliveryCheck.noCode:
+          _clearPin();
+          setState(() => _codeError = l.codeNotReady);
+      }
+    } catch (e) {
+      debugPrint('[DeliveryConfirm] confirm: $e');
+      if (mounted) setState(() => _codeError = l.errRequestFailed);
+    } finally {
+      if (mounted) setState(() => _releasing = false);
+    }
   }
 
   void _onPinChanged(int i, String value) {
     if (value.isNotEmpty && i < 3) _pinFocus[i + 1].requestFocus();
     if (value.isEmpty && i > 0) _pinFocus[i - 1].requestFocus();
-    setState(() {});
+    // A new code clears the last answer (but not a lock).
+    setState(() {
+      if (!_locked) _codeError = null;
+    });
   }
 
-  Future<void> _release() async {
-    if (!_canRelease) return;
-    setState(() => _releasing = true);
-    // Releasing the escrow payout is not connected yet (sample data).
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    // The sender is the one who reviews (once they confirm receipt), so the
-    // traveler just goes back.
-    final next = widget.next;
-    if (next == null) {
-      Navigator.of(context).pop(true);
-      return;
+  void _clearPin() {
+    for (final c in _pinCtrls) {
+      c.clear();
     }
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: next));
+    _pinFocus.first.requestFocus();
   }
 
   @override
@@ -160,8 +205,6 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                   _stepBanner(l),
                   const SizedBox(height: 16),
                   _pinCard(l),
-                  const SizedBox(height: 16),
-                  _photoCard(l),
                   const SizedBox(height: 16),
                   _payoutCard(l),
                   const SizedBox(height: 16),
@@ -334,26 +377,26 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
               ),
             ),
           ),
-          if (_pinComplete) ...[
+          if (_codeError != null) ...[
             const SizedBox(height: 14),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  _pinValid ? Icons.check_circle_rounded : Icons.error_rounded,
+                const Icon(
+                  Icons.error_rounded,
                   size: 14,
-                  color: _pinValid ? _green : AppColors.destructive,
+                  color: AppColors.destructive,
                 ),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    _pinValid ? l.pinConfirmed : l.pinMismatch,
+                    _codeError!,
                     key: const ValueKey('delivery-confirm-pin-status'),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
-                      color: _pinValid ? _green : AppColors.destructive,
+                      color: AppColors.destructive,
                     ),
                   ),
                 ),
@@ -403,102 +446,6 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
             borderSide: const BorderSide(color: AppColors.accent, width: 2),
           ),
         ),
-      ),
-    );
-  }
-
-  // ── Option 2: photo ────────────────────────────────────────────────────────
-  Widget _photoCard(AppLocalizations l) {
-    final photo = _photo;
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _cardHeader(
-            l.photoOptionTitle,
-            _chip(
-              l.alternative,
-              color: AppColors.mutedForeground,
-              bg: AppColors.secondary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: photo == null
-                      ? const Icon(
-                          Icons.add_a_photo_rounded,
-                          color: AppColors.primary,
-                        )
-                      : Image.memory(photo, fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      photo == null
-                          ? l.noHandoffPhoto
-                          : l.handoverPhotoAttached,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      photo == null
-                          ? l.handoffPhotoHint
-                          : '${l.sealIntactPhoto} · '
-                                '${(photo.length / (1024 * 1024)).toStringAsFixed(1)} MB',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        color: AppColors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                key: const ValueKey('delivery-confirm-photo'),
-                onTap: _changePhoto,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.input,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Text(
-                    photo == null ? l.add : l.change,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../services/payment_service.dart';
 import 'dart:io';
 import 'dart:ui';
 
@@ -641,6 +642,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Sends the payouts waiting for this traveler (they also go out by
+  /// themselves after each delivery).
+  Future<void> _withdraw() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final sent = await PaymentService().sendPayouts();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(sent > 0 ? l.withdrawSent(sent) : l.withdrawNothing),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Profile] withdraw: $e');
+      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+    }
+  }
+
   // ── Wallet card ────────────────────────────────────────────────────────────
   Widget _buildWalletCard() {
     return Container(
@@ -771,7 +790,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    key: const ValueKey('wallet-withdraw'),
+                    onTap: _withdraw,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

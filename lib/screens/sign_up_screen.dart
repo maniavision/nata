@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import '../widgets/app_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
@@ -180,7 +181,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _goToLogin() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      // Same instant switch as the bottom tabs, not a page slide.
+      AppBottomNav.tabRoute<void>(const LoginScreen()),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_payout_account_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
@@ -83,6 +84,15 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
         _error = (l) => l.errPaymentSettingsLoad;
       });
     }
+  }
+
+  Future<void> _addPayoutAccount() async {
+    final added = await Navigator.of(context).push<PayoutAccount>(
+      MaterialPageRoute(
+        builder: (_) => AddPayoutAccountScreen(service: widget.service),
+      ),
+    );
+    if (added != null && mounted) _load();
   }
 
   Future<void> _addMethod() async {
@@ -454,7 +464,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             const SizedBox(height: 12),
             OutlinedButton.icon(
               key: const ValueKey('payout-account-add'),
-              onPressed: () {},
+              onPressed: _addPayoutAccount,
               icon: const Icon(Icons.add_circle_rounded, size: 16),
               label: Text(
                 l.addPayoutAccount,

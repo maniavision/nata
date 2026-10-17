@@ -677,10 +677,10 @@
   "deliveryPayoutRelease": "Entrega y liberación del pago",
   "confirmDeliveryStep": "Paso 3 de 4: Confirmar la entrega",
   "itemArrivedAtDestination": "El artículo llegó a destino",
-  "confirmHandoffNote": "Confirma la entrega al destinatario con el PIN de 4 dígitos o subiendo una foto del artículo sellado entregado.",
-  "pinOptionTitle": "Opción 1: PIN de entrega de 4 dígitos",
+  "confirmHandoffNote": "Pide al destinatario su código de entrega de 4 dígitos e introdúcelo abajo. El código correcto confirma la entrega y envía tu pago.",
+  "pinOptionTitle": "Código de entrega de 4 dígitos",
   "instantRelease": "Liberación inmediata",
-  "pinOptionNote": "El remitente dio al destinatario un código secreto de 4 dígitos. Introdúcelo:",
+  "pinOptionNote": "El remitente compartió un código secreto de 4 dígitos con el destinatario. Introdúcelo abajo:",
   "pinConfirmed": "PIN del destinatario confirmado",
   "pinMismatch": "Este PIN no coincide con el código del destinatario.",
   "photoOptionTitle": "Opción 2: Foto de la entrega",
@@ -696,7 +696,7 @@
   "bankPayoutSpeed": "Transferencia bancaria · 1 día hábil",
   "disputeProtectionWindow": "Plazo de protección ante disputas",
   "threeDaysActive": "3 días activo",
-  "disputeProtectionNote": "Los fondos se transfieren automáticamente al método elegido cuando termina el plazo de 3 días sin reclamaciones.",
+  "disputeProtectionNote": "Tu pago se envía en cuanto se confirma el código. El remitente aún puede informar de un problema durante 3 días.",
   "reportIssue": "Informar de un problema o abrir una disputa",
   "confirmReleasePayout": "Confirmar y liberar el pago ({amount})",
   "requestUpdated": "Solicitud actualizada",
@@ -1433,8 +1433,137 @@
   "errMobileMoneyUnavailable": "El dinero móvil no está disponible para este país. Elige otro país o paga con tarjeta.",
   "errMobileMoneyOptions": "No se pudieron cargar los países de dinero móvil.",
 
-  "signInToContinue": "Inicia sesión o crea una cuenta para continuar.",
+  "signInPromptTitle": "Inicia sesión para continuar",
+  "signInPromptBody": "Crea una cuenta gratis para enviar artículos con viajeros, publicar tus viajes y seguir tus entregas.",
+  "signInPromptTraveler": "Crea una cuenta gratis para ver el perfil de {name} y enviar una solicitud de entrega.",
+  "signInPromptAddTrip": "Crea una cuenta gratis para publicar tu viaje y ganar dinero llevando artículos.",
+  "signInBenefitVerified": "Solo viajeros verificados",
+  "signInBenefitEscrow": "Pago protegido hasta la entrega",
+  "signInBenefitPhone": "Regístrate con tu número en un minuto",
+  "notNow": "Ahora no",
   "continueBrowsing": "Seguir explorando",
 
-  "guest": "Invitado"
+
+  "sortByDate": "Ordenar por fecha",
+  "sortEarliest": "Más pronto",
+  "sortLatest": "Más tarde",
+
+  "sendWithTrustedTravelers": "Envía con viajeros de confianza",
+  "guestHeroBadge": "Viajeros verificados · Pago en depósito",
+  "guestHeroTitle": "Envía artículos al extranjero con un viajero que ya va hacia allí",
+  "guestHeroBody": "Encuentra un viajero de confianza que vaya a tu destino. Tu pago queda guardado de forma segura hasta que tu destinatario confirme la entrega.",
+  "createFreeAccount": "Crear una cuenta gratis",
+  "travelersGoingSoon": "Viajeros que salen pronto",
+  "preview": "Vista previa",
+  "howItWorks": "Cómo funciona",
+  "howStep1Title": "Busca",
+  "howStep1Body": "un viajero que vaya a tu destino.",
+  "howStep2Title": "Paga en depósito",
+  "howStep2Body": "después de comprobar su billete y su documento de identidad.",
+  "howStep3Title": "El viajero cobra",
+  "howStep3Body": "cuando tu destinatario confirma la entrega.",
+
+  "pickedUpItem": "He recogido el artículo",
+  "pickedUpOn": "Recogido el {date}",
+  "@pickedUpOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pickedUp": "Recogido",
+  "notYet": "Aún no",
+  "pickUpFirst": "Primero marca el artículo como recogido.",
+  "errPickUpFailed": "No se pudo marcar como recogido. Inténtalo de nuevo.",
+  "handoverCodeNote": "Reúnete con el destinatario en {city}, entrégale el artículo y pídele el código de entrega.",
+  "@handoverCodeNote": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "wrongCodeAttempts": "Ese código no es correcto. {count, plural, =1{Te queda 1 intento} other{Te quedan {count} intentos}}.",
+  "@wrongCodeAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "codeLocked": "Demasiados códigos incorrectos. Contacta con soporte para desbloquear esta entrega.",
+  "codeNotReady": "El remitente aún no tenía código. Pídele que comparta el que ahora aparece en su aplicación.",
+  "deliveredPayoutQueued": "¡Entregado! Tu pago de {amount} está en camino.",
+  "@deliveredPayoutQueued": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "deliveryCode": "Código de entrega",
+  "deliveryCodeNote": "Dale este código a {name}. El viajero lo necesita para confirmar la entrega.",
+  "@deliveryCodeNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "textCodeTo": "Enviarlo por SMS a {name}",
+  "@textCodeTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeTextedResend": "Enviado por SMS · Reenviar",
+  "codeTexted": "Código enviado a {name} por SMS.",
+  "@codeTexted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errSmsUnavailable": "El envío de SMS no está disponible ahora. Comparte el código con el destinatario tú mismo.",
+  "errSmsTooSoon": "El código se acaba de enviar. Espera un par de minutos antes de reenviarlo.",
+
+  "payoutCountry": "País",
+  "bankAccount": "Cuenta bancaria",
+  "bankLabel": "Banco",
+  "providerLabel": "Operador",
+  "chooseBank": "Elige tu banco",
+  "chooseProvider": "Elige tu operador",
+  "accountNumber": "Número de cuenta",
+  "mobileMoneyNumber": "Número de dinero móvil",
+  "accountHolderName": "Nombre del titular",
+  "savePayoutAccount": "Guardar cuenta",
+  "payoutAccountNoteSecure": "Tu número de cuenta completo se guarda de forma segura en nuestro servidor y solo se usa para enviarte tus pagos. La aplicación solo muestra sus 4 últimos dígitos.",
+  "noPayoutOptions": "Nata aún no puede pagar a {country}.",
+  "@noPayoutOptions": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "errLoadPayoutOptions": "No se pudieron cargar los bancos de este país.",
+  "errPayoutAccountInvalid": "Revisa el número de cuenta y el nombre del titular.",
+  "errPayoutNotSupported": "Este banco aún no puede recibir pagos. Elige otro.",
+  "errSavePayoutAccount": "No se pudo guardar la cuenta. Inténtalo de nuevo.",
+  "payoutAccountSaved": "Cuenta de cobro guardada.",
+
+  "withdrawSent": "{count, plural, =1{Tu pago está en camino.} other{{count} pagos están en camino.}}",
+  "@withdrawSent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "withdrawNothing": "Nada que enviar ahora. Si esperas un pago, comprueba que tienes una cuenta de cobro en Ajustes de pago."
 }

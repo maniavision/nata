@@ -1219,16 +1219,12 @@ class _Step3 extends StatelessWidget {
                         color: AppColors.background,
                       ),
                       child: ClipOval(
-                        child: Image.network(
-                          'https://lh3.googleusercontent.com/a/ACg8ocJ97aGjnJ1qNWsqUS-lOIkKvwls8WK-SI54YY8POZz7eBd4JRE=s96-c',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stack) => Container(
-                            color: AppColors.secondary,
-                            child: const Icon(
-                              Icons.person,
-                              size: 48,
-                              color: AppColors.primary,
-                            ),
+                        child: Container(
+                          color: AppColors.secondary,
+                          child: const Icon(
+                            Icons.person,
+                            size: 48,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),

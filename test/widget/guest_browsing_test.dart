@@ -1,9 +1,11 @@
 import 'package:carrywise_app/screens/home_screen.dart';
+import 'package:carrywise_app/screens/sign_up_screen.dart';
 import 'package:carrywise_app/screens/login_screen.dart';
 import 'package:carrywise_app/screens/splash_screen.dart';
 import 'package:carrywise_app/screens/traveler_profile_screen.dart';
 import 'package:carrywise_app/screens/traveler_results_screen.dart';
 import 'package:carrywise_app/services/auth_gate.dart';
+import 'package:carrywise_app/widgets/sign_in_prompt_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -87,18 +89,55 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(TravelerProfileScreen), findsNothing);
-      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+      expect(find.byType(SignInPromptSheet), findsOneWidget);
+      expect(find.text('Sign in to continue'), findsOneWidget);
       expect(
-        find.text('Sign in or create an account to continue.'),
+        find.text(
+          "Create a free account to see Daniel's profile and send a "
+          'delivery request.',
+        ),
         findsOneWidget,
       );
+      expect(find.text('Verified travelers only'), findsOneWidget);
     });
+
+    testWidgets('the prompt opens Sign In or Sign Up', (tester) async {
+      signedOut();
+      await pumpResults(tester);
+
+      await tester.tap(find.text('Daniel Okafor'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('sign-in-prompt-create')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SignInPromptSheet), findsNothing);
+      expect(find.byType(SignUpScreen), findsOneWidget);
+    });
+
+    for (final key in ['sign-in-prompt-not-now', 'sign-in-prompt-close']) {
+      testWidgets('$key keeps the visitor on the results', (tester) async {
+        signedOut();
+        await pumpResults(tester);
+        await tester.tap(find.text('Daniel Okafor'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(ValueKey(key)));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SignInPromptSheet), findsNothing);
+        expect(find.byType(LoginScreen), findsNothing);
+        expect(find.text('Daniel Okafor'), findsOneWidget);
+      });
+    }
 
     testWidgets('closing Sign In goes back to the results', (tester) async {
       signedOut();
       await pumpResults(tester);
       await tester.tap(find.text('Daniel Okafor'));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('sign-in-prompt-sign-in')));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginScreen), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('auth-close')));
       await tester.pumpAndSettle();
@@ -132,17 +171,92 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('greets the guest, without notifications or tabs', (
+    testWidgets('the visitor Home, as designed', (tester) async {
+      signedOut();
+      await pumpHome(tester);
+
+      // Header: the logo (no "Nata" title), Sign In and Sign Up.
+      expect(find.byKey(const ValueKey('nata-logo')), findsOneWidget);
+      expect(find.text('Nata'), findsNothing);
+      expect(find.text('Send with trusted travelers'), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-sign-in')), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-sign-up')), findsOneWidget);
+      // The banner, the search, the preview and how it works.
+      expect(
+        find.text('Send items abroad with a traveler already going there'),
+        findsOneWidget,
+      );
+      expect(find.text('Create a free account'), findsOneWidget);
+      expect(find.text('Search Travelers'), findsOneWidget);
+      expect(find.text('Travelers Going Soon'), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-preview-label')), findsOneWidget);
+      expect(find.text('How it works'), findsOneWidget);
+      // Nothing for signed-in users.
+      expect(find.text('Hello,'), findsNothing);
+      expect(find.byKey(const ValueKey('home-notifications')), findsNothing);
+      expect(find.text('Add a Trip'), findsNothing);
+      expect(find.text('View all'), findsNothing);
+      expect(find.text('Requests'), findsNothing);
+      expect(find.text('Profile'), findsNothing);
+    });
+
+    testWidgets('Sign In ↔ Sign Up switch instantly, like the tabs', (
       tester,
     ) async {
       signedOut();
       await pumpHome(tester);
+      await tester.tap(find.byKey(const ValueKey('home-sign-in')));
+      await tester.pumpAndSettle();
 
-      expect(find.text('Guest'), findsOneWidget);
-      expect(find.text('Fortune Niama'), findsNothing);
-      expect(find.byKey(const ValueKey('home-notifications')), findsNothing);
-      expect(find.text('Requests'), findsNothing);
-      expect(find.text('Profile'), findsNothing);
+      await tester.tap(find.text('Sign Up').first);
+      await tester.pump(); // one frame: no slide
+      expect(find.byType(SignUpScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+
+      // Still a way back to browsing.
+      await tester.tap(find.byKey(const ValueKey('auth-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('home-guest-hero')), findsOneWidget);
+    });
+
+    testWidgets('Sign In opens it, with a way back', (tester) async {
+      signedOut();
+      await pumpHome(tester);
+
+      await tester.tap(find.byKey(const ValueKey('home-sign-in')));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginScreen), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('auth-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('home-guest-hero')), findsOneWidget);
+    });
+
+    for (final key in ['home-sign-up', 'home-create-account']) {
+      testWidgets('$key opens Sign Up', (tester) async {
+        signedOut();
+        await pumpHome(tester);
+
+        await tester.ensureVisible(find.byKey(ValueKey(key)));
+        await tester.tap(find.byKey(ValueKey(key)));
+        await tester.pumpAndSettle();
+        expect(find.byType(SignUpScreen), findsOneWidget);
+      });
+    }
+
+    testWidgets('a traveler in the preview asks to sign in', (tester) async {
+      signedOut();
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      final first = find.byKey(const ValueKey('home-preview-label'));
+      expect(first, findsOneWidget);
+      final traveler = find.textContaining(' K.').first;
+      await tester.ensureVisible(traveler);
+      await tester.tap(traveler);
+      await tester.pumpAndSettle();
+      expect(find.byType(SignInPromptSheet), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
     });
 
     testWidgets('signed in: the name, notifications and tabs', (tester) async {
@@ -150,6 +264,9 @@ void main() {
 
       expect(find.text('Fortune Niama'), findsOneWidget);
       expect(find.byKey(const ValueKey('home-notifications')), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-sign-in')), findsNothing);
+      expect(find.byKey(const ValueKey('home-guest-hero')), findsNothing);
+      expect(find.text('How it works'), findsNothing);
       expect(find.text('Requests'), findsOneWidget);
     });
 
@@ -168,7 +285,9 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Invité'), findsOneWidget);
+      expect(find.text('Créer un compte gratuit'), findsOneWidget);
+      expect(find.text('Se connecter'), findsOneWidget);
+      expect(find.text('Comment ça marche'), findsOneWidget);
     });
   });
 }

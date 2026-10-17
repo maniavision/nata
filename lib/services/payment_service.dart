@@ -175,6 +175,51 @@ class PayoutAccount {
   );
 }
 
+/// A bank or mobile money provider Flutterwave pays out to, with its code.
+class PayoutProvider {
+  final String code;
+  final String name;
+  const PayoutProvider(this.code, this.name);
+
+  factory PayoutProvider.fromJson(Map<String, dynamic> j) =>
+      PayoutProvider('${j['code']}', '${j['name']}');
+}
+
+/// Where a traveler in a country can be paid (payout-options).
+class PayoutOptions {
+  final String? currency;
+  final List<PayoutProvider> banks;
+  final List<PayoutProvider> mobileMoney;
+
+  const PayoutOptions({
+    this.currency,
+    this.banks = const [],
+    this.mobileMoney = const [],
+  });
+
+  bool get isEmpty => banks.isEmpty && mobileMoney.isEmpty;
+
+  factory PayoutOptions.fromJson(Map<String, dynamic> j) => PayoutOptions(
+    currency: j['currency'] as String?,
+    banks: [
+      for (final b in (j['banks'] as List? ?? const []))
+        PayoutProvider.fromJson(Map<String, dynamic>.from(b as Map)),
+    ],
+    mobileMoney: [
+      for (final m in (j['mobile_money'] as List? ?? const []))
+        PayoutProvider.fromJson(Map<String, dynamic>.from(m as Map)),
+    ],
+  );
+}
+
+/// Why saving a payout account failed.
+enum PayoutAccountFailure { invalid, notSupported, unavailable, other }
+
+class PayoutAccountException implements Exception {
+  final PayoutAccountFailure reason;
+  const PayoutAccountException(this.reason);
+}
+
 /// When earnings are paid out (`payment_preferences.payout_schedule`).
 enum PayoutSchedule {
   automatic,
@@ -231,6 +276,62 @@ class PaymentService {
       'payout_accounts',
     ).select().eq('user_id', _userId).order('created_at');
     return [for (final r in rows) PayoutAccount.fromJson(r)];
+  }
+
+  /// The banks and mobile money a traveler in [country] can be paid to.
+  Future<PayoutOptions> payoutOptions(String country) async {
+    final response = await _client.functions.invoke(
+      'payout-options',
+      body: {'country': country},
+    );
+    return PayoutOptions.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  /// Saves a payout account (add-payout-account): the full number stays on
+  /// the server, only the last 4 digits come back.
+  Future<PayoutAccount> addPayoutAccount({
+    required PayoutAccountKind kind,
+    required String country,
+    required PayoutProvider provider,
+    required String accountNumber,
+    required String holderName,
+  }) async {
+    try {
+      final response = await _client.functions.invoke(
+        'add-payout-account',
+        body: {
+          'kind': kind == PayoutAccountKind.mobileMoney
+              ? 'mobile_money'
+              : 'bank',
+          'country': country,
+          'bank_code': provider.code,
+          'institution_name': provider.name,
+          'account_number': accountNumber,
+          'holder_name': holderName,
+        },
+      );
+      return PayoutAccount.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final code = details is Map ? '${details['error']}' : '';
+      throw PayoutAccountException(switch (code) {
+        'invalid' => PayoutAccountFailure.invalid,
+        'not_supported' => PayoutAccountFailure.notSupported,
+        'payments_unavailable' => PayoutAccountFailure.unavailable,
+        _ => PayoutAccountFailure.other,
+      });
+    }
+  }
+
+  /// Sends the traveler's pending payouts (send-payouts). Returns how many
+  /// were sent; the rest wait for a payout account or failed.
+  Future<int> sendPayouts() async {
+    final response = await _client.functions.invoke('send-payouts');
+    return ((response.data as Map?)?['sent'] as num?)?.toInt() ?? 0;
   }
 
   /// The payout schedule; automatic until the user changes it.

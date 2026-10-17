@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/l10n_ext.dart';
-import '../screens/login_screen.dart';
+import '../widgets/sign_in_prompt_sheet.dart';
 import 'auth_service.dart';
 
 /// Browsing works signed out: Home and searching travelers. Anything further
@@ -13,16 +12,12 @@ class AuthGate {
   /// Whether someone is signed in. Replaced in tests.
   static bool Function() isSignedIn = () => AuthService().isSignedIn;
 
-  /// True when signed in. Otherwise opens Sign In (with a way back) and
-  /// returns false, so the caller stops there.
-  static bool check(BuildContext context) {
+  /// True when signed in. Otherwise shows the sign-in prompt, with [message]
+  /// saying what the visitor was trying to do, and returns false so the
+  /// caller stops there.
+  static bool check(BuildContext context, {String? message}) {
     if (isSignedIn()) return true;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(context.l10n.signInToContinue)));
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    showSignInPrompt(context, message: message);
     return false;
   }
 }

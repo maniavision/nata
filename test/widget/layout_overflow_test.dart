@@ -4,6 +4,9 @@
 // wide on a 400px phone), with enlarged text, in every supported language
 // (translations are often longer than English). Any layout overflow makes the
 // framework report an exception, which fails the test.
+import 'package:carrywise_app/services/country_service.dart';
+import 'package:carrywise_app/screens/add_payout_account_screen.dart';
+import 'package:carrywise_app/services/auth_gate.dart';
 import 'dart:typed_data';
 
 import 'package:carrywise_app/screens/add_payment_method_screen.dart';
@@ -31,6 +34,7 @@ import 'package:carrywise_app/services/city_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
+import 'package:carrywise_app/widgets/sign_in_prompt_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -160,9 +164,36 @@ void main() {
         ],
       ),
     ),
+    'Add payout account': () => AddPayoutAccountScreen(
+      service: FakePaymentService(),
+      initialCountry: const Country(
+        isoCode: 'KE',
+        name: 'Kenya',
+        phoneCode: '+254',
+      ),
+    ),
     'Home': () => HomeScreen(
       authService: FakeAuthService(),
       travelerService: FakeTravelerService(),
+    ),
+    // Signed out: "Hello, Guest" and Sign In at the top right.
+    'Home (guest)': () {
+      AuthGate.isSignedIn = () => false;
+      return HomeScreen(
+        authService: FakeAuthService(),
+        travelerService: FakeTravelerService(),
+      );
+    },
+    // A long traveler name in the message.
+    'Sign-in prompt': () => const Scaffold(
+      body: Align(
+        alignment: Alignment.bottomCenter,
+        child: SignInPromptSheet(
+          message:
+              "Create a free account to see Oluwaseun-Chukwuemeka's profile "
+              'and send a delivery request.',
+        ),
+      ),
     ),
     'Notifications': () => NotificationsScreen(
       now: () => DateTime(2030, 6, 15, 12),

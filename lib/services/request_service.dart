@@ -122,6 +122,15 @@ enum RequestFailure {
   /// Payments aren't set up on the server (no payment provider key).
   paymentsUnavailable,
 
+  /// The request isn't paid, so it can't be picked up or delivered.
+  notPaid,
+
+  /// SMS isn't set up on the server.
+  smsUnavailable,
+
+  /// Asked again too soon (the code was just texted).
+  tooSoon,
+
   /// Mobile money isn't available in that country.
   mobileMoneyUnavailable,
 
@@ -544,6 +553,9 @@ class SentRequest {
   /// Only a request the traveler has not answered yet can be changed.
   bool get isEditable => status == 'pending';
 
+  /// Paid, and not delivered yet: the delivery code is in use.
+  bool get isPaid => status == 'paid' || status == 'handed_off';
+
   /// The fee for cancelling now, in US dollars, or null when it can no longer
   /// be cancelled. Free until the traveler accepts, then 10% of the total,
   /// rounded up to whole dollars.
@@ -678,6 +690,13 @@ class IncomingRequest {
   final DateTime departureDate;
   final DateTime arrivalDate;
 
+  /// When the traveler picked the item up, and delivered it.
+  final DateTime? pickedUpAt;
+  final DateTime? deliveredAt;
+
+  /// Wrong delivery codes the traveler can still enter (5 at first).
+  final int codeAttemptsLeft;
+
   const IncomingRequest({
     required this.id,
     required this.status,
@@ -704,10 +723,18 @@ class IncomingRequest {
     required this.arrivalCountry,
     required this.departureDate,
     required this.arrivalDate,
+    this.pickedUpAt,
+    this.deliveredAt,
+    this.codeAttemptsLeft = 5,
   });
 
   /// Waiting for the traveler's answer.
   bool get isPending => status == 'pending';
+
+  /// Paid: the traveler can pick the item up and deliver it.
+  bool get isPaid => status == 'paid' || status == 'handed_off';
+
+  bool get isPickedUp => status == 'handed_off' || status == 'delivered';
 
   /// Accepted and under way (or just delivered).
   bool get isInProgress =>
@@ -761,9 +788,38 @@ class IncomingRequest {
       arrivalCountry: (j['arrival_country'] as String?) ?? '',
       departureDate: DateTime.parse(j['departure_date'] as String),
       arrivalDate: DateTime.parse(j['arrival_date'] as String),
+      pickedUpAt: time(j['picked_up_at']),
+      deliveredAt: time(j['delivered_at']),
+      codeAttemptsLeft: (j['code_attempts_left'] as num?)?.toInt() ?? 5,
     );
   }
 }
+
+/// The sender's delivery code for a paid request, and when it was last
+/// texted to the recipient.
+class DeliveryCode {
+  final String code;
+  final DateTime? smsSentAt;
+  const DeliveryCode(this.code, {this.smsSentAt});
+}
+
+/// What happened when the traveler entered the recipient's code.
+enum DeliveryCheck {
+  /// The code was right: delivered, payout queued.
+  delivered,
+
+  /// Wrong code; [DeliveryCheckResult.attemptsLeft] tries remain.
+  wrongCode,
+
+  /// Too many wrong codes: support has to unlock it.
+  locked,
+
+  /// The request had no code yet (paid before codes existed); the sender
+  /// now has one to share.
+  noCode,
+}
+
+typedef DeliveryCheckResult = ({DeliveryCheck result, int attemptsLeft});
 
 /// Sends delivery requests.
 ///
@@ -1098,6 +1154,83 @@ class RequestService {
     }
   }
 
+  /// The delivery code of the sender's paid request [requestId]; null when
+  /// there is none (not paid yet).
+  Future<DeliveryCode?> deliveryCode(String requestId) async {
+    final rows =
+        await _client.rpc(
+              'my_delivery_code',
+              params: {'p_request_id': requestId},
+            )
+            as List;
+    if (rows.isEmpty) return null;
+    final r = Map<String, dynamic>.from(rows.first as Map);
+    return DeliveryCode(
+      r['code'] as String,
+      smsSentAt: r['sms_sent_at'] == null
+          ? null
+          : DateTime.parse(r['sms_sent_at'] as String),
+    );
+  }
+
+  /// Texts the delivery code to the recipient (send-delivery-code).
+  Future<void> sendDeliveryCode(String requestId) async {
+    try {
+      await _client.functions.invoke(
+        'send-delivery-code',
+        body: {'request_id': requestId},
+      );
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final code = details is Map ? '${details['error']}' : '';
+      throw RequestException(switch (code) {
+        'too_soon' => RequestFailure.tooSoon,
+        'sms_unavailable' => RequestFailure.smsUnavailable,
+        'not_allowed' => RequestFailure.notPaid,
+        'unauthorized' => RequestFailure.notSignedIn,
+        _ => RequestFailure.other,
+      }, e);
+    }
+  }
+
+  /// The traveler has the item (paid -> picked up).
+  Future<void> markPickedUp(String requestId) =>
+      _call('mark_picked_up', {'p_id': requestId});
+
+  /// The traveler enters the recipient's [code]. The right code marks the
+  /// request delivered and queues the payout to [payoutAccountId].
+  Future<DeliveryCheckResult> confirmDelivery(
+    String requestId,
+    String code, {
+    String? payoutAccountId,
+  }) async {
+    _userId;
+    try {
+      final rows =
+          await _client.rpc(
+                'confirm_delivery',
+                params: {
+                  'p_id': requestId,
+                  'p_code': code.trim(),
+                  'p_payout_account_id': payoutAccountId,
+                },
+              )
+              as List;
+      final r = Map<String, dynamic>.from(rows.first as Map);
+      return (
+        result: switch (r['result']) {
+          'delivered' => DeliveryCheck.delivered,
+          'locked' => DeliveryCheck.locked,
+          'no_code' => DeliveryCheck.noCode,
+          _ => DeliveryCheck.wrongCode,
+        },
+        attemptsLeft: (r['attempts_left'] as num?)?.toInt() ?? 0,
+      );
+    } on PostgrestException catch (e) {
+      throw RequestException(reasonFor(e.message), e);
+    }
+  }
+
   /// Requests made on the signed-in traveler's trips, newest first.
   Future<List<IncomingRequest>> incomingRequests() async {
     _userId;
@@ -1162,6 +1295,7 @@ class RequestService {
     if (has('rate_unavailable')) return RequestFailure.rateUnavailable;
     if (has('request_not_pending')) return RequestFailure.notPending;
     if (has('request_not_payable')) return RequestFailure.notPayable;
+    if (has('request_not_paid')) return RequestFailure.notPaid;
     if (has('request_not_delivered')) return RequestFailure.notDelivered;
     if (has('already_reviewed')) return RequestFailure.alreadyReviewed;
     if (has('price_changed')) return RequestFailure.priceChanged;

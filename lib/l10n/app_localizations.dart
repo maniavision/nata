@@ -3389,13 +3389,13 @@ abstract class AppLocalizations {
   /// No description provided for @confirmHandoffNote.
   ///
   /// In en, this message translates to:
-  /// **'Confirm recipient handoff using the 4-digit delivery PIN or by uploading a photo of the handed-off sealed item.'**
+  /// **'Ask the recipient for their 4-digit delivery code and enter it below. The right code confirms the delivery and sends your payout.'**
   String get confirmHandoffNote;
 
   /// No description provided for @pinOptionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Option 1: 4-Digit Delivery PIN'**
+  /// **'4-Digit Delivery Code'**
   String get pinOptionTitle;
 
   /// No description provided for @instantRelease.
@@ -3407,7 +3407,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinOptionNote.
   ///
   /// In en, this message translates to:
-  /// **'The sender gave the recipient a secret 4-digit code. Enter it below:'**
+  /// **'The sender shared a secret 4-digit code with the recipient. Enter it below:'**
   String get pinOptionNote;
 
   /// No description provided for @pinConfirmed.
@@ -3503,7 +3503,7 @@ abstract class AppLocalizations {
   /// No description provided for @disputeProtectionNote.
   ///
   /// In en, this message translates to:
-  /// **'Funds are automatically disbursed to the chosen payout method once the 3-day dispute protection window concludes without contest.'**
+  /// **'Your payout is sent as soon as the code is confirmed. The sender can still report a problem within 3 days.'**
   String get disputeProtectionNote;
 
   /// No description provided for @reportIssue.
@@ -5336,11 +5336,53 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load the mobile money countries.'**
   String get errMobileMoneyOptions;
 
-  /// No description provided for @signInToContinue.
+  /// No description provided for @signInPromptTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in or create an account to continue.'**
-  String get signInToContinue;
+  /// **'Sign in to continue'**
+  String get signInPromptTitle;
+
+  /// No description provided for @signInPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a free account to send items with travelers, post your trips and follow your deliveries.'**
+  String get signInPromptBody;
+
+  /// No description provided for @signInPromptTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a free account to see {name}\'s profile and send a delivery request.'**
+  String signInPromptTraveler(String name);
+
+  /// No description provided for @signInPromptAddTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a free account to post your trip and earn by carrying items.'**
+  String get signInPromptAddTrip;
+
+  /// No description provided for @signInBenefitVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified travelers only'**
+  String get signInBenefitVerified;
+
+  /// No description provided for @signInBenefitEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment held safely until delivery'**
+  String get signInBenefitEscrow;
+
+  /// No description provided for @signInBenefitPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up with your phone number in a minute'**
+  String get signInBenefitPhone;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
 
   /// No description provided for @continueBrowsing.
   ///
@@ -5348,11 +5390,329 @@ abstract class AppLocalizations {
   /// **'Continue browsing'**
   String get continueBrowsing;
 
-  /// No description provided for @guest.
+  /// No description provided for @sortByDate.
   ///
   /// In en, this message translates to:
-  /// **'Guest'**
-  String get guest;
+  /// **'Sort by date'**
+  String get sortByDate;
+
+  /// No description provided for @sortEarliest.
+  ///
+  /// In en, this message translates to:
+  /// **'Earliest'**
+  String get sortEarliest;
+
+  /// No description provided for @sortLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get sortLatest;
+
+  /// No description provided for @sendWithTrustedTravelers.
+  ///
+  /// In en, this message translates to:
+  /// **'Send with trusted travelers'**
+  String get sendWithTrustedTravelers;
+
+  /// No description provided for @guestHeroBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified travelers · Escrow payments'**
+  String get guestHeroBadge;
+
+  /// No description provided for @guestHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send items abroad with a traveler already going there'**
+  String get guestHeroTitle;
+
+  /// No description provided for @guestHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a trusted traveler heading to your destination. Your payment is held safely until your recipient confirms delivery.'**
+  String get guestHeroBody;
+
+  /// No description provided for @createFreeAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a free account'**
+  String get createFreeAccount;
+
+  /// No description provided for @travelersGoingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Travelers Going Soon'**
+  String get travelersGoingSoon;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @howItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get howItWorks;
+
+  /// No description provided for @howStep1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get howStep1Title;
+
+  /// No description provided for @howStep1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'for a traveler going to your destination.'**
+  String get howStep1Body;
+
+  /// No description provided for @howStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay into escrow'**
+  String get howStep2Title;
+
+  /// No description provided for @howStep2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'once you have checked their ticket and ID.'**
+  String get howStep2Body;
+
+  /// No description provided for @howStep3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler is paid'**
+  String get howStep3Title;
+
+  /// No description provided for @howStep3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'after your recipient confirms delivery.'**
+  String get howStep3Body;
+
+  /// No description provided for @pickedUpItem.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve picked up the item'**
+  String get pickedUpItem;
+
+  /// No description provided for @pickedUpOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked up on {date}'**
+  String pickedUpOn(String date);
+
+  /// No description provided for @pickedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked up'**
+  String get pickedUp;
+
+  /// No description provided for @notYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get notYet;
+
+  /// No description provided for @pickUpFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the item as picked up first.'**
+  String get pickUpFirst;
+
+  /// No description provided for @errPickUpFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t mark it as picked up. Please try again.'**
+  String get errPickUpFailed;
+
+  /// No description provided for @handoverCodeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet the recipient in {city}, hand over the item and ask them for the delivery code.'**
+  String handoverCodeNote(String city);
+
+  /// No description provided for @wrongCodeAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'That code isn\'t right. {count, plural, =1{1 try left} other{{count} tries left}}.'**
+  String wrongCodeAttempts(int count);
+
+  /// No description provided for @codeLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong codes. Contact support to unlock this delivery.'**
+  String get codeLocked;
+
+  /// No description provided for @codeNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'The sender didn\'t have a code yet. Ask them to share the code that\'s now in their app.'**
+  String get codeNotReady;
+
+  /// No description provided for @deliveredPayoutQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered! Your payout of {amount} is on its way.'**
+  String deliveredPayoutQueued(String amount);
+
+  /// No description provided for @deliveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery code'**
+  String get deliveryCode;
+
+  /// No description provided for @deliveryCodeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this code to {name}. The traveler needs it to confirm the delivery.'**
+  String deliveryCodeNote(String name);
+
+  /// No description provided for @textCodeTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Text it to {name}'**
+  String textCodeTo(String name);
+
+  /// No description provided for @codeTextedResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent by SMS · Resend'**
+  String get codeTextedResend;
+
+  /// No description provided for @codeTexted.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent to {name} by SMS.'**
+  String codeTexted(String name);
+
+  /// No description provided for @errSmsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Texting isn\'t available right now. Please share the code with the recipient yourself.'**
+  String get errSmsUnavailable;
+
+  /// No description provided for @errSmsTooSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'The code was just sent. Please wait a couple of minutes before resending.'**
+  String get errSmsTooSoon;
+
+  /// No description provided for @payoutCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get payoutCountry;
+
+  /// No description provided for @bankAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank account'**
+  String get bankAccount;
+
+  /// No description provided for @bankLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get bankLabel;
+
+  /// No description provided for @providerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get providerLabel;
+
+  /// No description provided for @chooseBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your bank'**
+  String get chooseBank;
+
+  /// No description provided for @chooseProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your provider'**
+  String get chooseProvider;
+
+  /// No description provided for @accountNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Account number'**
+  String get accountNumber;
+
+  /// No description provided for @mobileMoneyNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile money number'**
+  String get mobileMoneyNumber;
+
+  /// No description provided for @accountHolderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Account holder name'**
+  String get accountHolderName;
+
+  /// No description provided for @savePayoutAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Save payout account'**
+  String get savePayoutAccount;
+
+  /// No description provided for @payoutAccountNoteSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Your full account number is kept securely on our server and only used to send your payouts. The app only shows its last 4 digits.'**
+  String get payoutAccountNoteSecure;
+
+  /// No description provided for @noPayoutOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata can\'t pay out to {country} yet.'**
+  String noPayoutOptions(String country);
+
+  /// No description provided for @errLoadPayoutOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the banks for this country.'**
+  String get errLoadPayoutOptions;
+
+  /// No description provided for @errPayoutAccountInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the account number and the holder’s name.'**
+  String get errPayoutAccountInvalid;
+
+  /// No description provided for @errPayoutNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This bank can\'t receive payouts yet. Please choose another one.'**
+  String get errPayoutNotSupported;
+
+  /// No description provided for @errSavePayoutAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the payout account. Please try again.'**
+  String get errSavePayoutAccount;
+
+  /// No description provided for @payoutAccountSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout account saved.'**
+  String get payoutAccountSaved;
+
+  /// No description provided for @withdrawSent.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Your payout is on its way.} other{{count} payouts are on their way.}}'**
+  String withdrawSent(int count);
+
+  /// No description provided for @withdrawNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to send right now. If you\'re waiting for a payout, check you have a payout account in Payment Settings.'**
+  String get withdrawNothing;
 }
 
 class _AppLocalizationsDelegate

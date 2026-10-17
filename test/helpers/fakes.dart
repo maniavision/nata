@@ -903,6 +903,48 @@ class FakeRequestService extends Fake implements RequestService {
         : paymentStatuses.length - 1];
   }
 
+  /// The handover: delivery codes by request, codes texted, items picked up
+  /// and codes entered. [deliveryChecks] are answered in order, the last one
+  /// repeating.
+  Map<String, DeliveryCode> codes = {};
+  final List<String> codesTexted = [];
+  RequestException? failTextCode;
+  final List<String> pickedUp = [];
+  RequestException? failPickUp;
+  List<DeliveryCheckResult> deliveryChecks = [
+    (result: DeliveryCheck.delivered, attemptsLeft: 0),
+  ];
+  final List<({String id, String code, String? account})> deliveryAttempts = [];
+
+  @override
+  Future<DeliveryCode?> deliveryCode(String requestId) async =>
+      codes[requestId];
+
+  @override
+  Future<void> sendDeliveryCode(String requestId) async {
+    if (failTextCode != null) throw failTextCode!;
+    codesTexted.add(requestId);
+  }
+
+  @override
+  Future<void> markPickedUp(String requestId) async {
+    if (failPickUp != null) throw failPickUp!;
+    pickedUp.add(requestId);
+  }
+
+  @override
+  Future<DeliveryCheckResult> confirmDelivery(
+    String requestId,
+    String code, {
+    String? payoutAccountId,
+  }) async {
+    deliveryAttempts.add((id: requestId, code: code, account: payoutAccountId));
+    final i = deliveryAttempts.length - 1;
+    return deliveryChecks[i < deliveryChecks.length
+        ? i
+        : deliveryChecks.length - 1];
+  }
+
   /// Receipts confirmed and reviews sent; [failReview] makes both fail.
   final List<String> receiptsConfirmed = [];
   final List<({String id, int rating, List<String> tags, String comment})>
@@ -1236,13 +1278,31 @@ AcceptedDelivery sampleDelivery() => const AcceptedDelivery(
   itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
   itemName: 'iPad Mini 64GB (Space Gray)',
   itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
-  receivedPhotoUrl: 'https://example.com/box.jpg',
-  receivedPhotoName: 'received_sealed_box.jpg',
-  receivedPhotoCaption: 'Captured at Lagos Airport · Jun 22, 10:14 AM',
   recipientName: 'David Adeleke (London)',
   recipientPhone: '+44 7700 900456',
   meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
-  deliveryPin: '7492',
+  requestId: 'req-1',
+);
+
+/// [sampleDelivery], already picked up.
+AcceptedDelivery samplePickedUpDelivery() => AcceptedDelivery(
+  orderId: 'DEL-8842',
+  senderName: 'Sarah Adeleke',
+  senderPhotoUrl: 'https://example.com/sarah.jpg',
+  senderSubtitle: 'Sender · Escrow Funded',
+  senderPhone: '+234 803 555 0142',
+  payout: '\$38.00',
+  trip: 'Lagos (LOS) → London (LHR)',
+  routeCodes: 'LOS → LHR',
+  travelDate: 'Jun 22, 2025',
+  destinationCity: 'London',
+  itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
+  itemName: 'iPad Mini 64GB (Space Gray)',
+  itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
+  recipientName: 'David Adeleke (London)',
+  recipientPhone: '+44 7700 900456',
+  requestId: 'req-1',
+  pickedUpAt: DateTime(2030, 6, 22, 10, 14),
 );
 
 /// Capitals by country, standing in for nata.cities.is_capital.
@@ -1281,6 +1341,70 @@ class FakePaymentService extends Fake implements PaymentService {
   final List<PaymentMethod> saved;
   List<PayoutAccount> accounts;
   PayoutSchedule schedule;
+
+  /// Payouts: the options by country, accounts added, and payouts sent.
+  Map<String, PayoutOptions> options = {
+    'NG': const PayoutOptions(
+      currency: 'NGN',
+      banks: [
+        PayoutProvider('044', 'Access Bank'),
+        PayoutProvider('058', 'GTBank'),
+      ],
+    ),
+    'KE': const PayoutOptions(
+      currency: 'KES',
+      banks: [PayoutProvider('01', 'KCB Bank')],
+      mobileMoney: [PayoutProvider('MPS', 'M-Pesa')],
+    ),
+  };
+  final List<
+    ({
+      PayoutAccountKind kind,
+      String country,
+      String code,
+      String number,
+      String holder,
+    })
+  >
+  addedAccounts = [];
+  PayoutAccountException? failAddAccount;
+  int payoutsSent = 0;
+
+  @override
+  Future<PayoutOptions> payoutOptions(String country) async =>
+      options[country] ?? const PayoutOptions();
+
+  @override
+  Future<PayoutAccount> addPayoutAccount({
+    required PayoutAccountKind kind,
+    required String country,
+    required PayoutProvider provider,
+    required String accountNumber,
+    required String holderName,
+  }) async {
+    if (failAddAccount != null) throw failAddAccount!;
+    addedAccounts.add((
+      kind: kind,
+      country: country,
+      code: provider.code,
+      number: accountNumber,
+      holder: holderName,
+    ));
+    final account = PayoutAccount(
+      id: 'pa${addedAccounts.length}',
+      kind: kind,
+      institutionName: provider.name,
+      countryCode: country,
+      accountLast4: accountNumber.substring(accountNumber.length - 4),
+      holderName: holderName,
+      isDefault: accounts.isEmpty,
+    );
+    accounts = [...accounts, account];
+    return account;
+  }
+
+  @override
+  Future<int> sendPayouts() async => ++payoutsSent;
   bool failLoad = false;
   bool failSave = false;
   int _nextId = 1;

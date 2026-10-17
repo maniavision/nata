@@ -49,6 +49,85 @@ void main() {
     if (settle) await tester.pumpAndSettle();
   }
 
+  group('sorting by date', () {
+    /// The travelers' names, top to bottom.
+    List<String> order(WidgetTester tester) {
+      final names = ['Amara Kalu', 'Daniel Okafor', 'Maya Tariq', 'Zoe Kalu'];
+      final shown = names.where((n) => find.text(n).evaluate().isNotEmpty);
+      return shown.toList()..sort(
+        (a, b) => tester
+            .getTopLeft(find.text(a))
+            .dy
+            .compareTo(tester.getTopLeft(find.text(b)).dy),
+      );
+    }
+
+    testWidgets('earliest departure first by default', (tester) async {
+      // Returned out of order by the search.
+      service.trips = sampleTravelers().reversed.toList();
+      await pumpResults(tester);
+
+      expect(find.text('Sort by date'), findsOneWidget);
+      expect(order(tester), ['Amara Kalu', 'Daniel Okafor', 'Maya Tariq']);
+    });
+
+    testWidgets('Latest puts the last departure first, and back', (
+      tester,
+    ) async {
+      await pumpResults(tester);
+
+      await tester.tap(find.byKey(const ValueKey('sort-latest')));
+      await tester.pumpAndSettle();
+      expect(order(tester), ['Maya Tariq', 'Daniel Okafor', 'Amara Kalu']);
+
+      await tester.tap(find.byKey(const ValueKey('sort-earliest')));
+      await tester.pumpAndSettle();
+      expect(order(tester), ['Amara Kalu', 'Daniel Okafor', 'Maya Tariq']);
+    });
+
+    testWidgets('trips on the same day keep the search order', (tester) async {
+      service.trips = [
+        sampleTrip(tripId: 'a', departureDate: DateTime(2030, 6, 22)),
+        sampleTrip(
+          tripId: 'z',
+          travelerId: 'traveler-9',
+          firstName: 'Zoe',
+          departureDate: DateTime(2030, 6, 22),
+        ),
+      ];
+      await pumpResults(tester);
+      expect(order(tester), ['Amara Kalu', 'Zoe Kalu']);
+
+      await tester.tap(find.byKey(const ValueKey('sort-latest')));
+      await tester.pumpAndSettle();
+      expect(order(tester), ['Amara Kalu', 'Zoe Kalu']);
+    });
+
+    testWidgets('no sort bar without results', (tester) async {
+      service.trips = [];
+      await pumpResults(tester);
+
+      expect(find.text('Sort by date'), findsNothing);
+    });
+
+    testWidgets('is translated', (tester) async {
+      tester.view.physicalSize = const Size(900, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          TravelerResultsScreen(service: service),
+          locale: const Locale('fr'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Trier par date'), findsOneWidget);
+      expect(find.text('Plus tôt'), findsOneWidget);
+      expect(find.text('Plus tard'), findsOneWidget);
+    });
+  });
+
   group('TravelerResultsScreen', () {
     testWidgets('sends the search criteria to the service', (tester) async {
       await pumpResults(

@@ -38,6 +38,21 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   String? _error;
   List<TravelerTrip> _results = const [];
 
+  /// Earliest departure first (the default), or latest first.
+  bool _latestFirst = false;
+
+  /// [_results] by departure date; trips on the same day keep the order the
+  /// search returned them in.
+  List<TravelerTrip> get _sorted {
+    final indexed = _results.indexed.toList()
+      ..sort((a, b) {
+        final byDate = a.$2.departureDate.compareTo(b.$2.departureDate);
+        if (byDate != 0) return _latestFirst ? -byDate : byDate;
+        return a.$1.compareTo(b.$1);
+      });
+    return [for (final (_, trip) in indexed) trip];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -184,13 +199,88 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
                 ],
               ),
             ),
-          ..._results.map(
+          if (_results.isNotEmpty) _buildSortBar(),
+          ..._sorted.map(
             (r) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _TravelerCard(trip: r, service: widget.service),
             ),
           ),
           _buildNotifyBanner(),
+        ],
+      ),
+    );
+  }
+
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  Widget _buildSortBar() {
+    final l = context.l10n;
+    Widget option(String label, bool latest) {
+      final selected = _latestFirst == latest;
+      return Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
+          key: ValueKey(latest ? 'sort-latest' : 'sort-earliest'),
+          onTap: () => setState(() => _latestFirst = latest),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: selected ? AppColors.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: selected
+                    ? AppColors.primaryForeground
+                    : AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.schedule_rounded,
+            size: 14,
+            color: AppColors.mutedForeground,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              l.sortByDate,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                option(l.sortEarliest, false),
+                option(l.sortLatest, true),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -367,7 +457,12 @@ class _TravelerCardState extends State<_TravelerCard> {
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: () {
-        if (!AuthGate.check(context)) return;
+        if (!AuthGate.check(
+          context,
+          message: context.l10n.signInPromptTraveler(widget.trip.firstName),
+        )) {
+          return;
+        }
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => TravelerProfileScreen(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'delivery_task_screen.dart';
 import 'incoming_request_screen.dart';
 import '../services/preferences_service.dart';
 import '../services/exchange_rate_service.dart';
@@ -33,6 +34,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
   /// The user's sent requests (Outgoing); null while loading.
   List<SentRequest>? _sent;
   bool _sentFailed = false;
+
+  /// Delivery codes of the paid requests, to give to the recipient.
+  Map<String, DeliveryCode> _codes = const {};
+  final Set<String> _texting = {};
 
   /// Amounts are stored in dollars and shown in the user's currency; dollars
   /// until the rate is known (or if it can't be had).
@@ -73,6 +78,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       final sent = await (widget.requestService ?? RequestService())
           .myRequests();
       if (mounted) setState(() => _sent = sent);
+      _loadCodes(sent);
     } catch (e) {
       debugPrint('[Requests] sent requests: $e');
       if (mounted) {
@@ -81,6 +87,57 @@ class _RequestsScreenState extends State<RequestsScreen> {
           _sentFailed = true;
         });
       }
+    }
+  }
+
+  Future<void> _loadCodes(List<SentRequest> sent) async {
+    final service = widget.requestService ?? RequestService();
+    final codes = <String, DeliveryCode>{};
+    for (final r in sent.where((r) => r.isPaid)) {
+      try {
+        final code = await service.deliveryCode(r.id);
+        if (code != null) codes[r.id] = code;
+      } catch (e) {
+        debugPrint('[Requests] delivery code: $e');
+      }
+    }
+    if (mounted) setState(() => _codes = codes);
+  }
+
+  /// Texts the delivery code to the recipient.
+  Future<void> _textCode(SentRequest r) async {
+    if (_texting.contains(r.id)) return;
+    setState(() => _texting.add(r.id));
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await (widget.requestService ?? RequestService()).sendDeliveryCode(r.id);
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.codeTexted(r.recipientName))),
+      );
+      final code = _codes[r.id];
+      if (code != null && mounted) {
+        setState(
+          () => _codes = {
+            ..._codes,
+            r.id: DeliveryCode(code.code, smsSentAt: DateTime.now()),
+          },
+        );
+      }
+    } on RequestException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(switch (e.reason) {
+            RequestFailure.smsUnavailable => l.errSmsUnavailable,
+            RequestFailure.tooSoon => l.errSmsTooSoon,
+            _ => l.errRequestFailed,
+          }),
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+    } finally {
+      if (mounted) setState(() => _texting.remove(r.id));
     }
   }
 
@@ -256,13 +313,23 @@ class _RequestsScreenState extends State<RequestsScreen> {
       DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(d);
 
   Future<void> _openIncoming(IncomingRequest r) async {
+    // Paid: the delivery itself (pick up, hand over with the code).
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => IncomingRequestScreen(
-          request: r,
-          money: _money,
-          service: widget.requestService,
-        ),
+        builder: (_) => r.isPaid
+            ? DeliveryTaskScreen(
+                delivery: AcceptedDelivery.fromIncoming(
+                  r,
+                  payout: _payoutText(r),
+                  locale: Localizations.localeOf(context).toString(),
+                ),
+                requestService: widget.requestService,
+              )
+            : IncomingRequestScreen(
+                request: r,
+                money: _money,
+                service: widget.requestService,
+              ),
       ),
     );
     if (changed == true && mounted) _loadIncoming();
@@ -734,6 +801,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     ? () => _confirmReceipt(r)
                     : null,
                 onReview: r.canReview ? () => _review(r) : null,
+                deliveryCode: _codes[r.id],
+                onTextCode: _texting.contains(r.id) ? null : () => _textCode(r),
                 money: _money,
               ),
             ),
@@ -1082,6 +1151,10 @@ class _SentRequestCard extends StatelessWidget {
   /// Opens the review for a delivered, confirmed request.
   final VoidCallback? onReview;
 
+  /// The code to give the recipient (paid requests), and texting it.
+  final DeliveryCode? deliveryCode;
+  final VoidCallback? onTextCode;
+
   /// Shows the dollar amounts in the user's currency.
   final PriceFormatter money;
 
@@ -1111,6 +1184,8 @@ class _SentRequestCard extends StatelessWidget {
     this.onPay,
     this.onConfirmReceipt,
     this.onReview,
+    this.deliveryCode,
+    this.onTextCode,
     this.money = PriceFormatter.usd,
   });
 
@@ -1147,6 +1222,91 @@ class _SentRequestCard extends StatelessWidget {
   }
 
   /// A full-width pill button, as in the design.
+  /// The delivery code, big enough to read out, and texting it.
+  Widget _codeBox(BuildContext context, DeliveryCode code) {
+    final l = context.l10n;
+    return Container(
+      key: ValueKey('sent-request-code-${request.id}'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _greenBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _green.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.key_rounded, size: 14, color: _green),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l.deliveryCode.toUpperCase(),
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    letterSpacing: 1.2,
+                    color: _green,
+                  ),
+                ),
+              ),
+              Text(
+                code.code.split('').join(' '),
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  letterSpacing: 2,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l.deliveryCodeNote(request.recipientName),
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              height: 1.4,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            key: ValueKey('sent-request-text-code-${request.id}'),
+            // The whole row is the button, not just its text.
+            behavior: HitTestBehavior.opaque,
+            onTap: onTextCode,
+            child: Row(
+              children: [
+                Icon(
+                  code.smsSentAt != null
+                      ? Icons.mark_chat_read_rounded
+                      : Icons.sms_rounded,
+                  size: 14,
+                  color: AppColors.accent,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    code.smsSentAt != null
+                        ? l.codeTextedResend
+                        : l.textCodeTo(request.recipientName),
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _button({
     required String key,
     required IconData icon,
@@ -1415,6 +1575,10 @@ class _SentRequestCard extends StatelessWidget {
                   filled: true,
                   onTap: onPay ?? () {},
                 ),
+              ],
+              if (deliveryCode != null && request.isPaid) ...[
+                const SizedBox(height: 12),
+                _codeBox(context, deliveryCode!),
               ],
               if (request.awaitingReceipt) ...[
                 const SizedBox(height: 12),

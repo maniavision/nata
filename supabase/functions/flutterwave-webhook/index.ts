@@ -1,5 +1,7 @@
 /**
- * flutterwave-webhook — Flutterwave's notice that a payment was made.
+ * flutterwave-webhook — Flutterwave's notices: a payment was made
+ * (charge.completed), or a payout to a traveler went through or failed
+ * (transfer.completed).
  *
  * Set in the Flutterwave dashboard (Settings > Webhooks) to
  *   https://<project>.supabase.co/functions/v1/flutterwave-webhook
@@ -133,6 +135,35 @@ async function record(tx: Transaction): Promise<string> {
 // ── This function ──────────────────────────────────────────────────────────
 
 
+/**
+ * A payout to a traveler, looked up again with Flutterwave: paid (releasing
+ * the escrow payment) or failed with its reason.
+ */
+async function recordTransfer(id: string): Promise<void> {
+  const res = await flutterwave(`/transfers/${encodeURIComponent(id)}`);
+  const t = res.body.data as
+    | { reference?: string; status?: string; complete_message?: string }
+    | undefined;
+  const reference = String(t?.reference ?? "");
+  if (!res.ok || !reference.startsWith("nata-payout-")) return;
+  const db = admin.schema("nata");
+  const status = String(t?.status ?? "").toUpperCase();
+  if (status === "SUCCESSFUL") {
+    const { error } = await db.rpc("release_payout", {
+      p_reference: reference,
+      p_provider_id: id,
+    });
+    if (error) throw error;
+  } else if (status === "FAILED") {
+    const { error } = await db.rpc("payout_failed", {
+      p_reference: reference,
+      p_reason: String(t?.complete_message ?? "Transfer failed"),
+      p_retry: false,
+    });
+    if (error) throw error;
+  }
+}
+
 /** Compares without leaking how much of the hash matched. */
 function sameSecret(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -151,15 +182,21 @@ Deno.serve(async (req: Request) => {
   }
 
   let id = "";
+  let event = "";
   try {
     const body = await req.json();
     id = String(body?.data?.id ?? "");
+    event = String(body?.event ?? "");
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
   if (!id) return json({ received: true });
 
   try {
+    if (event.startsWith("transfer")) {
+      await recordTransfer(id);
+      return json({ received: true });
+    }
     const tx = await transactionById(id);
     // Not one of ours (no nata- reference): nothing to record.
     if (tx && tx.tx_ref.startsWith("nata-")) await record(tx);

@@ -1,4 +1,7 @@
 import 'dart:async';
+import '../widgets/nata_logo.dart';
+import 'sign_up_screen.dart';
+import 'login_screen.dart';
 import '../services/auth_gate.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
@@ -326,6 +329,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    // Visitors who aren't signed in get their own Home: what Nata is, the
+    // search, a preview of travelers and how it works.
+    final guest = !AuthGate.isSignedIn();
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -340,20 +346,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(),
+                  guest ? _buildGuestHeader() : _buildHeader(),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        _buildSearchCard(),
-                        const SizedBox(height: 24),
-                        _buildAddTripButton(l),
-                        const SizedBox(height: 24),
-                        _buildTravelersSection(),
-                        const SizedBox(height: 16),
-                      ],
+                      children: guest
+                          ? [
+                              const SizedBox(height: 8),
+                              _buildGuestHero(),
+                              const SizedBox(height: 24),
+                              _buildSearchCard(),
+                              const SizedBox(height: 24),
+                              _buildTravelersSection(),
+                              const SizedBox(height: 24),
+                              _buildHowItWorks(),
+                              const SizedBox(height: 16),
+                            ]
+                          : [
+                              const SizedBox(height: 8),
+                              _buildSearchCard(),
+                              const SizedBox(height: 24),
+                              _buildAddTripButton(l),
+                              const SizedBox(height: 24),
+                              _buildTravelersSection(),
+                              const SizedBox(height: 16),
+                            ],
                     ),
                   ),
                 ],
@@ -391,31 +409,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ],
             ),
+            // No photo yet (or a visitor): a plain person icon.
             child: ClipOval(
-              child: _avatarPath != null
-                  ? AvatarImage(
-                      path: _avatarPath,
-                      fallback: Container(
-                        color: AppColors.secondary,
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                    )
-                  : Image.network(
-                      'https://lh3.googleusercontent.com/a/ACg8ocJ97aGjnJ1qNWsqUS-lOIkKvwls8WK-SI54YY8POZz7eBd4JRE=s96-c',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) => Container(
-                        color: AppColors.secondary,
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                    ),
+              child: AvatarImage(
+                key: const ValueKey('home-avatar'),
+                path: _avatarPath,
+                fallback: Container(
+                  color: AppColors.secondary,
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -431,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 Text(
-                  AuthGate.isSignedIn() ? _displayName : context.l10n.guest,
+                  _displayName,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
                     fontSize: 18,
@@ -442,34 +449,327 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ],
             ),
           ),
-          // Visitors have no notifications.
-          if (AuthGate.isSignedIn())
-            GestureDetector(
-              key: const ValueKey('home-notifications'),
-              onTap: () {
-                if (!AuthGate.check(context)) return;
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => NotificationsScreen(
-                      service: widget.notificationService,
+          GestureDetector(
+            key: const ValueKey('home-notifications'),
+            onTap: () {
+              if (!AuthGate.check(context)) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      NotificationsScreen(service: widget.notificationService),
+                ),
+              );
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_outlined,
+                color: AppColors.foreground,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Visitors ───────────────────────────────────────────────────────────────
+  Widget _buildGuestHeader() {
+    final l = context.l10n;
+    Widget pill(
+      String label, {
+      required bool filled,
+      required Key key,
+      required VoidCallback onTap,
+    }) {
+      return GestureDetector(
+        key: key,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: filled
+                ? AppColors.primary
+                : AppColors.secondary.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              color: filled
+                  ? AppColors.primaryForeground
+                  : AppColors.foreground,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      child: Row(
+        children: [
+          const NataLogo(size: 40),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.sendWithTrustedTravelers,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Long translations shrink the buttons a little rather than
+          // overflow on narrow phones.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  pill(
+                    l.signIn,
+                    filled: false,
+                    key: const ValueKey('home-sign-in'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
                     ),
                   ),
-                );
-              },
+                  const SizedBox(width: 8),
+                  pill(
+                    l.signUp,
+                    filled: true,
+                    key: const ValueKey('home-sign-up'),
+                    onTap: _openSignUp,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openSignUp() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => const SignUpScreen()));
+
+  Widget _buildGuestHero() {
+    final l = context.l10n;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        key: const ValueKey('home-guest-hero'),
+        color: AppColors.primary,
+        child: Stack(
+          children: [
+            // Soft coral glow in the corner.
+            Positioned(
+              right: -32,
+              top: -32,
               child: Container(
-                width: 40,
-                height: 40,
+                width: 128,
+                height: 128,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.8),
                   shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.notifications_outlined,
-                  color: AppColors.foreground,
-                  size: 20,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.25),
+                      blurRadius: 48,
+                      spreadRadius: 8,
+                    ),
+                  ],
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          size: 12,
+                          color: AppColors.accent,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            l.guestHeroBadge.toUpperCase(),
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                              letterSpacing: 0.8,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l.guestHeroTitle,
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                      height: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l.guestHeroBody,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: AppColors.primaryForeground.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      key: const ValueKey('home-create-account'),
+                      onPressed: _openSignUp,
+                      icon: const Icon(
+                        Icons.person_add_alt_1_rounded,
+                        size: 18,
+                      ),
+                      label: Text(
+                        l.createFreeAccount,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: AppColors.accentForeground,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHowItWorks() {
+    final l = context.l10n;
+    Widget step(int n, String title, String body) => Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$n',
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.primaryForeground,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$title ',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    TextSpan(text: body),
+                  ],
+                ),
+                style: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  height: 1.5,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Container(
+      key: const ValueKey('home-how-it-works'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.howItWorks,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: AppColors.foreground,
+            ),
+          ),
+          step(1, l.howStep1Title, l.howStep1Body),
+          step(2, l.howStep2Title, l.howStep2Body),
+          step(3, l.howStep3Title, l.howStep3Body),
         ],
       ),
     );
@@ -642,7 +942,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildAddTripButton(l) {
     return GestureDetector(
       onTap: () {
-        if (!AuthGate.check(context)) return;
+        if (!AuthGate.check(
+          context,
+          message: context.l10n.signInPromptAddTrip,
+        )) {
+          return;
+        }
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => const AddTripScreen()));
@@ -680,41 +985,69 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   // ── Travelers section ──────────────────────────────────────────────────────
   Widget _buildTravelersSection() {
+    final guest = !AuthGate.isSignedIn();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              context.l10n.availableTravelers,
-              style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: AppColors.foreground,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => TravelerResultsScreen(
-                      departure: _departure,
-                      destination: _destination,
-                      service: widget.travelerService,
-                    ),
-                  ),
-                );
-              },
+            // Long translations wrap instead of pushing the right side out.
+            Flexible(
               child: Text(
-                context.l10n.viewAll,
-                style: GoogleFonts.dmSans(
+                guest
+                    ? context.l10n.travelersGoingSoon
+                    : context.l10n.availableTravelers,
+                style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: AppColors.accent,
+                  fontSize: 15,
+                  color: AppColors.foreground,
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            if (guest)
+              Row(
+                key: const ValueKey('home-preview-label'),
+                children: [
+                  const Icon(
+                    Icons.visibility_outlined,
+                    size: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    context.l10n.preview,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              )
+            else
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => TravelerResultsScreen(
+                        departure: _departure,
+                        destination: _destination,
+                        service: widget.travelerService,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(
+                  context.l10n.viewAll,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -783,7 +1116,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: _TravelerRow(
                 trip: t,
                 onTap: () {
-                  if (!AuthGate.check(context)) return;
+                  if (!AuthGate.check(
+                    context,
+                    message: context.l10n.signInPromptTraveler(t.firstName),
+                  )) {
+                    return;
+                  }
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => TravelerProfileScreen(

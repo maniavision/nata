@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import '../widgets/app_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
@@ -457,7 +458,8 @@ class _LoginScreenState extends State<LoginScreen> {
         onTap: () {
           if (index == 1) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const SignUpScreen()),
+              // Same instant switch as the bottom tabs, not a page slide.
+              AppBottomNav.tabRoute<void>(const SignUpScreen()),
             );
           } else {
             setState(() => _selectedTab = index);
@@ -702,9 +704,8 @@ class _LoginScreenState extends State<LoginScreen> {
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const SignUpScreen(),
-                    ),
+                    // Same instant switch as the bottom tabs, not a page slide.
+                    AppBottomNav.tabRoute<void>(const SignUpScreen()),
                   );
                 },
                 child: Text(

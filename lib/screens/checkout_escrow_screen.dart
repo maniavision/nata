@@ -240,6 +240,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         case PaymentStatus.successful:
           _poll?.cancel();
           await (widget.closePaymentPage ?? _closeInApp)();
+          // Text the delivery code to the recipient straight away; the
+          // sender can also do it, or resend it, from the request card.
+          unawaited(
+            _service.sendDeliveryCode(_r.id).catchError((Object e) {
+              debugPrint('[Checkout] delivery code SMS: $e');
+            }),
+          );
           messenger.showSnackBar(SnackBar(content: Text(l.paymentReceived)));
           navigator.pop(true);
         case PaymentStatus.failed:

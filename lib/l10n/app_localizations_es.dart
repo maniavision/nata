@@ -1810,17 +1810,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get confirmHandoffNote =>
-      'Confirma la entrega al destinatario con el PIN de 4 dígitos o subiendo una foto del artículo sellado entregado.';
+      'Pide al destinatario su código de entrega de 4 dígitos e introdúcelo abajo. El código correcto confirma la entrega y envía tu pago.';
 
   @override
-  String get pinOptionTitle => 'Opción 1: PIN de entrega de 4 dígitos';
+  String get pinOptionTitle => 'Código de entrega de 4 dígitos';
 
   @override
   String get instantRelease => 'Liberación inmediata';
 
   @override
   String get pinOptionNote =>
-      'El remitente dio al destinatario un código secreto de 4 dígitos. Introdúcelo:';
+      'El remitente compartió un código secreto de 4 dígitos con el destinatario. Introdúcelo abajo:';
 
   @override
   String get pinConfirmed => 'PIN del destinatario confirmado';
@@ -1873,7 +1873,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get disputeProtectionNote =>
-      'Los fondos se transfieren automáticamente al método elegido cuando termina el plazo de 3 días sin reclamaciones.';
+      'Tu pago se envía en cuanto se confirma el código. El remitente aún puede informar de un problema durante 3 días.';
 
   @override
   String get reportIssue => 'Informar de un problema o abrir una disputa';
@@ -3045,12 +3045,239 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudieron cargar los países de dinero móvil.';
 
   @override
-  String get signInToContinue =>
-      'Inicia sesión o crea una cuenta para continuar.';
+  String get signInPromptTitle => 'Inicia sesión para continuar';
+
+  @override
+  String get signInPromptBody =>
+      'Crea una cuenta gratis para enviar artículos con viajeros, publicar tus viajes y seguir tus entregas.';
+
+  @override
+  String signInPromptTraveler(String name) {
+    return 'Crea una cuenta gratis para ver el perfil de $name y enviar una solicitud de entrega.';
+  }
+
+  @override
+  String get signInPromptAddTrip =>
+      'Crea una cuenta gratis para publicar tu viaje y ganar dinero llevando artículos.';
+
+  @override
+  String get signInBenefitVerified => 'Solo viajeros verificados';
+
+  @override
+  String get signInBenefitEscrow => 'Pago protegido hasta la entrega';
+
+  @override
+  String get signInBenefitPhone => 'Regístrate con tu número en un minuto';
+
+  @override
+  String get notNow => 'Ahora no';
 
   @override
   String get continueBrowsing => 'Seguir explorando';
 
   @override
-  String get guest => 'Invitado';
+  String get sortByDate => 'Ordenar por fecha';
+
+  @override
+  String get sortEarliest => 'Más pronto';
+
+  @override
+  String get sortLatest => 'Más tarde';
+
+  @override
+  String get sendWithTrustedTravelers => 'Envía con viajeros de confianza';
+
+  @override
+  String get guestHeroBadge => 'Viajeros verificados · Pago en depósito';
+
+  @override
+  String get guestHeroTitle =>
+      'Envía artículos al extranjero con un viajero que ya va hacia allí';
+
+  @override
+  String get guestHeroBody =>
+      'Encuentra un viajero de confianza que vaya a tu destino. Tu pago queda guardado de forma segura hasta que tu destinatario confirme la entrega.';
+
+  @override
+  String get createFreeAccount => 'Crear una cuenta gratis';
+
+  @override
+  String get travelersGoingSoon => 'Viajeros que salen pronto';
+
+  @override
+  String get preview => 'Vista previa';
+
+  @override
+  String get howItWorks => 'Cómo funciona';
+
+  @override
+  String get howStep1Title => 'Busca';
+
+  @override
+  String get howStep1Body => 'un viajero que vaya a tu destino.';
+
+  @override
+  String get howStep2Title => 'Paga en depósito';
+
+  @override
+  String get howStep2Body =>
+      'después de comprobar su billete y su documento de identidad.';
+
+  @override
+  String get howStep3Title => 'El viajero cobra';
+
+  @override
+  String get howStep3Body => 'cuando tu destinatario confirma la entrega.';
+
+  @override
+  String get pickedUpItem => 'He recogido el artículo';
+
+  @override
+  String pickedUpOn(String date) {
+    return 'Recogido el $date';
+  }
+
+  @override
+  String get pickedUp => 'Recogido';
+
+  @override
+  String get notYet => 'Aún no';
+
+  @override
+  String get pickUpFirst => 'Primero marca el artículo como recogido.';
+
+  @override
+  String get errPickUpFailed =>
+      'No se pudo marcar como recogido. Inténtalo de nuevo.';
+
+  @override
+  String handoverCodeNote(String city) {
+    return 'Reúnete con el destinatario en $city, entrégale el artículo y pídele el código de entrega.';
+  }
+
+  @override
+  String wrongCodeAttempts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Te quedan $count intentos',
+      one: 'Te queda 1 intento',
+    );
+    return 'Ese código no es correcto. $_temp0.';
+  }
+
+  @override
+  String get codeLocked =>
+      'Demasiados códigos incorrectos. Contacta con soporte para desbloquear esta entrega.';
+
+  @override
+  String get codeNotReady =>
+      'El remitente aún no tenía código. Pídele que comparta el que ahora aparece en su aplicación.';
+
+  @override
+  String deliveredPayoutQueued(String amount) {
+    return '¡Entregado! Tu pago de $amount está en camino.';
+  }
+
+  @override
+  String get deliveryCode => 'Código de entrega';
+
+  @override
+  String deliveryCodeNote(String name) {
+    return 'Dale este código a $name. El viajero lo necesita para confirmar la entrega.';
+  }
+
+  @override
+  String textCodeTo(String name) {
+    return 'Enviarlo por SMS a $name';
+  }
+
+  @override
+  String get codeTextedResend => 'Enviado por SMS · Reenviar';
+
+  @override
+  String codeTexted(String name) {
+    return 'Código enviado a $name por SMS.';
+  }
+
+  @override
+  String get errSmsUnavailable =>
+      'El envío de SMS no está disponible ahora. Comparte el código con el destinatario tú mismo.';
+
+  @override
+  String get errSmsTooSoon =>
+      'El código se acaba de enviar. Espera un par de minutos antes de reenviarlo.';
+
+  @override
+  String get payoutCountry => 'País';
+
+  @override
+  String get bankAccount => 'Cuenta bancaria';
+
+  @override
+  String get bankLabel => 'Banco';
+
+  @override
+  String get providerLabel => 'Operador';
+
+  @override
+  String get chooseBank => 'Elige tu banco';
+
+  @override
+  String get chooseProvider => 'Elige tu operador';
+
+  @override
+  String get accountNumber => 'Número de cuenta';
+
+  @override
+  String get mobileMoneyNumber => 'Número de dinero móvil';
+
+  @override
+  String get accountHolderName => 'Nombre del titular';
+
+  @override
+  String get savePayoutAccount => 'Guardar cuenta';
+
+  @override
+  String get payoutAccountNoteSecure =>
+      'Tu número de cuenta completo se guarda de forma segura en nuestro servidor y solo se usa para enviarte tus pagos. La aplicación solo muestra sus 4 últimos dígitos.';
+
+  @override
+  String noPayoutOptions(String country) {
+    return 'Nata aún no puede pagar a $country.';
+  }
+
+  @override
+  String get errLoadPayoutOptions =>
+      'No se pudieron cargar los bancos de este país.';
+
+  @override
+  String get errPayoutAccountInvalid =>
+      'Revisa el número de cuenta y el nombre del titular.';
+
+  @override
+  String get errPayoutNotSupported =>
+      'Este banco aún no puede recibir pagos. Elige otro.';
+
+  @override
+  String get errSavePayoutAccount =>
+      'No se pudo guardar la cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get payoutAccountSaved => 'Cuenta de cobro guardada.';
+
+  @override
+  String withdrawSent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pagos están en camino.',
+      one: 'Tu pago está en camino.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get withdrawNothing =>
+      'Nada que enviar ahora. Si esperas un pago, comprueba que tienes una cuenta de cobro en Ajustes de pago.';
 }

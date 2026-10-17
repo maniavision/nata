@@ -1790,17 +1790,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmHandoffNote =>
-      'Confirm recipient handoff using the 4-digit delivery PIN or by uploading a photo of the handed-off sealed item.';
+      'Ask the recipient for their 4-digit delivery code and enter it below. The right code confirms the delivery and sends your payout.';
 
   @override
-  String get pinOptionTitle => 'Option 1: 4-Digit Delivery PIN';
+  String get pinOptionTitle => '4-Digit Delivery Code';
 
   @override
   String get instantRelease => 'Instant Release';
 
   @override
   String get pinOptionNote =>
-      'The sender gave the recipient a secret 4-digit code. Enter it below:';
+      'The sender shared a secret 4-digit code with the recipient. Enter it below:';
 
   @override
   String get pinConfirmed => 'Valid recipient PIN confirmed';
@@ -1852,7 +1852,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get disputeProtectionNote =>
-      'Funds are automatically disbursed to the chosen payout method once the 3-day dispute protection window concludes without contest.';
+      'Your payout is sent as soon as the code is confirmed. The sender can still report a problem within 3 days.';
 
   @override
   String get reportIssue => 'Report an issue or open a dispute';
@@ -3000,11 +3000,238 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t load the mobile money countries.';
 
   @override
-  String get signInToContinue => 'Sign in or create an account to continue.';
+  String get signInPromptTitle => 'Sign in to continue';
+
+  @override
+  String get signInPromptBody =>
+      'Create a free account to send items with travelers, post your trips and follow your deliveries.';
+
+  @override
+  String signInPromptTraveler(String name) {
+    return 'Create a free account to see $name\'s profile and send a delivery request.';
+  }
+
+  @override
+  String get signInPromptAddTrip =>
+      'Create a free account to post your trip and earn by carrying items.';
+
+  @override
+  String get signInBenefitVerified => 'Verified travelers only';
+
+  @override
+  String get signInBenefitEscrow => 'Payment held safely until delivery';
+
+  @override
+  String get signInBenefitPhone => 'Sign up with your phone number in a minute';
+
+  @override
+  String get notNow => 'Not now';
 
   @override
   String get continueBrowsing => 'Continue browsing';
 
   @override
-  String get guest => 'Guest';
+  String get sortByDate => 'Sort by date';
+
+  @override
+  String get sortEarliest => 'Earliest';
+
+  @override
+  String get sortLatest => 'Latest';
+
+  @override
+  String get sendWithTrustedTravelers => 'Send with trusted travelers';
+
+  @override
+  String get guestHeroBadge => 'Verified travelers · Escrow payments';
+
+  @override
+  String get guestHeroTitle =>
+      'Send items abroad with a traveler already going there';
+
+  @override
+  String get guestHeroBody =>
+      'Find a trusted traveler heading to your destination. Your payment is held safely until your recipient confirms delivery.';
+
+  @override
+  String get createFreeAccount => 'Create a free account';
+
+  @override
+  String get travelersGoingSoon => 'Travelers Going Soon';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get howItWorks => 'How it works';
+
+  @override
+  String get howStep1Title => 'Search';
+
+  @override
+  String get howStep1Body => 'for a traveler going to your destination.';
+
+  @override
+  String get howStep2Title => 'Pay into escrow';
+
+  @override
+  String get howStep2Body => 'once you have checked their ticket and ID.';
+
+  @override
+  String get howStep3Title => 'Traveler is paid';
+
+  @override
+  String get howStep3Body => 'after your recipient confirms delivery.';
+
+  @override
+  String get pickedUpItem => 'I\'ve picked up the item';
+
+  @override
+  String pickedUpOn(String date) {
+    return 'Picked up on $date';
+  }
+
+  @override
+  String get pickedUp => 'Picked up';
+
+  @override
+  String get notYet => 'Not yet';
+
+  @override
+  String get pickUpFirst => 'Mark the item as picked up first.';
+
+  @override
+  String get errPickUpFailed =>
+      'Couldn\'t mark it as picked up. Please try again.';
+
+  @override
+  String handoverCodeNote(String city) {
+    return 'Meet the recipient in $city, hand over the item and ask them for the delivery code.';
+  }
+
+  @override
+  String wrongCodeAttempts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tries left',
+      one: '1 try left',
+    );
+    return 'That code isn\'t right. $_temp0.';
+  }
+
+  @override
+  String get codeLocked =>
+      'Too many wrong codes. Contact support to unlock this delivery.';
+
+  @override
+  String get codeNotReady =>
+      'The sender didn\'t have a code yet. Ask them to share the code that\'s now in their app.';
+
+  @override
+  String deliveredPayoutQueued(String amount) {
+    return 'Delivered! Your payout of $amount is on its way.';
+  }
+
+  @override
+  String get deliveryCode => 'Delivery code';
+
+  @override
+  String deliveryCodeNote(String name) {
+    return 'Give this code to $name. The traveler needs it to confirm the delivery.';
+  }
+
+  @override
+  String textCodeTo(String name) {
+    return 'Text it to $name';
+  }
+
+  @override
+  String get codeTextedResend => 'Sent by SMS · Resend';
+
+  @override
+  String codeTexted(String name) {
+    return 'Code sent to $name by SMS.';
+  }
+
+  @override
+  String get errSmsUnavailable =>
+      'Texting isn\'t available right now. Please share the code with the recipient yourself.';
+
+  @override
+  String get errSmsTooSoon =>
+      'The code was just sent. Please wait a couple of minutes before resending.';
+
+  @override
+  String get payoutCountry => 'Country';
+
+  @override
+  String get bankAccount => 'Bank account';
+
+  @override
+  String get bankLabel => 'Bank';
+
+  @override
+  String get providerLabel => 'Provider';
+
+  @override
+  String get chooseBank => 'Choose your bank';
+
+  @override
+  String get chooseProvider => 'Choose your provider';
+
+  @override
+  String get accountNumber => 'Account number';
+
+  @override
+  String get mobileMoneyNumber => 'Mobile money number';
+
+  @override
+  String get accountHolderName => 'Account holder name';
+
+  @override
+  String get savePayoutAccount => 'Save payout account';
+
+  @override
+  String get payoutAccountNoteSecure =>
+      'Your full account number is kept securely on our server and only used to send your payouts. The app only shows its last 4 digits.';
+
+  @override
+  String noPayoutOptions(String country) {
+    return 'Nata can\'t pay out to $country yet.';
+  }
+
+  @override
+  String get errLoadPayoutOptions =>
+      'Couldn\'t load the banks for this country.';
+
+  @override
+  String get errPayoutAccountInvalid =>
+      'Check the account number and the holder’s name.';
+
+  @override
+  String get errPayoutNotSupported =>
+      'This bank can\'t receive payouts yet. Please choose another one.';
+
+  @override
+  String get errSavePayoutAccount =>
+      'Couldn\'t save the payout account. Please try again.';
+
+  @override
+  String get payoutAccountSaved => 'Payout account saved.';
+
+  @override
+  String withdrawSent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payouts are on their way.',
+      one: 'Your payout is on its way.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get withdrawNothing =>
+      'Nothing to send right now. If you\'re waiting for a payout, check you have a payout account in Payment Settings.';
 }
