@@ -5713,6 +5713,606 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing to send right now. If you\'re waiting for a payout, check you have a payout account in Payment Settings.'**
   String get withdrawNothing;
+
+  /// No description provided for @backToProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Profile'**
+  String get backToProfile;
+
+  /// No description provided for @idStatusVerifiedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your identity is verified'**
+  String get idStatusVerifiedTitle;
+
+  /// No description provided for @idStatusVerifiedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Senders and travelers can see you\'re verified. Your ID details are never shown to other users.'**
+  String get idStatusVerifiedBody;
+
+  /// No description provided for @idStatusReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re checking your ID'**
+  String get idStatusReviewTitle;
+
+  /// No description provided for @idStatusReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This usually takes less than 24 hours. You can browse in the meantime, but you can\'t send or accept requests yet.'**
+  String get idStatusReviewBody;
+
+  /// No description provided for @idStatusDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'ID document'**
+  String get idStatusDocument;
+
+  /// No description provided for @idStatusFaceMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Face match'**
+  String get idStatusFaceMatch;
+
+  /// No description provided for @idStatusVerifiedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified on'**
+  String get idStatusVerifiedOn;
+
+  /// No description provided for @idStatusSubmittedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted on'**
+  String get idStatusSubmittedOn;
+
+  /// No description provided for @idStatusPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Passed'**
+  String get idStatusPassed;
+
+  /// No description provided for @idStatusInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get idStatusInReview;
+
+  /// No description provided for @idStatusReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get idStatusReceived;
+
+  /// No description provided for @idStatusPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Only your photo and first name appear on your profile.'**
+  String get idStatusPrivacy;
+
+  /// No description provided for @idDocPassport.
+  ///
+  /// In en, this message translates to:
+  /// **'Passport'**
+  String get idDocPassport;
+
+  /// No description provided for @idDocDriversLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver\'s license'**
+  String get idDocDriversLicense;
+
+  /// No description provided for @idDocNationalId.
+  ///
+  /// In en, this message translates to:
+  /// **'National ID'**
+  String get idDocNationalId;
+
+  /// No description provided for @walletHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet History'**
+  String get walletHistory;
+
+  /// No description provided for @walletAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get walletAvailable;
+
+  /// No description provided for @walletInEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'In escrow'**
+  String get walletInEscrow;
+
+  /// No description provided for @walletFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get walletFilterAll;
+
+  /// No description provided for @walletFilterPayouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Payouts'**
+  String get walletFilterPayouts;
+
+  /// No description provided for @walletFilterPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get walletFilterPayments;
+
+  /// No description provided for @walletPayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout · {item}'**
+  String walletPayoutTitle(String item);
+
+  /// No description provided for @walletPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment · {item}'**
+  String walletPaymentTitle(String item);
+
+  /// No description provided for @walletPayoutFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout'**
+  String get walletPayoutFallback;
+
+  /// No description provided for @walletPaymentFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get walletPaymentFallback;
+
+  /// No description provided for @walletPaymentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery request to {name}'**
+  String walletPaymentTo(String name);
+
+  /// No description provided for @walletStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get walletStatusPending;
+
+  /// No description provided for @walletStatusSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get walletStatusSending;
+
+  /// No description provided for @walletStatusPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get walletStatusPaid;
+
+  /// No description provided for @walletStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed · retrying'**
+  String get walletStatusFailed;
+
+  /// No description provided for @walletStatusInEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'In escrow'**
+  String get walletStatusInEscrow;
+
+  /// No description provided for @walletStatusReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Released'**
+  String get walletStatusReleased;
+
+  /// No description provided for @walletStatusRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get walletStatusRefunded;
+
+  /// No description provided for @walletEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet. Payments and payouts will appear here.'**
+  String get walletEmpty;
+
+  /// No description provided for @errWalletHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your history.'**
+  String get errWalletHistory;
+
+  /// No description provided for @sbpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why items travel sealed'**
+  String get sbpTitle;
+
+  /// No description provided for @sbpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every item must be in its original, factory-sealed box. It keeps travelers safe at customs and protects senders from disputes.'**
+  String get sbpBody;
+
+  /// No description provided for @sbpRule1.
+  ///
+  /// In en, this message translates to:
+  /// **'Original packaging, unopened'**
+  String get sbpRule1;
+
+  /// No description provided for @sbpRule2.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown in photos before the request'**
+  String get sbpRule2;
+
+  /// No description provided for @sbpRule3.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler checks the seal at pickup and can refuse a box that\'s been opened'**
+  String get sbpRule3;
+
+  /// No description provided for @sbpRule4.
+  ///
+  /// In en, this message translates to:
+  /// **'No prohibited items: cash, medicines without a prescription, batteries over 100Wh, liquids over 100ml, anything illegal at the destination'**
+  String get sbpRule4;
+
+  /// No description provided for @sbpCustoms.
+  ///
+  /// In en, this message translates to:
+  /// **'If customs opens the box, the traveler isn\'t responsible for the item.'**
+  String get sbpCustoms;
+
+  /// No description provided for @ecScreenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone we can reach if something goes wrong during a delivery. Never shown to other users.'**
+  String get ecScreenBody;
+
+  /// No description provided for @ecSaveContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Save contact'**
+  String get ecSaveContact;
+
+  /// No description provided for @ecSavedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency contact saved.'**
+  String get ecSavedToast;
+
+  /// No description provided for @ecProfileAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add someone we can reach'**
+  String get ecProfileAdd;
+
+  /// No description provided for @errLoadContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your emergency contact.'**
+  String get errLoadContact;
+
+  /// No description provided for @notifRequestNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New delivery request'**
+  String get notifRequestNewTitle;
+
+  /// No description provided for @notifRequestNewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants you to carry an item on {route}.'**
+  String notifRequestNewBody(String name, String route);
+
+  /// No description provided for @notifAcceptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request accepted'**
+  String get notifAcceptedTitle;
+
+  /// No description provided for @notifAcceptedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your request. Pay within 24 hours to confirm it.'**
+  String notifAcceptedBody(String name);
+
+  /// No description provided for @notifDeclinedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined'**
+  String get notifDeclinedTitle;
+
+  /// No description provided for @notifDeclinedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} can\'t take your item. Find another traveler on {route}.'**
+  String notifDeclinedBody(String name, String route);
+
+  /// No description provided for @notifExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request expired'**
+  String get notifExpiredTitle;
+
+  /// No description provided for @notifExpiredUnansweredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} didn\'t answer in time. Find another traveler.'**
+  String notifExpiredUnansweredBody(String name);
+
+  /// No description provided for @notifExpiredUnpaidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The 24 hours to pay have passed, so the request was closed.'**
+  String get notifExpiredUnpaidBody;
+
+  /// No description provided for @notifExpiredUnpaidTravelerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} didn\'t pay in time, so the request was closed.'**
+  String notifExpiredUnpaidTravelerBody(String name);
+
+  /// No description provided for @notifCancelledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request cancelled'**
+  String get notifCancelledTitle;
+
+  /// No description provided for @notifCancelledByTravelerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} cancelled your request.'**
+  String notifCancelledByTravelerBody(String name);
+
+  /// No description provided for @notifCancelledBySenderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} cancelled their request on {route}.'**
+  String notifCancelledBySenderBody(String name, String route);
+
+  /// No description provided for @notifPaidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment secured'**
+  String get notifPaidTitle;
+
+  /// No description provided for @notifPaidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} paid. The money is held safely until delivery, and chat is open.'**
+  String notifPaidBody(String name);
+
+  /// No description provided for @notifPickedUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item picked up'**
+  String get notifPickedUpTitle;
+
+  /// No description provided for @notifPickedUpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has your item and is on the way.'**
+  String notifPickedUpBody(String name);
+
+  /// No description provided for @notifDeliveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item delivered'**
+  String get notifDeliveredTitle;
+
+  /// No description provided for @notifDeliveredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} delivered your item. Confirm you received it.'**
+  String notifDeliveredBody(String name);
+
+  /// No description provided for @notifPayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout sent'**
+  String get notifPayoutTitle;
+
+  /// No description provided for @notifPayoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payout of {amount} is on its way.'**
+  String notifPayoutBody(String amount);
+
+  /// No description provided for @notifVerifiedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity verified'**
+  String get notifVerifiedTitle;
+
+  /// No description provided for @notifVerifiedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re verified. You can now send and accept delivery requests.'**
+  String get notifVerifiedBody;
+
+  /// No description provided for @notifRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity check failed'**
+  String get notifRejectedTitle;
+
+  /// No description provided for @notifRejectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t verify your ID. Please try again with a clear photo.'**
+  String get notifRejectedBody;
+
+  /// No description provided for @crHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'{traveler} says your item was delivered to {recipient}'**
+  String crHeadline(String traveler, String recipient);
+
+  /// No description provided for @crBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that it arrived safely. Confirming lets you rate {traveler}.'**
+  String crBody(String traveler);
+
+  /// No description provided for @crItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get crItem;
+
+  /// No description provided for @crRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get crRoute;
+
+  /// No description provided for @crRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get crRecipient;
+
+  /// No description provided for @crYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, it arrived'**
+  String get crYes;
+
+  /// No description provided for @reportProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a problem'**
+  String get reportProblem;
+
+  /// No description provided for @crReportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can report a problem for 3 days'**
+  String get crReportNote;
+
+  /// No description provided for @rpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what went wrong. Our support team will contact you.'**
+  String get rpBody;
+
+  /// No description provided for @rpReason.
+  ///
+  /// In en, this message translates to:
+  /// **'What happened?'**
+  String get rpReason;
+
+  /// No description provided for @rpNotReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'The item didn\'t arrive'**
+  String get rpNotReceived;
+
+  /// No description provided for @rpDamaged.
+  ///
+  /// In en, this message translates to:
+  /// **'It arrived damaged'**
+  String get rpDamaged;
+
+  /// No description provided for @rpWrongItem.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s not the item I sent'**
+  String get rpWrongItem;
+
+  /// No description provided for @rpOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'The box was opened'**
+  String get rpOpened;
+
+  /// No description provided for @rpOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get rpOther;
+
+  /// No description provided for @rpDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get rpDetails;
+
+  /// No description provided for @rpDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add anything that will help us look into it'**
+  String get rpDetailsHint;
+
+  /// No description provided for @rpSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report'**
+  String get rpSend;
+
+  /// No description provided for @rpSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks. We\'ve received your report and will contact you.'**
+  String get rpSent;
+
+  /// No description provided for @errAlreadyReported.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already reported a problem on this delivery.'**
+  String get errAlreadyReported;
+
+  /// No description provided for @errReportWindowClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The 3 days to report a problem have passed.'**
+  String get errReportWindowClosed;
+
+  /// No description provided for @notifProblemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem reported'**
+  String get notifProblemTitle;
+
+  /// No description provided for @notifProblemBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A problem was reported on one of your deliveries. Our support team will contact you.'**
+  String get notifProblemBody;
+
+  /// No description provided for @pickupPhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of the sealed box as you receive it.'**
+  String get pickupPhotoHint;
+
+  /// No description provided for @errPhotoUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload the photo. Please try again.'**
+  String get errPhotoUpload;
+
+  /// No description provided for @notifRefundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund sent'**
+  String get notifRefundTitle;
+
+  /// No description provided for @notifRefundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your refund of {amount} is on its way.'**
+  String notifRefundBody(String amount);
 }
 
 class _AppLocalizationsDelegate

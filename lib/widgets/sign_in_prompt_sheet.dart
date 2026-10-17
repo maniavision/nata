@@ -8,19 +8,27 @@ import '../screens/sign_up_screen.dart';
 
 /// Shown when a visitor taps something that needs an account. [message] says
 /// what they were trying to do; it defaults to a general line.
-Future<void> showSignInPrompt(BuildContext context, {String? message}) {
+Future<void> showSignInPrompt(
+  BuildContext context, {
+  String? message,
+  WidgetBuilder? next,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.foreground.withValues(alpha: 0.45),
-    builder: (_) => SignInPromptSheet(message: message),
+    builder: (_) => SignInPromptSheet(message: message, next: next),
   );
 }
 
 class SignInPromptSheet extends StatelessWidget {
   final String? message;
-  const SignInPromptSheet({super.key, this.message});
+
+  /// The page the visitor was opening; Sign In leads there once done.
+  final WidgetBuilder? next;
+
+  const SignInPromptSheet({super.key, this.message, this.next});
 
   /// Closes the sheet, then opens [screen] from the page underneath.
   void _open(BuildContext context, Widget screen) {
@@ -145,7 +153,7 @@ class SignInPromptSheet extends StatelessWidget {
               height: 52,
               child: OutlinedButton(
                 key: const ValueKey('sign-in-prompt-sign-in'),
-                onPressed: () => _open(context, const LoginScreen()),
+                onPressed: () => _open(context, LoginScreen(afterSignIn: next)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.foreground,
                   side: const BorderSide(color: AppColors.border, width: 1.5),

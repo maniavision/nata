@@ -334,11 +334,110 @@ class PaymentService {
     return ((response.data as Map?)?['sent'] as num?)?.toInt() ?? 0;
   }
 
+  /// The user's payouts and payments, newest first (wallet_history,
+  /// 20240141_wallet_history.sql).
+  Future<List<WalletEntry>> walletHistory({int limit = 100}) async {
+    final rows =
+        await _client.rpc('wallet_history', params: {'p_limit': limit})
+            as List<dynamic>;
+    return [
+      for (final r in rows)
+        WalletEntry.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
   /// The payout schedule; automatic until the user changes it.
   Future<PayoutSchedule> payoutSchedule() async {
     final row = await _table(
       'payment_preferences',
     ).select('payout_schedule').eq('user_id', _userId).maybeSingle();
     return PayoutSchedule.fromDb(row?['payout_schedule'] as String?);
+  }
+}
+
+/// What a wallet history row is about.
+enum WalletEntryKind { payout, payment }
+
+/// Where a wallet history row stands, as the app shows it.
+enum WalletEntryStatus {
+  /// Payout: waiting for a payout account or its turn.
+  pending,
+
+  /// Payout: being sent.
+  sending,
+
+  /// Payout: arrived.
+  paid,
+
+  /// Payout: the transfer failed and will be tried again.
+  failed,
+
+  /// Payment: held by Nata until delivery.
+  inEscrow,
+
+  /// Payment: passed on to the traveler.
+  released,
+
+  /// Payment: given back to the sender.
+  refunded,
+}
+
+/// One payout (as a traveler) or payment (as a sender).
+class WalletEntry {
+  final WalletEntryKind kind;
+  final String id;
+  final double amount;
+  final String currency;
+  final WalletEntryStatus status;
+  final DateTime date;
+  final String? item;
+  final String? fromCity;
+  final String? toCity;
+
+  /// The sender (payout) or traveler (payment).
+  final String? otherName;
+
+  const WalletEntry({
+    required this.kind,
+    required this.id,
+    required this.amount,
+    required this.currency,
+    required this.status,
+    required this.date,
+    this.item,
+    this.fromCity,
+    this.toCity,
+    this.otherName,
+  });
+
+  factory WalletEntry.fromJson(Map<String, dynamic> j) {
+    final kind = j['kind'] == 'payment'
+        ? WalletEntryKind.payment
+        : WalletEntryKind.payout;
+    final raw = j['status'] as String?;
+    final status = kind == WalletEntryKind.payout
+        ? switch (raw) {
+            'paid' => WalletEntryStatus.paid,
+            'processing' => WalletEntryStatus.sending,
+            'failed' => WalletEntryStatus.failed,
+            _ => WalletEntryStatus.pending,
+          }
+        : switch (raw) {
+            'released' => WalletEntryStatus.released,
+            'refunded' => WalletEntryStatus.refunded,
+            _ => WalletEntryStatus.inEscrow,
+          };
+    return WalletEntry(
+      kind: kind,
+      id: j['id'] as String,
+      amount: (j['amount'] as num?)?.toDouble() ?? 0,
+      currency: ((j['currency'] as String?) ?? 'USD').trim().toUpperCase(),
+      status: status,
+      date: DateTime.parse(j['created_at'] as String).toLocal(),
+      item: j['item'] as String?,
+      fromCity: j['from_city'] as String?,
+      toCity: j['to_city'] as String?,
+      otherName: j['other_name'] as String?,
+    );
   }
 }

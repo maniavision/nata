@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/notification_text.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/notification_service.dart';
@@ -417,6 +418,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _card(AppNotification n, DateTime now) {
     final l = context.l10n;
+    final (title, body) = notificationText(l, n);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
@@ -447,7 +449,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            n.title,
+                            title,
                             style: GoogleFonts.dmSans(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
@@ -472,10 +474,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ],
                       ],
                     ),
-                    if (n.body.isNotEmpty) ...[
+                    if (body.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        n.body,
+                        body,
                         maxLines: n.type == 'message' ? 1 : 4,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.dmSans(

@@ -457,20 +457,16 @@ class _TravelerCardState extends State<_TravelerCard> {
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: () {
+        Widget profile(BuildContext context) =>
+            TravelerProfileScreen(trip: widget.trip, service: widget.service);
         if (!AuthGate.check(
           context,
           message: context.l10n.signInPromptTraveler(widget.trip.firstName),
+          next: profile,
         )) {
           return;
         }
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => TravelerProfileScreen(
-              trip: widget.trip,
-              service: widget.service,
-            ),
-          ),
-        );
+        Navigator.of(context).push(MaterialPageRoute(builder: profile));
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),

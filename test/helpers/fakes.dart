@@ -150,8 +150,18 @@ class FakeTravelerService extends Fake implements TravelerService {
     });
     if (searchGate != null) await searchGate!.future;
     if (failSearch) throw Exception('search failed');
+    final filtered = [
+      departureCountry,
+      departureCity,
+      arrivalCountry,
+      arrivalCity,
+    ].any((f) => f != null);
+    if (filtered && noneOnRoute) return const [];
     return trips;
   }
+
+  /// Searches with a route find nobody; searches without one find [trips].
+  bool noneOnRoute = false;
 
   @override
   Future<TravelerProfile?> getProfile(String travelerId) async {
@@ -932,6 +942,31 @@ class FakeRequestService extends Fake implements RequestService {
     pickedUp.add(requestId);
   }
 
+  /// Delivery photos uploaded; [failPhoto] makes uploading fail.
+  final List<({String id, DeliveryPhotoKind kind})> photos = [];
+  RequestException? failPhoto;
+
+  @override
+  Future<void> uploadDeliveryPhoto(
+    String requestId,
+    DeliveryPhotoKind kind,
+    Uint8List bytes,
+  ) async {
+    if (failPhoto != null) throw failPhoto!;
+    photos.add((id: requestId, kind: kind));
+  }
+
+  /// What deliveryPhotoUrls returns.
+  ({String? pickup, String? handover}) photoUrls = (
+    pickup: null,
+    handover: null,
+  );
+
+  @override
+  Future<({String? pickup, String? handover})> deliveryPhotoUrls(
+    String requestId,
+  ) async => photoUrls;
+
   @override
   Future<DeliveryCheckResult> confirmDelivery(
     String requestId,
@@ -958,6 +993,26 @@ class FakeRequestService extends Fake implements RequestService {
   Future<void> confirmReceipt(String requestId) async {
     if (failReview != null) throw failReview!;
     receiptsConfirmed.add(requestId);
+  }
+
+  /// How many times refunds were asked for.
+  int refundCalls = 0;
+
+  @override
+  Future<void> sendRefunds() async => refundCalls++;
+
+  /// Problems reported; [failReport] makes reporting fail.
+  final List<({String id, ProblemReason reason, String details})> reports = [];
+  RequestException? failReport;
+
+  @override
+  Future<void> reportProblem(
+    String requestId, {
+    required ProblemReason reason,
+    String details = '',
+  }) async {
+    if (failReport != null) throw failReport!;
+    reports.add((id: requestId, reason: reason, details: details));
   }
 
   @override
@@ -1237,6 +1292,13 @@ class FakeEmergencyContactService extends Fake
     if (fail != null) throw fail!;
     saved.add(contact);
   }
+
+  /// The contact saved before the test started, if any.
+  EmergencyContact? existing;
+
+  @override
+  Future<EmergencyContact?> get() async =>
+      saved.isNotEmpty ? saved.last : existing;
 }
 
 /// Reports the update you give it, and remembers "Later".
@@ -1332,6 +1394,16 @@ Future<LocationSelection?> fakeCapitalLookup(String countryCode) async {
 /// (first method added, or the last one marked default; deleting the default
 /// promotes the most recent one left).
 class FakePaymentService extends Fake implements PaymentService {
+  /// What walletHistory returns; throws when [failHistory].
+  List<WalletEntry> history = [];
+  bool failHistory = false;
+
+  @override
+  Future<List<WalletEntry>> walletHistory({int limit = 100}) async {
+    if (failHistory) throw StateError('history failed');
+    return history;
+  }
+
   FakePaymentService({
     List<PaymentMethod>? methods,
     this.accounts = const [],
@@ -1490,3 +1562,74 @@ PayoutAccount sampleMobilePayoutAccount() => const PayoutAccount(
   accountLast4: '5678',
   holderName: 'Fortune Niama',
 );
+
+/// A 1×1 transparent PNG, for photos in tests.
+final kTransparentPng = Uint8List.fromList(const [
+  0x89,
+  0x50,
+  0x4E,
+  0x47,
+  0x0D,
+  0x0A,
+  0x1A,
+  0x0A,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x48,
+  0x44,
+  0x52,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x08,
+  0x06,
+  0x00,
+  0x00,
+  0x00,
+  0x1F,
+  0x15,
+  0xC4,
+  0x89,
+  0x00,
+  0x00,
+  0x00,
+  0x0A,
+  0x49,
+  0x44,
+  0x41,
+  0x54,
+  0x78,
+  0x9C,
+  0x63,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x05,
+  0x00,
+  0x01,
+  0x0D,
+  0x0A,
+  0x2D,
+  0xB4,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x49,
+  0x45,
+  0x4E,
+  0x44,
+  0xAE,
+  0x42,
+  0x60,
+  0x82,
+]);

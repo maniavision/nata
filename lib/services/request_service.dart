@@ -92,6 +92,12 @@ class RequestItem {
 
 /// Why sending a request did not work.
 enum RequestFailure {
+  /// A problem was already reported on this delivery.
+  alreadyReported,
+
+  /// More than 3 days have passed since delivery, or it can't be reported yet.
+  reportWindowClosed,
+
   /// The session ended.
   notSignedIn,
 
@@ -1130,6 +1136,24 @@ class RequestService {
   Future<void> confirmReceipt(String requestId) =>
       _call('confirm_receipt', {'p_id': requestId});
 
+  /// Sends the sender's pending refunds (send-refunds): after cancelling a
+  /// paid request, everything but the 10% fee goes back to them.
+  Future<void> sendRefunds() async {
+    await _client.functions.invoke('send-refunds');
+  }
+
+  /// Reports a problem with a delivery (report_problem,
+  /// 20240143_disputes.sql).
+  Future<void> reportProblem(
+    String requestId, {
+    required ProblemReason reason,
+    String details = '',
+  }) => _call('report_problem', {
+    'p_request_id': requestId,
+    'p_reason': reason.dbValue,
+    'p_details': details.trim(),
+  });
+
   /// The sender rates the traveler of a delivered request.
   Future<void> submitReview(
     String requestId, {
@@ -1196,6 +1220,61 @@ class RequestService {
   /// The traveler has the item (paid -> picked up).
   Future<void> markPickedUp(String requestId) =>
       _call('mark_picked_up', {'p_id': requestId});
+
+  /// Uploads the traveler's photo of the sealed item at pickup, or of the
+  /// handover to the recipient (20240144_handover_photos.sql).
+  Future<void> uploadDeliveryPhoto(
+    String requestId,
+    DeliveryPhotoKind kind,
+    Uint8List bytes,
+  ) async {
+    final path = '$requestId/${kind.name}.jpg';
+    try {
+      await _client.storage
+          .from(_deliveryPhotoBucket)
+          .uploadBinary(
+            path,
+            bytes,
+            fileOptions: const FileOptions(
+              contentType: 'image/jpeg',
+              upsert: true,
+            ),
+          );
+    } catch (e) {
+      throw RequestException(RequestFailure.other, e);
+    }
+    await _call('set_delivery_photo', {
+      'p_request_id': requestId,
+      'p_kind': kind.name,
+      'p_path': path,
+    });
+  }
+
+  /// Short-lived links to a request's pickup and handover photos; null where
+  /// there is none.
+  Future<({String? pickup, String? handover})> deliveryPhotoUrls(
+    String requestId,
+  ) async {
+    final rows =
+        await _client.rpc(
+              'delivery_photos',
+              params: {'p_request_id': requestId},
+            )
+            as List;
+    if (rows.isEmpty) return (pickup: null, handover: null);
+    final r = Map<String, dynamic>.from(rows.first as Map);
+    Future<String?> url(String? path) async => path == null
+        ? null
+        : await _client.storage
+              .from(_deliveryPhotoBucket)
+              .createSignedUrl(path, 600);
+    return (
+      pickup: await url(r['pickup_photo_path'] as String?),
+      handover: await url(r['handover_photo_path'] as String?),
+    );
+  }
+
+  static const _deliveryPhotoBucket = 'handover-photos';
 
   /// The traveler enters the recipient's [code]. The right code marks the
   /// request delivered and queues the payout to [payoutAccountId].
@@ -1304,6 +1383,10 @@ class RequestService {
     if (has('request_not_editable')) return RequestFailure.notEditable;
     if (has('request_not_cancellable')) return RequestFailure.notCancellable;
     if (has('fee_changed')) return RequestFailure.feeChanged;
+    if (has('already_reported')) return RequestFailure.alreadyReported;
+    if (has('report_window_closed') || has('not_reportable')) {
+      return RequestFailure.reportWindowClosed;
+    }
     const invalid = [
       'item_required',
       'too_many_items',
@@ -1320,3 +1403,18 @@ class RequestService {
     return RequestFailure.other;
   }
 }
+
+/// What went wrong with a delivery, as `nata.disputes.reason` stores it.
+enum ProblemReason {
+  notReceived('not_received'),
+  damaged('damaged'),
+  wrongItem('wrong_item'),
+  opened('opened'),
+  other('other');
+
+  const ProblemReason(this.dbValue);
+  final String dbValue;
+}
+
+/// Which delivery photo: the sealed item at pickup, or the handover.
+enum DeliveryPhotoKind { pickup, handover }

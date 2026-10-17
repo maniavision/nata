@@ -14,10 +14,15 @@ class AuthGate {
 
   /// True when signed in. Otherwise shows the sign-in prompt, with [message]
   /// saying what the visitor was trying to do, and returns false so the
-  /// caller stops there.
-  static bool check(BuildContext context, {String? message}) {
+  /// caller stops there. [next] is the page they were opening: after signing
+  /// in they land on it (above Home) instead of on Home.
+  static bool check(
+    BuildContext context, {
+    String? message,
+    WidgetBuilder? next,
+  }) {
     if (isSignedIn()) return true;
-    showSignInPrompt(context, message: message);
+    showSignInPrompt(context, message: message, next: next);
     return false;
   }
 }

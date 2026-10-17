@@ -21,11 +21,16 @@ class LoginScreen extends StatefulWidget {
   final BiometricService? biometricService;
   final WidgetBuilder? homeBuilder;
 
+  /// The page a visitor was opening when asked to sign in: shown above Home
+  /// once they are in.
+  final WidgetBuilder? afterSignIn;
+
   const LoginScreen({
     super.key,
     this.authService,
     this.biometricService,
     this.homeBuilder,
+    this.afterSignIn,
   });
 
   @override
@@ -119,12 +124,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _goHome() {
-    Navigator.of(context).pushAndRemoveUntil(
+    final navigator = Navigator.of(context);
+    navigator.pushAndRemoveUntil(
       MaterialPageRoute(
         builder: widget.homeBuilder ?? (context) => const HomeScreen(),
       ),
       (route) => false,
     );
+    final next = widget.afterSignIn;
+    if (next != null) navigator.push(MaterialPageRoute(builder: next));
   }
 
   void _say(String message) {

@@ -180,6 +180,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Upcoming travelers on the chosen route. A visitor who hasn't picked a
+  /// destination and has nobody leaving from their city sees the next
+  /// travelers from anywhere instead of an empty preview.
+  Future<List<TravelerTrip>> _searchTravelers() async {
+    final results = await _travelerService.search(
+      departureCountry: _departure?.countryCode,
+      departureCity: _departure?.city,
+      arrivalCountry: _destination?.countryCode,
+      arrivalCity: _destination?.city,
+      limit: 100,
+    );
+    if (results.isNotEmpty || _destination != null || AuthGate.isSignedIn()) {
+      return results;
+    }
+    return _travelerService.search(limit: 100);
+  }
+
   /// A quiet refresh: no spinner, and a failure keeps what is on screen (the
   /// previous results are simply re-drawn so the list still rotates).
   Future<void> _refreshTravelers() async {
@@ -187,13 +204,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _refreshingTravelers = true;
     final request = ++_travelersRequest;
     try {
-      final results = await _travelerService.search(
-        departureCountry: _departure?.countryCode,
-        departureCity: _departure?.city,
-        arrivalCountry: _destination?.countryCode,
-        arrivalCity: _destination?.city,
-        limit: 100,
-      );
+      final results = await _searchTravelers();
       if (!mounted || request != _travelersRequest) return;
       _applyTravelerResults(results);
     } catch (_) {
@@ -271,13 +282,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _loadTravelers() async {
     final request = ++_travelersRequest;
     try {
-      final results = await _travelerService.search(
-        departureCountry: _departure?.countryCode,
-        departureCity: _departure?.city,
-        arrivalCountry: _destination?.countryCode,
-        arrivalCity: _destination?.city,
-        limit: 100,
-      );
+      final results = await _searchTravelers();
       if (!mounted || request != _travelersRequest) return;
       _applyTravelerResults(results);
     } catch (_) {
@@ -945,6 +950,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         if (!AuthGate.check(
           context,
           message: context.l10n.signInPromptAddTrip,
+          next: (_) => const AddTripScreen(),
         )) {
           return;
         }
@@ -1116,20 +1122,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: _TravelerRow(
                 trip: t,
                 onTap: () {
+                  Widget profile(BuildContext context) => TravelerProfileScreen(
+                    trip: t,
+                    service: widget.travelerService,
+                  );
                   if (!AuthGate.check(
                     context,
                     message: context.l10n.signInPromptTraveler(t.firstName),
+                    next: profile,
                   )) {
                     return;
                   }
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => TravelerProfileScreen(
-                        trip: t,
-                        service: widget.travelerService,
-                      ),
-                    ),
-                  );
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: profile));
                 },
               ),
             ),

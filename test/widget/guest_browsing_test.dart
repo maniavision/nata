@@ -259,6 +259,48 @@ void main() {
       expect(find.byType(LoginScreen), findsNothing);
     });
 
+    testWidgets('nobody from their city: travelers from anywhere', (
+      tester,
+    ) async {
+      signedOut();
+      bigScreen(tester);
+      final travelers = FakeTravelerService()..noneOnRoute = true;
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: travelers,
+            capitalLookup: fakeCapitalLookup,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(travelers.searchCalls.last['departureCity'], isNull);
+      expect(find.text('No travelers on this route yet.'), findsNothing);
+      expect(find.textContaining(' K.'), findsWidgets);
+    });
+
+    testWidgets('signed in, an empty route stays empty', (tester) async {
+      bigScreen(tester);
+      final travelers = FakeTravelerService()..noneOnRoute = true;
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: travelers,
+            capitalLookup: fakeCapitalLookup,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        travelers.searchCalls.every((c) => c['departureCity'] != null),
+        isTrue,
+      );
+    });
+
     testWidgets('signed in: the name, notifications and tabs', (tester) async {
       await pumpHome(tester);
 

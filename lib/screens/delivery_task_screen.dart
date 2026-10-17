@@ -199,19 +199,38 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
   late DateTime? _pickedUpAt = widget.delivery.pickedUpAt;
   bool _markingPickedUp = false;
 
+  /// The photos taken on this visit: the sealed box at pickup, and the
+  /// handover (uploaded when the traveler goes on to the code).
+  Uint8List? _pickupPhoto;
+  Uint8List? _handoverPhoto;
+  bool _handoverUploaded = false;
+  bool _uploadingHandover = false;
+
+  Future<Uint8List?> _takePhoto() =>
+      (widget.photoPicker ?? DeliveryTaskScreen.pickPhoto)(context);
+
   /// Something changed (picked up, delivered): Requests reloads on return.
   bool _changed = false;
 
   AcceptedDelivery get d => widget.delivery;
   RequestService get _service => widget.requestService ?? RequestService();
 
+  /// A photo of the sealed box first, then the pickup is recorded.
   Future<void> _markPickedUp() async {
     if (_markingPickedUp || _pickedUpAt != null) return;
+    final photo = _pickupPhoto ?? await _takePhoto();
+    if (photo == null || !mounted) return;
     setState(() {
+      _pickupPhoto = photo;
       _markingPickedUp = true;
       _error = null;
     });
     try {
+      await _service.uploadDeliveryPhoto(
+        d.requestId,
+        DeliveryPhotoKind.pickup,
+        photo,
+      );
       await _service.markPickedUp(d.requestId);
       if (!mounted) return;
       setState(() {
@@ -232,10 +251,47 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
 
   /// Opens Delivery & Payout Release, where the recipient's code is
   /// entered. Back here once delivered, then back to Requests.
+  Future<void> _attachHandover() async {
+    final photo = await _takePhoto();
+    if (photo == null || !mounted) return;
+    setState(() {
+      _handoverPhoto = photo;
+      _handoverUploaded = false;
+      _error = null;
+    });
+  }
+
   Future<void> _confirmDelivery() async {
+    final l = context.l10n;
     if (_pickedUpAt == null) {
-      setState(() => _error = context.l10n.pickUpFirst);
+      setState(() => _error = l.pickUpFirst);
       return;
+    }
+    final photo = _handoverPhoto;
+    if (photo == null) {
+      setState(() => _error = l.attachHandoverFirst);
+      return;
+    }
+    if (!_handoverUploaded) {
+      setState(() {
+        _uploadingHandover = true;
+        _error = null;
+      });
+      try {
+        await _service.uploadDeliveryPhoto(
+          d.requestId,
+          DeliveryPhotoKind.handover,
+          photo,
+        );
+        _handoverUploaded = true;
+      } catch (e) {
+        debugPrint('[DeliveryTask] handover photo: $e');
+        if (mounted) setState(() => _error = l.errPhotoUpload);
+        return;
+      } finally {
+        if (mounted) setState(() => _uploadingHandover = false);
+      }
+      if (!mounted) return;
     }
     setState(() => _error = null);
     final delivered = await Navigator.of(context).push<bool>(
@@ -647,7 +703,15 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
           ),
           const SizedBox(height: 12),
           _note(l.itemReceivedNote),
+          if (pickedUpAt == null) ...[
+            const SizedBox(height: 4),
+            _note(l.pickupPhotoHint),
+          ],
           const SizedBox(height: 12),
+          if (_pickupPhoto != null) ...[
+            _thumbnail(_pickupPhoto!, key: 'delivery-task-pickup-photo'),
+            const SizedBox(height: 12),
+          ],
           if (pickedUpAt != null)
             Text(
               l.pickedUpOn(
@@ -672,7 +736,7 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.inventory_2_rounded, size: 16),
+                    : const Icon(Icons.photo_camera_rounded, size: 16),
                 label: Text(
                   l.pickedUpItem,
                   style: GoogleFonts.dmSans(
@@ -769,10 +833,81 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
               ],
             ),
           ),
+          if (_pickedUpAt != null) ...[
+            const SizedBox(height: 12),
+            if (_handoverPhoto != null) ...[
+              _thumbnail(_handoverPhoto!, key: 'delivery-task-handover-photo'),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: _green,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l.handoverPhotoAttached,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: _green,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    key: const ValueKey('delivery-task-retake-handover'),
+                    onPressed: _uploadingHandover ? null : _attachHandover,
+                    child: Text(l.retake),
+                  ),
+                ],
+              ),
+            ] else
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: const ValueKey('delivery-task-attach-handover'),
+                  onPressed: _attachHandover,
+                  icon: const Icon(Icons.photo_camera_rounded, size: 16),
+                  label: Text(
+                    l.takeOrUploadHandoverPhoto,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ],
       ),
     );
   }
+
+  Widget _thumbnail(Uint8List bytes, {required String key}) => ClipRRect(
+    key: ValueKey(key),
+    borderRadius: BorderRadius.circular(12),
+    child: Image.memory(
+      bytes,
+      height: 140,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => Container(
+        height: 140,
+        color: AppColors.secondary,
+        child: const Icon(Icons.image_rounded, color: AppColors.primary),
+      ),
+    ),
+  );
 
   // ── Confirm ────────────────────────────────────────────────────────────────
   Widget _confirm(AppLocalizations l) {
@@ -796,8 +931,22 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
           height: 48,
           child: ElevatedButton.icon(
             key: const ValueKey('delivery-task-confirm'),
-            onPressed: _pickedUpAt == null ? null : _confirmDelivery,
-            icon: const Icon(Icons.verified_rounded, size: 18),
+            onPressed:
+                _pickedUpAt == null ||
+                    _handoverPhoto == null ||
+                    _uploadingHandover
+                ? null
+                : _confirmDelivery,
+            icon: _uploadingHandover
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.verified_rounded, size: 18),
             label: Text(
               l.confirmDeliveryClaim(d.payout),
               maxLines: 1,

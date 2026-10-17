@@ -34,6 +34,14 @@ import 'package:carrywise_app/services/city_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
+import 'package:carrywise_app/services/payment_service.dart';
+import 'package:carrywise_app/services/emergency_contact_service.dart';
+import 'package:carrywise_app/services/request_service.dart';
+import 'package:carrywise_app/screens/confirm_receipt_screen.dart';
+import 'package:carrywise_app/screens/report_problem_screen.dart';
+import 'package:carrywise_app/screens/identity_status_screen.dart';
+import 'package:carrywise_app/screens/sealed_box_policy_screen.dart';
+import 'package:carrywise_app/screens/wallet_history_screen.dart';
 import 'package:carrywise_app/widgets/sign_in_prompt_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -184,6 +192,64 @@ void main() {
         travelerService: FakeTravelerService(),
       );
     },
+    'Identity status (verified)': () => IdentityStatusScreen(
+      verified: true,
+      loadVerification: () async => {
+        'id_document_type': 'drivers_license',
+        'verified_at': '2025-09-30T09:00:00Z',
+      },
+    ),
+    'Identity status (review)': () => IdentityStatusScreen(
+      verified: false,
+      loadVerification: () async => {
+        'id_document_type': 'national_id',
+        'updated_at': '2025-09-30T09:00:00Z',
+      },
+    ),
+    'Sealed box policy': () => const SealedBoxPolicyScreen(),
+    'Confirm receipt': () => ConfirmReceiptScreen(
+      request: sampleSentRequest(
+        status: 'delivered',
+        items: const [
+          RequestItem(
+            name: 'Factory-sealed noise-cancelling headphones and charger',
+          ),
+        ],
+      ),
+      service: FakeRequestService(),
+    ),
+    'Report a problem': () =>
+        ReportProblemScreen(requestId: 'req-1', service: FakeRequestService()),
+    'Emergency contact': () => EmergencyContactScreen(
+      service: FakeEmergencyContactService(),
+      initial: const EmergencyContact(
+        fullName: 'Oluwaseun-Chukwuemeka Adewale-Okonkwo',
+        phone: '+447700900123',
+        relationship: EmergencyRelationship.colleague,
+      ),
+    ),
+    'Wallet history': () => WalletHistoryScreen(
+      available: 'XOF 1,234,567',
+      inEscrow: 'XOF 9,876,543',
+      service: FakePaymentService()
+        ..history = [
+          for (final s in WalletEntryStatus.values)
+            WalletEntry(
+              kind: s.index < 4
+                  ? WalletEntryKind.payout
+                  : WalletEntryKind.payment,
+              id: s.name,
+              amount: 1234567,
+              currency: 'XOF',
+              status: s,
+              date: DateTime(2030, 9, 30 - s.index),
+              item: 'Factory-sealed noise-cancelling headphones and charger',
+              fromCity: 'Johannesburg',
+              toCity: 'Ho Chi Minh City',
+              otherName: 'Oluwaseun-Chukwuemeka',
+            ),
+        ],
+    ),
     // A long traveler name in the message.
     'Sign-in prompt': () => const Scaffold(
       body: Align(

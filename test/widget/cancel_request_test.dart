@@ -213,6 +213,18 @@ void main() {
 
       expect(service.cancelled.single.status, 'paid');
       expect(find.text(r'Cancellation fee: $12'), findsOneWidget);
+      // Paid: the rest goes back right away.
+      expect(service.refundCalls, 1);
+    });
+
+    testWidgets('accepted but not paid: nothing to refund', (tester) async {
+      service.mine = [sampleSentRequest(status: 'accepted')];
+      await pumpRequests(tester);
+      await openDialog(tester);
+      await confirm(tester);
+
+      expect(service.cancelled.single.status, 'accepted');
+      expect(service.refundCalls, 0);
     });
   });
 

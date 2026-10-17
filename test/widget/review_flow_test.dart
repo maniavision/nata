@@ -1,3 +1,5 @@
+import 'package:carrywise_app/screens/report_problem_screen.dart';
+import 'package:carrywise_app/screens/confirm_receipt_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/review_screen.dart';
 import 'package:carrywise_app/screens/traveler_profile_screen.dart';
@@ -216,6 +218,11 @@ void main() {
         find.byKey(const ValueKey('sent-request-confirm-receipt-req-1')),
       );
       await tester.pumpAndSettle();
+      expect(find.byType(ConfirmReceiptScreen), findsOneWidget);
+      expect(service.receiptsConfirmed, isEmpty);
+
+      await tester.tap(find.byKey(const ValueKey('receipt-yes')));
+      await tester.pumpAndSettle();
 
       expect(service.receiptsConfirmed, ['req-1']);
       expect(find.byType(ReviewScreen), findsOneWidget);
@@ -241,12 +248,77 @@ void main() {
         find.byKey(const ValueKey('sent-request-confirm-receipt-req-1')),
       );
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('receipt-yes')));
+      await tester.pumpAndSettle();
 
       expect(
         find.text('Could not confirm receipt. Please try again.'),
         findsOneWidget,
       );
       expect(find.byType(ReviewScreen), findsNothing);
+      expect(find.byType(ConfirmReceiptScreen), findsOneWidget);
+    });
+
+    testWidgets('Report a problem instead of confirming', (tester) async {
+      service.mine = [delivered(confirmed: false)];
+      await pump(tester);
+
+      await tester.tap(
+        find.byKey(const ValueKey('sent-request-confirm-receipt-req-1')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('You can report a problem for 3 days'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('receipt-report')));
+      await tester.pumpAndSettle();
+      expect(find.byType(ReportProblemScreen), findsOneWidget);
+
+      // Nothing to send until a reason is picked.
+      final send = find.byKey(const ValueKey('report-send'));
+      expect(tester.widget<FilledButton>(send).onPressed, isNull);
+
+      await tester.tap(find.byKey(const ValueKey('report-reason-damaged')));
+      await tester.enterText(
+        find.byKey(const ValueKey('report-details')),
+        'The screen is cracked.',
+      );
+      await tester.pump();
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+
+      expect(service.reports.single.id, 'req-1');
+      expect(service.reports.single.reason, ProblemReason.damaged);
+      expect(service.reports.single.details, 'The screen is cracked.');
+      expect(service.receiptsConfirmed, isEmpty);
+      expect(find.byType(ConfirmReceiptScreen), findsNothing);
+      expect(find.byType(ReviewScreen), findsNothing);
+      expect(
+        find.text("Thanks. We've received your report and will contact you."),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a second report is explained', (tester) async {
+      service.mine = [delivered(confirmed: false)];
+      service.failReport = const RequestException(
+        RequestFailure.alreadyReported,
+      );
+      await pump(tester);
+      await tester.tap(
+        find.byKey(const ValueKey('sent-request-confirm-receipt-req-1')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('receipt-report')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('report-reason-other')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('report-send')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("You've already reported a problem on this delivery."),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Leave a Review opens the review', (tester) async {

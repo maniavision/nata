@@ -1,3 +1,4 @@
+import 'report_problem_screen.dart';
 import '../services/request_service.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -183,6 +184,22 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
       c.clear();
     }
     _pinFocus.first.requestFocus();
+  }
+
+  Future<void> _reportProblem() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final sent = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ReportProblemScreen(
+          requestId: widget.delivery.requestId,
+          service: widget.requestService,
+        ),
+      ),
+    );
+    if (sent == true) {
+      messenger.showSnackBar(SnackBar(content: Text(l.rpSent)));
+    }
   }
 
   @override
@@ -634,7 +651,7 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
           const SizedBox(height: 8),
           GestureDetector(
             key: const ValueKey('delivery-confirm-dispute'),
-            onTap: () {},
+            onTap: _reportProblem,
             child: Row(
               children: [
                 const Icon(

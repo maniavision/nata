@@ -13,6 +13,7 @@ import '../services/id_document_check_service.dart';
 import '../services/preferences_service.dart';
 import '../services/request_service.dart' show RequestInput;
 import '../widgets/country_code_picker_sheet.dart';
+import '../widgets/page_header.dart';
 import '../widgets/face_scan_step.dart';
 import '../services/verification_service.dart';
 import 'home_screen.dart';
@@ -1734,11 +1735,18 @@ class _StepEmergency extends StatefulWidget {
   /// Called once the contact is saved, or when the user chooses to skip.
   final VoidCallback onDone;
 
+  /// Opened from Profile rather than during verification: a plain page
+  /// header, no Skip or progress, "Save contact", and [initial] filled in.
+  final bool standalone;
+  final EmergencyContact? initial;
+
   const _StepEmergency({
     super.key,
     required this.service,
     required this.onBack,
     required this.onDone,
+    this.standalone = false,
+    this.initial,
   });
 
   @override
@@ -1770,7 +1778,33 @@ class _StepEmergencyState extends State<_StepEmergency> {
   @override
   void initState() {
     super.initState();
-    _applyUserCountry();
+    final initial = widget.initial;
+    if (initial == null) {
+      _applyUserCountry();
+    } else {
+      _nameCtrl.text = initial.fullName;
+      _relationship = initial.relationship;
+      _phoneCtrl.text = initial.phone;
+      _applyCountryOf(initial.phone);
+    }
+  }
+
+  /// Splits a saved "+233241234567" into its country and local number.
+  Future<void> _applyCountryOf(String phone) async {
+    final all = await CountryService().all();
+    Country? best;
+    for (final c in all) {
+      if (phone.startsWith(c.phoneCode) &&
+          (best == null || c.phoneCode.length > best.phoneCode.length)) {
+        best = c;
+      }
+    }
+    if (best == null || !mounted || _countryChosenByUser) return;
+    final country = best;
+    setState(() {
+      _country = country;
+      _phoneCtrl.text = phone.substring(country.phoneCode.length);
+    });
   }
 
   Future<void> _applyUserCountry() async {
@@ -1858,28 +1892,37 @@ class _StepEmergencyState extends State<_StepEmergency> {
     final l = context.l10n;
     return Column(
       children: [
-        _header(l),
+        if (widget.standalone)
+          PageHeader(title: l.emergencyContactLabel)
+        else
+          _header(l),
         Expanded(
           child: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              widget.standalone ? 20 : 8,
+              20,
+              24,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l.ecTitle,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 24,
-                    letterSpacing: -0.5,
-                    color: AppColors.foreground,
+                if (!widget.standalone)
+                  Text(
+                    l.ecTitle,
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 24,
+                      letterSpacing: -0.5,
+                      color: AppColors.foreground,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 4),
                 Text(
-                  l.ecBody,
+                  widget.standalone ? l.ecScreenBody : l.ecBody,
                   style: GoogleFonts.dmSans(
-                    fontSize: 12,
+                    fontSize: widget.standalone ? 13 : 12,
                     color: AppColors.mutedForeground,
                   ),
                 ),
@@ -2270,7 +2313,7 @@ class _StepEmergencyState extends State<_StepEmergency> {
                       children: [
                         Flexible(
                           child: Text(
-                            l.ecFinish,
+                            widget.standalone ? l.ecSaveContact : l.ecFinish,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.dmSans(
@@ -2280,12 +2323,14 @@ class _StepEmergencyState extends State<_StepEmergency> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: Colors.white,
-                        ),
+                        if (!widget.standalone) ...[
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ],
                       ],
                     ),
             ),
@@ -2400,4 +2445,33 @@ class _DashedRRectBorder extends CustomPainter {
   @override
   bool shouldRepaint(_DashedRRectBorder old) =>
       old.color != color || old.radius != radius;
+}
+
+/// The emergency contact form on its own page, opened from Profile. Pops
+/// with true once the contact is saved.
+class EmergencyContactScreen extends StatelessWidget {
+  /// The saved contact, filled in for editing.
+  final EmergencyContact? initial;
+
+  /// Override for tests; defaults to the real [EmergencyContactService].
+  final EmergencyContactService? service;
+
+  const EmergencyContactScreen({super.key, this.initial, this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: _StepEmergency(
+          service: service ?? EmergencyContactService(),
+          standalone: true,
+          initial: initial,
+          onBack: () => Navigator.of(context).pop(),
+          onDone: () => Navigator.of(context).pop(true),
+        ),
+      ),
+    );
+  }
 }

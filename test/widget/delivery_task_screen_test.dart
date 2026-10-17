@@ -1,6 +1,7 @@
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
 import 'package:carrywise_app/services/request_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,9 +16,15 @@ void main() {
   late FakeRequestService service;
   bool? popped;
 
+  /// What the camera returns next (null: the traveler cancelled).
+  Uint8List? nextPhoto;
+  var photosTaken = 0;
+
   setUp(() {
     service = FakeRequestService();
     popped = null;
+    nextPhoto = kTransparentPng;
+    photosTaken = 0;
   });
 
   Future<void> pump(
@@ -39,6 +46,10 @@ void main() {
                     builder: (_) => DeliveryTaskScreen(
                       delivery: delivery,
                       requestService: service,
+                      photoPicker: (_) async {
+                        photosTaken++;
+                        return nextPhoto;
+                      },
                       paymentService: FakePaymentService(
                         accounts: [samplePayoutAccount()],
                       ),
@@ -60,6 +71,13 @@ void main() {
   ElevatedButton confirmButton(WidgetTester t) => t.widget<ElevatedButton>(
     find.byKey(const ValueKey('delivery-task-confirm')),
   );
+
+  Future<void> attachHandover(WidgetTester tester) async {
+    await tester.tap(
+      find.byKey(const ValueKey('delivery-task-attach-handover')),
+    );
+    await tester.pumpAndSettle();
+  }
 
   testWidgets('shows the order, sender, payout, route and item', (
     tester,
@@ -94,18 +112,41 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('delivery-task-picked-up')));
     await tester.pumpAndSettle();
 
+    // The sealed box is photographed first.
+    expect(photosTaken, 1);
+    expect(service.photos, [(id: 'req-1', kind: DeliveryPhotoKind.pickup)]);
+    expect(
+      find.byKey(const ValueKey('delivery-task-pickup-photo')),
+      findsOneWidget,
+    );
     expect(service.pickedUp, ['req-1']);
     expect(find.text('Picked up'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('delivery-task-picked-up-at')),
       findsOneWidget,
     );
+    // Still locked until the handover photo is attached.
+    expect(confirmButton(tester).onPressed, isNull);
+    await attachHandover(tester);
     expect(confirmButton(tester).onPressed, isNotNull);
 
     // Requests reloads on return.
     await tester.tap(find.byKey(const ValueKey('delivery-task-back')));
     await tester.pumpAndSettle();
     expect(popped, isTrue);
+  });
+
+  testWidgets('no photo, no pickup', (tester) async {
+    nextPhoto = null;
+    await pump(tester, sampleDelivery());
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-picked-up')));
+    await tester.pumpAndSettle();
+
+    expect(photosTaken, 1);
+    expect(service.photos, isEmpty);
+    expect(service.pickedUp, isEmpty);
+    expect(find.text('Not yet'), findsOneWidget);
   });
 
   testWidgets('a failed pickup is explained and can be retried', (
@@ -133,14 +174,34 @@ void main() {
     await pump(tester, samplePickedUpDelivery());
 
     expect(find.text('Picked up'), findsOneWidget);
+    expect(confirmButton(tester).onPressed, isNull);
+    await attachHandover(tester);
+    expect(find.text('Handover photo attached'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
     await tester.pumpAndSettle();
 
+    expect(service.photos, [(id: 'req-1', kind: DeliveryPhotoKind.handover)]);
     expect(find.byType(DeliveryConfirmScreen), findsOneWidget);
+  });
+
+  testWidgets('a failed handover upload is explained', (tester) async {
+    await pump(tester, samplePickedUpDelivery());
+    await attachHandover(tester);
+    service.failPhoto = const RequestException(RequestFailure.other);
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text("Couldn't upload the photo. Please try again."),
+      findsOneWidget,
+    );
+    expect(find.byType(DeliveryConfirmScreen), findsNothing);
   });
 
   testWidgets('once delivered, it goes back to Requests', (tester) async {
     await pump(tester, samplePickedUpDelivery());
+    await attachHandover(tester);
     await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
     await tester.pumpAndSettle();
 

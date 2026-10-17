@@ -617,4 +617,63 @@ void main() {
       expect(find.text('Where are you sending?'), findsOneWidget);
     });
   });
+
+  group('written from the event, in the user\'s language', () {
+    AppNotification event(String name, Map<String, dynamic> details) =>
+        AppNotification(
+          id: 'n-$name',
+          type: 'request',
+          title: 'Stored English title',
+          body: 'Stored English body',
+          imageUrl: null,
+          isRead: false,
+          createdAt: now,
+          payload: {'event': name, ...details},
+        );
+
+    testWidgets('English', (tester) async {
+      service = FakeNotificationService(
+        items: [
+          event('request_accepted', {'traveler': 'Amara'}),
+          event('payout_paid', {'amount': 45, 'currency': 'GBP'}),
+        ],
+      );
+      await pump(tester);
+
+      expect(find.text('Request accepted'), findsOneWidget);
+      expect(
+        find.text(
+          'Amara accepted your request. Pay within 24 hours to confirm it.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Your payout of £45 is on its way.'), findsOneWidget);
+      expect(find.text('Stored English body'), findsNothing);
+    });
+
+    testWidgets('French', (tester) async {
+      service = FakeNotificationService(
+        items: [
+          event('request_new', {'sender': 'Kofi', 'route': 'Accra → Paris'}),
+        ],
+      );
+      await pump(tester, locale: const Locale('fr'));
+
+      expect(find.text('Nouvelle demande de livraison'), findsOneWidget);
+      expect(
+        find.text(
+          'Kofi souhaite que vous transportiez un objet sur Accra → Paris.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an unknown event keeps its stored text', (tester) async {
+      service = FakeNotificationService(items: [event('something_new', {})]);
+      await pump(tester);
+
+      expect(find.text('Stored English title'), findsOneWidget);
+      expect(find.text('Stored English body'), findsOneWidget);
+    });
+  });
 }

@@ -16,6 +16,11 @@ class AppNotification {
   final bool isRead;
   final DateTime createdAt;
 
+  /// What happened (e.g. 'request_accepted'), with the names, route or
+  /// amount to write it in the user's language. Empty for older rows, which
+  /// only have [title] and [body].
+  final Map<String, dynamic> payload;
+
   const AppNotification({
     required this.id,
     required this.type,
@@ -24,7 +29,10 @@ class AppNotification {
     required this.imageUrl,
     required this.isRead,
     required this.createdAt,
+    this.payload = const {},
   });
+
+  String? get event => payload['event'] as String?;
 
   factory AppNotification.fromJson(Map<String, dynamic> j) {
     final image = (j['image_url'] as String?)?.trim();
@@ -36,6 +44,9 @@ class AppNotification {
       imageUrl: (image == null || image.isEmpty) ? null : image,
       isRead: (j['is_read'] as bool?) ?? false,
       createdAt: DateTime.parse(j['created_at'] as String).toLocal(),
+      payload: j['payload'] is Map
+          ? Map<String, dynamic>.from(j['payload'] as Map)
+          : const {},
     );
   }
 
@@ -47,6 +58,7 @@ class AppNotification {
     imageUrl: imageUrl,
     isRead: isRead ?? this.isRead,
     createdAt: createdAt,
+    payload: payload,
   );
 
   NotificationCategory get category {
@@ -85,7 +97,9 @@ class NotificationService {
         await _client
                 .schema('nata')
                 .from('notifications')
-                .select('id, type, title, body, image_url, is_read, created_at')
+                .select(
+                  'id, type, title, body, image_url, is_read, created_at, payload',
+                )
                 .eq('user_id', uid)
                 .order('created_at', ascending: false)
                 .limit(limit)

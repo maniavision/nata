@@ -3234,4 +3234,356 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get withdrawNothing =>
       'Nothing to send right now. If you\'re waiting for a payout, check you have a payout account in Payment Settings.';
+
+  @override
+  String get backToProfile => 'Back to Profile';
+
+  @override
+  String get idStatusVerifiedTitle => 'Your identity is verified';
+
+  @override
+  String get idStatusVerifiedBody =>
+      'Senders and travelers can see you\'re verified. Your ID details are never shown to other users.';
+
+  @override
+  String get idStatusReviewTitle => 'We\'re checking your ID';
+
+  @override
+  String get idStatusReviewBody =>
+      'This usually takes less than 24 hours. You can browse in the meantime, but you can\'t send or accept requests yet.';
+
+  @override
+  String get idStatusDocument => 'ID document';
+
+  @override
+  String get idStatusFaceMatch => 'Face match';
+
+  @override
+  String get idStatusVerifiedOn => 'Verified on';
+
+  @override
+  String get idStatusSubmittedOn => 'Submitted on';
+
+  @override
+  String get idStatusPassed => 'Passed';
+
+  @override
+  String get idStatusInReview => 'In review';
+
+  @override
+  String get idStatusReceived => 'Received';
+
+  @override
+  String get idStatusPrivacy =>
+      'Only your photo and first name appear on your profile.';
+
+  @override
+  String get idDocPassport => 'Passport';
+
+  @override
+  String get idDocDriversLicense => 'Driver\'s license';
+
+  @override
+  String get idDocNationalId => 'National ID';
+
+  @override
+  String get walletHistory => 'Wallet History';
+
+  @override
+  String get walletAvailable => 'Available';
+
+  @override
+  String get walletInEscrow => 'In escrow';
+
+  @override
+  String get walletFilterAll => 'All';
+
+  @override
+  String get walletFilterPayouts => 'Payouts';
+
+  @override
+  String get walletFilterPayments => 'Payments';
+
+  @override
+  String walletPayoutTitle(String item) {
+    return 'Payout · $item';
+  }
+
+  @override
+  String walletPaymentTitle(String item) {
+    return 'Payment · $item';
+  }
+
+  @override
+  String get walletPayoutFallback => 'Payout';
+
+  @override
+  String get walletPaymentFallback => 'Payment';
+
+  @override
+  String walletPaymentTo(String name) {
+    return 'Delivery request to $name';
+  }
+
+  @override
+  String get walletStatusPending => 'Waiting';
+
+  @override
+  String get walletStatusSending => 'Sending';
+
+  @override
+  String get walletStatusPaid => 'Paid';
+
+  @override
+  String get walletStatusFailed => 'Failed · retrying';
+
+  @override
+  String get walletStatusInEscrow => 'In escrow';
+
+  @override
+  String get walletStatusReleased => 'Released';
+
+  @override
+  String get walletStatusRefunded => 'Refunded';
+
+  @override
+  String get walletEmpty =>
+      'No transactions yet. Payments and payouts will appear here.';
+
+  @override
+  String get errWalletHistory => 'Couldn\'t load your history.';
+
+  @override
+  String get sbpTitle => 'Why items travel sealed';
+
+  @override
+  String get sbpBody =>
+      'Every item must be in its original, factory-sealed box. It keeps travelers safe at customs and protects senders from disputes.';
+
+  @override
+  String get sbpRule1 => 'Original packaging, unopened';
+
+  @override
+  String get sbpRule2 => 'Shown in photos before the request';
+
+  @override
+  String get sbpRule3 =>
+      'Traveler checks the seal at pickup and can refuse a box that\'s been opened';
+
+  @override
+  String get sbpRule4 =>
+      'No prohibited items: cash, medicines without a prescription, batteries over 100Wh, liquids over 100ml, anything illegal at the destination';
+
+  @override
+  String get sbpCustoms =>
+      'If customs opens the box, the traveler isn\'t responsible for the item.';
+
+  @override
+  String get ecScreenBody =>
+      'Someone we can reach if something goes wrong during a delivery. Never shown to other users.';
+
+  @override
+  String get ecSaveContact => 'Save contact';
+
+  @override
+  String get ecSavedToast => 'Emergency contact saved.';
+
+  @override
+  String get ecProfileAdd => 'Add someone we can reach';
+
+  @override
+  String get errLoadContact => 'Couldn\'t load your emergency contact.';
+
+  @override
+  String get notifRequestNewTitle => 'New delivery request';
+
+  @override
+  String notifRequestNewBody(String name, String route) {
+    return '$name wants you to carry an item on $route.';
+  }
+
+  @override
+  String get notifAcceptedTitle => 'Request accepted';
+
+  @override
+  String notifAcceptedBody(String name) {
+    return '$name accepted your request. Pay within 24 hours to confirm it.';
+  }
+
+  @override
+  String get notifDeclinedTitle => 'Request declined';
+
+  @override
+  String notifDeclinedBody(String name, String route) {
+    return '$name can\'t take your item. Find another traveler on $route.';
+  }
+
+  @override
+  String get notifExpiredTitle => 'Request expired';
+
+  @override
+  String notifExpiredUnansweredBody(String name) {
+    return '$name didn\'t answer in time. Find another traveler.';
+  }
+
+  @override
+  String get notifExpiredUnpaidBody =>
+      'The 24 hours to pay have passed, so the request was closed.';
+
+  @override
+  String notifExpiredUnpaidTravelerBody(String name) {
+    return '$name didn\'t pay in time, so the request was closed.';
+  }
+
+  @override
+  String get notifCancelledTitle => 'Request cancelled';
+
+  @override
+  String notifCancelledByTravelerBody(String name) {
+    return '$name cancelled your request.';
+  }
+
+  @override
+  String notifCancelledBySenderBody(String name, String route) {
+    return '$name cancelled their request on $route.';
+  }
+
+  @override
+  String get notifPaidTitle => 'Payment secured';
+
+  @override
+  String notifPaidBody(String name) {
+    return '$name paid. The money is held safely until delivery, and chat is open.';
+  }
+
+  @override
+  String get notifPickedUpTitle => 'Item picked up';
+
+  @override
+  String notifPickedUpBody(String name) {
+    return '$name has your item and is on the way.';
+  }
+
+  @override
+  String get notifDeliveredTitle => 'Item delivered';
+
+  @override
+  String notifDeliveredBody(String name) {
+    return '$name delivered your item. Confirm you received it.';
+  }
+
+  @override
+  String get notifPayoutTitle => 'Payout sent';
+
+  @override
+  String notifPayoutBody(String amount) {
+    return 'Your payout of $amount is on its way.';
+  }
+
+  @override
+  String get notifVerifiedTitle => 'Identity verified';
+
+  @override
+  String get notifVerifiedBody =>
+      'You\'re verified. You can now send and accept delivery requests.';
+
+  @override
+  String get notifRejectedTitle => 'Identity check failed';
+
+  @override
+  String get notifRejectedBody =>
+      'We couldn\'t verify your ID. Please try again with a clear photo.';
+
+  @override
+  String crHeadline(String traveler, String recipient) {
+    return '$traveler says your item was delivered to $recipient';
+  }
+
+  @override
+  String crBody(String traveler) {
+    return 'Check that it arrived safely. Confirming lets you rate $traveler.';
+  }
+
+  @override
+  String get crItem => 'Item';
+
+  @override
+  String get crRoute => 'Route';
+
+  @override
+  String get crRecipient => 'Recipient';
+
+  @override
+  String get crYes => 'Yes, it arrived';
+
+  @override
+  String get reportProblem => 'Report a problem';
+
+  @override
+  String get crReportNote => 'You can report a problem for 3 days';
+
+  @override
+  String get rpBody =>
+      'Tell us what went wrong. Our support team will contact you.';
+
+  @override
+  String get rpReason => 'What happened?';
+
+  @override
+  String get rpNotReceived => 'The item didn\'t arrive';
+
+  @override
+  String get rpDamaged => 'It arrived damaged';
+
+  @override
+  String get rpWrongItem => 'It\'s not the item I sent';
+
+  @override
+  String get rpOpened => 'The box was opened';
+
+  @override
+  String get rpOther => 'Something else';
+
+  @override
+  String get rpDetails => 'Details';
+
+  @override
+  String get rpDetailsHint => 'Add anything that will help us look into it';
+
+  @override
+  String get rpSend => 'Send report';
+
+  @override
+  String get rpSent =>
+      'Thanks. We\'ve received your report and will contact you.';
+
+  @override
+  String get errAlreadyReported =>
+      'You\'ve already reported a problem on this delivery.';
+
+  @override
+  String get errReportWindowClosed =>
+      'The 3 days to report a problem have passed.';
+
+  @override
+  String get notifProblemTitle => 'Problem reported';
+
+  @override
+  String get notifProblemBody =>
+      'A problem was reported on one of your deliveries. Our support team will contact you.';
+
+  @override
+  String get pickupPhotoHint =>
+      'Take a photo of the sealed box as you receive it.';
+
+  @override
+  String get errPhotoUpload => 'Couldn\'t upload the photo. Please try again.';
+
+  @override
+  String get notifRefundTitle => 'Refund sent';
+
+  @override
+  String notifRefundBody(String amount) {
+    return 'Your refund of $amount is on its way.';
+  }
 }

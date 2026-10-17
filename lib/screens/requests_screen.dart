@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'delivery_task_screen.dart';
 import 'incoming_request_screen.dart';
@@ -11,6 +12,7 @@ import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'checkout_escrow_screen.dart';
 import 'delivery_request_screen.dart';
+import 'confirm_receipt_screen.dart';
 import 'review_screen.dart';
 import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
@@ -156,25 +158,25 @@ class _RequestsScreenState extends State<RequestsScreen> {
     if (mounted) _loadSent();
   }
 
-  /// The sender confirms the traveler's "delivered", then rates them.
+  /// The sender checks the traveler's "delivered" on Confirm Receipt: once
+  /// confirmed they rate the traveler; a reported problem just reloads.
   Future<void> _confirmReceipt(SentRequest request) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final l = context.l10n;
     setState(() => _confirming.add(request.id));
-    try {
-      await (widget.requestService ?? RequestService()).confirmReceipt(
-        request.id,
-      );
-    } catch (_) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.errConfirmReceiptFailed)),
-      );
-      if (mounted) setState(() => _confirming.remove(request.id));
-      return;
-    }
+    final outcome = await Navigator.of(context).push<ReceiptOutcome>(
+      MaterialPageRoute(
+        builder: (_) => ConfirmReceiptScreen(
+          request: request,
+          service: widget.requestService,
+        ),
+      ),
+    );
     if (!mounted) return;
     setState(() => _confirming.remove(request.id));
-    await _review(request);
+    if (outcome == ReceiptOutcome.confirmed) {
+      await _review(request);
+    } else {
+      _loadSent();
+    }
   }
 
   /// Opens Rate Your Traveler; reloads afterwards either way, since receipt
@@ -245,9 +247,19 @@ class _RequestsScreenState extends State<RequestsScreen> {
     if (confirmed != true || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    final service = widget.requestService ?? RequestService();
     try {
-      await (widget.requestService ?? RequestService()).cancel(request);
+      await service.cancel(request);
       messenger.showSnackBar(SnackBar(content: Text(l.requestCancelled)));
+      // Paid: the money (less the fee) goes back right away. If this call
+      // fails the refund stays queued and is sent later.
+      if (request.isPaid) {
+        unawaited(
+          service.sendRefunds().catchError(
+            (Object e) => debugPrint('[Requests] refunds: $e'),
+          ),
+        );
+      }
     } on RequestException catch (e) {
       messenger.showSnackBar(
         SnackBar(

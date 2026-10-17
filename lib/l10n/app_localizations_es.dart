@@ -3280,4 +3280,356 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get withdrawNothing =>
       'Nada que enviar ahora. Si esperas un pago, comprueba que tienes una cuenta de cobro en Ajustes de pago.';
+
+  @override
+  String get backToProfile => 'Volver al perfil';
+
+  @override
+  String get idStatusVerifiedTitle => 'Tu identidad está verificada';
+
+  @override
+  String get idStatusVerifiedBody =>
+      'Remitentes y viajeros ven que estás verificado. Los datos de tu documento nunca se muestran a otros usuarios.';
+
+  @override
+  String get idStatusReviewTitle => 'Estamos revisando tu documento';
+
+  @override
+  String get idStatusReviewBody =>
+      'Suele tardar menos de 24 horas. Mientras tanto puedes explorar, pero aún no puedes enviar ni aceptar solicitudes.';
+
+  @override
+  String get idStatusDocument => 'Documento de identidad';
+
+  @override
+  String get idStatusFaceMatch => 'Reconocimiento facial';
+
+  @override
+  String get idStatusVerifiedOn => 'Verificado el';
+
+  @override
+  String get idStatusSubmittedOn => 'Enviado el';
+
+  @override
+  String get idStatusPassed => 'Superado';
+
+  @override
+  String get idStatusInReview => 'En revisión';
+
+  @override
+  String get idStatusReceived => 'Recibido';
+
+  @override
+  String get idStatusPrivacy =>
+      'En tu perfil solo aparecen tu foto y tu nombre.';
+
+  @override
+  String get idDocPassport => 'Pasaporte';
+
+  @override
+  String get idDocDriversLicense => 'Licencia de conducir';
+
+  @override
+  String get idDocNationalId => 'Documento nacional';
+
+  @override
+  String get walletHistory => 'Historial de la billetera';
+
+  @override
+  String get walletAvailable => 'Disponible';
+
+  @override
+  String get walletInEscrow => 'En custodia';
+
+  @override
+  String get walletFilterAll => 'Todo';
+
+  @override
+  String get walletFilterPayouts => 'Cobros';
+
+  @override
+  String get walletFilterPayments => 'Pagos';
+
+  @override
+  String walletPayoutTitle(String item) {
+    return 'Cobro · $item';
+  }
+
+  @override
+  String walletPaymentTitle(String item) {
+    return 'Pago · $item';
+  }
+
+  @override
+  String get walletPayoutFallback => 'Cobro';
+
+  @override
+  String get walletPaymentFallback => 'Pago';
+
+  @override
+  String walletPaymentTo(String name) {
+    return 'Solicitud de entrega a $name';
+  }
+
+  @override
+  String get walletStatusPending => 'En espera';
+
+  @override
+  String get walletStatusSending => 'Enviando';
+
+  @override
+  String get walletStatusPaid => 'Pagado';
+
+  @override
+  String get walletStatusFailed => 'Fallido · reintentando';
+
+  @override
+  String get walletStatusInEscrow => 'En custodia';
+
+  @override
+  String get walletStatusReleased => 'Liberado';
+
+  @override
+  String get walletStatusRefunded => 'Reembolsado';
+
+  @override
+  String get walletEmpty =>
+      'Aún no hay transacciones. Tus pagos y cobros aparecerán aquí.';
+
+  @override
+  String get errWalletHistory => 'No se pudo cargar tu historial.';
+
+  @override
+  String get sbpTitle => 'Por qué los artículos viajan sellados';
+
+  @override
+  String get sbpBody =>
+      'Cada artículo debe ir en su caja original, sellada de fábrica. Protege a los viajeros en la aduana y a los remitentes ante disputas.';
+
+  @override
+  String get sbpRule1 => 'Embalaje original, sin abrir';
+
+  @override
+  String get sbpRule2 => 'Mostrado en fotos antes de la solicitud';
+
+  @override
+  String get sbpRule3 =>
+      'El viajero revisa el sello al recogerlo y puede rechazar una caja abierta';
+
+  @override
+  String get sbpRule4 =>
+      'Artículos prohibidos: dinero en efectivo, medicamentos sin receta, baterías de más de 100 Wh, líquidos de más de 100 ml, cualquier cosa ilegal en el destino';
+
+  @override
+  String get sbpCustoms =>
+      'Si la aduana abre la caja, el viajero no es responsable del artículo.';
+
+  @override
+  String get ecScreenBody =>
+      'Alguien a quien podamos contactar si algo sale mal durante una entrega. Nunca se muestra a otros usuarios.';
+
+  @override
+  String get ecSaveContact => 'Guardar contacto';
+
+  @override
+  String get ecSavedToast => 'Contacto de emergencia guardado.';
+
+  @override
+  String get ecProfileAdd => 'Añade a alguien a quien contactar';
+
+  @override
+  String get errLoadContact => 'No se pudo cargar tu contacto de emergencia.';
+
+  @override
+  String get notifRequestNewTitle => 'Nueva solicitud de entrega';
+
+  @override
+  String notifRequestNewBody(String name, String route) {
+    return '$name quiere que lleves un artículo en $route.';
+  }
+
+  @override
+  String get notifAcceptedTitle => 'Solicitud aceptada';
+
+  @override
+  String notifAcceptedBody(String name) {
+    return '$name aceptó tu solicitud. Paga en 24 horas para confirmarla.';
+  }
+
+  @override
+  String get notifDeclinedTitle => 'Solicitud rechazada';
+
+  @override
+  String notifDeclinedBody(String name, String route) {
+    return '$name no puede llevar tu artículo. Busca otro viajero en $route.';
+  }
+
+  @override
+  String get notifExpiredTitle => 'Solicitud vencida';
+
+  @override
+  String notifExpiredUnansweredBody(String name) {
+    return '$name no respondió a tiempo. Busca otro viajero.';
+  }
+
+  @override
+  String get notifExpiredUnpaidBody =>
+      'Pasaron las 24 horas para pagar, así que la solicitud se cerró.';
+
+  @override
+  String notifExpiredUnpaidTravelerBody(String name) {
+    return '$name no pagó a tiempo, así que la solicitud se cerró.';
+  }
+
+  @override
+  String get notifCancelledTitle => 'Solicitud cancelada';
+
+  @override
+  String notifCancelledByTravelerBody(String name) {
+    return '$name canceló tu solicitud.';
+  }
+
+  @override
+  String notifCancelledBySenderBody(String name, String route) {
+    return '$name canceló su solicitud en $route.';
+  }
+
+  @override
+  String get notifPaidTitle => 'Pago asegurado';
+
+  @override
+  String notifPaidBody(String name) {
+    return '$name pagó. El dinero se guarda de forma segura hasta la entrega y el chat está abierto.';
+  }
+
+  @override
+  String get notifPickedUpTitle => 'Artículo recogido';
+
+  @override
+  String notifPickedUpBody(String name) {
+    return '$name tiene tu artículo y va en camino.';
+  }
+
+  @override
+  String get notifDeliveredTitle => 'Artículo entregado';
+
+  @override
+  String notifDeliveredBody(String name) {
+    return '$name entregó tu artículo. Confirma que lo recibiste.';
+  }
+
+  @override
+  String get notifPayoutTitle => 'Cobro enviado';
+
+  @override
+  String notifPayoutBody(String amount) {
+    return 'Tu cobro de $amount está en camino.';
+  }
+
+  @override
+  String get notifVerifiedTitle => 'Identidad verificada';
+
+  @override
+  String get notifVerifiedBody =>
+      'Estás verificado. Ya puedes enviar y aceptar solicitudes de entrega.';
+
+  @override
+  String get notifRejectedTitle => 'Verificación fallida';
+
+  @override
+  String get notifRejectedBody =>
+      'No pudimos verificar tu documento. Inténtalo de nuevo con una foto nítida.';
+
+  @override
+  String crHeadline(String traveler, String recipient) {
+    return '$traveler dice que entregó tu artículo a $recipient';
+  }
+
+  @override
+  String crBody(String traveler) {
+    return 'Comprueba que llegó bien. Al confirmar podrás valorar a $traveler.';
+  }
+
+  @override
+  String get crItem => 'Artículo';
+
+  @override
+  String get crRoute => 'Ruta';
+
+  @override
+  String get crRecipient => 'Destinatario';
+
+  @override
+  String get crYes => 'Sí, llegó';
+
+  @override
+  String get reportProblem => 'Informar de un problema';
+
+  @override
+  String get crReportNote => 'Puedes informar de un problema durante 3 días';
+
+  @override
+  String get rpBody =>
+      'Cuéntanos qué salió mal. Nuestro equipo de soporte se pondrá en contacto contigo.';
+
+  @override
+  String get rpReason => '¿Qué pasó?';
+
+  @override
+  String get rpNotReceived => 'El artículo no llegó';
+
+  @override
+  String get rpDamaged => 'Llegó dañado';
+
+  @override
+  String get rpWrongItem => 'No es el artículo que envié';
+
+  @override
+  String get rpOpened => 'La caja estaba abierta';
+
+  @override
+  String get rpOther => 'Otra cosa';
+
+  @override
+  String get rpDetails => 'Detalles';
+
+  @override
+  String get rpDetailsHint => 'Añade lo que nos ayude a revisarlo';
+
+  @override
+  String get rpSend => 'Enviar informe';
+
+  @override
+  String get rpSent =>
+      'Gracias. Recibimos tu informe y nos pondremos en contacto contigo.';
+
+  @override
+  String get errAlreadyReported =>
+      'Ya informaste de un problema en esta entrega.';
+
+  @override
+  String get errReportWindowClosed =>
+      'Ya pasaron los 3 días para informar de un problema.';
+
+  @override
+  String get notifProblemTitle => 'Problema informado';
+
+  @override
+  String get notifProblemBody =>
+      'Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.';
+
+  @override
+  String get pickupPhotoHint =>
+      'Toma una foto de la caja sellada al recibirla.';
+
+  @override
+  String get errPhotoUpload => 'No se pudo subir la foto. Inténtalo de nuevo.';
+
+  @override
+  String get notifRefundTitle => 'Reembolso enviado';
+
+  @override
+  String notifRefundBody(String amount) {
+    return 'Tu reembolso de $amount está en camino.';
+  }
 }
