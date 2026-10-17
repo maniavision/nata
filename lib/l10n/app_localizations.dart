@@ -2540,6 +2540,12 @@ abstract class AppLocalizations {
   /// **'Shared with the traveler only after they accept your request'**
   String get recipientPhoneNote;
 
+  /// No description provided for @recipientSmsConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'By adding this number, you confirm the recipient agreed to get their delivery code from Nata by SMS.'**
+  String get recipientSmsConsent;
+
   /// No description provided for @sizeAndWeight.
   ///
   /// In en, this message translates to:

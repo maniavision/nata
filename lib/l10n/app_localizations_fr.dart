@@ -1339,6 +1339,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Partagé avec le voyageur uniquement après qu\'il a accepté votre demande';
 
   @override
+  String get recipientSmsConsent =>
+      'En ajoutant ce numéro, vous confirmez que le destinataire a accepté de recevoir son code de livraison Nata par SMS.';
+
+  @override
   String get sizeAndWeight => 'Taille et poids';
 
   @override

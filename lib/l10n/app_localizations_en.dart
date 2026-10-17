@@ -1318,6 +1318,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Shared with the traveler only after they accept your request';
 
   @override
+  String get recipientSmsConsent =>
+      'By adding this number, you confirm the recipient agreed to get their delivery code from Nata by SMS.';
+
+  @override
   String get sizeAndWeight => 'Size and Weight';
 
   @override

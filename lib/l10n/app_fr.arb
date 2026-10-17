@@ -536,6 +536,7 @@
   "recipientPhone": "Téléphone du destinataire",
   "recipientPhoneHint": "ex. +44 7700 900123",
   "recipientPhoneNote": "Partagé avec le voyageur uniquement après qu'il a accepté votre demande",
+  "recipientSmsConsent": "En ajoutant ce numéro, vous confirmez que le destinataire a accepté de recevoir son code de livraison Nata par SMS.",
   "sizeAndWeight": "Taille et poids",
   "travelerLimitLabel": "Limite du voyageur : {limit}",
   "itemNameHint": "ex. Casque Sony, cosmétiques scellés, etc.",

@@ -1163,6 +1163,16 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               color: AppColors.mutedForeground,
             ),
           ),
+          const SizedBox(height: 2),
+          // Recipient consent for the delivery-code SMS (send-delivery-code).
+          Text(
+            l.recipientSmsConsent,
+            key: const ValueKey('request-recipient-sms-consent'),
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: AppColors.mutedForeground,
+            ),
+          ),
         ],
       ),
     );
