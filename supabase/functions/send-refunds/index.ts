@@ -3,7 +3,8 @@
  *
  * Called by the app (with the sender's JWT) right after a paid request is
  * cancelled, which sends that sender's pending refunds; or with the service
- * role key (a schedule, or support) to send everyone's. Refunds are queued by
+ * role key (support) or from the payment-jobs schedule (the x-job-secret
+ * header, matching PAYMENT_JOBS_SECRET; 20240147) to send everyone's. Refunds are queued by
  * the database (20240145_refunds.sql): a cancellation after payment keeps
  * Nata's 10% fee, a payment flagged needs_refund is refunded in full.
  *
@@ -72,8 +73,10 @@ Deno.serve(async (req: Request) => {
 
   // The service role sends everyone's refunds; a signed-in sender, their own.
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-  const isService = !!token &&
-    token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const jobSecret = Deno.env.get("PAYMENT_JOBS_SECRET")?.trim();
+  const isService = (!!token &&
+    token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) ||
+    (!!jobSecret && req.headers.get("x-job-secret") === jobSecret);
   const user = isService ? null : await caller(req);
   if (!isService && !user) return json({ error: "unauthorized" }, 401);
 

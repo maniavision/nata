@@ -3,10 +3,12 @@
  * Flutterwave transfers.
  *
  * Called by the app (with the traveler's JWT) right after a delivery is
- * confirmed, after adding a payout account, and from Withdraw. Payouts with
- * nowhere to go yet (no payout account) stay pending. Each transfer carries
- * the payout's own reference, which Flutterwave refuses twice, so a payout
- * is never paid twice. Flutterwave then reports the result to
+ * confirmed, after adding a payout account, and from Withdraw, which sends
+ * that traveler's payouts; or by the payment-jobs schedule (the x-job-secret
+ * header, matching PAYMENT_JOBS_SECRET; 20240147) to send everyone's.
+ * Payouts with nowhere to go yet (no payout account) stay pending. Each
+ * transfer carries the payout's own reference, which Flutterwave refuses
+ * twice, so a payout is never paid twice. Flutterwave then reports the result to
  * flutterwave-webhook (paid, or failed with its reason).
  *
  * Responds 200 with { sent, failed }. Errors: 401 unauthorized,
@@ -44,6 +46,12 @@ async function caller(req: Request) {
   if (!token) return null;
   const { data: { user } } = await admin.auth.getUser(token);
   return user ?? null;
+}
+
+/** A call from the payment-jobs schedule, which sends everyone's. */
+function isJob(req: Request): boolean {
+  const secret = Deno.env.get("PAYMENT_JOBS_SECRET")?.trim();
+  return !!secret && req.headers.get("x-job-secret") === secret;
 }
 
 async function flutterwave(
@@ -113,12 +121,12 @@ async function countryCurrency(country: string): Promise<string | null> {
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   if (!secretKey()) return json({ error: "payments_unavailable" }, 503);
-  const user = await caller(req);
-  if (!user) return json({ error: "unauthorized" }, 401);
+  const user = isJob(req) ? null : await caller(req);
+  if (!isJob(req) && !user) return json({ error: "unauthorized" }, 401);
 
   const db = admin.schema("nata");
   const { data: claimed, error } = await db.rpc("claim_payouts", {
-    p_traveler: user.id,
+    p_traveler: user?.id ?? null,
   });
   if (error) {
     console.error("[send-payouts] claim", error);
