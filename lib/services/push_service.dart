@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../firebase_options.dart';
 import '../l10n/notification_text.dart' show requestsTabForEvent;
 import '../screens/notifications_screen.dart';
 import '../screens/requests_screen.dart';
@@ -14,8 +15,8 @@ import '../screens/requests_screen.dart';
 ///
 /// After sign-in the device's Firebase token is registered for the user;
 /// on sign-out it is removed. Tapping a push opens Requests on the right
-/// side, or the notifications list. Without the Firebase config files
-/// (scripts/setup_push.sh) it does nothing and the app works as before.
+/// side, or the notifications list. If Firebase can't start it does
+/// nothing and the app works as before.
 class PushService {
   PushService._();
   static final PushService instance = PushService._();
@@ -30,7 +31,9 @@ class PushService {
   Future<void> start(GlobalKey<NavigatorState> navigator) async {
     _navigator = navigator;
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       _ready = true;
     } catch (e) {
       debugPrint('[Push] Firebase not set up: $e');

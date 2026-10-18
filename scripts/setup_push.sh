@@ -15,12 +15,15 @@
 #   * Apple Developer > Keys: create an APNs key (.p8) and upload it in
 #     Firebase console > Project settings > Cloud Messaging > Apple app.
 #
-#   bash scripts/setup_push.sh <firebase-project-id> <service-account.json>
+#   bash scripts/setup_push.sh <service-account.json> [firebase-project-id]
+#
+# The app is already connected to nata-app-a03de (lib/firebase_options.dart);
+# step 1 only runs again when a different project id is given.
 set -euo pipefail
 
 PROJECT_REF="${PROJECT_REF:-xnzredskhxfgywggetzw}"
-FIREBASE_PROJECT="${1:?Firebase project id, e.g. nata-app}"
-SERVICE_ACCOUNT="${2:?Path to the service account JSON file}"
+SERVICE_ACCOUNT="${1:?Path to the service account JSON file}"
+FIREBASE_PROJECT="${2:-nata-app-a03de}"
 
 cd "$(dirname "$0")/.."
 
@@ -39,12 +42,16 @@ if [ ! -x "$FLUTTERFIRE" ]; then
 fi
 
 echo "1/3 Connecting the app to Firebase ($FIREBASE_PROJECT)"
+if grep -q "projectId: '$FIREBASE_PROJECT'" lib/firebase_options.dart 2>/dev/null; then
+  echo "    already connected"
+else
 "$FLUTTERFIRE" configure \
   --project="$FIREBASE_PROJECT" \
   --platforms=ios,android \
   --ios-bundle-id=com.nata.nataApp \
   --android-package-name=com.carrywise.carrywise_app \
   --yes
+fi
 
 echo "2/3 Storing the service account as FCM_SERVICE_ACCOUNT"
 tmp=$(mktemp)
