@@ -3,12 +3,13 @@
  * request, to pay its fixed price into escrow.
  *
  * Called by the app (with the sender's JWT) with { request_id, method,
- * country, email }, where method is card, mobile_money or apple_pay. The
- * amount and currency are the ones fixed when the traveler accepted
- * (display_total / display_currency), never taken from the app. Mobile
- * money is charged in the currency of the wallet's [country] instead,
- * converted at the latest rate (nata.mobile_money_charge); the fixed price is
- * kept as base_amount.
+ * country, email }, where method is card, mobile_money, bank_transfer or
+ * apple_pay. The amount and currency are the ones fixed when the traveler
+ * accepted (display_total / display_currency), never taken from the app.
+ * Mobile money is charged in the currency of the wallet's [country] instead,
+ * converted at the latest rate (nata.mobile_money_charge); the fixed price
+ * is kept as base_amount. Bank transfer is charged in naira the same way
+ * (nata.local_charge).
  *
  * Allowed only for the request's sender, while it is accepted and before its
  * payment deadline, once the sender checked the ticket and the traveler's ID.
@@ -150,6 +151,8 @@ const OPTIONS: Record<string, string> = {
   card: "card",
   apple_pay: "applepay, card",
   mobile_money: "",
+  // A temporary Nigerian bank account to pay into, in naira.
+  bank_transfer: "banktransfer",
 };
 
 /** The mobile money Flutterwave takes in each currency. */
@@ -263,6 +266,18 @@ Deno.serve(async (req: Request) => {
     currency = String(c.currency).trim().toUpperCase();
     paymentOptions = MOBILE_MONEY[currency] ?? "";
     if (!paymentOptions) return json({ error: "mobile_money_unavailable" }, 409);
+  } else if (method === "bank_transfer") {
+    const { data: charge, error } = await db
+      .rpc("local_charge", { p_request_id: requestId, p_currency: "NGN" })
+      .maybeSingle();
+    if (error || !charge) {
+      const msg = String(error?.message ?? "");
+      if (msg.includes("rate_unavailable")) return json({ error: "rate_unavailable" }, 409);
+      return json({ error: "not_payable" }, 409);
+    }
+    const c = charge as { amount: number; currency: string };
+    amount = Number(c.amount);
+    currency = String(c.currency).trim().toUpperCase();
   }
   // The fee, in the currency charged.
   const fee = Number(request.display_fee ?? 0) * (amount / baseAmount);
@@ -278,7 +293,11 @@ Deno.serve(async (req: Request) => {
     currency,
     base_amount: baseAmount,
     base_currency: baseCurrency,
-    country_code: method === "mobile_money" ? country : null,
+    country_code: method === "mobile_money"
+      ? country
+      : method === "bank_transfer"
+      ? "NG"
+      : null,
     method,
     status: "pending",
   });

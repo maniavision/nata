@@ -3081,6 +3081,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de charger les pays du mobile money.';
 
   @override
+  String get bankTransfer => 'Virement bancaire';
+
+  @override
+  String get bankTransferSub => 'Payez sur un compte bancaire nigérian (NGN)';
+
+  @override
+  String bankTransferChargedAs(String local, String price) {
+    return 'Vous paierez $local par virement, au taux du jour. Le prix de la livraison reste $price. Flutterwave vous donne le compte à créditer.';
+  }
+
+  @override
+  String get errBankTransferQuote =>
+      'Impossible d\'obtenir le montant en nairas.';
+
+  @override
   String get signInPromptTitle => 'Connectez-vous pour continuer';
 
   @override

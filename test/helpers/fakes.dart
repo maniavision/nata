@@ -887,10 +887,23 @@ class FakeRequestService extends Fake implements RequestService {
     String? email,
   }) async {
     if (failStartPayment != null) throw failStartPayment!;
-    paymentsStarted.add(
-      (id: requestId, method: method, country: country, email: email),
-    );
+    paymentsStarted.add((
+      id: requestId,
+      method: method,
+      country: country,
+      email: email,
+    ));
     return nextPayment;
+  }
+
+  /// The naira amount for a bank transfer; [failBankQuote] makes it fail.
+  LocalCharge bankQuote = const LocalCharge(currency: 'NGN', amount: 178381);
+  bool failBankQuote = false;
+
+  @override
+  Future<LocalCharge> bankTransferQuote(String requestId) async {
+    if (failBankQuote) throw StateError('bank quote failed');
+    return bankQuote;
   }
 
   /// Mobile money countries offered at checkout; [failMobileOptions] makes

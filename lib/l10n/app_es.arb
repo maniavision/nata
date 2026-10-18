@@ -1438,6 +1438,10 @@
   },
   "errMobileMoneyUnavailable": "El dinero móvil no está disponible para este país. Elige otro país o paga con tarjeta.",
   "errMobileMoneyOptions": "No se pudieron cargar los países de dinero móvil.",
+  "bankTransfer": "Transferencia bancaria",
+  "bankTransferSub": "Paga a una cuenta bancaria nigeriana (NGN)",
+  "bankTransferChargedAs": "Pagarás {local} por transferencia bancaria, al tipo de cambio de hoy. El precio de la entrega sigue siendo {price}. Flutterwave te da la cuenta a la que pagar.",
+  "errBankTransferQuote": "No se pudo obtener el importe en nairas.",
 
   "signInPromptTitle": "Inicia sesión para continuar",
   "signInPromptBody": "Crea una cuenta gratis para enviar artículos con viajeros, publicar tus viajes y seguir tus entregas.",

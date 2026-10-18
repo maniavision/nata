@@ -5372,6 +5372,30 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load the mobile money countries.'**
   String get errMobileMoneyOptions;
 
+  /// No description provided for @bankTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Transfer'**
+  String get bankTransfer;
+
+  /// No description provided for @bankTransferSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay into a Nigerian bank account (NGN)'**
+  String get bankTransferSub;
+
+  /// No description provided for @bankTransferChargedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll pay {local} by bank transfer, at today\'s rate. The delivery price stays {price}. Flutterwave gives you the account to pay into.'**
+  String bankTransferChargedAs(String local, String price);
+
+  /// No description provided for @errBankTransferQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get the amount in naira.'**
+  String get errBankTransferQuote;
+
   /// No description provided for @signInPromptTitle.
   ///
   /// In en, this message translates to:

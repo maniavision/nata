@@ -1451,6 +1451,20 @@
   },
   "errMobileMoneyUnavailable": "Mobile money isn't available for this country. Please choose another country or pay by card.",
   "errMobileMoneyOptions": "Couldn't load the mobile money countries.",
+  "bankTransfer": "Bank Transfer",
+  "bankTransferSub": "Pay into a Nigerian bank account (NGN)",
+  "bankTransferChargedAs": "You'll pay {local} by bank transfer, at today's rate. The delivery price stays {price}. Flutterwave gives you the account to pay into.",
+  "@bankTransferChargedAs": {
+    "placeholders": {
+      "local": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errBankTransferQuote": "Couldn't get the amount in naira.",
 
   "signInPromptTitle": "Sign in to continue",
   "signInPromptBody": "Create a free account to send items with travelers, post your trips and follow your deliveries.",

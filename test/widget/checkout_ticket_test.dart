@@ -368,6 +368,45 @@ void main() {
       expect(service.paymentsStarted.single.country, 'KE');
     });
 
+    testWidgets('bank transfer: charged in naira at today\'s rate', (
+      tester,
+    ) async {
+      await pumpPayable(tester);
+      await tester.ensureVisible(find.text('Bank Transfer'));
+      await tester.tap(find.text('Bank Transfer'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('bank-transfer-charge')),
+        findsOneWidget,
+      );
+      expect(find.text('Pay NGN 178,381 into Escrow'), findsOneWidget);
+
+      await pay(tester);
+      expect(service.paymentsStarted.single.method, PayMethod.bankTransfer);
+    });
+
+    testWidgets('a bank transfer amount that fails to load can be retried', (
+      tester,
+    ) async {
+      service.failBankQuote = true;
+      await pumpPayable(tester);
+      await tester.ensureVisible(find.text('Bank Transfer'));
+      await tester.tap(find.text('Bank Transfer'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('bank-transfer-error')), findsOneWidget);
+      expect(payButton(tester).onPressed, isNull);
+
+      service.failBankQuote = false;
+      await tester.tap(find.text('Retry'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Pay NGN 178,381 into Escrow'), findsOneWidget);
+    });
+
     testWidgets('mobile money waits for a country when none is suggested', (
       tester,
     ) async {

@@ -49,11 +49,12 @@ class CheckoutEscrowScreen extends StatefulWidget {
 }
 
 class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
-  int _paymentMethod = 0; // 0=Apple Pay, 1=Card, 2=Mobile Money
+  int _paymentMethod = 0; // 0=Apple Pay, 1=Card, 2=Mobile Money, 3=Bank
   static const _payMethods = [
     PayMethod.applePay,
     PayMethod.card,
     PayMethod.mobileMoney,
+    PayMethod.bankTransfer,
   ];
 
   /// The payment in progress on Flutterwave's page, checked every
@@ -72,6 +73,29 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   bool _mobileFailed = false;
   MobileMoneyOption? _mobileChoice;
   bool get _payingByMobile => _paymentMethod == 2;
+
+  /// Bank transfer is paid in naira: the amount, loaded when it is chosen.
+  bool get _payingByBank => _paymentMethod == 3;
+  LocalCharge? _bankQuote;
+  bool _bankLoading = false;
+  bool _bankFailed = false;
+
+  Future<void> _loadBankQuote() async {
+    if (_bankLoading || _bankQuote != null) return;
+    setState(() {
+      _bankLoading = true;
+      _bankFailed = false;
+    });
+    try {
+      final quote = await _service.bankTransferQuote(_r.id);
+      if (mounted) setState(() => _bankQuote = quote);
+    } catch (e) {
+      debugPrint('[Checkout] bank transfer quote: $e');
+      if (mounted) setState(() => _bankFailed = true);
+    } finally {
+      if (mounted) setState(() => _bankLoading = false);
+    }
+  }
 
   /// Accounts made with a phone number have no email, which Flutterwave
   /// needs: checkout asks for one (kept by create-payment for next time).
@@ -876,6 +900,14 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         title: context.l10n.mobileMoney,
         subtitle: context.l10n.mobileMoneyPhoneSub,
       ),
+      _PayMethod(
+        icon: Icons.account_balance_rounded,
+        iconBg: AppColors.card,
+        iconColor: AppColors.primary,
+        title: context.l10n.bankTransfer,
+        subtitle: context.l10n.bankTransferSub,
+        iconBorder: true,
+      ),
     ];
 
     return Container(
@@ -912,6 +944,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 onTap: () {
                   setState(() => _paymentMethod = e.key);
                   if (e.key == 2) _loadMobileOptions();
+                  if (e.key == 3) _loadBankQuote();
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
@@ -1009,6 +1042,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             );
           }),
           if (_payingByMobile) _buildMobileMoneyPanel(),
+          if (_payingByBank) _buildBankTransferPanel(),
           if (_needsEmail) _buildEmailField(),
         ],
       ),
@@ -1102,6 +1136,55 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ),
           ],
         ],
+      );
+    }
+    return Padding(padding: const EdgeInsets.only(top: 12), child: body);
+  }
+
+  /// The amount in naira, for a bank transfer.
+  Widget _buildBankTransferPanel() {
+    final l = context.l10n;
+    final quote = _bankQuote;
+    final Widget body;
+    if (_bankFailed) {
+      body = Row(
+        children: [
+          Expanded(
+            child: Text(
+              l.errBankTransferQuote,
+              key: const ValueKey('bank-transfer-error'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.destructive,
+              ),
+            ),
+          ),
+          TextButton(onPressed: _loadBankQuote, child: Text(l.retry)),
+        ],
+      );
+    } else if (quote == null) {
+      body = const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accent,
+            ),
+          ),
+        ),
+      );
+    } else {
+      body = Text(
+        l.bankTransferChargedAs(quote.amountText, _totalText),
+        key: const ValueKey('bank-transfer-charge'),
+        style: GoogleFonts.dmSans(
+          fontSize: 11,
+          height: 1.4,
+          color: AppColors.mutedForeground,
+        ),
       );
     }
     return Padding(padding: const EdgeInsets.only(top: 12), child: body);
@@ -1326,11 +1409,15 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     final l = context.l10n;
     final checked = _ticketChecked && _idChecked && !_expired;
     final countryChosen = !_payingByMobile || _mobileChoice != null;
+    final bankReady = !_payingByBank || _bankQuote != null;
     final emailGiven = !_needsEmail || _emailValid;
-    final unlocked = checked && countryChosen && emailGiven;
-    // Mobile money is charged in the wallet's currency.
+    final unlocked = checked && countryChosen && bankReady && emailGiven;
+    // Mobile money is charged in the wallet's currency, bank transfer in
+    // naira.
     final amount = _payingByMobile && _mobileChoice != null
         ? _mobileChoice!.amountText
+        : _payingByBank && _bankQuote != null
+        ? _bankQuote!.amountText
         : _totalText;
     if (_payment != null) return _buildPaymentInProgress(l);
     return Column(
@@ -1374,6 +1461,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   ? l.validateTicketAndId
                   : !countryChosen
                   ? l.chooseCountry
+                  : !bankReady
+                  ? l.bankTransfer
                   : l.enterEmailToPay,
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w800,

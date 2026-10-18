@@ -183,7 +183,8 @@ enum RequestFailure {
 enum PayMethod {
   applePay('apple_pay'),
   card('card'),
-  mobileMoney('mobile_money');
+  mobileMoney('mobile_money'),
+  bankTransfer('bank_transfer');
 
   const PayMethod(this.wire);
   final String wire;
@@ -228,6 +229,23 @@ class MobileMoneyOption {
       );
 
   /// "KES 14,230"
+  String get amountText => PriceFormatter.write(amount, currency);
+}
+
+/// An amount to pay in another currency than the fixed price, at today's
+/// rate (bank transfer is paid in naira).
+class LocalCharge {
+  final String currency;
+  final double amount;
+
+  const LocalCharge({required this.currency, required this.amount});
+
+  factory LocalCharge.fromJson(Map<String, dynamic> j) => LocalCharge(
+    currency: (j['currency'] as String).trim(),
+    amount: (j['amount'] as num).toDouble(),
+  );
+
+  /// "NGN 178,381"
   String get amountText => PriceFormatter.write(amount, currency);
 }
 
@@ -1129,6 +1147,18 @@ class RequestService {
       for (final r in (rows as List))
         MobileMoneyOption.fromJson(Map<String, dynamic>.from(r as Map)),
     ];
+  }
+
+  /// What paying [requestId] by bank transfer costs, in naira at today's
+  /// rate (bank_transfer_quote).
+  Future<LocalCharge> bankTransferQuote(String requestId) async {
+    final rows = await _client.rpc(
+      'bank_transfer_quote',
+      params: {'p_request_id': requestId},
+    );
+    return LocalCharge.fromJson(
+      Map<String, dynamic>.from((rows as List).single as Map),
+    );
   }
 
   /// Where the payment [txRef] stands, checked with Flutterwave
