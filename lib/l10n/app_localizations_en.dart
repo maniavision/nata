@@ -474,7 +474,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get travelerReward => 'Traveler reward';
 
   @override
-  String get platformFee => 'CarryWise protection & escrow fee';
+  String get platformFee => 'Nata protection & escrow fee';
 
   @override
   String get totalEscrow => 'Total to Hold in Escrow';
@@ -2989,6 +2989,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseCountry => 'Choose a country';
+
+  @override
+  String get payerEmail => 'Email for your receipt';
+
+  @override
+  String get payerEmailHint => 'you@example.com';
+
+  @override
+  String get payerEmailNote =>
+      'The payment provider sends your receipt here. It stays private, and you\'re only asked once.';
+
+  @override
+  String get enterEmailToPay => 'Enter your email to pay';
+
+  @override
+  String get errEmailRequired => 'Enter your email to pay.';
 
   @override
   String mobileMoneyChargedAs(String local, String price) {

@@ -232,6 +232,53 @@ void main() {
       expect(find.byKey(const ValueKey('checkout-pay')), findsNothing);
     });
 
+    testWidgets('an account without an email gives one before paying', (
+      tester,
+    ) async {
+      service.payerEmailValue = null;
+      await pumpPayable(tester);
+      await tester.tap(find.text('Credit or Debit Card'));
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('checkout-email')), findsOneWidget);
+      expect(find.text('Enter your email to pay'), findsOneWidget);
+      expect(payButton(tester).onPressed, isNull);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('checkout-email')),
+        ' Ama@Example.com ',
+      );
+      await tester.pump();
+      await pay(tester);
+
+      expect(service.paymentsStarted.single.email, 'Ama@Example.com');
+      expect(opened, [service.nextPayment.link]);
+    });
+
+    testWidgets('an account with an email is not asked for one', (
+      tester,
+    ) async {
+      await pumpPayable(tester);
+      await tester.tap(find.text('Credit or Debit Card'));
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('checkout-email')), findsNothing);
+      await pay(tester);
+      expect(service.paymentsStarted.single.email, isNull);
+    });
+
+    testWidgets('asks for an email when the server needs one', (tester) async {
+      service.failStartPayment = RequestException(RequestFailure.emailRequired);
+      await pumpPayable(tester);
+      await tester.tap(find.text('Credit or Debit Card'));
+      await tester.pump();
+
+      await pay(tester);
+
+      expect(find.text('Enter your email to pay.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('checkout-email')), findsOneWidget);
+    });
+
     testWidgets('once paid, it closes Flutterwave and goes back', (
       tester,
     ) async {

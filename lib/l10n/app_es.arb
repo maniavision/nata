@@ -1420,6 +1420,11 @@
 
   "mobileMoneyCountry": "País del dinero móvil",
   "chooseCountry": "Elige un país",
+  "payerEmail": "Correo para tu recibo",
+  "payerEmailHint": "tu@ejemplo.com",
+  "payerEmailNote": "El proveedor de pagos te envía el recibo aquí. Es privado y solo se te pide una vez.",
+  "enterEmailToPay": "Escribe tu correo para pagar",
+  "errEmailRequired": "Escribe tu correo para pagar.",
   "mobileMoneyChargedAs": "Se cobra en la moneda de tu billetera al tipo de cambio de hoy: {local}. El precio de la entrega sigue siendo {price}.",
   "@mobileMoneyChargedAs": {
     "placeholders": {

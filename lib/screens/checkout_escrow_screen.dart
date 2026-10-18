@@ -73,6 +73,23 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   MobileMoneyOption? _mobileChoice;
   bool get _payingByMobile => _paymentMethod == 2;
 
+  /// Accounts made with a phone number have no email, which Flutterwave
+  /// needs: checkout asks for one (kept by create-payment for next time).
+  bool _needsEmail = false;
+  final _emailCtrl = TextEditingController();
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+  bool get _emailValid => _emailPattern.hasMatch(_emailCtrl.text.trim());
+
+  Future<void> _loadPayerEmail() async {
+    try {
+      final email = await _service.payerEmail();
+      if (mounted && email == null) setState(() => _needsEmail = true);
+    } catch (e) {
+      // Pay anyway: create-payment answers email_required if one is needed.
+      debugPrint('[Checkout] payer email: $e');
+    }
+  }
+
   Future<void> _loadMobileOptions() async {
     if (_mobileLoading || _mobileOptions != null) return;
     setState(() {
@@ -142,6 +159,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     }
     if (_hasTicketImage) _loadTicket();
     if (_r.travelerVerified) _loadIdPhoto();
+    _loadPayerEmail();
   }
 
   // ── Paying ─────────────────────────────────────────────────────────────────
@@ -155,17 +173,22 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         _r.id,
         _payMethods[_paymentMethod],
         country: _payingByMobile ? _mobileChoice?.countryCode : null,
+        email: _needsEmail ? _emailCtrl.text.trim() : null,
       );
       if (!mounted) return;
       setState(() => _payment = payment);
       _startPolling();
       await _openPaymentPage();
     } on RequestException catch (e) {
+      if (e.reason == RequestFailure.emailRequired && mounted) {
+        setState(() => _needsEmail = true);
+      }
       messenger.showSnackBar(
         SnackBar(
           content: Text(switch (e.reason) {
             RequestFailure.notPayable => l.errRequestNotPayable,
             RequestFailure.paymentsUnavailable => l.errPaymentsUnavailable,
+            RequestFailure.emailRequired => l.errEmailRequired,
             RequestFailure.mobileMoneyUnavailable =>
               l.errMobileMoneyUnavailable,
             RequestFailure.rateUnavailable => l.errRateUnavailable,
@@ -329,6 +352,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   void dispose() {
     _timer?.cancel();
     _poll?.cancel();
+    _emailCtrl.dispose();
     super.dispose();
   }
 
@@ -985,6 +1009,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             );
           }),
           if (_payingByMobile) _buildMobileMoneyPanel(),
+          if (_needsEmail) _buildEmailField(),
         ],
       ),
     );
@@ -1080,6 +1105,47 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       );
     }
     return Padding(padding: const EdgeInsets.only(top: 12), child: body);
+  }
+
+  /// The payer's email, for an account without one.
+  Widget _buildEmailField() {
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            key: const ValueKey('checkout-email'),
+            controller: _emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            autofillHints: const [AutofillHints.email],
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: l.payerEmail,
+              hintText: l.payerEmailHint,
+              isDense: true,
+              filled: true,
+              fillColor: AppColors.input,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l.payerEmailNote,
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              height: 1.4,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ── Breakdown ──────────────────────────────────────────────────────────────
@@ -1259,7 +1325,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   Widget _buildPayButton(BuildContext context) {
     final l = context.l10n;
     final checked = _ticketChecked && _idChecked && !_expired;
-    final unlocked = checked && (!_payingByMobile || _mobileChoice != null);
+    final countryChosen = !_payingByMobile || _mobileChoice != null;
+    final emailGiven = !_needsEmail || _emailValid;
+    final unlocked = checked && countryChosen && emailGiven;
     // Mobile money is charged in the wallet's currency.
     final amount = _payingByMobile && _mobileChoice != null
         ? _mobileChoice!.amountText
@@ -1302,9 +1370,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             label: Text(
               unlocked
                   ? l.payAmountIntoEscrow(amount)
-                  : checked
+                  : !checked
+                  ? l.validateTicketAndId
+                  : !countryChosen
                   ? l.chooseCountry
-                  : l.validateTicketAndId,
+                  : l.enterEmailToPay,
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w800,
                 fontSize: 14,

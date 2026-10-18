@@ -168,7 +168,7 @@
   "mobileMoneyPhoneSub": "M-Pesa, MTN MoMo, Orange, Wave",
   "paymentBreakdown": "PAYMENT BREAKDOWN",
   "travelerReward": "Traveler reward",
-  "platformFee": "CarryWise protection & escrow fee",
+  "platformFee": "Nata protection & escrow fee",
   "totalEscrow": "Total to Hold in Escrow",
   "payIntoEscrow": "Pay into Escrow",
   "cancellationTitle": "Cancellation & Refund Guarantee",
@@ -1433,6 +1433,11 @@
 
   "mobileMoneyCountry": "Mobile money country",
   "chooseCountry": "Choose a country",
+  "payerEmail": "Email for your receipt",
+  "payerEmailHint": "you@example.com",
+  "payerEmailNote": "The payment provider sends your receipt here. It stays private, and you're only asked once.",
+  "enterEmailToPay": "Enter your email to pay",
+  "errEmailRequired": "Enter your email to pay.",
   "mobileMoneyChargedAs": "Charged in your wallet's currency at today's rate: {local}. The delivery price stays {price}.",
   "@mobileMoneyChargedAs": {
     "placeholders": {

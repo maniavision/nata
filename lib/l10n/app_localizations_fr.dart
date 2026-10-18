@@ -3052,6 +3052,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chooseCountry => 'Choisissez un pays';
 
   @override
+  String get payerEmail => 'E-mail pour votre reçu';
+
+  @override
+  String get payerEmailHint => 'vous@exemple.com';
+
+  @override
+  String get payerEmailNote =>
+      'Le prestataire de paiement vous envoie votre reçu ici. Il reste privé et ne vous est demandé qu\'une fois.';
+
+  @override
+  String get enterEmailToPay => 'Saisissez votre e-mail pour payer';
+
+  @override
+  String get errEmailRequired => 'Saisissez votre e-mail pour payer.';
+
+  @override
   String mobileMoneyChargedAs(String local, String price) {
     return 'Débité dans la devise de votre portefeuille au taux du jour : $local. Le prix de la livraison reste $price.';
   }

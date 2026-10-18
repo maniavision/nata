@@ -560,6 +560,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       case RequestFailure.tooSoon:
       case RequestFailure.alreadyReported:
       case RequestFailure.reportWindowClosed:
+      case RequestFailure.emailRequired:
         return l.errRequestFailed;
       case RequestFailure.mobileMoneyUnavailable:
         return l.errMobileMoneyUnavailable;

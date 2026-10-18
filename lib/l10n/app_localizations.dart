@@ -991,7 +991,7 @@ abstract class AppLocalizations {
   /// No description provided for @platformFee.
   ///
   /// In en, this message translates to:
-  /// **'CarryWise protection & escrow fee'**
+  /// **'Nata protection & escrow fee'**
   String get platformFee;
 
   /// No description provided for @totalEscrow.
@@ -5323,6 +5323,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a country'**
   String get chooseCountry;
+
+  /// No description provided for @payerEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email for your receipt'**
+  String get payerEmail;
+
+  /// No description provided for @payerEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'you@example.com'**
+  String get payerEmailHint;
+
+  /// No description provided for @payerEmailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment provider sends your receipt here. It stays private, and you\'re only asked once.'**
+  String get payerEmailNote;
+
+  /// No description provided for @enterEmailToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to pay'**
+  String get enterEmailToPay;
+
+  /// No description provided for @errEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to pay.'**
+  String get errEmailRequired;
 
   /// No description provided for @mobileMoneyChargedAs.
   ///

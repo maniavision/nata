@@ -858,8 +858,19 @@ class FakeRequestService extends Fake implements RequestService {
   /// Payments started (request id and method); [failStartPayment] makes
   /// starting fail. [paymentStatuses] are answered in order, the last one
   /// repeating.
-  final List<({String id, PayMethod method, String? country})> paymentsStarted =
-      [];
+  final List<({String id, PayMethod method, String? country, String? email})>
+  paymentsStarted = [];
+
+  /// The email the user pays with; null asks for one at checkout.
+  String? payerEmailValue = 'sender@example.com';
+  bool failPayerEmail = false;
+
+  @override
+  Future<String?> payerEmail() async {
+    if (failPayerEmail) throw StateError('payer email failed');
+    return payerEmailValue;
+  }
+
   RequestException? failStartPayment;
   PaymentLink nextPayment = PaymentLink(
     Uri.parse('https://checkout.flutterwave.test/pay/abc'),
@@ -873,9 +884,12 @@ class FakeRequestService extends Fake implements RequestService {
     String requestId,
     PayMethod method, {
     String? country,
+    String? email,
   }) async {
     if (failStartPayment != null) throw failStartPayment!;
-    paymentsStarted.add((id: requestId, method: method, country: country));
+    paymentsStarted.add(
+      (id: requestId, method: method, country: country, email: email),
+    );
     return nextPayment;
   }
 

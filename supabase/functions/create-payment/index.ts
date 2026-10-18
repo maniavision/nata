@@ -3,18 +3,23 @@
  * request, to pay its fixed price into escrow.
  *
  * Called by the app (with the sender's JWT) with { request_id, method,
- * country }, where method is card, mobile_money or apple_pay. The amount and
- * currency are the ones fixed when the traveler accepted (display_total /
- * display_currency), never taken from the app. Mobile money is charged in the
- * currency of the wallet's [country] instead, converted at the latest rate
- * (nata.mobile_money_charge); the fixed price is kept as base_amount.
+ * country, email }, where method is card, mobile_money or apple_pay. The
+ * amount and currency are the ones fixed when the traveler accepted
+ * (display_total / display_currency), never taken from the app. Mobile
+ * money is charged in the currency of the wallet's [country] instead,
+ * converted at the latest rate (nata.mobile_money_charge); the fixed price is
+ * kept as base_amount.
  *
  * Allowed only for the request's sender, while it is accepted and before its
  * payment deadline, once the sender checked the ticket and the traveler's ID.
  *
+ * Flutterwave needs the payer's email. It is the account's; for an account
+ * made with a phone number, the [email] the sender gave at checkout, kept in
+ * nata.payer_emails (20240148) for next time.
+ *
  * Responds 200 with { link, tx_ref }. Errors: 401 unauthorized,
  * 403 not_allowed, 409 not_payable / expired / checks_missing /
- * mobile_money_unavailable / rate_unavailable,
+ * email_required / mobile_money_unavailable / rate_unavailable,
  * 503 payments_unavailable (no FLW_SECRET_KEY), 502 provider_error.
  */
 
@@ -159,6 +164,9 @@ const MOBILE_MONEY: Record<string, string> = {
   XAF: "mobilemoneyfranco",
 };
 
+/** The same check as nata.payer_emails. */
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   if (!secretKey()) return json({ error: "payments_unavailable" }, 503);
@@ -169,11 +177,13 @@ Deno.serve(async (req: Request) => {
   let requestId = "";
   let method = "card";
   let country = "";
+  let givenEmail = "";
   try {
     const body = await req.json();
     requestId = String(body.request_id ?? "");
     method = String(body.method ?? "card");
     country = String(body.country ?? "").trim().toUpperCase();
+    givenEmail = String(body.email ?? "").trim().toLowerCase();
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
@@ -202,6 +212,28 @@ Deno.serve(async (req: Request) => {
   if (!request.ticket_checked_at || !request.id_checked_at) {
     return json({ error: "checks_missing" }, 409);
   }
+
+  // The payer's email: the account's, else the one given at checkout (kept
+  // for next time), else the one given last time.
+  let email = String(user.email ?? "").trim();
+  if (!email && EMAIL.test(givenEmail)) {
+    email = givenEmail;
+    const { error } = await db.from("payer_emails").upsert({
+      user_id: user.id,
+      email,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) console.error("[create-payment] payer email", error);
+  }
+  if (!email) {
+    const { data: saved } = await db
+      .from("payer_emails")
+      .select("email")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    email = String(saved?.email ?? "");
+  }
+  if (!email) return json({ error: "email_required" }, 409);
 
   const { data: profile } = await db
     .from("profiles")
@@ -264,7 +296,7 @@ Deno.serve(async (req: Request) => {
       payment_options: paymentOptions,
       redirect_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-return`,
       customer: {
-        email: user.email,
+        email,
         name: name || undefined,
         phonenumber: user.phone || undefined,
       },

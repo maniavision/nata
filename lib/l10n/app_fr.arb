@@ -1420,6 +1420,11 @@
 
   "mobileMoneyCountry": "Pays du mobile money",
   "chooseCountry": "Choisissez un pays",
+  "payerEmail": "E-mail pour votre reçu",
+  "payerEmailHint": "vous@exemple.com",
+  "payerEmailNote": "Le prestataire de paiement vous envoie votre reçu ici. Il reste privé et ne vous est demandé qu'une fois.",
+  "enterEmailToPay": "Saisissez votre e-mail pour payer",
+  "errEmailRequired": "Saisissez votre e-mail pour payer.",
   "mobileMoneyChargedAs": "Débité dans la devise de votre portefeuille au taux du jour : {local}. Le prix de la livraison reste {price}.",
   "@mobileMoneyChargedAs": {
     "placeholders": {

@@ -3036,6 +3036,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chooseCountry => 'Elige un país';
 
   @override
+  String get payerEmail => 'Correo para tu recibo';
+
+  @override
+  String get payerEmailHint => 'tu@ejemplo.com';
+
+  @override
+  String get payerEmailNote =>
+      'El proveedor de pagos te envía el recibo aquí. Es privado y solo se te pide una vez.';
+
+  @override
+  String get enterEmailToPay => 'Escribe tu correo para pagar';
+
+  @override
+  String get errEmailRequired => 'Escribe tu correo para pagar.';
+
+  @override
   String mobileMoneyChargedAs(String local, String price) {
     return 'Se cobra en la moneda de tu billetera al tipo de cambio de hoy: $local. El precio de la entrega sigue siendo $price.';
   }

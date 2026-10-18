@@ -128,6 +128,10 @@ enum RequestFailure {
   /// Payments aren't set up on the server (no payment provider key).
   paymentsUnavailable,
 
+  /// The account has no email, which the payment provider needs: checkout
+  /// asks for one.
+  emailRequired,
+
   /// The request isn't paid, so it can't be picked up or delivered.
   notPaid,
 
@@ -1063,12 +1067,23 @@ class RequestService {
     }
   }
 
+  /// The email the user pays with: their account's, or the one they gave
+  /// at checkout before (my_payer_email). Null when they have none yet, as
+  /// for accounts made with a phone number.
+  Future<String?> payerEmail() async {
+    _userId;
+    final email = await _client.rpc('my_payer_email');
+    return email is String && email.trim().isNotEmpty ? email.trim() : null;
+  }
+
   /// Starts paying [requestId] into escrow: a Flutterwave payment page for
-  /// the price fixed when the traveler accepted (create-payment).
+  /// the price fixed when the traveler accepted (create-payment). [email] is
+  /// the payer's, for an account without one; it is kept for next time.
   Future<PaymentLink> startPayment(
     String requestId,
     PayMethod method, {
     String? country,
+    String? email,
   }) async {
     try {
       final response = await _client.functions.invoke(
@@ -1077,6 +1092,7 @@ class RequestService {
           'request_id': requestId,
           'method': method.wire,
           if (country != null) 'country': country,
+          if (email != null) 'email': email,
         },
       );
       final data = Map<String, dynamic>.from(response.data as Map);
@@ -1093,6 +1109,7 @@ class RequestService {
         'checks_missing' ||
         'not_allowed' => RequestFailure.notPayable,
         'payments_unavailable' => RequestFailure.paymentsUnavailable,
+        'email_required' => RequestFailure.emailRequired,
         'mobile_money_unavailable' => RequestFailure.mobileMoneyUnavailable,
         'rate_unavailable' => RequestFailure.rateUnavailable,
         'unauthorized' => RequestFailure.notSignedIn,
