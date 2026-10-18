@@ -76,5 +76,9 @@
 	<string>Required to select your ID document from your photo library</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Required to save captured ID document photos</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

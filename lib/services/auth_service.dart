@@ -1,3 +1,4 @@
+import 'push_service.dart';
 import 'home_search_memory.dart';
 import 'dart:async';
 
@@ -426,6 +427,7 @@ class AuthService {
 
   /// Signs the current user out and clears the session.
   Future<void> signOut() async {
+    await PushService.instance.signingOut();
     await _client.auth.signOut();
     // The next person to sign in on this device starts with an empty search.
     HomeSearchMemory.clear();

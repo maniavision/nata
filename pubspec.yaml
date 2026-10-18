@@ -28,6 +28,8 @@ dependencies:
   url_launcher: ^6.3.3
   pdfrx: ^2.4.7
   camera: ^0.12.0+2
+  firebase_core: ^5.0.0
+  firebase_messaging: ^17.0.0
 
 dev_dependencies:
   flutter_test:

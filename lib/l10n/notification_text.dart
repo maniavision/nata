@@ -70,7 +70,10 @@ import 'app_localizations.dart';
 /// The Requests tab a notification is about: 0 (Incoming, the traveler's
 /// side) or 1 (Outgoing, the sender's side); null when it isn't about a
 /// request.
-int? requestsTabFor(AppNotification n) => switch (n.event) {
+int? requestsTabFor(AppNotification n) => requestsTabForEvent(n.event);
+
+/// The same, from a notification's event (a tapped push carries only that).
+int? requestsTabForEvent(String? event) => switch (event) {
   'request_new' ||
   'request_paid' ||
   'request_cancelled_by_sender' ||
