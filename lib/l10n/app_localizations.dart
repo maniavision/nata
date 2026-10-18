@@ -3113,7 +3113,7 @@ abstract class AppLocalizations {
   /// No description provided for @payoutAccountNote.
   ///
   /// In en, this message translates to:
-  /// **'Earnings from completed deliveries are withdrawn to this account after the 3-day dispute window.'**
+  /// **'Earnings are sent to this account as soon as the recipient\'s delivery code is confirmed.'**
   String get payoutAccountNote;
 
   /// No description provided for @addPayoutAccount.
@@ -4583,13 +4583,13 @@ abstract class AppLocalizations {
   /// No description provided for @disputeWindowBold.
   ///
   /// In en, this message translates to:
-  /// **'3-day dispute window'**
+  /// **'3 days to report a problem'**
   String get disputeWindowBold;
 
   /// No description provided for @disputeWindowRest.
   ///
   /// In en, this message translates to:
-  /// **'after delivery before funds are finalized.'**
+  /// **'after delivery; support follows up on every report.'**
   String get disputeWindowRest;
 
   /// No description provided for @reviewTagIntact.
@@ -6451,6 +6451,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportTitle;
+
+  /// No description provided for @supportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata staff · Reports, locks and failed payments'**
+  String get supportSubtitle;
+
+  /// No description provided for @supportProblemsCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported problems'**
+  String get supportProblemsCard;
+
+  /// No description provided for @supportOpenSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'open'**
+  String get supportOpenSuffix;
+
+  /// No description provided for @supportProblemsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a decision'**
+  String get supportProblemsLine;
+
+  /// No description provided for @supportLockedCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked deliveries'**
+  String get supportLockedCard;
+
+  /// No description provided for @supportLockedSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'locked'**
+  String get supportLockedSuffix;
+
+  /// No description provided for @supportLockedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked after 5 wrong delivery codes'**
+  String get supportLockedLine;
+
+  /// No description provided for @supportFailedCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed payments'**
+  String get supportFailedCard;
+
+  /// No description provided for @supportFailedSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'failed'**
+  String get supportFailedSuffix;
+
+  /// No description provided for @supportFailedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed payouts and refunds to retry'**
+  String get supportFailedLine;
+
+  /// No description provided for @supportRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get supportRecentActivity;
+
+  /// No description provided for @supportNoActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No support actions yet.'**
+  String get supportNoActivity;
+
+  /// No description provided for @supportActResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem resolved'**
+  String get supportActResolved;
+
+  /// No description provided for @supportActRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender refunded'**
+  String get supportActRefunded;
+
+  /// No description provided for @supportActPayoutRetried.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout retried'**
+  String get supportActPayoutRetried;
+
+  /// No description provided for @supportActRefundRetried.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund retried'**
+  String get supportActRefundRetried;
+
+  /// No description provided for @supportActUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery unlocked'**
+  String get supportActUnlocked;
+
+  /// No description provided for @supportProblemsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported Problems'**
+  String get supportProblemsTitle;
+
+  /// No description provided for @supportOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get supportOpen;
+
+  /// No description provided for @supportResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get supportResolved;
+
+  /// No description provided for @supportReportedBySender.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported by Sender'**
+  String get supportReportedBySender;
+
+  /// No description provided for @supportReportedByTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported by Traveler'**
+  String get supportReportedByTraveler;
+
+  /// No description provided for @supportInEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'In escrow'**
+  String get supportInEscrow;
+
+  /// No description provided for @supportViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get supportViewDetails;
+
+  /// No description provided for @supportNoProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'No problems here.'**
+  String get supportNoProblems;
+
+  /// No description provided for @supportProblemDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem Detail'**
+  String get supportProblemDetail;
+
+  /// No description provided for @supportReporterDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporter\'s details'**
+  String get supportReporterDetails;
+
+  /// No description provided for @supportNoDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'No details given.'**
+  String get supportNoDetails;
+
+  /// No description provided for @supportPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get supportPeople;
+
+  /// No description provided for @supportSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender'**
+  String get supportSender;
+
+  /// No description provided for @supportTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Traveler'**
+  String get supportTraveler;
+
+  /// No description provided for @supportTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery timeline'**
+  String get supportTimeline;
+
+  /// No description provided for @supportPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get supportPaid;
+
+  /// No description provided for @supportPickedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked up'**
+  String get supportPickedUp;
+
+  /// No description provided for @supportDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get supportDelivered;
+
+  /// No description provided for @supportReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported'**
+  String get supportReported;
+
+  /// No description provided for @supportPaymentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment status'**
+  String get supportPaymentStatus;
+
+  /// No description provided for @supportHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Held'**
+  String get supportHeld;
+
+  /// No description provided for @supportHeldLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} held in escrow'**
+  String supportHeldLine(String amount);
+
+  /// No description provided for @supportHeldSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Not paid out until resolved'**
+  String get supportHeldSub;
+
+  /// No description provided for @supportReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid out'**
+  String get supportReleased;
+
+  /// No description provided for @supportReleasedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} paid to the traveler'**
+  String supportReleasedLine(String amount);
+
+  /// No description provided for @supportRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get supportRefunded;
+
+  /// No description provided for @supportRefundedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} returned to the sender'**
+  String supportRefundedLine(String amount);
+
+  /// No description provided for @supportResolutionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution note'**
+  String get supportResolutionNote;
+
+  /// No description provided for @supportResolutionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what was decided and why…'**
+  String get supportResolutionHint;
+
+  /// No description provided for @supportMarkResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark resolved'**
+  String get supportMarkResolved;
+
+  /// No description provided for @supportRefundSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund sender'**
+  String get supportRefundSender;
+
+  /// No description provided for @supportRefundConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund {amount} to {name}?'**
+  String supportRefundConfirmTitle(String amount, String name);
+
+  /// No description provided for @supportRefundConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The escrow goes back to the sender and the traveler isn\'t paid. This can\'t be undone.'**
+  String get supportRefundConfirmBody;
+
+  /// No description provided for @supportConfirmRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm refund'**
+  String get supportConfirmRefund;
+
+  /// No description provided for @supportResolvedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem resolved.'**
+  String get supportResolvedSnack;
+
+  /// No description provided for @supportRefundSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund queued. It goes out within 15 minutes.'**
+  String get supportRefundSnack;
+
+  /// No description provided for @supportPaymentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments & Locks'**
+  String get supportPaymentsTitle;
+
+  /// No description provided for @supportFailedTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed payments'**
+  String get supportFailedTab;
+
+  /// No description provided for @supportLockedTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked deliveries'**
+  String get supportLockedTab;
+
+  /// No description provided for @supportPayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout'**
+  String get supportPayout;
+
+  /// No description provided for @supportRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get supportRefund;
+
+  /// No description provided for @supportFlutterwaveSaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Flutterwave: \"{reason}\"'**
+  String supportFlutterwaveSaid(String reason);
+
+  /// No description provided for @supportRetrySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout accepted by Flutterwave.'**
+  String get supportRetrySent;
+
+  /// No description provided for @supportRetryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Flutterwave refused it again.'**
+  String get supportRetryFailed;
+
+  /// No description provided for @supportRefundRequeued.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund queued again. It goes out within 15 minutes.'**
+  String get supportRefundRequeued;
+
+  /// No description provided for @supportLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get supportLocked;
+
+  /// No description provided for @supportWrongAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong code attempts'**
+  String get supportWrongAttempts;
+
+  /// No description provided for @supportUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock delivery'**
+  String get supportUnlock;
+
+  /// No description provided for @supportUnlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock this delivery?'**
+  String get supportUnlockTitle;
+
+  /// No description provided for @supportUnlockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} gets 5 more attempts at the delivery code. Confirm the traveler is with the item before unlocking.'**
+  String supportUnlockBody(String name);
+
+  /// No description provided for @supportConfirmUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm unlock'**
+  String get supportConfirmUnlock;
+
+  /// No description provided for @supportUnlockedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery unlocked.'**
+  String get supportUnlockedSnack;
+
+  /// No description provided for @supportNothingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'No failed payments.'**
+  String get supportNothingFailed;
+
+  /// No description provided for @supportNothingLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'No locked deliveries.'**
+  String get supportNothingLocked;
+
+  /// No description provided for @supportRowSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata staff · Reports, locks & payments'**
+  String get supportRowSub;
+
+  /// No description provided for @supportAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get supportAdmin;
+
+  /// No description provided for @supportLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this. Pull down to try again.'**
+  String get supportLoadFailed;
+
+  /// No description provided for @supportActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t work. Please try again.'**
+  String get supportActionFailed;
 }
 
 class _AppLocalizationsDelegate

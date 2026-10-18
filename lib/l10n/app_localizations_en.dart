@@ -1640,7 +1640,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payoutAccountNote =>
-      'Earnings from completed deliveries are withdrawn to this account after the 3-day dispute window.';
+      'Earnings are sent to this account as soon as the recipient\'s delivery code is confirmed.';
 
   @override
   String get addPayoutAccount => 'Add payout account';
@@ -2536,10 +2536,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'if you cancel after the traveler accepted, until handoff.';
 
   @override
-  String get disputeWindowBold => '3-day dispute window';
+  String get disputeWindowBold => '3 days to report a problem';
 
   @override
-  String get disputeWindowRest => 'after delivery before funds are finalized.';
+  String get disputeWindowRest =>
+      'after delivery; support follows up on every report.';
 
   @override
   String get reviewTagIntact => 'Item was intact';
@@ -3665,4 +3666,249 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get supportSubtitle =>
+      'Nata staff · Reports, locks and failed payments';
+
+  @override
+  String get supportProblemsCard => 'Reported problems';
+
+  @override
+  String get supportOpenSuffix => 'open';
+
+  @override
+  String get supportProblemsLine => 'Waiting for a decision';
+
+  @override
+  String get supportLockedCard => 'Locked deliveries';
+
+  @override
+  String get supportLockedSuffix => 'locked';
+
+  @override
+  String get supportLockedLine => 'Locked after 5 wrong delivery codes';
+
+  @override
+  String get supportFailedCard => 'Failed payments';
+
+  @override
+  String get supportFailedSuffix => 'failed';
+
+  @override
+  String get supportFailedLine => 'Failed payouts and refunds to retry';
+
+  @override
+  String get supportRecentActivity => 'Recent activity';
+
+  @override
+  String get supportNoActivity => 'No support actions yet.';
+
+  @override
+  String get supportActResolved => 'Problem resolved';
+
+  @override
+  String get supportActRefunded => 'Sender refunded';
+
+  @override
+  String get supportActPayoutRetried => 'Payout retried';
+
+  @override
+  String get supportActRefundRetried => 'Refund retried';
+
+  @override
+  String get supportActUnlocked => 'Delivery unlocked';
+
+  @override
+  String get supportProblemsTitle => 'Reported Problems';
+
+  @override
+  String get supportOpen => 'Open';
+
+  @override
+  String get supportResolved => 'Resolved';
+
+  @override
+  String get supportReportedBySender => 'Reported by Sender';
+
+  @override
+  String get supportReportedByTraveler => 'Reported by Traveler';
+
+  @override
+  String get supportInEscrow => 'In escrow';
+
+  @override
+  String get supportViewDetails => 'View details';
+
+  @override
+  String get supportNoProblems => 'No problems here.';
+
+  @override
+  String get supportProblemDetail => 'Problem Detail';
+
+  @override
+  String get supportReporterDetails => 'Reporter\'s details';
+
+  @override
+  String get supportNoDetails => 'No details given.';
+
+  @override
+  String get supportPeople => 'People';
+
+  @override
+  String get supportSender => 'Sender';
+
+  @override
+  String get supportTraveler => 'Traveler';
+
+  @override
+  String get supportTimeline => 'Delivery timeline';
+
+  @override
+  String get supportPaid => 'Paid';
+
+  @override
+  String get supportPickedUp => 'Picked up';
+
+  @override
+  String get supportDelivered => 'Delivered';
+
+  @override
+  String get supportReported => 'Reported';
+
+  @override
+  String get supportPaymentStatus => 'Payment status';
+
+  @override
+  String get supportHeld => 'Held';
+
+  @override
+  String supportHeldLine(String amount) {
+    return '$amount held in escrow';
+  }
+
+  @override
+  String get supportHeldSub => 'Not paid out until resolved';
+
+  @override
+  String get supportReleased => 'Paid out';
+
+  @override
+  String supportReleasedLine(String amount) {
+    return '$amount paid to the traveler';
+  }
+
+  @override
+  String get supportRefunded => 'Refunded';
+
+  @override
+  String supportRefundedLine(String amount) {
+    return '$amount returned to the sender';
+  }
+
+  @override
+  String get supportResolutionNote => 'Resolution note';
+
+  @override
+  String get supportResolutionHint => 'Describe what was decided and why…';
+
+  @override
+  String get supportMarkResolved => 'Mark resolved';
+
+  @override
+  String get supportRefundSender => 'Refund sender';
+
+  @override
+  String supportRefundConfirmTitle(String amount, String name) {
+    return 'Refund $amount to $name?';
+  }
+
+  @override
+  String get supportRefundConfirmBody =>
+      'The escrow goes back to the sender and the traveler isn\'t paid. This can\'t be undone.';
+
+  @override
+  String get supportConfirmRefund => 'Confirm refund';
+
+  @override
+  String get supportResolvedSnack => 'Problem resolved.';
+
+  @override
+  String get supportRefundSnack =>
+      'Refund queued. It goes out within 15 minutes.';
+
+  @override
+  String get supportPaymentsTitle => 'Payments & Locks';
+
+  @override
+  String get supportFailedTab => 'Failed payments';
+
+  @override
+  String get supportLockedTab => 'Locked deliveries';
+
+  @override
+  String get supportPayout => 'Payout';
+
+  @override
+  String get supportRefund => 'Refund';
+
+  @override
+  String supportFlutterwaveSaid(String reason) {
+    return 'Flutterwave: \"$reason\"';
+  }
+
+  @override
+  String get supportRetrySent => 'Payout accepted by Flutterwave.';
+
+  @override
+  String get supportRetryFailed => 'Flutterwave refused it again.';
+
+  @override
+  String get supportRefundRequeued =>
+      'Refund queued again. It goes out within 15 minutes.';
+
+  @override
+  String get supportLocked => 'Locked';
+
+  @override
+  String get supportWrongAttempts => 'Wrong code attempts';
+
+  @override
+  String get supportUnlock => 'Unlock delivery';
+
+  @override
+  String get supportUnlockTitle => 'Unlock this delivery?';
+
+  @override
+  String supportUnlockBody(String name) {
+    return '$name gets 5 more attempts at the delivery code. Confirm the traveler is with the item before unlocking.';
+  }
+
+  @override
+  String get supportConfirmUnlock => 'Confirm unlock';
+
+  @override
+  String get supportUnlockedSnack => 'Delivery unlocked.';
+
+  @override
+  String get supportNothingFailed => 'No failed payments.';
+
+  @override
+  String get supportNothingLocked => 'No locked deliveries.';
+
+  @override
+  String get supportRowSub => 'Nata staff · Reports, locks & payments';
+
+  @override
+  String get supportAdmin => 'Admin';
+
+  @override
+  String get supportLoadFailed =>
+      'Couldn\'t load this. Pull down to try again.';
+
+  @override
+  String get supportActionFailed => 'That didn\'t work. Please try again.';
 }

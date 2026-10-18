@@ -17,6 +17,8 @@ import '../services/traveler_service.dart';
 import 'identity_status_screen.dart';
 import 'identity_verification_screen.dart';
 import 'sealed_box_policy_screen.dart';
+import 'support_screens.dart';
+import '../services/support_service.dart';
 import 'wallet_history_screen.dart';
 import 'payment_settings_screen.dart';
 import 'login_screen.dart';
@@ -57,6 +59,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int? _reviewCount;
   EmergencyContact? _emergencyContact;
   bool _isUploading = false;
+
+  /// Staff see a Support row at the top of the settings.
+  bool _isAdmin = false;
   bool _isLoading = true;
 
   StreamSubscription? _profileSubscription;
@@ -74,6 +79,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfile();
     _setupStreams();
     _loadEmergencyContact();
+    _loadAdmin();
+  }
+
+  Future<void> _loadAdmin() async {
+    try {
+      final admin = await SupportAccess.isAdmin();
+      if (mounted && admin != _isAdmin) setState(() => _isAdmin = admin);
+    } catch (e) {
+      debugPrint('[Profile] admin check: $e');
+    }
   }
 
   Future<void> _loadEmergencyContact() async {
@@ -953,6 +968,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSettingsList() {
     final prefs = PreferencesService();
     final items = [
+      if (_isAdmin)
+        _SettingsItem(
+          key: const ValueKey('profile-support'),
+          icon: Icons.shield_outlined,
+          iconBg: AppColors.secondary,
+          iconColor: AppColors.primary,
+          title: context.l10n.supportTitle,
+          subtitle: context.l10n.supportRowSub,
+          trailing: context.l10n.supportAdmin,
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SupportScreen())),
+        ),
       _SettingsItem(
         icon: Icons.language_rounded,
         iconBg: AppColors.secondary,

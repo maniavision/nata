@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:carrywise_app/services/auth_gate.dart';
 import 'package:carrywise_app/services/home_search_memory.dart';
+import 'package:carrywise_app/services/support_service.dart';
 import 'package:carrywise_app/services/verify_gate.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,5 +16,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   setUp(() => AuthGate.isSignedIn = () => true);
   // ...and as a verified one, who may post trips and send requests.
   setUp(() => VerifyGate.status = () async => 'verified');
+  // ...who isn't Nata staff.
+  setUp(() => SupportAccess.isAdmin = () async => false);
   await testMain();
 }

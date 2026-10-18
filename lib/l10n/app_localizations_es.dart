@@ -1658,7 +1658,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get payoutAccountNote =>
-      'Las ganancias de las entregas completadas se transfieren a esta cuenta tras el plazo de reclamación de 3 días.';
+      'Las ganancias se envían a esta cuenta en cuanto se confirma el código de entrega del destinatario.';
 
   @override
   String get addPayoutAccount => 'Añadir cuenta de cobro';
@@ -2575,11 +2575,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'si cancelas después de que el viajero acepte, hasta la entrega.';
 
   @override
-  String get disputeWindowBold => 'Plazo de reclamación de 3 días';
+  String get disputeWindowBold => '3 días para informar de un problema';
 
   @override
   String get disputeWindowRest =>
-      'después de la entrega antes de que se liberen los fondos.';
+      'tras la entrega; el equipo de soporte revisa cada informe.';
 
   @override
   String get reviewTagIntact => 'El artículo llegó intacto';
@@ -3712,4 +3712,250 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get close => 'Cerrar';
+
+  @override
+  String get supportTitle => 'Soporte';
+
+  @override
+  String get supportSubtitle =>
+      'Equipo de Nata · Informes, bloqueos y pagos fallidos';
+
+  @override
+  String get supportProblemsCard => 'Problemas informados';
+
+  @override
+  String get supportOpenSuffix => 'abiertos';
+
+  @override
+  String get supportProblemsLine => 'Esperando una decisión';
+
+  @override
+  String get supportLockedCard => 'Entregas bloqueadas';
+
+  @override
+  String get supportLockedSuffix => 'bloqueadas';
+
+  @override
+  String get supportLockedLine =>
+      'Bloqueadas tras 5 códigos de entrega erróneos';
+
+  @override
+  String get supportFailedCard => 'Pagos fallidos';
+
+  @override
+  String get supportFailedSuffix => 'fallidos';
+
+  @override
+  String get supportFailedLine => 'Pagos y reembolsos fallidos para reintentar';
+
+  @override
+  String get supportRecentActivity => 'Actividad reciente';
+
+  @override
+  String get supportNoActivity => 'Aún no hay acciones de soporte.';
+
+  @override
+  String get supportActResolved => 'Problema resuelto';
+
+  @override
+  String get supportActRefunded => 'Remitente reembolsado';
+
+  @override
+  String get supportActPayoutRetried => 'Pago reintentado';
+
+  @override
+  String get supportActRefundRetried => 'Reembolso reintentado';
+
+  @override
+  String get supportActUnlocked => 'Entrega desbloqueada';
+
+  @override
+  String get supportProblemsTitle => 'Problemas informados';
+
+  @override
+  String get supportOpen => 'Abiertos';
+
+  @override
+  String get supportResolved => 'Resueltos';
+
+  @override
+  String get supportReportedBySender => 'Informado por el remitente';
+
+  @override
+  String get supportReportedByTraveler => 'Informado por el viajero';
+
+  @override
+  String get supportInEscrow => 'En garantía';
+
+  @override
+  String get supportViewDetails => 'Ver detalles';
+
+  @override
+  String get supportNoProblems => 'No hay problemas aquí.';
+
+  @override
+  String get supportProblemDetail => 'Detalle del problema';
+
+  @override
+  String get supportReporterDetails => 'Detalles del informante';
+
+  @override
+  String get supportNoDetails => 'Sin detalles.';
+
+  @override
+  String get supportPeople => 'Personas';
+
+  @override
+  String get supportSender => 'Remitente';
+
+  @override
+  String get supportTraveler => 'Viajero';
+
+  @override
+  String get supportTimeline => 'Cronología de la entrega';
+
+  @override
+  String get supportPaid => 'Pagado';
+
+  @override
+  String get supportPickedUp => 'Recogido';
+
+  @override
+  String get supportDelivered => 'Entregado';
+
+  @override
+  String get supportReported => 'Informado';
+
+  @override
+  String get supportPaymentStatus => 'Estado del pago';
+
+  @override
+  String get supportHeld => 'Retenido';
+
+  @override
+  String supportHeldLine(String amount) {
+    return '$amount retenidos en garantía';
+  }
+
+  @override
+  String get supportHeldSub => 'No se paga hasta resolverlo';
+
+  @override
+  String get supportReleased => 'Pagado';
+
+  @override
+  String supportReleasedLine(String amount) {
+    return '$amount pagados al viajero';
+  }
+
+  @override
+  String get supportRefunded => 'Reembolsado';
+
+  @override
+  String supportRefundedLine(String amount) {
+    return '$amount devueltos al remitente';
+  }
+
+  @override
+  String get supportResolutionNote => 'Nota de resolución';
+
+  @override
+  String get supportResolutionHint => 'Describe qué se decidió y por qué…';
+
+  @override
+  String get supportMarkResolved => 'Marcar como resuelto';
+
+  @override
+  String get supportRefundSender => 'Reembolsar al remitente';
+
+  @override
+  String supportRefundConfirmTitle(String amount, String name) {
+    return '¿Reembolsar $amount a $name?';
+  }
+
+  @override
+  String get supportRefundConfirmBody =>
+      'La garantía vuelve al remitente y el viajero no recibe el pago. No se puede deshacer.';
+
+  @override
+  String get supportConfirmRefund => 'Confirmar reembolso';
+
+  @override
+  String get supportResolvedSnack => 'Problema resuelto.';
+
+  @override
+  String get supportRefundSnack =>
+      'Reembolso en cola. Se envía en 15 minutos como máximo.';
+
+  @override
+  String get supportPaymentsTitle => 'Pagos y bloqueos';
+
+  @override
+  String get supportFailedTab => 'Pagos fallidos';
+
+  @override
+  String get supportLockedTab => 'Entregas bloqueadas';
+
+  @override
+  String get supportPayout => 'Pago';
+
+  @override
+  String get supportRefund => 'Reembolso';
+
+  @override
+  String supportFlutterwaveSaid(String reason) {
+    return 'Flutterwave: \"$reason\"';
+  }
+
+  @override
+  String get supportRetrySent => 'Flutterwave aceptó el pago.';
+
+  @override
+  String get supportRetryFailed => 'Flutterwave lo volvió a rechazar.';
+
+  @override
+  String get supportRefundRequeued =>
+      'Reembolso en cola de nuevo. Se envía en 15 minutos como máximo.';
+
+  @override
+  String get supportLocked => 'Bloqueada';
+
+  @override
+  String get supportWrongAttempts => 'Intentos de código erróneos';
+
+  @override
+  String get supportUnlock => 'Desbloquear entrega';
+
+  @override
+  String get supportUnlockTitle => '¿Desbloquear esta entrega?';
+
+  @override
+  String supportUnlockBody(String name) {
+    return '$name tendrá 5 intentos más con el código de entrega. Confirma que el viajero tiene el artículo antes de desbloquear.';
+  }
+
+  @override
+  String get supportConfirmUnlock => 'Confirmar desbloqueo';
+
+  @override
+  String get supportUnlockedSnack => 'Entrega desbloqueada.';
+
+  @override
+  String get supportNothingFailed => 'No hay pagos fallidos.';
+
+  @override
+  String get supportNothingLocked => 'No hay entregas bloqueadas.';
+
+  @override
+  String get supportRowSub => 'Equipo de Nata · Informes, bloqueos y pagos';
+
+  @override
+  String get supportAdmin => 'Admin';
+
+  @override
+  String get supportLoadFailed =>
+      'No se pudo cargar. Desliza hacia abajo para reintentar.';
+
+  @override
+  String get supportActionFailed => 'No funcionó. Inténtalo de nuevo.';
 }
