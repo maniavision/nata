@@ -70,6 +70,8 @@
 	<string>Required to capture your ID document for identity verification and to photograph your flight receipt</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Used to confirm it is you when you sign in with Face ID</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Used once, while you use the app, to detect your country so we can suggest your language and currency. Nata never tracks your location in the background</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Used once to detect your country so we can suggest your language and currency. Your exact location is not stored</string>
 	<key>NSPhotoLibraryUsageDescription</key>
