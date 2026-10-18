@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/notification_text.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
+import 'requests_screen.dart';
 
 /// "2 min ago", "1 hr ago", "Yesterday", "Jun 12" ...
 String notificationTimeLabel(AppLocalizations l, DateTime now, DateTime then) {
@@ -31,7 +33,16 @@ class NotificationsScreen extends StatefulWidget {
   final NotificationService? service;
   final DateTime Function()? now;
 
-  const NotificationsScreen({super.key, this.service, this.now});
+  /// Builds the Requests page a notification opens, on [tab]. Defaults to
+  /// [RequestsScreen].
+  final Widget Function(int tab)? requestsBuilder;
+
+  const NotificationsScreen({
+    super.key,
+    this.service,
+    this.now,
+    this.requestsBuilder,
+  });
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -95,6 +106,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return category == null
         ? _items
         : _items.where((n) => n.category == category).toList();
+  }
+
+  /// Marks it read and, when it is about a request, opens that side of
+  /// Requests.
+  void _open(AppNotification n) {
+    _markRead(n);
+    final tab = requestsTabFor(n);
+    if (tab == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            widget.requestsBuilder?.call(tab) ??
+            RequestsScreen(initialTab: tab),
+      ),
+    );
   }
 
   // Optimistic: the dot disappears at once; if saving fails it comes back.
@@ -417,11 +443,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _card(AppNotification n, DateTime now) {
     final l = context.l10n;
+    final (title, body) = notificationText(l, n);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         key: ValueKey('notif-${n.id}'),
-        onTap: () => _markRead(n),
+        onTap: () => _open(n),
         behavior: HitTestBehavior.opaque,
         child: Container(
           padding: const EdgeInsets.all(14),
@@ -447,7 +474,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            n.title,
+                            title,
                             style: GoogleFonts.dmSans(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
@@ -472,10 +499,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ],
                       ],
                     ),
-                    if (n.body.isNotEmpty) ...[
+                    if (body.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        n.body,
+                        body,
                         maxLines: n.type == 'message' ? 1 : 4,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.dmSans(

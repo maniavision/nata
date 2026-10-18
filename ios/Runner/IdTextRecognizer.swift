@@ -6,6 +6,9 @@ import Vision
 
 /// Identity checks with Apple's Vision framework. Channel "nata/id_text":
 /// - "recognizeText" { path } -> String: the text on the image
+/// - "textBoxes" { path } -> { words: [{ text, line, x, y, w, h }], barcodes:
+///   [{ x, y, w, h }] }: each word read and each barcode found, in the
+///   upright image's pixels from the top left (to blur parts of a ticket)
 /// - "detectFace" { path } -> Bool: whether the image shows a human face
 /// - "toJpeg" { path, maxSide } -> bytes: the image upright, scaled down to
 ///   at most maxSide px, as JPEG (for the face match: HEIC/PNG/huge photos)
@@ -24,7 +27,7 @@ enum IdTextRecognizer {
       let args = call.arguments as? [String: Any] ?? [:]
       let reply: (Any) -> Void = { value in DispatchQueue.main.async { result(value) } }
       switch call.method {
-      case "recognizeText", "detectFace", "toJpeg":
+      case "recognizeText", "detectFace", "toJpeg", "textBoxes":
         guard let path = args["path"] as? String,
               let image = UIImage(contentsOfFile: path),
               let cgImage = image.cgImage else {
@@ -37,6 +40,8 @@ enum IdTextRecognizer {
             reply(recognizeText(cgImage, CGImagePropertyOrientation(image.imageOrientation)))
           case "detectFace":
             reply(detectFace(cgImage, CGImagePropertyOrientation(image.imageOrientation)))
+          case "textBoxes":
+            reply(textBoxes(cgImage, CGImagePropertyOrientation(image.imageOrientation), image.size))
           default:
             let maxSide = CGFloat(args["maxSide"] as? Int ?? 1600)
             reply(jpeg(image, maxSide: maxSide) ?? FlutterError(
@@ -73,6 +78,48 @@ enum IdTextRecognizer {
     } catch {
       return visionError(error)
     }
+  }
+
+  private static func textBoxes(
+    _ image: CGImage, _ orientation: CGImagePropertyOrientation, _ size: CGSize
+  ) -> Any {
+    let text = VNRecognizeTextRequest()
+    text.recognitionLevel = .accurate
+    text.usesLanguageCorrection = false
+    let codes = VNDetectBarcodesRequest()
+    prepare(text)
+    prepare(codes)
+    do {
+      try VNImageRequestHandler(cgImage: image, orientation: orientation).perform([text, codes])
+    } catch {
+      return visionError(error)
+    }
+    // Vision's boxes are normalized, from the bottom left.
+    func box(_ r: CGRect) -> [String: Any] {
+      [
+        "x": Double(r.minX * size.width),
+        "y": Double((1 - r.maxY) * size.height),
+        "w": Double(r.width * size.width),
+        "h": Double(r.height * size.height),
+      ]
+    }
+    var words: [[String: Any]] = []
+    for (line, observation) in (text.results ?? []).enumerated() {
+      guard let candidate = observation.topCandidates(1).first else { continue }
+      let string = candidate.string
+      string.enumerateSubstrings(in: string.startIndex..<string.endIndex, options: .byWords) {
+        word, range, _, _ in
+        guard let word, let rect = (try? candidate.boundingBox(for: range))?.boundingBox else {
+          return
+        }
+        var entry = box(rect)
+        entry["text"] = word
+        entry["line"] = line
+        words.append(entry)
+      }
+    }
+    let barcodes = (codes.results ?? []).map { box($0.boundingBox) }
+    return ["words": words, "barcodes": barcodes]
   }
 
   private static func detectFace(_ image: CGImage, _ orientation: CGImagePropertyOrientation) -> Any {

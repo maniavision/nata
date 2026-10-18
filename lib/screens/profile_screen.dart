@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../services/payment_service.dart';
 import 'dart:io';
 import 'dart:ui';
 
@@ -11,7 +12,15 @@ import '../widgets/app_bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
 import '../widgets/avatar_image.dart';
+import '../services/emergency_contact_service.dart';
+import '../services/traveler_service.dart';
+import 'identity_status_screen.dart';
 import 'identity_verification_screen.dart';
+import 'sealed_box_policy_screen.dart';
+import 'support_screens.dart';
+import '../services/support_service.dart';
+import 'wallet_history_screen.dart';
+import 'payment_settings_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
 
@@ -19,7 +28,16 @@ class ProfileScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
   final AuthService? authService;
 
-  const ProfileScreen({super.key, this.authService});
+  /// Overrides for tests; they default to the real services.
+  final EmergencyContactService? emergencyService;
+  final TravelerService? travelerService;
+
+  const ProfileScreen({
+    super.key,
+    this.authService,
+    this.emergencyService,
+    this.travelerService,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -37,7 +55,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double _escrowBalance = 0.0;
   int _tripsCount = 0;
   int _parcelsCount = 0;
+  double? _avgRating;
+  int? _reviewCount;
+  EmergencyContact? _emergencyContact;
   bool _isUploading = false;
+
+  /// Staff see a Support row at the top of the settings.
+  bool _isAdmin = false;
   bool _isLoading = true;
 
   StreamSubscription? _profileSubscription;
@@ -54,6 +78,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     PreferencesService().addListener(_onPrefsChanged);
     _loadProfile();
     _setupStreams();
+    _loadEmergencyContact();
+    _loadAdmin();
+  }
+
+  Future<void> _loadAdmin() async {
+    try {
+      final admin = await SupportAccess.isAdmin();
+      if (mounted && admin != _isAdmin) setState(() => _isAdmin = admin);
+    } catch (e) {
+      debugPrint('[Profile] admin check: $e');
+    }
+  }
+
+  Future<void> _loadEmergencyContact() async {
+    try {
+      final contact =
+          await (widget.emergencyService ?? EmergencyContactService()).get();
+      if (mounted) setState(() => _emergencyContact = contact);
+    } catch (e) {
+      debugPrint('[Profile] emergency contact error: $e');
+    }
+  }
+
+  /// How many reviews the user has, next to their average rating.
+  Future<void> _loadReviewCount(String userId) async {
+    try {
+      final reviews = await (widget.travelerService ?? TravelerService())
+          .reviews(userId, limit: 1);
+      if (mounted) setState(() => _reviewCount = reviews.total);
+    } catch (e) {
+      debugPrint('[Profile] review count error: $e');
+    }
   }
 
   void _setupStreams() {
@@ -75,6 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _memberSinceDate = DateFormat('MMM yyyy').format(date);
           }
           _verificationStatus = profile['verification_status'] ?? 'unverified';
+          _avgRating = (profile['avg_rating'] as num?)?.toDouble();
         });
       }
     }, onError: (Object e) => debugPrint('[Profile] profile stream error: $e'));
@@ -122,6 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           _verificationStatus = profile['verification_status'] ?? 'unverified';
+          _avgRating = (profile['avg_rating'] as num?)?.toDouble();
 
           _availableBalance = balances['available'] ?? 0.0;
           _escrowBalance = balances['escrow'] ?? 0.0;
@@ -131,6 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           _isLoading = false;
         });
+        final id = profile['id'] as String?;
+        if (id != null && _avgRating != null) _loadReviewCount(id);
       }
     } catch (e) {
       debugPrint('Error loading profile: $e');
@@ -193,17 +253,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile picture updated successfully'),
-            ),
+            SnackBar(content: Text(context.l10n.profilePictureUpdated)),
           );
         }
       } catch (e) {
         debugPrint('Upload error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.errUploadImage('$e'))),
+          );
         }
       } finally {
         if (mounted) {
@@ -238,6 +296,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         bottom: false,
         child: Stack(
+          // Fill the screen so the bottom nav sits at the bottom even when
+          // the content is shorter than the screen.
+          fit: StackFit.expand,
           children: [
             SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 100),
@@ -280,7 +341,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             context.l10n.accountAndProfile,
@@ -289,20 +349,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontSize: 20,
               letterSpacing: -0.4,
               color: AppColors.foreground,
-            ),
-          ),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(
-              Icons.settings_rounded,
-              color: AppColors.primary,
-              size: 20,
             ),
           ),
         ],
@@ -350,6 +396,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     child: Stack(
+                      fit: StackFit.expand,
                       children: [
                         ClipOval(
                           child: _imagePath != null
@@ -545,30 +592,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: Color(0xFFE5A83B),
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              '5.0 ',
-                              style: GoogleFonts.dmSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                                color: AppColors.foreground,
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 14,
+                                color: Color(0xFFE5A83B),
                               ),
-                            ),
-                            Text(
-                              '(20)',
-                              style: GoogleFonts.dmSans(
-                                fontSize: 12,
-                                color: AppColors.mutedForeground,
+                              const SizedBox(width: 3),
+                              Flexible(
+                                child: Text(
+                                  _avgRating == null
+                                      ? context.l10n.noReviewsYet
+                                      : '${_avgRating!.toStringAsFixed(1)} ',
+                                  key: const ValueKey('profile-rating'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: _avgRating == null
+                                        ? FontWeight.w500
+                                        : FontWeight.w700,
+                                    fontSize: 12,
+                                    color: _avgRating == null
+                                        ? AppColors.mutedForeground
+                                        : AppColors.foreground,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                              if (_avgRating != null && _reviewCount != null)
+                                Text(
+                                  '($_reviewCount)',
+                                  style: GoogleFonts.dmSans(
+                                    fontSize: 12,
+                                    color: AppColors.mutedForeground,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -639,6 +701,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Sends the payouts waiting for this traveler (they also go out by
+  /// themselves after each delivery).
+  Future<void> _withdraw() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final sent = await PaymentService().sendPayouts();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(sent > 0 ? l.withdrawSent(sent) : l.withdrawNothing),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Profile] withdraw: $e');
+      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+    }
+  }
+
   // ── Wallet card ────────────────────────────────────────────────────────────
   Widget _buildWalletCard() {
     return Container(
@@ -654,12 +734,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       padding: const EdgeInsets.all(20),
+      // The blob is cut by the card's rounded edge, not by its padding.
+      clipBehavior: Clip.antiAlias,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Decorative blob
           Positioned(
-            right: -20,
-            bottom: -20,
+            right: -40,
+            bottom: -40,
             child: Container(
               width: 120,
               height: 120,
@@ -769,7 +852,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    key: const ValueKey('wallet-withdraw'),
+                    onTap: _withdraw,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -830,7 +914,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(width: 12),
                   GestureDetector(
-                    onTap: () {},
+                    key: const ValueKey('wallet-view-history'),
+                    onTap: _openHistory,
                     child: Text(
                       context.l10n.viewHistory,
                       style: GoogleFonts.dmSans(
@@ -851,10 +936,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _openHistory() {
+    final money = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => WalletHistoryScreen(
+          available: money.format(_availableBalance),
+          inEscrow: money.format(_escrowBalance),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openEmergencyContact() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => EmergencyContactScreen(
+          initial: _emergencyContact,
+          service: widget.emergencyService,
+        ),
+      ),
+    );
+    if (saved != true || !mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.ecSavedToast)));
+    _loadEmergencyContact();
+  }
+
   // ── Settings list ──────────────────────────────────────────────────────────
   Widget _buildSettingsList() {
     final prefs = PreferencesService();
     final items = [
+      if (_isAdmin)
+        _SettingsItem(
+          key: const ValueKey('profile-support'),
+          icon: Icons.shield_outlined,
+          iconBg: AppColors.secondary,
+          iconColor: AppColors.primary,
+          title: context.l10n.supportTitle,
+          subtitle: context.l10n.supportRowSub,
+          trailing: context.l10n.supportAdmin,
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SupportScreen())),
+        ),
       _SettingsItem(
         icon: Icons.language_rounded,
         iconBg: AppColors.secondary,
@@ -903,7 +1029,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: () async {
           await Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const IdentityVerificationScreen(),
+              builder: (context) => _verificationStatus == 'unverified'
+                  ? const IdentityVerificationScreen()
+                  : IdentityStatusScreen(
+                      verified: _verificationStatus == 'verified',
+                    ),
             ),
           );
           // Show the new verification status right away instead of waiting
@@ -912,12 +1042,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
       ),
       _SettingsItem(
+        key: const ValueKey('profile-payment-settings'),
+        icon: Icons.account_balance_wallet_rounded,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.paymentSettings,
+        subtitle: context.l10n.paymentSettingsSub,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PaymentSettingsScreen(
+              availableBalance: _availableBalance,
+              escrowBalance: _escrowBalance,
+              holderName: _displayName,
+            ),
+          ),
+        ),
+      ),
+      _SettingsItem(
         icon: Icons.inventory_2_outlined,
         iconBg: AppColors.secondary,
         iconColor: AppColors.primary,
         title: context.l10n.sealedBoxPolicySetting,
         subtitle: context.l10n.originalBoxCompliance,
-        onTap: () {},
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const SealedBoxPolicyScreen()),
+        ),
+      ),
+      _SettingsItem(
+        key: const ValueKey('profile-emergency-contact'),
+        icon: Icons.contact_emergency_rounded,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.emergencyContactLabel,
+        subtitle: _emergencyContact?.fullName ?? context.l10n.ecProfileAdd,
+        onTap: _openEmergencyContact,
       ),
     ];
 
@@ -937,6 +1095,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return Column(
             children: [
               GestureDetector(
+                key: item.key,
                 onTap: item.onTap,
                 child: Container(
                   color: Colors.transparent,
@@ -1075,6 +1234,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 // ── Data models ────────────────────────────────────────────────────────────
 class _SettingsItem {
+  final Key? key;
   final IconData icon;
   final Color iconBg;
   final Color iconColor;
@@ -1086,6 +1246,7 @@ class _SettingsItem {
   final VoidCallback? onTap;
 
   const _SettingsItem({
+    this.key,
     required this.icon,
     required this.iconBg,
     required this.iconColor,

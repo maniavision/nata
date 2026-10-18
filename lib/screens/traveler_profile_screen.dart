@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
+import '../services/verify_gate.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
 import 'delivery_request_screen.dart';
+import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 
 /// Shows a traveler's profile and the trip the user picked.
@@ -29,6 +31,7 @@ class TravelerProfileScreen extends StatefulWidget {
 class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   late TravelerTrip _trip = widget.trip;
   TravelerProfile? _profile;
+  TravelerReviews? _reviews;
 
   String get _name => _profile?.fullName.isNotEmpty == true
       ? _profile!.fullName
@@ -39,10 +42,24 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
 
   static String _fmtDate(DateTime d) => DateFormat('MMM d').format(d);
 
+  /// "Same day delivery" when departure and arrival fall on the same calendar
+  /// day, otherwise "Deliver in N days" based on the calendar-day gap.
+  String _deliveryTiming(AppLocalizations l) {
+    final dep = _trip.departureDate;
+    final arr = _trip.arrivalDate;
+    final days = DateTime.utc(
+      arr.year,
+      arr.month,
+      arr.day,
+    ).difference(DateTime.utc(dep.year, dep.month, dep.day)).inDays;
+    return days <= 0 ? l.sameDayDelivery : l.deliverInDays(days);
+  }
+
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadReviews();
   }
 
   @override
@@ -51,7 +68,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
     if (oldWidget.trip.tripId != widget.trip.tripId) {
       _trip = widget.trip;
       _profile = null;
+      _reviews = null;
       _loadProfile();
+      _loadReviews();
     }
   }
 
@@ -63,6 +82,17 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
       setState(() => _profile = profile);
     } catch (_) {
       // Non-fatal: the screen already shows the data from the search result.
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    try {
+      final service = widget.service ?? TravelerService();
+      final reviews = await service.reviews(widget.trip.travelerId);
+      if (!mounted) return;
+      setState(() => _reviews = reviews);
+    } catch (_) {
+      // Non-fatal: the card stays on "No reviews yet".
     }
   }
 
@@ -176,32 +206,14 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Center(
-              child: Text(
-                context.l10n.travelerProfile,
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: AppColors.foreground,
-                ),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Icon(
-                Icons.share_outlined,
-                color: AppColors.primary,
-                size: 20,
+            child: Text(
+              context.l10n.travelerProfile,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.foreground,
               ),
             ),
           ),
@@ -461,6 +473,25 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
           Row(
             children: [
               const Icon(
+                Icons.access_time_filled_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _deliveryTiming(l),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(
                 Icons.local_offer_rounded,
                 size: 16,
                 color: AppColors.accent,
@@ -484,15 +515,6 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                     fontSize: 12,
                     color: AppColors.mutedForeground,
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${_trip.currency} ${_trip.price.toStringAsFixed(2)}',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                  color: AppColors.foreground,
                 ),
               ),
             ],
@@ -521,19 +543,22 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             children: [
               Expanded(
                 child: _capacityTile(
-                  label: 'WEIGHT LIMIT',
+                  label: l.weightLimit.toUpperCase(),
                   value: _trip.maxWeightKg == null
                       ? '—'
-                      : 'Up to ${_trip.maxWeightKg!.toStringAsFixed(1)} kg',
+                      : l.upToKg(_trip.maxWeightKg!.toStringAsFixed(1)),
                   sub: l.checkBaggage,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _capacityTile(
-                  label: 'SIZE LIMIT',
-                  value: _trip.maxSize ?? '—',
-                  sub: '',
+                  label: l.sizeLimit.toUpperCase(),
+                  // "Shoebox" over "Max 30×20×15 cm", as in the design.
+                  value: l
+                      .tripSize(_trip.maxSize)
+                      .replaceAll(RegExp(r'\s*\(.*\)'), ''),
+                  sub: _sizeDims == null ? '' : l.maxDims(_sizeDims!),
                 ),
               ),
             ],
@@ -712,40 +737,194 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   }
 
   // ── Reviews card ───────────────────────────────────────────────────────────
-  // There is no reviews data yet, so this shows an honest empty state instead
-  // of made-up reviews. Wire it to a reviews table when one exists.
+  // What senders said after their deliveries, newest first.
   Widget _buildReviewsCard(BuildContext context) {
     final l = context.l10n;
+    final reviews = _reviews?.reviews ?? const <TravelerReview>[];
+    final total = _reviews?.total ?? 0;
     return Container(
       decoration: _cardDecoration,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle(
-            Icons.star_rounded,
-            const Color(0xFFE5A83B),
-            l.deliveryHistoryAndReviews,
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                l.noReviewsYet,
-                style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  color: AppColors.mutedForeground,
+          Row(
+            children: [
+              Expanded(
+                child: _sectionTitle(
+                  Icons.star_rounded,
+                  const Color(0xFFE5A83B),
+                  l.deliveryHistoryAndReviews,
                 ),
               ),
-            ),
+              if (total > 0)
+                Text(
+                  l.reviewsCount(total),
+                  key: const ValueKey('profile-reviews-count'),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+            ],
           ),
+          const SizedBox(height: 12),
+          if (reviews.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  l.noReviewsYet,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            )
+          else
+            for (var i = 0; i < reviews.length; i++) ...[
+              if (i > 0) const Divider(height: 20, color: AppColors.border),
+              _reviewTile(reviews[i]),
+            ],
         ],
       ),
     );
   }
 
+  Widget _reviewTile(TravelerReview r) {
+    final locale = Localizations.localeOf(context).toString();
+    return Row(
+      key: ValueKey('profile-review-${r.id}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: AppColors.secondary,
+          child: Text(
+            r.initials,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              fontSize: 11,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      r.reviewerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    DateFormat.yMMMd(locale).format(r.createdAt),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 10,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  for (var v = 1; v <= 5; v++)
+                    Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: v <= r.rating
+                          ? const Color(0xFFE5A83B)
+                          : AppColors.border,
+                    ),
+                ],
+              ),
+              if (r.comment.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  r.comment,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// "30×20×15 cm" from "Shoebox (30×20×15 cm)", if the size has them.
+  String? get _sizeDims =>
+      RegExp(r'\((.*)\)').firstMatch(_trip.maxSize ?? '')?.group(1)?.trim();
+
   // ── Send request bar ───────────────────────────────────────────────────────
+  /// Messaging stays locked until the sender has paid for a delivery; chat
+  /// then opens from Messages.
+  Widget _buildLockedMessageButton(BuildContext context) {
+    final l = context.l10n;
+    return Semantics(
+      button: true,
+      enabled: false,
+      label: '${l.messageLocked}. ${l.messageUnlocksAfterPayment}',
+      child: GestureDetector(
+        key: const ValueKey('profile-message-locked'),
+        onTap: () => ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l.messageUnlocksAfterPayment))),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.lock_rounded,
+                size: 16,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  l.messageLocked,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSendRequestBar(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
@@ -761,38 +940,53 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             16,
             16 + MediaQuery.of(context).padding.bottom,
           ),
-          child: SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => DeliveryRequestScreen(trip: _trip),
+          child: Row(
+            children: [
+              Expanded(child: _buildLockedMessageButton(context)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final navigator = Navigator.of(context);
+                      if (!await VerifyGate.check(
+                        context,
+                        message: context.l10n.verifyToSendRequest,
+                      )) {
+                        return;
+                      }
+                      navigator.push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              DeliveryRequestScreen(trip: _trip),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.send_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      context.l10n.sendRequest,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.white,
+                      elevation: 1,
+                      shadowColor: const Color(0x33000000),
+                      shape: const StadiumBorder(),
+                    ),
                   ),
-                );
-              },
-              icon: const Icon(
-                Icons.send_outlined,
-                size: 18,
-                color: Colors.white,
-              ),
-              label: Text(
-                context.l10n.sendRequest,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: Colors.white,
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                elevation: 1,
-                shadowColor: const Color(0x33000000),
-                shape: const StadiumBorder(),
-              ),
-            ),
+            ],
           ),
         ),
       ),

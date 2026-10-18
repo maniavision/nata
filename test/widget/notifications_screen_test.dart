@@ -617,4 +617,110 @@ void main() {
       expect(find.text('Where are you sending?'), findsOneWidget);
     });
   });
+
+  group('written from the event, in the user\'s language', () {
+    AppNotification event(String name, Map<String, dynamic> details) =>
+        AppNotification(
+          id: 'n-$name',
+          type: 'request',
+          title: 'Stored English title',
+          body: 'Stored English body',
+          imageUrl: null,
+          isRead: false,
+          createdAt: now,
+          payload: {'event': name, ...details},
+        );
+
+    testWidgets('English', (tester) async {
+      service = FakeNotificationService(
+        items: [
+          event('request_accepted', {'traveler': 'Amara'}),
+          event('payout_paid', {'amount': 45, 'currency': 'GBP'}),
+        ],
+      );
+      await pump(tester);
+
+      expect(find.text('Request accepted'), findsOneWidget);
+      expect(
+        find.text(
+          'Amara accepted your request. Pay within 24 hours to confirm it.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Your payout of £45 is on its way.'), findsOneWidget);
+      expect(find.text('Stored English body'), findsNothing);
+    });
+
+    testWidgets('French', (tester) async {
+      service = FakeNotificationService(
+        items: [
+          event('request_new', {'sender': 'Kofi', 'route': 'Accra → Paris'}),
+        ],
+      );
+      await pump(tester, locale: const Locale('fr'));
+
+      expect(find.text('Nouvelle demande de livraison'), findsOneWidget);
+      expect(
+        find.text(
+          'Kofi souhaite que vous transportiez un objet sur Accra → Paris.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an unknown event keeps its stored text', (tester) async {
+      service = FakeNotificationService(items: [event('something_new', {})]);
+      await pump(tester);
+
+      expect(find.text('Stored English title'), findsOneWidget);
+      expect(find.text('Stored English body'), findsOneWidget);
+    });
+  });
+
+  group('opening a notification', () {
+    AppNotification about(String event, {String id = 'n-x'}) => AppNotification(
+      id: id,
+      type: 'request',
+      title: 't',
+      body: 'b',
+      imageUrl: null,
+      isRead: false,
+      createdAt: now,
+      payload: {'event': event, 'traveler': 'Amara', 'sender': 'Kofi'},
+    );
+
+    Future<void> pumpOpen(WidgetTester tester, AppNotification n) async {
+      service = FakeNotificationService(items: [n]);
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          NotificationsScreen(
+            service: service,
+            now: () => now,
+            requestsBuilder: (tab) => Scaffold(body: Text('REQUESTS-TAB-$tab')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('notif-${n.id}')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('accepted (sender): Outgoing', (tester) async {
+      await pumpOpen(tester, about('request_accepted'));
+      expect(find.text('REQUESTS-TAB-1'), findsOneWidget);
+    });
+
+    testWidgets('new request (traveler): Incoming', (tester) async {
+      await pumpOpen(tester, about('request_new'));
+      expect(find.text('REQUESTS-TAB-0'), findsOneWidget);
+    });
+
+    testWidgets('not about a request: stays here', (tester) async {
+      await pumpOpen(tester, about('identity_verified'));
+      expect(find.textContaining('REQUESTS-TAB'), findsNothing);
+    });
+  });
 }

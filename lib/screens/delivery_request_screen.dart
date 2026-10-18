@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/city_service.dart';
+import '../services/country_service.dart';
 import '../services/delivery_pricing.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/preferences_service.dart';
@@ -15,6 +16,7 @@ import '../services/request_service.dart';
 import '../services/traveler_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
+import '../widgets/country_code_picker_sheet.dart' show flagEmoji;
 
 /// Takes or chooses an item photo. [camera] true = take it with the camera.
 /// Replaceable in tests.
@@ -34,9 +36,14 @@ class DeliveryRequestScreen extends StatefulWidget {
   final ExchangeRateService? exchangeRates;
   final DateTime Function()? now;
 
+  /// A pending request to edit: the form starts from it and saves changes to
+  /// it instead of sending a new one. Pops with true once saved.
+  final SentRequest? editing;
+
   const DeliveryRequestScreen({
     super.key,
     required this.trip,
+    this.editing,
     this.service,
     this.photoPicker,
     this.idGenerator,
@@ -59,11 +66,22 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
 
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
+
+  /// The trip's destination country: the recipient is there, so their phone
+  /// number gets its dialling code. Null until loaded (or if unknown).
+  Country? _recipientCountry;
   final _weightCtrl = TextEditingController();
   final _dimsCtrl = TextEditingController();
 
   RequestSizeClass? _sizeClass;
   final List<PickedReceipt> _photos = [];
+
+  /// Editing: whether the photos differ from the request's (then they are
+  /// uploaded again), and whether the current ones are still downloading.
+  bool _photosChanged = false;
+  bool _loadingPhotos = false;
+
+  SentRequest? get _editing => widget.editing;
 
   bool _sending = false;
   String? _error;
@@ -103,6 +121,71 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     super.initState();
     _loadDistance();
     _loadRates();
+    _loadRecipientCountry();
+    final editing = _editing;
+    if (editing != null) _startFrom(editing);
+  }
+
+  /// Fills the form with the request being edited.
+  void _startFrom(SentRequest r) {
+    for (final item in _items) {
+      item.dispose();
+    }
+    _items
+      ..clear()
+      ..addAll([
+        for (final i in r.items)
+          _ItemForm(_nextItemId++)
+            ..name.text = i.name
+            ..description.text = i.description
+            ..category = i.category,
+      ]);
+    if (_items.isEmpty) _items.add(_ItemForm(_nextItemId++));
+    _recipientNameCtrl.text = r.recipientName;
+    _recipientPhoneCtrl.text = r.recipientPhone;
+    _weightCtrl.text = r.weightKg.toString();
+    _dimsCtrl.text = r.dimensions ?? '';
+    _sizeClass = r.sizeClass;
+    _loadPhotos(r);
+  }
+
+  Future<void> _loadPhotos(SentRequest r) async {
+    if (r.photoPaths.isEmpty) return;
+    setState(() => _loadingPhotos = true);
+    try {
+      final photos = await (widget.service ?? RequestService()).downloadPhotos(
+        r.photoPaths,
+      );
+      if (!mounted || _photosChanged) return;
+      setState(() => _photos.addAll(photos));
+    } catch (e) {
+      debugPrint('[DeliveryRequest] photos: $e');
+    } finally {
+      if (mounted) setState(() => _loadingPhotos = false);
+    }
+  }
+
+  Future<void> _loadRecipientCountry() async {
+    try {
+      final country = await CountryService().byIsoCode(_trip.arrivalCountry);
+      if (country != null && mounted) {
+        setState(() => _recipientCountry = country);
+      }
+    } catch (e) {
+      debugPrint('[DeliveryRequest] destination country: $e');
+    }
+  }
+
+  /// The recipient's number in international format, with the destination
+  /// country's code (or as typed with its own "+" code).
+  String? get _recipientPhone {
+    final country = _recipientCountry;
+    return country == null
+        ? RequestInput.normalizePhone(_recipientPhoneCtrl.text)
+        : RequestInput.internationalPhone(
+            country.phoneCode,
+            _recipientPhoneCtrl.text,
+          );
   }
 
   Future<void> _loadDistance() async {
@@ -303,6 +386,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       }
       setState(() {
         _photos.add(picked);
+        _photosChanged = true;
         _error = null;
       });
     } catch (_) {
@@ -339,7 +423,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       }
     }
     if (_recipientNameCtrl.text.trim().length < 2) return l.errRecipientName;
-    if (RequestInput.normalizePhone(_recipientPhoneCtrl.text) == null) {
+    if (_recipientPhone == null) {
       return l.errRecipientPhone;
     }
     final weight = RequestInput.parseWeightKg(_weightCtrl.text);
@@ -353,7 +437,10 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     if (!size.fitsIn(RequestSizeClass.fromTripSize(_trip.maxSize))) {
       return l.errSizeTooBig;
     }
-    if (_photos.isEmpty) return l.errPhotoRequired;
+    // While editing, the request's photos may still be downloading.
+    if (_photos.isEmpty && !(_loadingPhotos && !_photosChanged)) {
+      return l.errPhotoRequired;
+    }
     return null;
   }
 
@@ -385,7 +472,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       dimensions: _dimsCtrl.text,
       sizeClass: _sizeClass!,
       recipientName: _recipientNameCtrl.text,
-      recipientPhone: RequestInput.normalizePhone(_recipientPhoneCtrl.text)!,
+      recipientPhone: _recipientPhone!,
       // Always in US dollars: that is what the database calculates and stores.
       expectedTotal: quote.totalUsd,
     );
@@ -396,11 +483,22 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     });
 
     try {
-      await (widget.service ?? RequestService()).send(
-        _requestId,
-        draft,
-        List.of(_photos),
-      );
+      final service = widget.service ?? RequestService();
+      final editing = _editing;
+      if (editing != null) {
+        await service.update(
+          editing,
+          draft,
+          photos: _photosChanged ? List.of(_photos) : null,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(context.l10n.requestUpdated)));
+        Navigator.of(context).pop(true);
+        return;
+      }
+      await service.send(_requestId, draft, List.of(_photos));
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -429,18 +527,54 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errSessionExpired;
       case RequestFailure.tripUnavailable:
         return l.errTripUnavailable;
+      case RequestFailure.notVerified:
+        return l.errNotVerified;
+      case RequestFailure.tripFull:
+      case RequestFailure.senderOnTrip:
+        return l.errTripFull;
       case RequestFailure.ownTrip:
         return l.errOwnTrip;
       case RequestFailure.weightTooHeavy:
         return l.errWeightTooHeavy((_trip.maxWeightKg ?? 0).toStringAsFixed(1));
       case RequestFailure.duplicate:
         return l.errDuplicate;
+      case RequestFailure.destinationLimit:
+        return l.errDestinationLimit(_trip.arrivalCity);
       case RequestFailure.priceChanged:
         return l.errPriceChanged;
       case RequestFailure.sizeTooBig:
         return l.errSizeTooBig;
       case RequestFailure.invalid:
         return l.errInvalidRequest;
+      case RequestFailure.requestNotFound:
+        return l.errRequestNotFound;
+      case RequestFailure.notEditable:
+        return l.errRequestNotEditable;
+      case RequestFailure.rateUnavailable:
+        return l.errRateUnavailable;
+      case RequestFailure.notPending:
+        return l.errRequestNotPending;
+      case RequestFailure.notPayable:
+        return l.errRequestNotPayable;
+      case RequestFailure.notCancellable:
+        return l.errNotCancellable;
+      case RequestFailure.feeChanged:
+        return l.errFeeChanged;
+      case RequestFailure.notPaid:
+      case RequestFailure.smsUnavailable:
+      case RequestFailure.tooSoon:
+      case RequestFailure.alreadyReported:
+      case RequestFailure.reportWindowClosed:
+      case RequestFailure.emailRequired:
+        return l.errRequestFailed;
+      case RequestFailure.mobileMoneyUnavailable:
+        return l.errMobileMoneyUnavailable;
+      case RequestFailure.paymentsUnavailable:
+        return l.errPaymentsUnavailable;
+      case RequestFailure.notDelivered:
+        return l.errNotDelivered;
+      case RequestFailure.alreadyReviewed:
+        return l.errAlreadyReviewed;
       case RequestFailure.other:
         return l.errRequestFailed;
     }
@@ -510,26 +644,19 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Center(
-              child: Text(
-                context.l10n.deliveryRequest,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: AppColors.foreground,
-                ),
+            child: Text(
+              _editing == null
+                  ? context.l10n.deliveryRequest
+                  : context.l10n.editRequest,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.foreground,
               ),
-            ),
-          ),
-          Text(
-            context.l10n.step1of1,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              color: AppColors.mutedForeground,
             ),
           ),
         ],
@@ -983,20 +1110,70 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
           const SizedBox(height: 14),
           _fieldLabel(l.recipientPhone.toUpperCase()),
           const SizedBox(height: 6),
-          _iconTextField(
-            fieldKey: 'request-recipient-phone',
-            icon: Icons.phone_rounded,
-            controller: _recipientPhoneCtrl,
-            hint: l.recipientPhoneHint,
-            keyboardType: TextInputType.phone,
-            maxLength: 24,
-            formatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().\s]')),
+          Row(
+            children: [
+              // The destination country's code: where the recipient is.
+              if (_recipientCountry != null) ...[
+                Container(
+                  key: const ValueKey('request-recipient-country'),
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.input,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        flagEmoji(_recipientCountry!.isoCode),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _recipientCountry!.phoneCode,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: _iconTextField(
+                  fieldKey: 'request-recipient-phone',
+                  icon: Icons.phone_rounded,
+                  controller: _recipientPhoneCtrl,
+                  hint: _recipientCountry == null
+                      ? l.recipientPhoneHint
+                      : l.recipientLocalPhoneHint,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 24,
+                  formatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().\s]')),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             l.recipientPhoneNote,
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 2),
+          // Recipient consent for the delivery-code SMS (send-delivery-code).
+          Text(
+            l.recipientSmsConsent,
+            key: const ValueKey('request-recipient-sms-consent'),
             style: GoogleFonts.dmSans(
               fontSize: 10,
               color: AppColors.mutedForeground,
@@ -1076,9 +1253,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l.travelerLimitLabel(
-                        (_trip.maxSize ?? '').isEmpty ? '—' : _trip.maxSize!,
-                      ),
+                      l.travelerLimitLabel(l.tripSize(_trip.maxSize)),
                       key: const ValueKey('request-size-limit'),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -1236,6 +1411,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               key: ValueKey('request-photo-remove-$index'),
               onTap: () => setState(() {
                 _photos.removeAt(index);
+                _photosChanged = true;
                 _error = null;
               }),
               child: Container(
@@ -1423,7 +1599,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                p.totalText,
+                p.shownTotalText,
                 key: const ValueKey('request-price-total'),
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w800,
@@ -1457,10 +1633,25 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
+                l.priceEstimateNote(p.currency),
+                key: const ValueKey('request-price-estimate-note'),
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.secondaryForeground,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
                 l.priceRateLine(
                   p.rate.toStringAsFixed(p.rate >= 100 ? 2 : 4),
                   p.currency,
-                  DateFormat('MMM d').format(rates.updatedAt.toLocal()),
+                  DateFormat.MMMd(
+                    Localizations.localeOf(context).toString(),
+                  ).format(rates.updatedAt.toLocal()),
                 ),
                 key: const ValueKey('request-price-rate'),
                 style: GoogleFonts.dmSans(
@@ -1611,9 +1802,15 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                           color: Colors.white,
                         ),
                   label: Text(
-                    _pricing == null
+                    _editing != null
+                        ? (_pricing == null
+                              ? l.saveChanges
+                              : l.saveChangesWithPrice(
+                                  _pricing!.shownTotalText,
+                                ))
+                        : _pricing == null
                         ? l.sendDeliveryRequest
-                        : l.sendRequestWithPrice(_pricing!.totalText),
+                        : l.sendRequestWithPrice(_pricing!.shownTotalText),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.dmSans(

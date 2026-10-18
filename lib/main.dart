@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:carrywise_app/l10n/app_localizations.dart';
 import 'config/supabase_config.dart';
+import 'services/push_service.dart';
 import 'services/preferences_service.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/app_update_listener.dart';
@@ -64,6 +65,7 @@ class _NataAppState extends State<NataApp> {
     _localeNotifier = ValueNotifier(_prefs.locale);
     // Keep the ValueNotifier in sync with PreferencesService changes.
     _prefs.addListener(_onPrefsChanged);
+    PushService.instance.start(_navigatorKey);
   }
 
   void _onPrefsChanged() {

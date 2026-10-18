@@ -119,7 +119,9 @@ class VerificationService {
       return await _client
           .schema('nata')
           .from('identity_verifications')
-          .select('id, status, id_document_type, created_at, updated_at')
+          .select(
+            'id, status, id_document_type, created_at, updated_at, verified_at',
+          )
           .eq('user_id', uid)
           .order('created_at', ascending: false)
           .limit(1)

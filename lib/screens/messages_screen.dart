@@ -579,10 +579,20 @@ class _ConversationTile extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
+                      if (c.escrowFunded) ...[
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          size: 11,
+                          color: _green,
+                        ),
+                        const SizedBox(width: 3),
+                      ],
                       Expanded(
                         child: Text(
                           c.isCompleted
                               ? '${l.tripCompleted} ✓'
+                              : c.escrowFunded
+                              ? l.escrowFunded
                               : c.itemDescription,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

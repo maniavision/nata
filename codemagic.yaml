@@ -1,0 +1,303 @@
+# Codemagic builds for Nata (https://codemagic.io/apps).
+#
+#   * Pull requests to main      -> checks only (format, analyze, tests, compile)
+#   * Push to main               -> TestFlight + Google Play internal testing
+#   * Tag v1.2.3                 -> App Store + Google Play production
+#
+# Set up once in Codemagic (app > Environment variables / Team integrations):
+#   * Team integration "App Store Connect" API key, named below
+#     (app_store_connect: ...). Same as cartel_plus if both apps are in the
+#     same Apple developer account.
+#   * Group ios_credentials:     CERTIFICATE_PRIVATE_KEY
+#   * Group android_credentials: FCI_KEYSTORE (base64 of the .jks),
+#     FCI_KEYSTORE_PASSWORD, FCI_KEY_ALIAS, FCI_KEY_PASSWORD,
+#     GCLOUD_SERVICE_ACCOUNT_CREDENTIALS (Play Console service account JSON)
+# Mark them all "Secure". The keystore and key.properties are written during
+# the build only and are never committed (android/.gitignore).
+#
+# Version: the name comes from pubspec.yaml (version: 1.0.0+1 -> 1.0.0), the
+# build number from Codemagic's $BUILD_NUMBER. Raise the name in pubspec.yaml
+# before tagging a release.
+
+definitions:
+  ios_bundle_id: &ios_bundle_id com.nata.nataApp
+  android_package: &android_package com.carrywise.carrywise_app
+
+  email: &email
+    email:
+      recipients:
+        - niamachristian@gmail.com
+      notify:
+        success: true
+        failure: true
+
+  scripts:
+    - &pub_get
+      name: Get Flutter packages
+      script: flutter pub get
+
+    # Fails on real errors only; the existing infos and warnings (unused code,
+    # style) don't block a build.
+    - &analyze
+      name: Static analysis
+      script: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+    - &test
+      name: Run tests
+      script: flutter test
+
+    - &ios_signing
+      name: Set up iOS code signing
+      script: |
+        keychain initialize
+        app-store-connect certificates list --type IOS_DISTRIBUTION --save || \
+          app-store-connect certificates create --type IOS_DISTRIBUTION --save \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
+        app-store-connect fetch-signing-files "$BUNDLE_ID" \
+          --type IOS_APP_STORE \
+          --create
+        keychain add-certificates
+        xcode-project use-profiles
+
+    - &ios_build
+      name: Build IPA
+      script: |
+        flutter build ipa --release \
+          --build-number=$BUILD_NUMBER \
+          --export-options-plist=/Users/builder/export_options.plist
+
+    - &android_signing
+      name: Set up Android signing
+      script: |
+        echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+        echo "$FCI_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/app/keystore.jks"
+        cat > "$CM_BUILD_DIR/android/key.properties" <<EOF
+        storeFile=keystore.jks
+        storePassword=$FCI_KEYSTORE_PASSWORD
+        keyAlias=$FCI_KEY_ALIAS
+        keyPassword=$FCI_KEY_PASSWORD
+        EOF
+        # Check without printing the passwords.
+        test -s "$CM_BUILD_DIR/android/app/keystore.jks" || { echo "Keystore missing"; exit 1; }
+        echo "key.properties written"
+
+    - &android_build
+      name: Build App Bundle (AAB)
+      script: |
+        flutter build appbundle --release \
+          --build-number=$BUILD_NUMBER
+
+workflows:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 0. Pull request: checks only (no signing, no upload)
+  # ───────────────────────────────────────────────────────────────────────────
+  pull_request:
+    name: Pull request checks
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: false
+      cancel_previous_builds: true
+
+    environment:
+      flutter: stable
+      java: 17
+
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $HOME/.gradle/caches
+
+    scripts:
+      - *pub_get
+      - name: Verify formatting
+        script: dart format --output=none --set-exit-if-changed .
+      - *analyze
+      - *test
+      - name: Build Android debug (compile check)
+        script: flutter build apk --debug
+
+    publishing:
+      email:
+        recipients:
+          - niamachristian@gmail.com
+        notify:
+          success: false
+          failure: true
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1. iOS – TestFlight (testing)
+  # ───────────────────────────────────────────────────────────────────────────
+  ios_testing:
+    name: iOS – TestFlight (testing)
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    integrations:
+      app_store_connect: 7S9U63DGF6
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - ios_credentials
+      vars:
+        BUNDLE_ID: *ios_bundle_id
+
+    scripts:
+      - *ios_signing
+      - *pub_get
+      - *analyze
+      - *test
+      - *ios_build
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+      <<: *email
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. iOS – App Store (production)
+  # ───────────────────────────────────────────────────────────────────────────
+  ios_production:
+    name: iOS – App Store (production)
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+
+    integrations:
+      app_store_connect: 7S9U63DGF6
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - ios_credentials
+      vars:
+        BUNDLE_ID: *ios_bundle_id
+
+    scripts:
+      - *ios_signing
+      - *pub_get
+      - *analyze
+      - *test
+      - *ios_build
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: true
+      <<: *email
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3. Android – Google Play internal testing
+  # ───────────────────────────────────────────────────────────────────────────
+  android_testing:
+    name: Android – Google Play internal testing
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    environment:
+      flutter: stable
+      java: 17
+      groups:
+        - android_credentials
+      vars:
+        PACKAGE_NAME: *android_package
+
+    scripts:
+      - *android_signing
+      - *pub_get
+      - *analyze
+      - *test
+      - *android_build
+
+    artifacts:
+      - build/app/outputs/bundle/release/app-release.aab
+
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        # Drafts until the app has been published once on Google Play.
+        submit_as_draft: true
+      <<: *email
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 4. Android – Google Play production
+  # ───────────────────────────────────────────────────────────────────────────
+  android_production:
+    name: Android – Google Play (production)
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+
+    environment:
+      flutter: stable
+      java: 17
+      groups:
+        - android_credentials
+      vars:
+        PACKAGE_NAME: *android_package
+
+    scripts:
+      - *android_signing
+      - *pub_get
+      - *analyze
+      - *test
+      - *android_build
+
+    artifacts:
+      - build/app/outputs/bundle/release/app-release.aab
+
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: production
+        submit_as_draft: false
+      <<: *email

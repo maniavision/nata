@@ -3,6 +3,7 @@ import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
 import 'package:carrywise_app/services/trip_service.dart';
+import 'package:carrywise_app/services/verify_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -408,6 +409,41 @@ void main() {
       expect(find.text('Add a Trip'), findsOneWidget);
     });
 
+    testWidgets('an unverified traveler is asked to verify first', (
+      tester,
+    ) async {
+      VerifyGate.status = () async => 'unverified';
+      await pump(tester);
+
+      await tapKey(tester, 'trips-add');
+
+      expect(find.byType(AddTripScreen), findsNothing);
+      expect(find.byKey(const ValueKey('verify-prompt')), findsOneWidget);
+      expect(find.text('Verify your identity first'), findsOneWidget);
+      expect(find.byKey(const ValueKey('verify-prompt-start')), findsOneWidget);
+    });
+
+    testWidgets('a traveler under review is told to wait', (tester) async {
+      VerifyGate.status = () async => 'pending';
+      await pump(tester);
+
+      await tapKey(tester, 'trips-add');
+
+      expect(find.byType(AddTripScreen), findsNothing);
+      expect(find.text('Your identity check is under review'), findsOneWidget);
+      expect(find.byKey(const ValueKey('verify-prompt-start')), findsNothing);
+    });
+
+    testWidgets('editing a trip is not gated', (tester) async {
+      VerifyGate.status = () async => 'unverified';
+      service.trips = [sampleMyTrip(id: 'live', departureDate: inDays(7))];
+      await pump(tester);
+
+      await tapKey(tester, 'trip-edit-live');
+
+      expect(find.byType(AddTripScreen), findsOneWidget);
+    });
+
     testWidgets('the empty-state button opens Add a Trip too', (tester) async {
       await pump(tester);
 
@@ -460,10 +496,6 @@ void main() {
       expect(find.text('Edit Trip'), findsWidgets);
       expect(find.text('Save changes'), findsOneWidget);
       expect(find.text('Lagos'), findsOneWidget);
-      final price = tester.widget<TextField>(
-        find.byKey(const ValueKey('add-trip-price')),
-      );
-      expect(price.controller!.text, '42');
     });
 
     testWidgets('the list refreshes after a trip is edited', (tester) async {

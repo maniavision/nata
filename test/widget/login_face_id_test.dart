@@ -77,6 +77,35 @@ void main() {
       expect(find.byType(LoginScreen), findsNothing); // the stack is cleared
     });
 
+    testWidgets('opened from the sign-in prompt, lands on that page', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          LoginScreen(
+            authService: auth,
+            biometricService: bio,
+            homeBuilder: (_) => const Scaffold(body: Text('HOME-SCREEN')),
+            afterSignIn: (_) => const Scaffold(body: Text('TRAVELER-PAGE')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tapFaceId(tester);
+
+      expect(find.text('TRAVELER-PAGE'), findsOneWidget);
+      // Back from it goes to Home, not to sign in.
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      navigator.pop();
+      await tester.pumpAndSettle();
+      expect(find.text('HOME-SCREEN'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+    });
+
     testWidgets('explains itself in the system prompt', (tester) async {
       await pump(tester);
 

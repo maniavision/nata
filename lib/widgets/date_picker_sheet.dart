@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n_ext.dart';
+import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 
@@ -86,28 +88,24 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
   DateTime? _selected;
   bool _flexible = false;
 
-  static const _weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  static const _months = [
-    '',
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
+  String get _locale => Localizations.localeOf(context).toString();
+
+  static String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+  /// Column headers, Sunday first: "Su", "Mo"... in the app's language.
+  List<String> get _weekDays => [
+    // 2030-06-02 is a Sunday.
+    for (var i = 0; i < 7; i++)
+      _capitalize(
+        DateFormat.E(_locale).format(DateTime(2030, 6, 2 + i)),
+      ).replaceAll('.', '').substring(0, 2),
   ];
-  static const _filters = [
-    'Anytime',
-    'This Week',
-    'Next Week',
-    'Flexible (±3d)',
-  ];
+
+  List<String> get _filters {
+    final l = context.l10n;
+    return [l.dateAnytime, l.dateThisWeek, l.dateNextWeek, l.dateFlexible];
+  }
 
   DateTime get _today {
     final now = DateTime.now();
@@ -234,14 +232,17 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          widget.title,
-                          style: GoogleFonts.manrope(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                            color: AppColors.foreground,
+                        Expanded(
+                          child: Text(
+                            widget.title,
+                            style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              color: AppColors.foreground,
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         GestureDetector(
                           onTap: () => Navigator.of(context).pop(),
                           child: Container(
@@ -337,7 +338,9 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                         Column(
                           children: [
                             Text(
-                              '${_months[_viewMonth.month]} ${_viewMonth.year}',
+                              _capitalize(
+                                DateFormat.yMMMM(_locale).format(_viewMonth),
+                              ),
                               style: GoogleFonts.manrope(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 15,
@@ -346,7 +349,9 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                             ),
                             if (_hasCounts)
                               Text(
-                                '$_flightsInViewMonth traveler flight${_flightsInViewMonth == 1 ? '' : 's'}',
+                                context.l10n.travelerFlightsCount(
+                                  _flightsInViewMonth,
+                                ),
                                 style: GoogleFonts.dmSans(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 11,
@@ -529,7 +534,7 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                                   )
                                 else if (flights != null)
                                   Text(
-                                    '$flights flts',
+                                    context.l10n.flightsShort(flights),
                                     style: GoogleFonts.dmSans(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 8,
@@ -567,11 +572,11 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                             child: Text(
                               _selected == null
                                   ? (widget.allowAnytime
-                                        ? 'Any date'
-                                        : 'Select a date')
-                                  : '${const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][_selected!.weekday - 1]}, ${_months[_selected!.month]} ${_selected!.day}'
-                                        '${_hasCounts ? '  •  ${_flightsOn(_selected!)} flight${_flightsOn(_selected!) == 1 ? '' : 's'}' : ''}'
-                                        '${_flexible ? '  •  ±3 days' : ''}',
+                                        ? context.l10n.anyDate
+                                        : context.l10n.selectADate)
+                                  : '${DateFormat('EEE, MMMM d', _locale).format(_selected!)}'
+                                        '${_hasCounts ? '  •  ${context.l10n.flightsCount(_flightsOn(_selected!))}' : ''}'
+                                        '${_flexible ? '  •  ${context.l10n.plusMinus3Days}' : ''}',
                               key: const ValueKey('date-summary'),
                               style: GoogleFonts.dmSans(
                                 fontSize: 12,
@@ -603,10 +608,12 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
                         ),
                         label: Text(
                           _selected != null
-                              ? 'Confirm Date (${_months[_selected!.month].substring(0, 3)} ${_selected!.day})'
+                              ? context.l10n.confirmDateOn(
+                                  DateFormat.MMMd(_locale).format(_selected!),
+                                )
                               : (widget.allowAnytime
-                                    ? 'Confirm Date (Anytime)'
-                                    : 'Select a date'),
+                                    ? context.l10n.confirmDateAnytime
+                                    : context.l10n.selectADate),
                           style: GoogleFonts.dmSans(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,

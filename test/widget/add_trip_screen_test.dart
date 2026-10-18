@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:carrywise_app/screens/add_trip_screen.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
+import 'package:carrywise_app/services/ticket_check_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
 import 'package:flutter/material.dart';
@@ -30,9 +32,13 @@ void main() {
   Object? cameraError;
   bool? popResult;
   bool popped = false;
+  late FakeTicketCheck ticketCheck;
+  late FakeTicketRedaction redaction;
 
   setUp(() {
     service = FakeTripService();
+    ticketCheck = FakeTicketCheck();
+    redaction = FakeTicketRedaction();
     pickerCalls = [];
     lagos = city('Lagos', 'NG', 'Nigeria', 1);
     london = city('London', 'GB', 'United Kingdom', 2);
@@ -84,6 +90,8 @@ void main() {
                         locationPicker: fakeLocationPicker,
                         receiptPicker: fakeReceiptPicker,
                         receiptCamera: fakeReceiptCamera,
+                        ticketCheck: ticketCheck,
+                        ticketRedaction: redaction,
                       ),
                     ),
                   );
@@ -119,11 +127,6 @@ void main() {
     await tapKey(tester, 'date-confirm');
   }
 
-  Future<void> enterPrice(WidgetTester tester, String text) async {
-    await tester.enterText(find.byKey(const ValueKey('add-trip-price')), text);
-    await tester.pump();
-  }
-
   Future<void> save(WidgetTester tester) async {
     await tapKey(tester, 'add-trip-save');
   }
@@ -142,7 +145,6 @@ void main() {
     await tapKey(tester, 'add-trip-arrival-country');
     await pickDate(tester, 'add-trip-departure-date', today.day);
     await tapKey(tester, 'add-trip-upload-receipt');
-    await enterPrice(tester, '30');
   }
 
   group('AddTripScreen form', () {
@@ -160,6 +162,13 @@ void main() {
       expect(find.text('Select city'), findsNWidgets(2));
       expect(find.text('Select date'), findsNWidgets(2));
       expect(find.text('Save & Publish Trip'), findsOneWidget);
+    });
+
+    testWidgets('does not ask for a price', (tester) async {
+      await pump(tester);
+
+      expect(find.byKey(const ValueKey('add-trip-price')), findsNothing);
+      expect(find.textContaining('PRICE PER ITEM'), findsNothing);
     });
 
     testWidgets('does not show any made-up default data', (tester) async {
@@ -579,7 +588,6 @@ void main() {
       await tapKey(tester, 'add-trip-arrival-country');
       await pickDate(tester, 'add-trip-departure-date', today.day);
       await tapKey(tester, 'add-trip-take-photo');
-      await enterPrice(tester, '30');
 
       await save(tester);
 
@@ -680,32 +688,6 @@ void main() {
       expect(errorText(tester), 'Attach your flight receipt.');
     });
 
-    testWidgets('then the price', (tester) async {
-      await pump(tester);
-      await tapKey(tester, 'add-trip-departure-country');
-      await tapKey(tester, 'add-trip-arrival-country');
-      await pickDate(tester, 'add-trip-departure-date', today.day);
-      await tapKey(tester, 'add-trip-upload-receipt');
-
-      await save(tester);
-
-      expect(errorText(tester), 'Enter a valid price.');
-      expect(service.created, isEmpty);
-    });
-
-    for (final bad in ['abc', '0', '-5', '0.00', '100000000']) {
-      testWidgets('rejects the price "$bad"', (tester) async {
-        await pump(tester);
-        await fillValidForm(tester);
-        await enterPrice(tester, bad);
-
-        await save(tester);
-
-        expect(errorText(tester), 'Enter a valid price.');
-        expect(service.created, isEmpty);
-      });
-    }
-
     testWidgets('the error clears once the user fixes the field', (
       tester,
     ) async {
@@ -717,21 +699,62 @@ void main() {
 
       expect(errorText(tester), isNull);
     });
-
-    testWidgets('typing in the price clears the error', (tester) async {
-      await pump(tester);
-      await fillValidForm(tester);
-      await enterPrice(tester, '0');
-      await save(tester);
-      expect(errorText(tester), isNotNull);
-
-      await enterPrice(tester, '12');
-
-      expect(errorText(tester), isNull);
-    });
   });
 
   group('saving a new trip', () {
+    testWidgets('uploads a copy with the booking reference blurred', (
+      tester,
+    ) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      nextReceipt = sampleReceipt(name: 'ticket.pdf');
+      await pump(tester);
+      await fillValidForm(tester);
+      await tester.enterText(
+        find.byKey(const ValueKey('add-trip-booking-reference')),
+        'X7KQ9R',
+      );
+
+      await save(tester);
+
+      expect(redaction.calls.single.fileName, 'ticket.pdf');
+      expect(redaction.calls.single.reference, 'X7KQ9R');
+      expect(service.uploaded.map((r) => r.name), [
+        'ticket.pdf',
+        'ticket-shared.jpg',
+      ]);
+      final d = service.created.single;
+      expect(d.ticketReceiptPath, FakeTripService.uploadedPath);
+      expect(d.ticketSharedPath, FakeTripService.sharedPath);
+    });
+
+    testWidgets('no reference found: the trip is saved without a copy', (
+      tester,
+    ) async {
+      nextReceipt = sampleReceipt(name: 'ticket.pdf');
+      await pump(tester);
+      await fillValidForm(tester);
+
+      await save(tester);
+
+      expect(service.uploaded, hasLength(1));
+      expect(service.created.single.ticketSharedPath, isNull);
+      expect(popResult, isTrue);
+    });
+
+    testWidgets('a failed save removes both uploads', (tester) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      service.failSave = true;
+      await pump(tester);
+      await fillValidForm(tester);
+
+      await save(tester);
+
+      expect(
+        service.deletedReceipts,
+        containsAll([FakeTripService.uploadedPath, FakeTripService.sharedPath]),
+      );
+    });
+
     testWidgets('uploads the receipt, then creates the trip', (tester) async {
       nextReceipt = sampleReceipt(name: 'ticket.pdf');
       await pump(tester);
@@ -743,16 +766,13 @@ void main() {
       expect(service.created, hasLength(1));
     });
 
-    testWidgets('sends the chosen cities, dates, capacity and price', (
-      tester,
-    ) async {
+    testWidgets('sends the chosen cities, dates and capacity', (tester) async {
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
       await tapKey(tester, 'add-trip-arrival-country');
       await pickDate(tester, 'add-trip-departure-date', today.day);
       await pickDate(tester, 'add-trip-arrival-date', 20, monthsAhead: 1);
       await tapKey(tester, 'add-trip-upload-receipt');
-      await enterPrice(tester, '45.5');
       await tester.tap(find.byKey(const ValueKey('add-trip-weight')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Up to 5.0 kg').last);
@@ -769,7 +789,8 @@ void main() {
       expect(d.arrivalCityId, 2);
       expect(d.departureDate, today);
       expect(d.arrivalDate, DateTime(today.year, today.month + 1, 20));
-      expect(d.price, 45.5);
+      // No price is asked for: prices come from the pricing formula.
+      expect(d.price, 0);
       expect(d.currency, 'USD');
       expect(d.maxWeightKg, 5.0);
       expect(d.maxSize, 'Backpack size');
@@ -778,30 +799,9 @@ void main() {
       expect(d.toInsertJson('u')['status'], 'pending_review');
     });
 
-    testWidgets('accepts a comma as the decimal separator', (tester) async {
-      await pump(tester);
-      await fillValidForm(tester);
-      await enterPrice(tester, '12,5');
-
-      await save(tester);
-
-      expect(service.created.single.price, 12.5);
-    });
-
-    testWidgets('rounds the price to cents', (tester) async {
-      await pump(tester);
-      await fillValidForm(tester);
-      await enterPrice(tester, '10.999');
-
-      await save(tester);
-
-      expect(service.created.single.price, 11.0);
-    });
-
     testWidgets('uses the user\'s preferred currency', (tester) async {
       PreferencesService().setCurrency(AppCurrency.eur);
       await pump(tester);
-      expect(find.text('PRICE PER ITEM (EUR)'), findsOneWidget);
       await fillValidForm(tester);
 
       await save(tester);
@@ -915,10 +915,6 @@ void main() {
       expect(find.text('Select city'), findsNWidgets(2));
       expect(find.text('Select date'), findsNWidgets(2));
       expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsNothing);
-      final price = tester.widget<TextField>(
-        find.byKey(const ValueKey('add-trip-price')),
-      );
-      expect(price.controller!.text, isEmpty);
     });
   });
 
@@ -956,20 +952,8 @@ void main() {
       expect(find.text(longDate(trip.arrivalDate)), findsOneWidget);
       expect(find.text('Up to 5.0 kg'), findsOneWidget);
       expect(find.text('Backpack size'), findsOneWidget);
-      final price = tester.widget<TextField>(
-        find.byKey(const ValueKey('add-trip-price')),
-      );
-      expect(price.controller!.text, '30');
       expect(find.text('old.pdf'), findsOneWidget);
       expect(find.textContaining('Receipt on file'), findsOneWidget);
-    });
-
-    testWidgets('keeps the trip\'s own currency', (tester) async {
-      PreferencesService().setCurrency(AppCurrency.eur);
-      trip = sampleMyTrip(currency: 'GBP');
-      await pump(tester, trip: trip);
-
-      expect(find.text('PRICE PER ITEM (GBP)'), findsOneWidget);
     });
 
     testWidgets('saving updates that trip without re-uploading', (
@@ -986,6 +970,7 @@ void main() {
       expect(u.draft.departureCityId, 1);
       expect(u.draft.arrivalCityId, 2);
       expect(u.draft.ticketReceiptPath, 'user-1/old.pdf');
+      // The trip's existing price is kept as it was.
       expect(u.draft.price, 30.0);
       expect(popResult, isTrue);
       expect(find.text('Trip updated'), findsOneWidget);
@@ -993,7 +978,6 @@ void main() {
 
     testWidgets('changing fields is sent in the update', (tester) async {
       await pump(tester, trip: trip);
-      await enterPrice(tester, '55');
       await tapKey(
         tester,
         'add-trip-arrival-country',
@@ -1004,7 +988,7 @@ void main() {
       await save(tester);
 
       final d = service.updated.single.draft;
-      expect(d.price, 55.0);
+      expect(d.price, 30.0); // unchanged
       expect(d.departureCityId, 7);
     });
 
@@ -1022,6 +1006,62 @@ void main() {
         FakeTripService.uploadedPath,
       );
       expect(service.deletedReceipts, contains('user-1/old.pdf'));
+    });
+
+    testWidgets('the blurred copy is kept when the ticket is unchanged', (
+      tester,
+    ) async {
+      await pump(tester, trip: trip);
+
+      await save(tester);
+
+      expect(redaction.calls, isEmpty);
+      expect(
+        service.updated.single.draft.ticketSharedPath,
+        'user-1/111-shared.jpg',
+      );
+      expect(service.deletedReceipts, isEmpty);
+    });
+
+    testWidgets('a new ticket replaces the blurred copy too', (tester) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      await pump(tester, trip: trip);
+
+      await tapKey(tester, 'add-trip-upload-receipt');
+      await save(tester);
+
+      expect(
+        service.updated.single.draft.ticketSharedPath,
+        FakeTripService.sharedPath,
+      );
+      expect(
+        service.deletedReceipts,
+        containsAll(['user-1/old.pdf', 'user-1/111-shared.jpg']),
+      );
+    });
+
+    testWidgets('an older trip without a copy gets one when saved', (
+      tester,
+    ) async {
+      redaction.result = Uint8List.fromList([0xFF, 0xD8, 1, 2]);
+      await pump(
+        tester,
+        trip: sampleMyTrip(
+          id: 'trip-7',
+          receipt: 'user-1/old.pdf',
+          sharedTicket: null,
+        ),
+      );
+
+      await save(tester);
+
+      expect(service.downloadedReceipts, ['user-1/old.pdf']);
+      expect(redaction.calls.single.fileName, 'user-1/old.pdf');
+      expect(service.uploaded.single.name, 'ticket-shared.jpg');
+      expect(
+        service.updated.single.draft.ticketSharedPath,
+        FakeTripService.sharedPath,
+      );
     });
 
     testWidgets('removing the receipt without a new one is not allowed', (
@@ -1069,16 +1109,6 @@ void main() {
 
       await save(tester);
       expect(service.updated.single.draft.maxSize, 'Large suitcase');
-    });
-
-    testWidgets('prices with cents are shown with cents', (tester) async {
-      trip = sampleMyTrip(price: 12.5);
-      await pump(tester, trip: trip);
-
-      final price = tester.widget<TextField>(
-        find.byKey(const ValueKey('add-trip-price')),
-      );
-      expect(price.controller!.text, '12.50');
     });
   });
 
@@ -1219,10 +1249,9 @@ void main() {
       expect(errorText(tester), isNull);
     });
 
-    testWidgets('is checked before the price', (tester) async {
+    testWidgets('an invalid one stops the save', (tester) async {
       await pump(tester);
       await fillValidForm(tester);
-      await enterPrice(tester, '0');
       await typeRef(tester, 'AB1');
 
       await save(tester);
@@ -1359,6 +1388,121 @@ void main() {
         await save(tester);
 
         expect(service.updated.single.draft.bookingReference, 'X7KQ9R');
+      });
+    });
+  });
+
+  group('the flight ticket is checked', () {
+    testWidgets('with the trip\'s dates, before saving', (tester) async {
+      await pump(tester);
+      await fillValidForm(tester);
+      await save(tester);
+
+      expect(ticketCheck.calls.single.fileName, 'ticket.pdf');
+      expect(ticketCheck.calls.single.departure, today);
+      expect(service.created, hasLength(1));
+      expect(popResult, isTrue);
+    });
+
+    testWidgets('someone else\'s ticket is refused', (tester) async {
+      ticketCheck.result = TicketCheckResult.nameMismatch;
+      await pump(tester);
+      await fillValidForm(tester);
+      await save(tester);
+
+      expect(
+        errorText(tester),
+        "The name on this ticket doesn't match your profile name. "
+        'Upload a ticket in your name, or update your profile name.',
+      );
+      expect(service.created, isEmpty);
+      expect(service.uploaded, isEmpty); // nothing uploaded either
+      expect(popped, isFalse);
+    });
+
+    testWidgets('a ticket for another day is refused, naming the date', (
+      tester,
+    ) async {
+      ticketCheck.result = TicketCheckResult.dateMismatch;
+      await pump(tester);
+      await fillValidForm(tester);
+      await save(tester);
+
+      expect(
+        errorText(tester),
+        "This ticket isn't for ${longDate(today)}. "
+        "Check the trip's dates, or upload the ticket for this flight.",
+      );
+      expect(service.created, isEmpty);
+    });
+
+    testWidgets('an unreadable ticket is refused', (tester) async {
+      ticketCheck.result = TicketCheckResult.unreadable;
+      await pump(tester);
+      await fillValidForm(tester);
+      await save(tester);
+
+      expect(errorText(tester), startsWith("We couldn't read this ticket."));
+      expect(service.created, isEmpty);
+    });
+
+    testWidgets('no profile name to compare: saved on the date alone', (
+      tester,
+    ) async {
+      ticketCheck.result = TicketCheckResult.unverifiable;
+      await pump(tester);
+      await fillValidForm(tester);
+      await save(tester);
+
+      expect(service.created, hasLength(1));
+    });
+
+    testWidgets('fixing the problem lets it save', (tester) async {
+      ticketCheck.result = TicketCheckResult.dateMismatch;
+      await pump(tester);
+      await fillValidForm(tester);
+      await save(tester);
+      expect(service.created, isEmpty);
+
+      ticketCheck.result = TicketCheckResult.passed;
+      await save(tester);
+
+      expect(service.created, hasLength(1));
+    });
+
+    group('when editing', () {
+      Trip trip() => sampleMyTrip(
+        id: 'trip-42',
+        departureDate: DateTime(today.year, today.month + 1, 12),
+        arrivalDate: DateTime(today.year, today.month + 1, 12),
+        receipt: 'user-1/old.pdf',
+      );
+
+      testWidgets('same dates, same ticket: not checked again', (tester) async {
+        await pump(tester, trip: trip());
+        await save(tester);
+
+        expect(ticketCheck.calls, isEmpty);
+        expect(service.downloadedReceipts, isEmpty);
+        expect(service.updated, hasLength(1));
+      });
+
+      testWidgets('new dates: the ticket on file is checked against them', (
+        tester,
+      ) async {
+        ticketCheck.result = TicketCheckResult.dateMismatch;
+        await pump(tester, trip: trip());
+        // The calendar opens on the trip's month.
+        await pickDate(tester, 'add-trip-departure-date', 20);
+        await save(tester);
+
+        expect(service.downloadedReceipts, ['user-1/old.pdf']);
+        expect(
+          ticketCheck.calls.single.departure,
+          DateTime(today.year, today.month + 1, 20),
+        );
+        expect(service.updated, isEmpty);
+        expect(errorText(tester), startsWith("This ticket isn't for"));
       });
     });
   });

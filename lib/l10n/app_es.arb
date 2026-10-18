@@ -118,7 +118,16 @@
   "destination": "Destino",
   "directFlight": "Vuelo directo",
   "pricingLabel": "Precio:",
-  "pricingValue": "Calculado por tamaño y peso del artículo",
+  "pricingValue": "Calculado por distancia, tamaño y peso del artículo",
+  "sameDayDelivery": "Entrega el mismo día",
+  "deliverInDays": "{count, plural, =1{Entrega en 1 día} other{Entrega en {count} días}}",
+  "@deliverInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "itemSizeAndWeight": "LÍMITES DE TAMAÑO Y PESO ACEPTADOS",
   "weightLimit": "Límite de peso",
   "sizeLimit": "Límite de tamaño",
@@ -130,7 +139,6 @@
   "sendRequest": "Enviar solicitud",
 
   "deliveryRequest": "Solicitud de entrega",
-  "step1of1": "Paso 1 de 1",
   "selectedTraveler": "VIAJERO SELECCIONADO",
   "whatIsTheItem": "¿Qué es el artículo?",
   "itemCategory": "Categoría del artículo",
@@ -144,7 +152,7 @@
   "photoAttached": "foto adjunta",
   "addPhoto": "Añadir foto",
   "calculatedPrice": "Precio calculado del artículo",
-  "sendDeliveryRequest": "Enviar solicitud de entrega",
+  "sendDeliveryRequest": "Enviar solicitud",
 
   "secureEscrowCheckout": "Pago seguro con depósito en garantía",
   "paymentWindowActive": "VENTANA DE PAGO ACTIVA",
@@ -165,7 +173,7 @@
   "payIntoEscrow": "Pagar en depósito",
   "cancellationTitle": "Garantía de cancelación y reembolso",
   "refundBullet1": "Reembolso total del 100% si el viajero cancela o el artículo no se entrega.",
-  "refundBullet2": "Cancelación gratuita en cualquier momento antes de la entrega física al viajero.",
+  "refundBullet2": "Cancelar es gratis hasta que el viajero acepte. Después, se aplica una tarifa de cancelación del 10 % hasta la entrega.",
   "refundBullet3": "Ventana de disputa de 3 días después de la entrega antes de finalizar los fondos.",
   "escrowEncrypted": "Depósito cifrado de 256 bits por Nata Pay",
 
@@ -385,8 +393,6 @@
   "selectCountry": "Selecciona un país",
   "selectCity": "Selecciona una ciudad",
   "selectDate": "Selecciona una fecha",
-  "tripPrice": "PRECIO POR ARTÍCULO",
-  "tripPriceHint": "Tu tarifa por llevar un artículo",
   "errPickDeparture": "Elige desde dónde sales.",
   "errPickArrival": "Elige tu destino.",
   "errSameCity": "La salida y la llegada deben ser ciudades distintas.",
@@ -394,7 +400,6 @@
   "errPickArrDate": "Elige una fecha de llegada.",
   "errArrivalBeforeDeparture": "La llegada no puede ser anterior a la salida.",
   "errAttachReceipt": "Adjunta tu recibo de vuelo.",
-  "errPrice": "Introduce un precio válido.",
   "errSaveFailed": "No se pudo guardar tu viaje. Inténtalo de nuevo.",
   "itemsDeliveredCount": "{count, plural, =1{1 artículo entregado} other{{count} artículos entregados}}",
   "@itemsDeliveredCount": {
@@ -531,6 +536,7 @@
   "recipientPhone": "Teléfono del destinatario",
   "recipientPhoneHint": "p. ej. +44 7700 900123",
   "recipientPhoneNote": "Se comparte con el viajero solo después de que acepte tu solicitud",
+  "recipientSmsConsent": "Al añadir este número, confirmas que el destinatario aceptó recibir su código de entrega de Nata por SMS.",
   "sizeAndWeight": "Tamaño y peso",
   "travelerLimitLabel": "Límite del viajero: {limit}",
   "itemNameHint": "p. ej. auriculares Sony, cosméticos sellados, etc.",
@@ -617,6 +623,96 @@
   "confirmDeliveryClaim": "Confirmar entrega y cobrar {amount}",
   "escrowReleaseNote": "Los fondos en depósito se liberarán de inmediato en tu billetera.",
   "attachHandoverFirst": "Primero adjunta la foto de la entrega.",
+  "recipientLocalPhoneHint": "p. ej. 7700 900123",
+  "paymentSettings": "Ajustes de pago",
+  "paymentSettingsSub": "Métodos de pago y cuenta de cobro",
+  "paymentMethods": "Métodos de pago",
+  "add": "Añadir",
+  "remove": "Eliminar",
+  "defaultLabel": "Predeterminado",
+  "payoutAccount": "Cuenta de cobro",
+  "payoutAccountNote": "Las ganancias se envían a esta cuenta en cuanto se confirma el código de entrega del destinatario.",
+  "addPayoutAccount": "Añadir cuenta de cobro",
+  "preferences": "Preferencias",
+  "defaultCurrency": "Moneda predeterminada",
+  "defaultCurrencySub": "Para cobros y recibos",
+  "payoutSchedule": "Calendario de cobros",
+  "payoutScheduleSub": "Tras confirmarse la entrega",
+  "automatic": "Automático",
+  "transactions": "Transacciones",
+  "addPaymentMethod": "Añadir método de pago",
+  "paymentSecurityNote": "Tus datos de pago se cifran y se guardan de forma segura. Los pagos se retienen en depósito hasta que se confirma la entrega.",
+  "paymentKindCard": "Tarjeta",
+  "paymentKindCardSub": "Débito o crédito",
+  "paymentKindMobile": "Dinero móvil",
+  "paymentKindAppleSub": "Pago rápido",
+  "cardDetails": "Datos de la tarjeta",
+  "nameOnCard": "Nombre en la tarjeta",
+  "nameOnCardHint": "Nombre completo como en la tarjeta",
+  "cardNumber": "Número de tarjeta",
+  "expiryDate": "Caducidad",
+  "mobileMoneyDetails": "Datos de dinero móvil",
+  "provider": "Proveedor",
+  "mobileNumber": "Número móvil",
+  "registeredName": "Nombre registrado",
+  "registeredNameHint": "Nombre registrado con el proveedor",
+  "applePayNote": "Apple Pay se vinculará a la cartera de tu Apple ID. Lo confirmarás con Face ID en tu dispositivo.",
+  "setAsDefault": "Usar como predeterminado",
+  "setAsDefaultSub": "Usar este método en futuras solicitudes",
+  "savePaymentMethod": "Guardar método de pago",
+  "errCardName": "Introduce el nombre tal como aparece en la tarjeta.",
+  "errCardNumber": "Introduce un número de tarjeta válido.",
+  "errCardExpiry": "Introduce una fecha de caducidad válida (MM/AA).",
+  "errCardCvv": "Introduce el código de seguridad de 3 o 4 dígitos.",
+  "errMobileNumber": "Introduce el número móvil con el prefijo del país, p. ej. +254 712 345 678.",
+  "errRegisteredName": "Introduce el nombre registrado con el proveedor.",
+  "cardExpires": "Caduca {date}",
+  "holdersIphone": "iPhone de {name}",
+  "errPaymentSettingsLoad": "No se pudieron cargar tus ajustes de pago. Inténtalo de nuevo.",
+  "errPaymentSettingsSave": "No se pudo guardar el cambio. Inténtalo de nuevo.",
+  "noPaymentMethods": "Aún no hay ningún método de pago. Añade uno para pagar las solicitudes de entrega.",
+  "noPayoutAccount": "Aún no hay cuenta de cobro.",
+  "weekly": "Semanal",
+  "manual": "Manual",
+  "faceScanLivenessNote": "La IA biométrica comprueba en tiempo real que estás presente para confirmar que eres el titular del documento.",
+  "deliveryPayoutRelease": "Entrega y liberación del pago",
+  "confirmDeliveryStep": "Paso 3 de 4: Confirmar la entrega",
+  "itemArrivedAtDestination": "El artículo llegó a destino",
+  "confirmHandoffNote": "Pide al destinatario su código de entrega de 4 dígitos e introdúcelo abajo. El código correcto confirma la entrega y envía tu pago.",
+  "pinOptionTitle": "Código de entrega de 4 dígitos",
+  "instantRelease": "Liberación inmediata",
+  "pinOptionNote": "El remitente compartió un código secreto de 4 dígitos con el destinatario. Introdúcelo abajo:",
+  "pinConfirmed": "PIN del destinatario confirmado",
+  "pinMismatch": "Este PIN no coincide con el código del destinatario.",
+  "photoOptionTitle": "Opción 2: Foto de la entrega",
+  "alternative": "Alternativa",
+  "noHandoffPhoto": "Aún no hay foto de la entrega",
+  "handoffPhotoHint": "Una foto del artículo sellado al entregarlo",
+  "sealIntactPhoto": "Precinto intacto",
+  "change": "Cambiar",
+  "payoutDestination": "Destino del pago al viajero",
+  "payoutAmount": "Pago de +{amount}",
+  "noPayoutAccountForRelease": "Aún no hay cuenta de cobro. Añade una en Ajustes de pago; el pago se enviará allí.",
+  "mobileMoneyPayoutSpeed": "Dinero móvil · Liberación inmediata",
+  "bankPayoutSpeed": "Transferencia bancaria · 1 día hábil",
+  "disputeProtectionWindow": "Plazo de protección ante disputas",
+  "threeDaysActive": "3 días activo",
+  "disputeProtectionNote": "Tu pago se envía en cuanto se confirma el código. El remitente aún puede informar de un problema durante 3 días.",
+  "reportIssue": "Informar de un problema o abrir una disputa",
+  "confirmReleasePayout": "Confirmar y liberar el pago ({amount})",
+  "requestUpdated": "Solicitud actualizada",
+  "errRequestNotFound": "Esta solicitud ya no existe.",
+  "errRequestNotEditable": "El viajero ya respondió a esta solicitud, así que ya no se puede cambiar.",
+  "editRequest": "Editar solicitud",
+  "saveChangesWithPrice": "Guardar cambios · {price}",
+  "statusExpired": "Caducada",
+  "statusPaid": "Pagada",
+  "statusInTransit": "En tránsito",
+  "statusDelivered": "Entregada",
+  "statusCancelled": "Cancelada",
+  "noSentRequests": "Aún no has enviado ninguna solicitud.",
+  "errLoadRequests": "No se pudieron cargar tus solicitudes.",
+  "tapToEdit": "Toca para editar",
   "errIdNameMismatch": "El nombre de este documento no coincide con el de tu perfil. Sube un documento que muestre tu nombre y apellido, o actualiza el nombre de tu perfil.",
   "errContactSave": "No se pudo guardar el contacto. Inténtalo de nuevo.",
   "updateAvailableTitle": "Actualización disponible",
@@ -674,7 +770,7 @@
     }
   },
   "errRecipientName": "Introduce el nombre completo del destinatario.",
-  "errRecipientPhone": "Introduce el teléfono del destinatario con el prefijo del país, p. ej. +44 7700 900123.",
+  "errRecipientPhone": "Introduce un número de teléfono válido para el destinatario.",
   "errWeight": "Introduce el peso del paquete, p. ej. 0,9 kg.",
   "errPhotoRequired": "Añade al menos una foto del artículo sellado.",
   "errPhotoTooBig": "Esa foto es demasiado grande (máx. 10 MB).",
@@ -682,6 +778,65 @@
   "errTripUnavailable": "Este viaje ya no está disponible.",
   "errOwnTrip": "No puedes enviar un paquete con tu propio viaje.",
   "errDuplicate": "Ya tienes una solicitud abierta en este viaje.",
+  "errDestinationLimit": "Ya tienes 5 solicitudes abiertas con destino a {city}. Podrás enviar otra cuando una de ellas se entregue, se rechace o caduque.",
+  "@errDestinationLimit": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelRequest": "Cancelar solicitud",
+  "cancelRequestTitle": "¿Cancelar esta solicitud?",
+  "cancelRequestFreeBody": "El viajero aún no ha aceptado, así que cancelar es gratis.",
+  "cancelRequestFeeBody": "El viajero ya aceptó esta solicitud. Cancelar ahora tiene una tarifa de cancelación del 10 %: {fee}.",
+  "@cancelRequestFeeBody": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "keepRequest": "Mantener solicitud",
+  "cancelWithFee": "Cancelar y pagar {fee}",
+  "@cancelWithFee": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCancelled": "Solicitud cancelada",
+  "cancellationFeeCharged": "Tarifa de cancelación: {fee}",
+  "@cancellationFeeCharged": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelledFreeOfCharge": "Cancelada sin coste",
+  "errFeeChanged": "El viajero acaba de responder a esta solicitud, así que la tarifa de cancelación ha cambiado. Revísala e inténtalo de nuevo.",
+  "errNotCancellable": "Esta solicitud ya no se puede cancelar.",
+  "errCancelFailed": "No se pudo cancelar tu solicitud. Inténtalo de nuevo.",
+  "sentRequestsCount": "SOLICITUDES ENVIADAS ({count})",
+  "@sentRequestsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForTraveler": "Esperando al viajero",
+  "routeLabel": "Ruta:",
+  "travelerDeliveries": "{count, plural, =0{Viajero · Nuevo} =1{Viajero · 1 entrega} other{Viajero · {count} entregas}}",
+  "@travelerDeliveries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "errSessionExpired": "Tu sesión caducó. Inicia sesión de nuevo.",
   "errInvalidRequest": "Se rechazaron algunos datos. Revisa el formulario.",
   "errRequestFailed": "No se pudo enviar tu solicitud. Inténtalo de nuevo.",
@@ -710,7 +865,7 @@
       }
     }
   },
-  "sendRequestWithPrice": "Enviar solicitud de entrega · {price}",
+  "sendRequestWithPrice": "Enviar solicitud · {price}",
   "@sendRequestWithPrice": {
     "placeholders": {
       "price": {
@@ -731,7 +886,7 @@
   "sizeBackpack": "Mochila",
   "errSizeRequired": "Elige el tamaño del paquete.",
   "errSizeTooBig": "Este paquete es más grande de lo que acepta el viajero.",
-  "errPriceChanged": "El viajero cambió su precio. Vuelve y abre la solicitud de nuevo para ver el nuevo precio.",
+  "errPriceChanged": "El precio cambió desde que abriste esta solicitud. Vuelve y ábrela de nuevo para ver el nuevo precio.",
   "priceEnterWeight": "Introduce el peso del paquete para ver el precio final.",
   "priceRateUnavailable": "Tipo de cambio no disponible, así que los precios se muestran en dólares estadounidenses.",
   "priceCredit": "Tipos de cambio de Exchange Rate API",
@@ -758,5 +913,862 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "departingFrom": "Salida desde",
+  "hello": "Hola,",
+  "whereAreYouSending": "¿A dónde envías?",
+  "whereSendingFrom": "¿Desde dónde envías?",
+  "destinationExample": "p. ej. Londres, Reino Unido",
+  "anytimeThisMonth": "Cualquier día de este mes",
+  "flexibleShort": "(±3 d)",
+  "availableTravelers": "Viajeros disponibles",
+  "errLoadTravelers": "No se pudieron cargar los viajeros.",
+  "noTravelersOnRoute": "Aún no hay viajeros en esta ruta.",
+  "desiredDeliveryDateTitle": "Fecha de entrega deseada",
+  "upToKg": "Hasta {weight} kg",
+  "@upToKg": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+
+  "dateAnytime": "Cualquier día",
+  "dateThisWeek": "Esta semana",
+  "dateNextWeek": "Próxima semana",
+  "dateFlexible": "Flexible (±3 d)",
+  "travelerFlightsCount": "{count, plural, =1{1 vuelo de viajero} other{{count} vuelos de viajeros}}",
+  "@travelerFlightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "flightsCount": "{count, plural, =1{1 vuelo} other{{count} vuelos}}",
+  "@flightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plusMinus3Days": "±3 días",
+  "anyDate": "Cualquier fecha",
+  "selectADate": "Selecciona una fecha",
+  "confirmDateOn": "Confirmar fecha ({date})",
+  "@confirmDateOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDateAnytime": "Confirmar fecha (cualquier día)",
+
+  "searchCountryHint": "Buscar país...",
+  "searchCityIn": "Buscar ciudad en {country}...",
+  "@searchCityIn": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "selectCityTitle": "Seleccionar ciudad",
+  "noCountriesFound": "No se encontraron países",
+  "noCitiesFoundIn": "No se encontraron ciudades en {country}",
+  "@noCitiesFoundIn": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "selectCountryCode": "Seleccionar código de país",
+
+  "errLoadTravelersRetry": "No se pudieron cargar los viajeros. Inténtalo de nuevo.",
+  "anywhere": "Cualquier lugar",
+  "byDate": "antes del {date}",
+  "@byDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noTravelersOnRouteTitle": "Aún no hay viajeros en esta ruta",
+  "tryAnotherDateOrRoute": "Prueba otra fecha u otra ruta, o activa las alertas abajo.",
+  "travelersFound": "Viajeros encontrados",
+  "notifyNewTravelers": "Recibe un aviso en cuanto nuevos viajeros añadan viajes en esta ruta.",
+  "capacityNotSpecified": "Capacidad no especificada",
+  "acceptsUpToKg": "Acepta hasta {weight} kg",
+  "@acceptsUpToKg": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+
+  "arrivingIn": "Llegada a",
+  "departureDateTitle": "Fecha de salida",
+  "arrivalDateTitle": "Fecha de llegada",
+  "errOpenFile": "No se pudo abrir ese archivo.",
+  "errFileTooLarge": "Ese archivo es demasiado grande (máx. 10 MB).",
+  "departureDetailsTitle": "Detalles de salida",
+  "arrivalDetailsTitle": "Detalles de llegada",
+  "departureCountryLabel": "PAÍS DE SALIDA",
+  "departureCityLabel": "CIUDAD DE SALIDA",
+  "arrivalCountryLabel": "PAÍS DE LLEGADA",
+  "arrivalCityLabel": "CIUDAD DE LLEGADA",
+  "receiptOnFile": "Recibo guardado",
+  "bookingRefHint": "p. ej. X7KQ9R",
+
+  "deliveriesCount": "{count, plural, =1{1 entrega} other{{count} entregas}}",
+  "@deliveriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "availableCount": "{count, plural, =1{1 disponible} other{{count} disponibles}}",
+  "@availableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveredCount": "{count, plural, =1{1 entregado} other{{count} entregados}}",
+  "@deliveredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "flightsShort": "{count, plural, =1{1 vuel.} other{{count} vuel.}}",
+  "@flightsShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "amountPerDelivery": "{amount} / entrega",
+  "@amountPerDelivery": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "countries180": "180+ países",
+
+  "errEnterPhone": "Introduce tu número de teléfono.",
+  "errTooManyRequests": "Demasiadas solicitudes. Espera un momento.",
+  "errTooManyRequestsRetry": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+  "errInvalidPhone": "Número de teléfono no válido. Revísalo e inténtalo de nuevo.",
+  "errSomethingWrong": "Algo salió mal. Inténtalo de nuevo.",
+  "errFillAllFields": "Completa todos los campos.",
+  "countryOfResidenceLabel": "PAÍS DE RESIDENCIA",
+  "errVerificationFailed": "La verificación falló. Inténtalo de nuevo.",
+  "errCodeExpired": "El código caducó. Solicita uno nuevo.",
+  "errOtpDisabled": "La verificación por teléfono no está activada. Contacta con soporte.",
+  "errIncorrectCode": "Código incorrecto. Inténtalo de nuevo.",
+  "errTooManyAttempts": "Demasiados intentos. Espera antes de reintentar.",
+  "errNetwork": "Error de red. Revisa tu conexión.",
+  "errIncorrectOrExpiredCode": "Código incorrecto o caducado. Inténtalo de nuevo.",
+  "enterVerificationCode": "Introduce el código de verificación",
+  "otpSentToPrefix": "Enviamos un código de 6 dígitos al ",
+  "verifyCode": "Verificar código",
+  "resendCodeInPrefix": "Reenviar código en ",
+  "resendCode": "Reenviar código",
+  "otpNotReceived": "¿No recibiste el código? Comprueba que tu número sea correcto y que tengas cobertura.",
+  "verifyPhone": "Verificar teléfono",
+
+  "errCaptureIdFirst": "Primero toma una foto o sube tu documento de identidad.",
+  "errUploadFailed": "La subida falló. Inténtalo de nuevo.",
+  "uploadingEllipsis": "Subiendo...",
+  "submitForVerification": "Enviar para verificación",
+  "documentSelected": "Documento seleccionado",
+  "errCameraDetail": "Error de cámara: {error}",
+  "@errCameraDetail": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errFilePicker": "Error al elegir el archivo: {error}",
+  "@errFilePicker": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "verifiedLabel": "Verificado",
+  "matchPercent": "Coincidencia {percent}",
+  "@matchPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+
+  "requestExpiresInPrefix": "La solicitud caduca en ",
+  "escrowNotePart1": "Nata guarda tu pago de forma segura. Al viajero solo se le paga ",
+  "escrowNotePart2": "después de que tu destinatario verifique la entrega",
+  "escrowNotePart3": " con tu código secreto de 4 dígitos o una prueba fotográfica.",
+  "itemPlain": "Artículo",
+  "weightPlain": "Peso",
+  "refundFullBold": "Reembolso completo del 100 %",
+  "refundFullRest": "si el viajero cancela o el artículo no se entrega.",
+  "cancelFeeBold": "Tarifa de cancelación del 10 %",
+  "cancelFeeRest": "si cancelas después de que el viajero acepte, hasta la entrega.",
+  "disputeWindowBold": "3 días para informar de un problema",
+  "disputeWindowRest": "tras la entrega; el equipo de soporte revisa cada informe.",
+
+  "reviewTagIntact": "El artículo llegó intacto",
+  "reviewTagOnTime": "Puntual",
+  "reviewTagCommunicator": "Gran comunicación",
+  "reviewTagRules": "Siguió todas las normas",
+  "reviewTagHandoff": "Entrega sin problemas",
+  "reviewTagAgain": "Volvería a usarlo",
+  "deliveredYourItem": "Entregó tu {item} · {date}",
+  "@deliveredYourItem": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "expiryHint": "MM/AA",
+  "profilePictureUpdated": "Foto de perfil actualizada",
+  "errUploadImage": "No se pudo subir la imagen: {error}",
+  "@errUploadImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "senderEscrowFunded": "Remitente · Depósito en garantía",
+  "senderDeliveries": "{count, plural, =1{Remitente · 1 entrega} other{Remitente · {count} entregas}}",
+  "@senderDeliveries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sealedPhotosAttached": "{count, plural, =1{1 foto del embalaje sellado adjunta} other{{count} fotos del embalaje sellado adjuntas}}",
+  "@sealedPhotosAttached": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "capturedAt": "Tomada en {place} · {time}",
+  "@capturedAt": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "txDeliveryOf": "Entrega de {item}",
+  "@txDeliveryOf": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "txReleasedFromEscrow": "Liberado del depósito · {date}",
+  "@txReleasedFromEscrow": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "txEscrowHold": "Retención en depósito",
+  "txDeliveryRequest": "Solicitud de entrega · {date}",
+  "@txDeliveryRequest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "priceEstimateNote": "Esto es una estimación en {currency} al tipo de cambio de hoy. El precio se fija cuando el viajero acepta.",
+  "@priceEstimateNote": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "estimateLabel": "Estimación",
+  "errRateUnavailable": "El tipo de cambio no está disponible ahora mismo, así que el precio no se puede fijar. Inténtalo más tarde.",
+  "errRequestNotPending": "Esta solicitud ya ha sido respondida.",
+
+  "chatLockedUntilPayment": "El chat se desbloquea cuando se paga la entrega. Tu pago queda en depósito hasta que se confirme la entrega.",
+  "messageLocked": "Mensaje",
+  "messageUnlocksAfterPayment": "Los mensajes se desbloquean después del pago.",
+  "escrowFunded": "Depósito realizado",
+  "maxDims": "Máx. {dims}",
+  "@maxDims": {
+    "placeholders": {
+      "dims": {
+        "type": "String"
+      }
+    }
+  },
+
+  "errRequestNotPayable": "Esta solicitud ya no se puede pagar.",
+  "step1ValidateTicket": "PASO 1 · VERIFICAR EL BILLETE DE AVIÓN",
+  "step2PaymentMethod": "PASO 2 · ELEGIR EL MÉTODO DE PAGO",
+  "ticketNotValidated": "No verificado",
+  "ticketValidated": "Verificado",
+  "ticketIntro": "{name} subió su billete de avión para este viaje. Comprueba que coincide con la ruta y la fecha antes de pagar.",
+  "@ticketIntro": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "viewFullTicket": "Ver el billete completo",
+  "ticketPdf": "Billete de avión (PDF)",
+  "ticketRoute": "Ruta",
+  "ticketDeparture": "Salida",
+  "ticketBookingRef": "Referencia de reserva",
+  "ticketTraveler": "Viajero",
+  "iCheckedTicket": "He verificado este billete",
+  "errTicketLoad": "No se pudo cargar el billete.",
+  "noTicketUploaded": "El viajero aún no ha subido un billete para este viaje, así que el pago sigue bloqueado.",
+  "validateToUnlock": "Verifica el billete para desbloquear el pago",
+  "payAmountIntoEscrow": "Pagar {amount} en depósito",
+  "@payAmountIntoEscrow": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestExpiredPayment": "Esta solicitud ha caducado y ya no se puede pagar.",
+  "hoursMinutes": "{hours} h {minutes} min",
+  "@hoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "step2VerifyId": "PASO 2 · VERIFICAR LA IDENTIDAD DEL VIAJERO",
+  "step3PaymentMethod": "PASO 3 · ELEGIR EL MÉTODO DE PAGO",
+  "idIntro": "El documento de identidad de {name} fue verificado. Comprueba que la foto parece real y que el nombre coincide con el billete antes de pagar.",
+  "@idIntro": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "identityVerifiedBadge": "Identidad verificada",
+  "nameOnId": "Nombre en el documento",
+  "idDocument": "Documento",
+  "idVerifiedOn": "Verificada el",
+  "idPhotoOnlyNote": "Solo se muestra la foto. El resto del documento sigue siendo privado.",
+  "iCheckedId": "He verificado este documento",
+  "errIdPhotoLoad": "No se pudo cargar la foto del documento.",
+  "travelerNotVerified": "La identidad de este viajero no está verificada, así que el pago sigue bloqueado.",
+  "validateTicketAndId": "Verifica el billete y el documento para desbloquear el pago",
+  "idSharedWithSendersNote": "Cuando aceptes una solicitud, ese remitente verá la foto de tu documento y tu nombre verificado, para comprobar que coincides con tu billete. El resto de tu documento sigue siendo privado.",
+
+  "errTicketNameMismatch": "El nombre de este billete no coincide con el de tu perfil. Sube un billete a tu nombre o actualiza el nombre de tu perfil.",
+  "errTicketDateMismatch": "Este billete no es para el {date}. Revisa las fechas del viaje o sube el billete de este vuelo.",
+  "@errTicketDateMismatch": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errTicketUnreadable": "No pudimos leer este billete. Sube una foto nítida o el PDF de tu tarjeta de embarque o billete electrónico.",
+  "checkingTicket": "Comprobando tu billete…",
+
+  "noIncomingRequests": "Aún no hay solicitudes. Aparecerán aquí cuando los remitentes te pidan llevar algo en tus viajes.",
+  "senderAwaitingPayment": "Remitente · Pago pendiente",
+  "senderItemWithYou": "Remitente · Artículo contigo",
+  "senderDelivered": "Remitente · Entregado",
+  "nextWaitPayment": "Esperar el pago del remitente",
+  "nextPickUp": "Recoger el artículo",
+  "nextDeliver": "Entregar e introducir el código",
+  "nextDone": "Pago liberado",
+  "viewRequest": "Ver la solicitud",
+  "requestAcceptedSnack": "Solicitud aceptada. El remitente tiene 24 horas para pagar.",
+  "requestDeclinedSnack": "Solicitud rechazada.",
+  "declineTitle": "¿Rechazar esta solicitud?",
+  "declineBody": "Se avisará al remitente de que no puedes llevarlo.",
+  "declineReasonHint": "Motivo (opcional)",
+  "keepIt": "Mantener",
+  "errAcceptFailed": "No se pudo aceptar la solicitud. Inténtalo de nuevo.",
+  "errDeclineFailed": "No se pudo rechazar la solicitud. Inténtalo de nuevo.",
+  "requestDetailsTitle": "Detalles de la solicitud",
+  "answerWithin": "Responde en {time}",
+  "@answerWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "payDueWithin": "El remitente debe pagar en {time}",
+  "@payDueWithin": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "itemPhotosTitle": "FOTOS DEL ARTÍCULO SELLADO",
+  "recipientHiddenNote": "El nombre y el teléfono del destinatario se comparten cuando aceptas.",
+  "senderVerifiedBadge": "Verificado",
+
+  "rateYourTraveler": "Califica a tu viajero",
+  "deliveryCompleteLabel": "ENTREGA COMPLETADA",
+  "itemArrivedSafely": "Tu artículo llegó bien",
+  "reviewHelpsOthers": "Tu reseña ayuda a otros remitentes a encontrar viajeros de confianza.",
+  "overallRating": "VALORACIÓN GENERAL",
+  "tapStarToRate": "Toca una estrella para valorar",
+  "whatStoodOut": "¿QUÉ DESTACÓ?",
+  "tagCommunication": "Gran comunicación",
+  "tagCareful": "Cuidadoso con el artículo",
+  "tagFlexiblePickup": "Recogida flexible",
+  "writtenReview": "RESEÑA ESCRITA",
+  "reviewHint": "Cuenta cómo fueron la entrega y la recogida. Sé respetuoso y objetivo.",
+  "reviewsFinal": "Las reseñas no se pueden editar una vez publicadas.",
+  "reviewSharedNote": "Tu valoración se comparte con {name} al enviarla y se añade a su historial público de entregas.",
+  "@reviewSharedNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewThanksName": "Gracias por valorar a {name}. Tu opinión ayuda a que la comunidad siga siendo de confianza y segura.",
+  "@reviewThanksName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errReviewFailed": "No se pudo enviar tu reseña. Inténtalo de nuevo.",
+  "errAlreadyReviewed": "Ya has valorado esta entrega.",
+  "errNotDelivered": "Este artículo aún no está marcado como entregado.",
+  "confirmReceipt": "Confirmar recepción",
+  "youReviewed": "Valoraste esta entrega",
+  "errConfirmReceiptFailed": "No se pudo confirmar la recepción. Inténtalo de nuevo.",
+  "reviewsCount": "{count, plural, =1{1 reseña} other{{count} reseñas}}",
+  "@reviewsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "ticketImageHidden": "El billete no se muestra porque no se pudo ocultar su referencia de reserva. Nata comprobó el nombre del viajero y la fecha del viaje al subirlo.",
+  "bookingRefHidden": "Oculta para proteger la reserva del viajero",
+
+  "completeYourPayment": "Completa tu pago",
+  "completeYourPaymentSub": "Termina el pago en la página de Flutterwave. Esta página se actualiza sola cuando el pago se complete.",
+  "openPaymentPage": "Abrir la página de pago",
+  "iPaidCheckNow": "Ya pagué, comprobar",
+  "chooseAnotherWayToPay": "Elegir otra forma de pago",
+  "paymentReceived": "Pago recibido. El dinero queda en depósito hasta que se complete la entrega.",
+  "paymentNotReceivedYet": "Aún no hemos recibido el pago. Si acabas de pagar, puede tardar un minuto.",
+  "errPaymentFailed": "El pago no se completó. Inténtalo de nuevo o elige otra forma de pago.",
+  "errPaymentStart": "No se pudo abrir la página de pago. Inténtalo de nuevo.",
+  "errPaymentsUnavailable": "Los pagos no están disponibles en este momento. Inténtalo más tarde.",
+
+  "mobileMoneyCountry": "País del dinero móvil",
+  "chooseCountry": "Elige un país",
+  "payerEmail": "Correo para tu recibo",
+  "payerEmailHint": "tu@ejemplo.com",
+  "payerEmailNote": "El proveedor de pagos te envía el recibo aquí. Es privado y solo se te pide una vez.",
+  "enterEmailToPay": "Escribe tu correo para pagar",
+  "errEmailRequired": "Escribe tu correo para pagar.",
+  "mobileMoneyChargedAs": "Se cobra en la moneda de tu billetera al tipo de cambio de hoy: {local}. El precio de la entrega sigue siendo {price}.",
+  "@mobileMoneyChargedAs": {
+    "placeholders": {
+      "local": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errMobileMoneyUnavailable": "El dinero móvil no está disponible para este país. Elige otro país o paga con tarjeta.",
+  "errMobileMoneyOptions": "No se pudieron cargar los países de dinero móvil.",
+  "bankTransfer": "Transferencia bancaria",
+  "bankTransferSub": "Paga a una cuenta bancaria nigeriana (NGN)",
+  "bankTransferChargedAs": "Pagarás {local} por transferencia bancaria, al tipo de cambio de hoy. El precio de la entrega sigue siendo {price}. Flutterwave te da la cuenta a la que pagar.",
+  "errBankTransferQuote": "No se pudo obtener el importe en nairas.",
+
+  "signInPromptTitle": "Inicia sesión para continuar",
+  "signInPromptBody": "Crea una cuenta gratis para enviar artículos con viajeros, publicar tus viajes y seguir tus entregas.",
+  "signInPromptTraveler": "Crea una cuenta gratis para ver el perfil de {name} y enviar una solicitud de entrega.",
+  "signInPromptAddTrip": "Crea una cuenta gratis para publicar tu viaje y ganar dinero llevando artículos.",
+  "signInBenefitVerified": "Solo viajeros verificados",
+  "signInBenefitEscrow": "Pago protegido hasta la entrega",
+  "signInBenefitPhone": "Regístrate con tu número en un minuto",
+  "notNow": "Ahora no",
+  "verifyPromptTitle": "Primero verifica tu identidad",
+  "verifyPendingTitle": "Tu verificación de identidad está en revisión",
+  "verifyPendingBody": "Podrás publicar viajes y enviar solicitudes cuando se apruebe tu documento. Te avisaremos.",
+  "verifyMyIdentity": "Verificar mi identidad",
+  "ok": "Aceptar",
+  "verifyToAddTrip": "Solo los viajeros verificados pueden publicar viajes. Toma unos minutos: una foto de tu documento y un selfi.",
+  "verifyToSendRequest": "Solo los miembros verificados pueden enviar solicitudes de entrega. Toma unos minutos: una foto de tu documento y un selfi.",
+  "errNotVerified": "Primero verifica tu identidad: solo los miembros verificados pueden hacer esto.",
+  "errTripFull": "Este viaje ya lleva artículos de 3 remitentes.",
+  "errSenderOnTrip": "Ya aceptaste una solicitud de este remitente en este viaje.",
+  "continueBrowsing": "Seguir explorando",
+
+
+  "sortByDate": "Ordenar por fecha",
+  "sortEarliest": "Más pronto",
+  "sortLatest": "Más tarde",
+
+  "sendWithTrustedTravelers": "Envía con viajeros de confianza",
+  "guestHeroBadge": "Viajeros verificados · Pago en depósito",
+  "guestHeroTitle": "Envía artículos al extranjero con un viajero que ya va hacia allí",
+  "guestHeroBody": "Encuentra un viajero de confianza que vaya a tu destino. Tu pago queda guardado de forma segura hasta que tu destinatario confirme la entrega.",
+  "createFreeAccount": "Crear una cuenta gratis",
+  "travelersGoingSoon": "Viajeros que salen pronto",
+  "preview": "Vista previa",
+  "howItWorks": "Cómo funciona",
+  "howStep1Title": "Busca",
+  "howStep1Body": "un viajero que vaya a tu destino.",
+  "howStep2Title": "Paga en depósito",
+  "howStep2Body": "después de comprobar su billete y su documento de identidad.",
+  "howStep3Title": "El viajero cobra",
+  "howStep3Body": "cuando tu destinatario confirma la entrega.",
+
+  "pickedUpItem": "He recogido el artículo",
+  "pickedUpOn": "Recogido el {date}",
+  "@pickedUpOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pickedUp": "Recogido",
+  "notYet": "Aún no",
+  "pickUpFirst": "Primero marca el artículo como recogido.",
+  "errPickUpFailed": "No se pudo marcar como recogido. Inténtalo de nuevo.",
+  "handoverCodeNote": "Reúnete con el destinatario en {city}, entrégale el artículo y pídele el código de entrega.",
+  "@handoverCodeNote": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "wrongCodeAttempts": "Ese código no es correcto. {count, plural, =1{Te queda 1 intento} other{Te quedan {count} intentos}}.",
+  "@wrongCodeAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "codeLocked": "Demasiados códigos incorrectos. Contacta con soporte para desbloquear esta entrega.",
+  "codeNotReady": "El remitente aún no tenía código. Pídele que comparta el que ahora aparece en su aplicación.",
+  "deliveredPayoutQueued": "¡Entregado! Tu pago de {amount} está en camino.",
+  "@deliveredPayoutQueued": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "deliveryCode": "Código de entrega",
+  "deliveryCodeNote": "Dale este código a {name}. El viajero lo necesita para confirmar la entrega.",
+  "@deliveryCodeNote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "textCodeTo": "Enviarlo por SMS a {name}",
+  "@textCodeTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeTextedResend": "Enviado por SMS · Reenviar",
+  "codeTexted": "Código enviado a {name} por SMS.",
+  "@codeTexted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errSmsUnavailable": "El envío de SMS no está disponible ahora. Comparte el código con el destinatario tú mismo.",
+  "errSmsTooSoon": "El código se acaba de enviar. Espera un par de minutos antes de reenviarlo.",
+
+  "payoutCountry": "País",
+  "bankAccount": "Cuenta bancaria",
+  "bankLabel": "Banco",
+  "providerLabel": "Operador",
+  "chooseBank": "Elige tu banco",
+  "chooseProvider": "Elige tu operador",
+  "accountNumber": "Número de cuenta",
+  "mobileMoneyNumber": "Número de dinero móvil",
+  "accountHolderName": "Nombre del titular",
+  "savePayoutAccount": "Guardar cuenta",
+  "payoutAccountNoteSecure": "Tu número de cuenta completo se guarda de forma segura en nuestro servidor y solo se usa para enviarte tus pagos. La aplicación solo muestra sus 4 últimos dígitos.",
+  "noPayoutOptions": "Nata aún no puede pagar a {country}.",
+  "@noPayoutOptions": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "errLoadPayoutOptions": "No se pudieron cargar los bancos de este país.",
+  "errPayoutAccountInvalid": "Revisa el número de cuenta y el nombre del titular.",
+  "errPayoutNotSupported": "Este banco aún no puede recibir pagos. Elige otro.",
+  "errSavePayoutAccount": "No se pudo guardar la cuenta. Inténtalo de nuevo.",
+  "payoutAccountSaved": "Cuenta de cobro guardada.",
+
+  "withdrawSent": "{count, plural, =1{Tu pago está en camino.} other{{count} pagos están en camino.}}",
+  "@withdrawSent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "withdrawNothing": "Nada que enviar ahora. Si esperas un pago, comprueba que tienes una cuenta de cobro en Ajustes de pago.",
+
+  "backToProfile": "Volver al perfil",
+  "idStatusVerifiedTitle": "Tu identidad está verificada",
+  "idStatusVerifiedBody": "Remitentes y viajeros ven que estás verificado. Los datos de tu documento nunca se muestran a otros usuarios.",
+  "idStatusReviewTitle": "Estamos revisando tu documento",
+  "idStatusReviewBody": "Suele tardar menos de 24 horas. Mientras tanto puedes explorar, pero aún no puedes enviar ni aceptar solicitudes.",
+  "idStatusDocument": "Documento de identidad",
+  "idStatusFaceMatch": "Reconocimiento facial",
+  "idStatusVerifiedOn": "Verificado el",
+  "idStatusSubmittedOn": "Enviado el",
+  "idStatusPassed": "Superado",
+  "idStatusInReview": "En revisión",
+  "idStatusReceived": "Recibido",
+  "idStatusPrivacy": "En tu perfil solo aparecen tu foto y tu nombre.",
+  "idDocPassport": "Pasaporte",
+  "idDocDriversLicense": "Licencia de conducir",
+  "idDocNationalId": "Documento nacional",
+  "walletHistory": "Historial de la billetera",
+  "walletAvailable": "Disponible",
+  "walletInEscrow": "En custodia",
+  "walletFilterAll": "Todo",
+  "walletFilterPayouts": "Cobros",
+  "walletFilterPayments": "Pagos",
+  "walletPayoutTitle": "Cobro · {item}",
+  "walletPaymentTitle": "Pago · {item}",
+  "walletPayoutFallback": "Cobro",
+  "walletPaymentFallback": "Pago",
+  "walletPaymentTo": "Solicitud de entrega a {name}",
+  "walletStatusPending": "En espera",
+  "walletStatusSending": "Enviando",
+  "walletStatusPaid": "Pagado",
+  "walletStatusFailed": "Fallido · reintentando",
+  "walletStatusInEscrow": "En custodia",
+  "walletStatusReleased": "Liberado",
+  "walletStatusRefunded": "Reembolsado",
+  "walletEmpty": "Aún no hay transacciones. Tus pagos y cobros aparecerán aquí.",
+  "errWalletHistory": "No se pudo cargar tu historial.",
+  "sbpTitle": "Por qué los artículos viajan sellados",
+  "sbpBody": "Cada artículo debe ir en su caja original, sellada de fábrica. Protege a los viajeros en la aduana y a los remitentes ante disputas.",
+  "sbpRule1": "Embalaje original, sin abrir",
+  "sbpRule2": "Mostrado en fotos antes de la solicitud",
+  "sbpRule3": "El viajero revisa el sello al recogerlo y puede rechazar una caja abierta",
+  "sbpRule4": "Artículos prohibidos: dinero en efectivo, medicamentos sin receta, baterías de más de 100 Wh, líquidos de más de 100 ml, cualquier cosa ilegal en el destino",
+  "sbpCustoms": "Si la aduana abre la caja, el viajero no es responsable del artículo.",
+  "ecScreenBody": "Alguien a quien podamos contactar si algo sale mal durante una entrega. Nunca se muestra a otros usuarios.",
+  "ecSaveContact": "Guardar contacto",
+  "ecSavedToast": "Contacto de emergencia guardado.",
+  "ecProfileAdd": "Añade a alguien a quien contactar",
+  "errLoadContact": "No se pudo cargar tu contacto de emergencia.",
+
+  "notifRequestNewTitle": "Nueva solicitud de entrega",
+  "notifRequestNewBody": "{name} quiere que lleves un artículo en {route}.",
+  "notifAcceptedTitle": "Solicitud aceptada",
+  "notifAcceptedBody": "{name} aceptó tu solicitud. Paga en 24 horas para confirmarla.",
+  "notifDeclinedTitle": "Solicitud rechazada",
+  "notifDeclinedBody": "{name} no puede llevar tu artículo. Busca otro viajero en {route}.",
+  "notifExpiredTitle": "Solicitud vencida",
+  "notifExpiredUnansweredBody": "{name} no respondió a tiempo. Busca otro viajero.",
+  "notifExpiredUnpaidBody": "Pasaron las 24 horas para pagar, así que la solicitud se cerró.",
+  "notifExpiredUnpaidTravelerBody": "{name} no pagó a tiempo, así que la solicitud se cerró.",
+  "notifCancelledTitle": "Solicitud cancelada",
+  "notifCancelledByTravelerBody": "{name} canceló tu solicitud.",
+  "notifCancelledBySenderBody": "{name} canceló su solicitud en {route}.",
+  "notifPaidTitle": "Pago asegurado",
+  "notifPaidBody": "{name} pagó. El dinero se guarda de forma segura hasta la entrega y el chat está abierto.",
+  "notifPickedUpTitle": "Artículo recogido",
+  "notifPickedUpBody": "{name} tiene tu artículo y va en camino.",
+  "notifDeliveredTitle": "Artículo entregado",
+  "notifDeliveredBody": "{name} entregó tu artículo. Confirma que lo recibiste.",
+  "notifPayoutTitle": "Cobro enviado",
+  "notifPayoutBody": "Tu cobro de {amount} está en camino.",
+  "notifVerifiedTitle": "Identidad verificada",
+  "notifVerifiedBody": "Estás verificado. Ya puedes enviar y aceptar solicitudes de entrega.",
+  "notifRejectedTitle": "Verificación fallida",
+  "notifRejectedBody": "No pudimos verificar tu documento. Inténtalo de nuevo con una foto nítida.",
+
+  "crHeadline": "{traveler} dice que entregó tu artículo a {recipient}",
+  "crBody": "Comprueba que llegó bien. Al confirmar podrás valorar a {traveler}.",
+  "crItem": "Artículo",
+  "crRoute": "Ruta",
+  "crRecipient": "Destinatario",
+  "crYes": "Sí, llegó",
+  "reportProblem": "Informar de un problema",
+  "crReportNote": "Puedes informar de un problema durante 3 días",
+  "rpBody": "Cuéntanos qué salió mal. Nuestro equipo de soporte se pondrá en contacto contigo.",
+  "rpReason": "¿Qué pasó?",
+  "rpNotReceived": "El artículo no llegó",
+  "rpDamaged": "Llegó dañado",
+  "rpWrongItem": "No es el artículo que envié",
+  "rpOpened": "La caja estaba abierta",
+  "rpOther": "Otra cosa",
+  "rpDetails": "Detalles",
+  "rpDetailsHint": "Añade lo que nos ayude a revisarlo",
+  "rpSend": "Enviar informe",
+  "rpSent": "Gracias. Recibimos tu informe y nos pondremos en contacto contigo.",
+  "errAlreadyReported": "Ya informaste de un problema en esta entrega.",
+  "errReportWindowClosed": "Ya pasaron los 3 días para informar de un problema.",
+  "notifProblemTitle": "Problema informado",
+  "notifProblemBody": "Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.",
+
+  "pickupPhotoHint": "Toma una foto de la caja sellada al recibirla.",
+  "errPhotoUpload": "No se pudo subir la foto. Inténtalo de nuevo.",
+
+  "notifRefundTitle": "Reembolso enviado",
+  "notifRefundBody": "Tu reembolso de {amount} está en camino.",
+
+  "viewCode": "Ver código",
+  "chatCodeNote": "Tu destinatario le da este código al viajero en la entrega. No lo compartas antes.",
+  "close": "Cerrar",
+  "supportTitle": "Soporte",
+  "supportSubtitle": "Equipo de Nata · Informes, bloqueos y pagos fallidos",
+  "supportProblemsCard": "Problemas informados",
+  "supportOpenSuffix": "abiertos",
+  "supportProblemsLine": "Esperando una decisión",
+  "supportLockedCard": "Entregas bloqueadas",
+  "supportLockedSuffix": "bloqueadas",
+  "supportLockedLine": "Bloqueadas tras 5 códigos de entrega erróneos",
+  "supportFailedCard": "Pagos fallidos",
+  "supportFailedSuffix": "fallidos",
+  "supportFailedLine": "Pagos y reembolsos fallidos para reintentar",
+  "supportRecentActivity": "Actividad reciente",
+  "supportNoActivity": "Aún no hay acciones de soporte.",
+  "supportActResolved": "Problema resuelto",
+  "supportActRefunded": "Remitente reembolsado",
+  "supportActPayoutRetried": "Pago reintentado",
+  "supportActRefundRetried": "Reembolso reintentado",
+  "supportActUnlocked": "Entrega desbloqueada",
+  "supportProblemsTitle": "Problemas informados",
+  "supportOpen": "Abiertos",
+  "supportResolved": "Resueltos",
+  "supportReportedBySender": "Informado por el remitente",
+  "supportReportedByTraveler": "Informado por el viajero",
+  "supportInEscrow": "En garantía",
+  "supportViewDetails": "Ver detalles",
+  "supportNoProblems": "No hay problemas aquí.",
+  "supportProblemDetail": "Detalle del problema",
+  "supportReporterDetails": "Detalles del informante",
+  "supportNoDetails": "Sin detalles.",
+  "supportPeople": "Personas",
+  "supportSender": "Remitente",
+  "supportTraveler": "Viajero",
+  "supportTimeline": "Cronología de la entrega",
+  "supportPaid": "Pagado",
+  "supportPickedUp": "Recogido",
+  "supportDelivered": "Entregado",
+  "supportReported": "Informado",
+  "supportPaymentStatus": "Estado del pago",
+  "supportHeld": "Retenido",
+  "supportHeldLine": "{amount} retenidos en garantía",
+  "supportHeldSub": "No se paga hasta resolverlo",
+  "supportReleased": "Pagado",
+  "supportReleasedLine": "{amount} pagados al viajero",
+  "supportRefunded": "Reembolsado",
+  "supportRefundedLine": "{amount} devueltos al remitente",
+  "supportResolutionNote": "Nota de resolución",
+  "supportResolutionHint": "Describe qué se decidió y por qué…",
+  "supportMarkResolved": "Marcar como resuelto",
+  "supportRefundSender": "Reembolsar al remitente",
+  "supportRefundConfirmTitle": "¿Reembolsar {amount} a {name}?",
+  "supportRefundConfirmBody": "La garantía vuelve al remitente y el viajero no recibe el pago. No se puede deshacer.",
+  "supportConfirmRefund": "Confirmar reembolso",
+  "supportResolvedSnack": "Problema resuelto.",
+  "supportRefundSnack": "Reembolso en cola. Se envía en 15 minutos como máximo.",
+  "supportPaymentsTitle": "Pagos y bloqueos",
+  "supportFailedTab": "Pagos fallidos",
+  "supportLockedTab": "Entregas bloqueadas",
+  "supportPayout": "Pago",
+  "supportRefund": "Reembolso",
+  "supportFlutterwaveSaid": "Flutterwave: \"{reason}\"",
+  "supportRetrySent": "Flutterwave aceptó el pago.",
+  "supportRetryFailed": "Flutterwave lo volvió a rechazar.",
+  "supportRefundRequeued": "Reembolso en cola de nuevo. Se envía en 15 minutos como máximo.",
+  "supportLocked": "Bloqueada",
+  "supportWrongAttempts": "Intentos de código erróneos",
+  "supportUnlock": "Desbloquear entrega",
+  "supportUnlockTitle": "¿Desbloquear esta entrega?",
+  "supportUnlockBody": "{name} tendrá 5 intentos más con el código de entrega. Confirma que el viajero tiene el artículo antes de desbloquear.",
+  "supportConfirmUnlock": "Confirmar desbloqueo",
+  "supportUnlockedSnack": "Entrega desbloqueada.",
+  "supportNothingFailed": "No hay pagos fallidos.",
+  "supportNothingLocked": "No hay entregas bloqueadas.",
+  "supportRowSub": "Equipo de Nata · Informes, bloqueos y pagos",
+  "supportAdmin": "Admin",
+  "supportLoadFailed": "No se pudo cargar. Desliza hacia abajo para reintentar.",
+  "supportActionFailed": "No funcionó. Inténtalo de nuevo."
 }

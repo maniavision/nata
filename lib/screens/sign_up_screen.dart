@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import '../widgets/app_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
@@ -10,6 +11,7 @@ import 'login_screen.dart';
 import 'identity_verification_screen.dart';
 import 'otp_screen.dart';
 import '../l10n/l10n_ext.dart';
+import '../widgets/nata_logo.dart';
 
 class SignUpScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -116,7 +118,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final phone = _phoneController.text.trim().replaceAll(RegExp(r'\s+'), '');
 
     if (firstName.isEmpty || lastName.isEmpty || phone.isEmpty) {
-      setState(() => _error = 'Please fill in all fields.');
+      setState(() => _error = context.l10n.errFillAllFields);
       return;
     }
 
@@ -143,6 +145,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             authService: widget.authService,
             firstName: firstName,
             lastName: lastName,
+            // The country picked for the phone number (its iso_code in
+            // nata.countries) is the user's country of residence.
+            countryOfResidence: _selectedCountry.isoCode,
             onSuccess: () {
               // After OTP verified → go to identity verification
               Navigator.of(context).pushAndRemoveUntil(
@@ -166,17 +171,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String _friendlyError(String raw) {
     if (raw.contains('rate limit') || raw.contains('too many')) {
-      return 'Too many requests. Please wait a moment and try again.';
+      return context.l10n.errTooManyRequestsRetry;
     }
     if (raw.contains('invalid') || raw.contains('phone')) {
-      return 'Invalid phone number. Please check and try again.';
+      return context.l10n.errInvalidPhone;
     }
-    return 'Something went wrong. Please try again.';
+    return context.l10n.errSomethingWrong;
   }
 
   void _goToLogin() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      // Same instant switch as the bottom tabs, not a page slide.
+      AppBottomNav.tabRoute<void>(const LoginScreen()),
     );
   }
 
@@ -186,15 +192,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHero(),
-              _buildCard(),
-              _buildFooter(),
-              const SizedBox(height: 32),
-            ],
-          ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHero(),
+                  _buildCard(),
+                  _buildFooter(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+            // Opened while browsing: a way back.
+            if (Navigator.of(context).canPop())
+              Positioned(
+                top: 12,
+                left: 16,
+                child: Semantics(
+                  button: true,
+                  label: context.l10n.continueBrowsing,
+                  child: GestureDetector(
+                    key: const ValueKey('auth-close'),
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -269,19 +309,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 13,
-                      ),
-                    ),
+                    const NataLogo(size: 24),
                     const SizedBox(width: 8),
                     Text(
                       context.l10n.appName,
@@ -524,7 +552,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         const SizedBox(height: 12),
         // Country of Residence — autocomplete
         _buildField(
-          label: 'COUNTRY OF RESIDENCE',
+          label: context.l10n.countryOfResidenceLabel,
           child: _CountryField(
             controller: _countryController,
             focusNode: _countryFocus,
@@ -837,7 +865,7 @@ class _CountryField extends StatelessWidget {
                     color: AppColors.foreground,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Select country',
+                    hintText: context.l10n.selectCountry,
                     hintStyle: GoogleFonts.dmSans(
                       fontSize: 12,
                       color: AppColors.mutedForeground,

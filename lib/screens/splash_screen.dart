@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'home_screen.dart';
+import '../services/auth_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:carrywise_app/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,12 +9,16 @@ import '../main.dart';
 import '../services/preferences_service.dart';
 import '../services/region_service.dart';
 import 'login_screen.dart';
+import '../widgets/nata_logo.dart';
 
 class SplashScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RegionService].
   final RegionService? regionService;
 
-  const SplashScreen({super.key, this.regionService});
+  /// Override for tests: the Home a visitor lands on after continuing.
+  final WidgetBuilder? guestHomeBuilder;
+
+  const SplashScreen({super.key, this.regionService, this.guestHomeBuilder});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -64,8 +70,14 @@ class _SplashScreenState extends State<SplashScreen> {
     // Keep LocaleNotifier in sync for any screens that still use it.
     LocaleNotifier.of(context).value = _prefs.locale;
 
+    // Visitors start browsing right away; someone with a saved session goes
+    // to Sign In, where Face ID unlocks it.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      MaterialPageRoute(
+        builder: (context) => AuthGate.isSignedIn()
+            ? const LoginScreen()
+            : (widget.guestHomeBuilder ?? (_) => const HomeScreen())(context),
+      ),
     );
   }
 
@@ -212,30 +224,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              // rounded-lg (20 px) on 24 px: a circle.
-                              shape: BoxShape.circle,
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x0D000000),
-                                  offset: Offset(0, 1),
-                                  blurRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Transform.rotate(
-                              angle: -0.785, // -45°: plane flying up-right
-                              child: const Icon(
-                                Icons.send_rounded,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                            ),
-                          ),
+                          const NataLogo(size: 24),
                           const SizedBox(width: 8),
                           Text(
                             'Nata',
@@ -269,7 +258,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                       ),
                       child: Text(
-                        '180+ Countries',
+                        AppLocalizations.of(context)!.countries180,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w700,
                           fontSize: 11,
@@ -314,7 +303,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Select Language & Currency',
+                  AppLocalizations.of(context)!.splashTitle,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w800,
                     fontSize: 24,
@@ -326,7 +315,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 320),
                   child: Text(
-                    'Personalize your peer delivery experience across routes worldwide.',
+                    AppLocalizations.of(context)!.splashSubtitle,
                     style: GoogleFonts.dmSans(
                       fontSize: 12,
                       height: 16 / 12,
@@ -480,7 +469,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'CHOOSE LANGUAGE',
+                    AppLocalizations.of(context)!.splashChooseLanguage,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
@@ -491,7 +480,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
               Text(
-                '3 available',
+                AppLocalizations.of(
+                  context,
+                )!.splashAvailable(AppLanguage.values.length),
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 10,
@@ -523,7 +514,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'PREFERRED CURRENCY',
+                    AppLocalizations.of(context)!.splashPreferredCurrency,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
@@ -534,7 +525,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
               Text(
-                '4 available',
+                AppLocalizations.of(
+                  context,
+                )!.splashAvailable(AppCurrency.values.length),
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 10,
@@ -746,7 +739,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Save & Continue',
+                    AppLocalizations.of(context)!.splashSaveAndContinue,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
@@ -760,7 +753,7 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'You can change your language and currency anytime in Profile Settings.',
+            AppLocalizations.of(context)!.splashSettingsNote,
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(
               fontSize: 10,

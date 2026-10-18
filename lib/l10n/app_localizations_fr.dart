@@ -343,7 +343,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pricingValue =>
-      'Calculé selon la taille et le poids de l\'article';
+      'Calculé selon la distance, la taille et le poids de l\'article';
+
+  @override
+  String get sameDayDelivery => 'Livraison le même jour';
+
+  @override
+  String deliverInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Livraison en $count jours',
+      one: 'Livraison en 1 jour',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get itemSizeAndWeight => 'LIMITES DE TAILLE ET DE POIDS ACCEPTÉES';
@@ -375,9 +389,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deliveryRequest => 'Demande de livraison';
-
-  @override
-  String get step1of1 => 'Étape 1 sur 1';
 
   @override
   String get selectedTraveler => 'VOYAGEUR SÉLECTIONNÉ';
@@ -419,7 +430,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get calculatedPrice => 'Prix calculé de l\'article';
 
   @override
-  String get sendDeliveryRequest => 'Envoyer la demande de livraison';
+  String get sendDeliveryRequest => 'Envoyer la demande';
 
   @override
   String get secureEscrowCheckout => 'Paiement sécurisé en séquestre';
@@ -482,7 +493,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get refundBullet2 =>
-      'Annulation gratuite à tout moment avant la remise physique au voyageur.';
+      'L\'annulation est gratuite jusqu\'à ce que le voyageur accepte. Ensuite, des frais d\'annulation de 10 % s\'appliquent jusqu\'à la remise.';
 
   @override
   String get refundBullet3 =>
@@ -1074,12 +1085,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectDate => 'Choisir une date';
 
   @override
-  String get tripPrice => 'PRIX PAR ARTICLE';
-
-  @override
-  String get tripPriceHint => 'Vos frais pour transporter un article';
-
-  @override
   String get errPickDeparture => 'Choisissez votre lieu de départ.';
 
   @override
@@ -1101,9 +1106,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errAttachReceipt => 'Joignez votre reçu de vol.';
-
-  @override
-  String get errPrice => 'Saisissez un prix valide.';
 
   @override
   String get errSaveFailed =>
@@ -1335,6 +1337,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipientPhoneNote =>
       'Partagé avec le voyageur uniquement après qu\'il a accepté votre demande';
+
+  @override
+  String get recipientSmsConsent =>
+      'En ajoutant ce numéro, vous confirmez que le destinataire a accepté de recevoir son code de livraison Nata par SMS.';
 
   @override
   String get sizeAndWeight => 'Taille et poids';
@@ -1634,6 +1640,305 @@ class AppLocalizationsFr extends AppLocalizations {
   String get attachHandoverFirst => 'Joignez d\'abord la photo de remise.';
 
   @override
+  String get recipientLocalPhoneHint => 'ex. 7700 900123';
+
+  @override
+  String get paymentSettings => 'Paramètres de paiement';
+
+  @override
+  String get paymentSettingsSub => 'Moyens de paiement et compte de versement';
+
+  @override
+  String get paymentMethods => 'Moyens de paiement';
+
+  @override
+  String get add => 'Ajouter';
+
+  @override
+  String get remove => 'Retirer';
+
+  @override
+  String get defaultLabel => 'Par défaut';
+
+  @override
+  String get payoutAccount => 'Compte de versement';
+
+  @override
+  String get payoutAccountNote =>
+      'Les gains sont versés sur ce compte dès que le code de livraison du destinataire est confirmé.';
+
+  @override
+  String get addPayoutAccount => 'Ajouter un compte de versement';
+
+  @override
+  String get preferences => 'Préférences';
+
+  @override
+  String get defaultCurrency => 'Devise par défaut';
+
+  @override
+  String get defaultCurrencySub => 'Pour les versements et les reçus';
+
+  @override
+  String get payoutSchedule => 'Calendrier des versements';
+
+  @override
+  String get payoutScheduleSub => 'Après confirmation de la livraison';
+
+  @override
+  String get automatic => 'Automatique';
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String get addPaymentMethod => 'Ajouter un moyen de paiement';
+
+  @override
+  String get paymentSecurityNote =>
+      'Vos données de paiement sont chiffrées et conservées en toute sécurité. Les paiements restent en séquestre jusqu\'à la confirmation de la livraison.';
+
+  @override
+  String get paymentKindCard => 'Carte';
+
+  @override
+  String get paymentKindCardSub => 'Débit ou crédit';
+
+  @override
+  String get paymentKindMobile => 'Mobile Money';
+
+  @override
+  String get paymentKindAppleSub => 'Paiement rapide';
+
+  @override
+  String get cardDetails => 'Détails de la carte';
+
+  @override
+  String get nameOnCard => 'Nom sur la carte';
+
+  @override
+  String get nameOnCardHint => 'Nom complet tel qu\'indiqué sur la carte';
+
+  @override
+  String get cardNumber => 'Numéro de carte';
+
+  @override
+  String get expiryDate => 'Date d\'expiration';
+
+  @override
+  String get mobileMoneyDetails => 'Détails Mobile Money';
+
+  @override
+  String get provider => 'Opérateur';
+
+  @override
+  String get mobileNumber => 'Numéro de mobile';
+
+  @override
+  String get registeredName => 'Nom enregistré';
+
+  @override
+  String get registeredNameHint => 'Nom enregistré auprès de l\'opérateur';
+
+  @override
+  String get applePayNote =>
+      'Apple Pay sera lié au portefeuille de votre identifiant Apple. Vous le confirmerez avec Face ID sur votre appareil.';
+
+  @override
+  String get setAsDefault => 'Définir par défaut';
+
+  @override
+  String get setAsDefaultSub =>
+      'Utiliser ce moyen pour les prochaines demandes';
+
+  @override
+  String get savePaymentMethod => 'Enregistrer le moyen de paiement';
+
+  @override
+  String get errCardName => 'Saisissez le nom tel qu\'il figure sur la carte.';
+
+  @override
+  String get errCardNumber => 'Saisissez un numéro de carte valide.';
+
+  @override
+  String get errCardExpiry =>
+      'Saisissez une date d\'expiration valide (MM/AA).';
+
+  @override
+  String get errCardCvv => 'Saisissez le code de sécurité à 3 ou 4 chiffres.';
+
+  @override
+  String get errMobileNumber =>
+      'Saisissez le numéro avec l\'indicatif du pays, ex. +254 712 345 678.';
+
+  @override
+  String get errRegisteredName =>
+      'Saisissez le nom enregistré auprès de l\'opérateur.';
+
+  @override
+  String cardExpires(String date) {
+    return 'Expire $date';
+  }
+
+  @override
+  String holdersIphone(String name) {
+    return 'iPhone de $name';
+  }
+
+  @override
+  String get errPaymentSettingsLoad =>
+      'Impossible de charger vos paramètres de paiement. Veuillez réessayer.';
+
+  @override
+  String get errPaymentSettingsSave =>
+      'Impossible d\'enregistrer la modification. Veuillez réessayer.';
+
+  @override
+  String get noPaymentMethods =>
+      'Aucun moyen de paiement pour l\'instant. Ajoutez-en un pour payer vos demandes de livraison.';
+
+  @override
+  String get noPayoutAccount => 'Aucun compte de versement pour l\'instant.';
+
+  @override
+  String get weekly => 'Hebdomadaire';
+
+  @override
+  String get manual => 'Manuel';
+
+  @override
+  String get faceScanLivenessNote =>
+      'L\'IA biométrique vérifie en temps réel votre présence pour confirmer que vous êtes le titulaire du document.';
+
+  @override
+  String get deliveryPayoutRelease => 'Livraison et versement';
+
+  @override
+  String get confirmDeliveryStep => 'Étape 3 sur 4 : Confirmer la livraison';
+
+  @override
+  String get itemArrivedAtDestination => 'Article arrivé à destination';
+
+  @override
+  String get confirmHandoffNote =>
+      'Demandez au destinataire son code de livraison à 4 chiffres et saisissez-le ci-dessous. Le bon code confirme la livraison et déclenche votre paiement.';
+
+  @override
+  String get pinOptionTitle => 'Code de livraison à 4 chiffres';
+
+  @override
+  String get instantRelease => 'Versement immédiat';
+
+  @override
+  String get pinOptionNote =>
+      'L\'expéditeur a communiqué un code secret à 4 chiffres au destinataire. Saisissez-le ci-dessous :';
+
+  @override
+  String get pinConfirmed => 'Code PIN du destinataire confirmé';
+
+  @override
+  String get pinMismatch =>
+      'Ce code PIN ne correspond pas à celui du destinataire.';
+
+  @override
+  String get photoOptionTitle => 'Option 2 : photo de la remise';
+
+  @override
+  String get alternative => 'Alternative';
+
+  @override
+  String get noHandoffPhoto => 'Pas encore de photo de remise';
+
+  @override
+  String get handoffPhotoHint =>
+      'Une photo de l\'article scellé au moment de la remise';
+
+  @override
+  String get sealIntactPhoto => 'Scellé intact';
+
+  @override
+  String get change => 'Modifier';
+
+  @override
+  String get payoutDestination => 'Compte de versement du voyageur';
+
+  @override
+  String payoutAmount(String amount) {
+    return 'Versement de +$amount';
+  }
+
+  @override
+  String get noPayoutAccountForRelease =>
+      'Aucun compte de versement. Ajoutez-en un dans Paramètres de paiement ; le versement y sera envoyé.';
+
+  @override
+  String get mobileMoneyPayoutSpeed => 'Mobile Money · Versement immédiat';
+
+  @override
+  String get bankPayoutSpeed => 'Virement bancaire · 1 jour ouvré';
+
+  @override
+  String get disputeProtectionWindow =>
+      'Délai de protection contre les litiges';
+
+  @override
+  String get threeDaysActive => '3 jours actifs';
+
+  @override
+  String get disputeProtectionNote =>
+      'Votre paiement est envoyé dès que le code est confirmé. L\'expéditeur peut encore signaler un problème pendant 3 jours.';
+
+  @override
+  String get reportIssue => 'Signaler un problème ou ouvrir un litige';
+
+  @override
+  String confirmReleasePayout(String amount) {
+    return 'Confirmer et verser ($amount)';
+  }
+
+  @override
+  String get requestUpdated => 'Demande mise à jour';
+
+  @override
+  String get errRequestNotFound => 'Cette demande n\'existe plus.';
+
+  @override
+  String get errRequestNotEditable =>
+      'Le voyageur a déjà répondu à cette demande : elle ne peut plus être modifiée.';
+
+  @override
+  String get editRequest => 'Modifier la demande';
+
+  @override
+  String saveChangesWithPrice(String price) {
+    return 'Enregistrer · $price';
+  }
+
+  @override
+  String get statusExpired => 'Expirée';
+
+  @override
+  String get statusPaid => 'Payée';
+
+  @override
+  String get statusInTransit => 'En transit';
+
+  @override
+  String get statusDelivered => 'Livrée';
+
+  @override
+  String get statusCancelled => 'Annulée';
+
+  @override
+  String get noSentRequests => 'Vous n\'avez encore envoyé aucune demande.';
+
+  @override
+  String get errLoadRequests => 'Impossible de charger vos demandes.';
+
+  @override
+  String get tapToEdit => 'Touchez pour modifier';
+
+  @override
   String get errIdNameMismatch =>
       'Le nom sur cette pièce d\'identité ne correspond pas à celui de votre profil. Téléversez une pièce affichant vos prénom et nom, ou mettez à jour le nom de votre profil.';
 
@@ -1713,7 +2018,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errRecipientPhone =>
-      'Saisissez le téléphone du destinataire avec l\'indicatif du pays, ex. +44 7700 900123.';
+      'Saisissez un numéro de téléphone valide pour le destinataire.';
 
   @override
   String get errWeight => 'Saisissez le poids du colis, ex. 0,9 kg.';
@@ -1738,6 +2043,79 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errDuplicate =>
       'Vous avez déjà une demande en cours sur ce trajet.';
+
+  @override
+  String errDestinationLimit(String city) {
+    return 'Vous avez déjà 5 demandes en cours vers $city. Vous pourrez en envoyer une autre dès que l\'une d\'elles sera livrée, refusée ou expirée.';
+  }
+
+  @override
+  String get cancelRequest => 'Annuler la demande';
+
+  @override
+  String get cancelRequestTitle => 'Annuler cette demande ?';
+
+  @override
+  String get cancelRequestFreeBody =>
+      'Le voyageur n\'a pas encore accepté, l\'annulation est donc gratuite.';
+
+  @override
+  String cancelRequestFeeBody(String fee) {
+    return 'Le voyageur a déjà accepté cette demande. Annuler maintenant entraîne des frais d\'annulation de 10 %, soit $fee.';
+  }
+
+  @override
+  String get keepRequest => 'Garder la demande';
+
+  @override
+  String cancelWithFee(String fee) {
+    return 'Annuler et payer $fee';
+  }
+
+  @override
+  String get requestCancelled => 'Demande annulée';
+
+  @override
+  String cancellationFeeCharged(String fee) {
+    return 'Frais d\'annulation : $fee';
+  }
+
+  @override
+  String get cancelledFreeOfCharge => 'Annulée sans frais';
+
+  @override
+  String get errFeeChanged =>
+      'Le voyageur vient de répondre à cette demande, les frais d\'annulation ont donc changé. Vérifiez et réessayez.';
+
+  @override
+  String get errNotCancellable => 'Cette demande ne peut plus être annulée.';
+
+  @override
+  String get errCancelFailed =>
+      'Impossible d\'annuler votre demande. Veuillez réessayer.';
+
+  @override
+  String sentRequestsCount(int count) {
+    return 'DEMANDES ENVOYÉES ($count)';
+  }
+
+  @override
+  String get waitingForTraveler => 'En attente du voyageur';
+
+  @override
+  String get routeLabel => 'Trajet :';
+
+  @override
+  String travelerDeliveries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voyageur · $count livraisons',
+      one: 'Voyageur · 1 livraison',
+      zero: 'Voyageur · Nouveau',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get errSessionExpired => 'Votre session a expiré. Reconnectez-vous.';
@@ -1777,7 +2155,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String sendRequestWithPrice(String price) {
-    return 'Envoyer la demande de livraison · $price';
+    return 'Envoyer la demande · $price';
   }
 
   @override
@@ -1801,7 +2179,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errPriceChanged =>
-      'Le voyageur a modifié son prix. Revenez en arrière et rouvrez la demande pour voir le nouveau prix.';
+      'Le prix a changé depuis que vous avez ouvert cette demande. Revenez en arrière et rouvrez-la pour voir le nouveau prix.';
 
   @override
   String get priceEnterWeight =>
@@ -1830,4 +2208,1778 @@ class AppLocalizationsFr extends AppLocalizations {
   String priceRateLine(String rate, String currency, String date) {
     return '1 USD = $rate $currency · mis à jour $date';
   }
+
+  @override
+  String get departingFrom => 'Départ de';
+
+  @override
+  String get hello => 'Bonjour,';
+
+  @override
+  String get whereAreYouSending => 'Où envoyez-vous ?';
+
+  @override
+  String get whereSendingFrom => 'D\'où envoyez-vous ?';
+
+  @override
+  String get destinationExample => 'ex. Londres, Royaume-Uni';
+
+  @override
+  String get anytimeThisMonth => 'N\'importe quand ce mois-ci';
+
+  @override
+  String get flexibleShort => '(±3 j)';
+
+  @override
+  String get availableTravelers => 'Voyageurs disponibles';
+
+  @override
+  String get errLoadTravelers => 'Impossible de charger les voyageurs.';
+
+  @override
+  String get noTravelersOnRoute =>
+      'Aucun voyageur sur ce trajet pour l\'instant.';
+
+  @override
+  String get desiredDeliveryDateTitle => 'Date de livraison souhaitée';
+
+  @override
+  String upToKg(String weight) {
+    return 'Jusqu\'à $weight kg';
+  }
+
+  @override
+  String get dateAnytime => 'N\'importe quand';
+
+  @override
+  String get dateThisWeek => 'Cette semaine';
+
+  @override
+  String get dateNextWeek => 'Semaine prochaine';
+
+  @override
+  String get dateFlexible => 'Flexible (±3 j)';
+
+  @override
+  String travelerFlightsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vols de voyageurs',
+      one: '1 vol de voyageur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String flightsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vols',
+      one: '1 vol',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get plusMinus3Days => '±3 jours';
+
+  @override
+  String get anyDate => 'N\'importe quelle date';
+
+  @override
+  String get selectADate => 'Sélectionnez une date';
+
+  @override
+  String confirmDateOn(String date) {
+    return 'Confirmer la date ($date)';
+  }
+
+  @override
+  String get confirmDateAnytime => 'Confirmer la date (n\'importe quand)';
+
+  @override
+  String get searchCountryHint => 'Rechercher un pays...';
+
+  @override
+  String searchCityIn(String country) {
+    return 'Rechercher une ville en/au $country...';
+  }
+
+  @override
+  String get selectCityTitle => 'Choisir une ville';
+
+  @override
+  String get noCountriesFound => 'Aucun pays trouvé';
+
+  @override
+  String noCitiesFoundIn(String country) {
+    return 'Aucune ville trouvée pour $country';
+  }
+
+  @override
+  String get selectCountryCode => 'Choisir l\'indicatif du pays';
+
+  @override
+  String get errLoadTravelersRetry =>
+      'Impossible de charger les voyageurs. Veuillez réessayer.';
+
+  @override
+  String get anywhere => 'N\'importe où';
+
+  @override
+  String byDate(String date) {
+    return 'avant le $date';
+  }
+
+  @override
+  String get noTravelersOnRouteTitle =>
+      'Aucun voyageur sur ce trajet pour l\'instant';
+
+  @override
+  String get tryAnotherDateOrRoute =>
+      'Essayez une autre date ou un autre trajet, ou activez les alertes ci-dessous.';
+
+  @override
+  String get travelersFound => 'Voyageurs trouvés';
+
+  @override
+  String get notifyNewTravelers =>
+      'Soyez averti dès que de nouveaux voyageurs ajoutent des trajets sur cette route.';
+
+  @override
+  String get capacityNotSpecified => 'Capacité non précisée';
+
+  @override
+  String acceptsUpToKg(String weight) {
+    return 'Accepte jusqu\'à $weight kg';
+  }
+
+  @override
+  String get arrivingIn => 'Arrivée à';
+
+  @override
+  String get departureDateTitle => 'Date de départ';
+
+  @override
+  String get arrivalDateTitle => 'Date d\'arrivée';
+
+  @override
+  String get errOpenFile => 'Impossible d\'ouvrir ce fichier.';
+
+  @override
+  String get errFileTooLarge => 'Ce fichier est trop volumineux (10 Mo max).';
+
+  @override
+  String get departureDetailsTitle => 'Détails du départ';
+
+  @override
+  String get arrivalDetailsTitle => 'Détails de l\'arrivée';
+
+  @override
+  String get departureCountryLabel => 'PAYS DE DÉPART';
+
+  @override
+  String get departureCityLabel => 'VILLE DE DÉPART';
+
+  @override
+  String get arrivalCountryLabel => 'PAYS D\'ARRIVÉE';
+
+  @override
+  String get arrivalCityLabel => 'VILLE D\'ARRIVÉE';
+
+  @override
+  String get receiptOnFile => 'Reçu enregistré';
+
+  @override
+  String get bookingRefHint => 'ex. X7KQ9R';
+
+  @override
+  String deliveriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livraisons',
+      one: '1 livraison',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String availableCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count disponibles',
+      one: '1 disponible',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deliveredCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livrés',
+      one: '1 livré',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String flightsShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vols',
+      one: '1 vol',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String amountPerDelivery(String amount) {
+    return '$amount / livraison';
+  }
+
+  @override
+  String get countries180 => '180+ pays';
+
+  @override
+  String get errEnterPhone => 'Veuillez saisir votre numéro de téléphone.';
+
+  @override
+  String get errTooManyRequests =>
+      'Trop de demandes. Veuillez patienter un instant.';
+
+  @override
+  String get errTooManyRequestsRetry =>
+      'Trop de demandes. Patientez un instant puis réessayez.';
+
+  @override
+  String get errInvalidPhone =>
+      'Numéro de téléphone invalide. Vérifiez-le et réessayez.';
+
+  @override
+  String get errSomethingWrong =>
+      'Une erreur s\'est produite. Veuillez réessayer.';
+
+  @override
+  String get errFillAllFields => 'Veuillez remplir tous les champs.';
+
+  @override
+  String get countryOfResidenceLabel => 'PAYS DE RÉSIDENCE';
+
+  @override
+  String get errVerificationFailed =>
+      'La vérification a échoué. Veuillez réessayer.';
+
+  @override
+  String get errCodeExpired => 'Code expiré. Veuillez en demander un nouveau.';
+
+  @override
+  String get errOtpDisabled =>
+      'La vérification par téléphone n\'est pas activée. Veuillez contacter le support.';
+
+  @override
+  String get errIncorrectCode => 'Code incorrect. Veuillez réessayer.';
+
+  @override
+  String get errTooManyAttempts =>
+      'Trop de tentatives. Patientez avant de réessayer.';
+
+  @override
+  String get errNetwork => 'Erreur réseau. Vérifiez votre connexion.';
+
+  @override
+  String get errIncorrectOrExpiredCode =>
+      'Code incorrect ou expiré. Veuillez réessayer.';
+
+  @override
+  String get enterVerificationCode => 'Saisissez le code de vérification';
+
+  @override
+  String get otpSentToPrefix => 'Nous avons envoyé un code à 6 chiffres au ';
+
+  @override
+  String get verifyCode => 'Vérifier le code';
+
+  @override
+  String get resendCodeInPrefix => 'Renvoyer le code dans ';
+
+  @override
+  String get resendCode => 'Renvoyer le code';
+
+  @override
+  String get otpNotReceived =>
+      'Vous n\'avez pas reçu le code ? Vérifiez que votre numéro est correct et que vous avez du réseau.';
+
+  @override
+  String get verifyPhone => 'Vérifier le téléphone';
+
+  @override
+  String get errCaptureIdFirst =>
+      'Veuillez d\'abord photographier ou importer votre pièce d\'identité.';
+
+  @override
+  String get errUploadFailed => 'L\'envoi a échoué. Veuillez réessayer.';
+
+  @override
+  String get uploadingEllipsis => 'Envoi en cours...';
+
+  @override
+  String get submitForVerification => 'Envoyer pour vérification';
+
+  @override
+  String get documentSelected => 'Document sélectionné';
+
+  @override
+  String errCameraDetail(String error) {
+    return 'Erreur de caméra : $error';
+  }
+
+  @override
+  String errFilePicker(String error) {
+    return 'Erreur de sélection de fichier : $error';
+  }
+
+  @override
+  String get verifiedLabel => 'Vérifié';
+
+  @override
+  String matchPercent(String percent) {
+    return 'Correspondance $percent';
+  }
+
+  @override
+  String get requestExpiresInPrefix => 'La demande expire dans ';
+
+  @override
+  String get escrowNotePart1 =>
+      'Votre paiement est conservé en sécurité par Nata. Le voyageur n\'est payé ';
+
+  @override
+  String get escrowNotePart2 =>
+      'qu\'après que votre destinataire a confirmé la livraison';
+
+  @override
+  String get escrowNotePart3 =>
+      ' avec votre code secret à 4 chiffres ou une preuve photo.';
+
+  @override
+  String get itemPlain => 'Article';
+
+  @override
+  String get weightPlain => 'Poids';
+
+  @override
+  String get refundFullBold => 'Remboursement intégral à 100 %';
+
+  @override
+  String get refundFullRest =>
+      'si le voyageur annule ou si l\'article n\'est pas livré.';
+
+  @override
+  String get cancelFeeBold => 'Frais d\'annulation de 10 %';
+
+  @override
+  String get cancelFeeRest =>
+      'si vous annulez après l\'acceptation du voyageur, jusqu\'à la remise.';
+
+  @override
+  String get disputeWindowBold => '3 jours pour signaler un problème';
+
+  @override
+  String get disputeWindowRest =>
+      'après la livraison ; le support traite chaque signalement.';
+
+  @override
+  String get reviewTagIntact => 'L\'article était intact';
+
+  @override
+  String get reviewTagOnTime => 'À l\'heure';
+
+  @override
+  String get reviewTagCommunicator => 'Très bonne communication';
+
+  @override
+  String get reviewTagRules => 'A respecté toutes les règles';
+
+  @override
+  String get reviewTagHandoff => 'Remise sans accroc';
+
+  @override
+  String get reviewTagAgain => 'Je referais appel à lui';
+
+  @override
+  String deliveredYourItem(String item, String date) {
+    return 'A livré votre $item · $date';
+  }
+
+  @override
+  String get expiryHint => 'MM/AA';
+
+  @override
+  String get profilePictureUpdated => 'Photo de profil mise à jour';
+
+  @override
+  String errUploadImage(String error) {
+    return 'Échec de l\'envoi de l\'image : $error';
+  }
+
+  @override
+  String get senderEscrowFunded => 'Expéditeur · Séquestre financé';
+
+  @override
+  String senderDeliveries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Expéditeur · $count livraisons',
+      one: 'Expéditeur · 1 livraison',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sealedPhotosAttached(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos de l\'emballage scellé jointes',
+      one: '1 photo de l\'emballage scellé jointe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String capturedAt(String place, String time) {
+    return 'Prise à $place · $time';
+  }
+
+  @override
+  String txDeliveryOf(String item) {
+    return 'Livraison $item';
+  }
+
+  @override
+  String txReleasedFromEscrow(String date) {
+    return 'Libéré du séquestre · $date';
+  }
+
+  @override
+  String get txEscrowHold => 'Fonds en séquestre';
+
+  @override
+  String txDeliveryRequest(String date) {
+    return 'Demande de livraison · $date';
+  }
+
+  @override
+  String priceEstimateNote(String currency) {
+    return 'Ceci est une estimation en $currency au taux du jour. Le prix est fixé lorsque le voyageur accepte.';
+  }
+
+  @override
+  String get estimateLabel => 'Estimation';
+
+  @override
+  String get errRateUnavailable =>
+      'Le taux de change n\'est pas disponible pour le moment, le prix ne peut donc pas être fixé. Veuillez réessayer plus tard.';
+
+  @override
+  String get errRequestNotPending => 'Cette demande a déjà reçu une réponse.';
+
+  @override
+  String get chatLockedUntilPayment =>
+      'Le chat se débloque une fois la livraison payée. Votre paiement reste en séquestre jusqu\'à la confirmation de la livraison.';
+
+  @override
+  String get messageLocked => 'Message';
+
+  @override
+  String get messageUnlocksAfterPayment =>
+      'La messagerie se débloque après le paiement.';
+
+  @override
+  String get escrowFunded => 'Séquestre financé';
+
+  @override
+  String maxDims(String dims) {
+    return 'Max $dims';
+  }
+
+  @override
+  String get errRequestNotPayable => 'Cette demande ne peut plus être payée.';
+
+  @override
+  String get step1ValidateTicket => 'ÉTAPE 1 · VÉRIFIER LE BILLET D\'AVION';
+
+  @override
+  String get step2PaymentMethod => 'ÉTAPE 2 · CHOISIR LE MOYEN DE PAIEMENT';
+
+  @override
+  String get ticketNotValidated => 'Non vérifié';
+
+  @override
+  String get ticketValidated => 'Vérifié';
+
+  @override
+  String ticketIntro(String name) {
+    return '$name a importé son billet d\'avion pour ce trajet. Vérifiez qu\'il correspond au trajet et à la date avant de payer.';
+  }
+
+  @override
+  String get viewFullTicket => 'Voir le billet complet';
+
+  @override
+  String get ticketPdf => 'Billet d\'avion (PDF)';
+
+  @override
+  String get ticketRoute => 'Trajet';
+
+  @override
+  String get ticketDeparture => 'Départ';
+
+  @override
+  String get ticketBookingRef => 'Référence de réservation';
+
+  @override
+  String get ticketTraveler => 'Voyageur';
+
+  @override
+  String get iCheckedTicket => 'J\'ai vérifié ce billet';
+
+  @override
+  String get errTicketLoad => 'Impossible de charger le billet.';
+
+  @override
+  String get noTicketUploaded =>
+      'Le voyageur n\'a pas encore importé de billet pour ce trajet, le paiement reste donc bloqué.';
+
+  @override
+  String get validateToUnlock =>
+      'Vérifiez le billet pour débloquer le paiement';
+
+  @override
+  String payAmountIntoEscrow(String amount) {
+    return 'Payer $amount en séquestre';
+  }
+
+  @override
+  String get requestExpiredPayment =>
+      'Cette demande a expiré et ne peut plus être payée.';
+
+  @override
+  String hoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get step2VerifyId => 'ÉTAPE 2 · VÉRIFIER L\'IDENTITÉ DU VOYAGEUR';
+
+  @override
+  String get step3PaymentMethod => 'ÉTAPE 3 · CHOISIR LE MOYEN DE PAIEMENT';
+
+  @override
+  String idIntro(String name) {
+    return 'La pièce d\'identité de $name a été vérifiée. Vérifiez que la photo semble authentique et que le nom correspond au billet avant de payer.';
+  }
+
+  @override
+  String get identityVerifiedBadge => 'Identité vérifiée';
+
+  @override
+  String get nameOnId => 'Nom sur la pièce d\'identité';
+
+  @override
+  String get idDocument => 'Pièce d\'identité';
+
+  @override
+  String get idVerifiedOn => 'Vérifiée le';
+
+  @override
+  String get idPhotoOnlyNote =>
+      'Seule la photo est affichée. Le reste de la pièce d\'identité reste privé.';
+
+  @override
+  String get iCheckedId => 'J\'ai vérifié cette pièce d\'identité';
+
+  @override
+  String get errIdPhotoLoad => 'Impossible de charger la photo d\'identité.';
+
+  @override
+  String get travelerNotVerified =>
+      'L\'identité de ce voyageur n\'est pas vérifiée, le paiement reste donc bloqué.';
+
+  @override
+  String get validateTicketAndId =>
+      'Vérifiez le billet et la pièce d\'identité pour débloquer le paiement';
+
+  @override
+  String get idSharedWithSendersNote =>
+      'Lorsque vous acceptez une demande, l\'expéditeur verra la photo de votre pièce d\'identité et votre nom vérifié, pour vérifier que vous correspondez à votre billet. Le reste de votre pièce d\'identité reste privé.';
+
+  @override
+  String get errTicketNameMismatch =>
+      'Le nom sur ce billet ne correspond pas au nom de votre profil. Importez un billet à votre nom ou modifiez le nom de votre profil.';
+
+  @override
+  String errTicketDateMismatch(String date) {
+    return 'Ce billet n\'est pas pour le $date. Vérifiez les dates du trajet ou importez le billet de ce vol.';
+  }
+
+  @override
+  String get errTicketUnreadable =>
+      'Impossible de lire ce billet. Importez une photo nette ou le PDF de votre carte d\'embarquement ou billet électronique.';
+
+  @override
+  String get checkingTicket => 'Vérification de votre billet…';
+
+  @override
+  String get noIncomingRequests =>
+      'Aucune demande pour l\'instant. Elles apparaîtront ici lorsque des expéditeurs vous demanderont de transporter quelque chose.';
+
+  @override
+  String get senderAwaitingPayment => 'Expéditeur · Paiement en attente';
+
+  @override
+  String get senderItemWithYou => 'Expéditeur · Article avec vous';
+
+  @override
+  String get senderDelivered => 'Expéditeur · Livré';
+
+  @override
+  String get nextWaitPayment => 'Attendre le paiement de l\'expéditeur';
+
+  @override
+  String get nextPickUp => 'Récupérer l\'article';
+
+  @override
+  String get nextDeliver => 'Livrer et saisir le code';
+
+  @override
+  String get nextDone => 'Paiement versé';
+
+  @override
+  String get viewRequest => 'Voir la demande';
+
+  @override
+  String get requestAcceptedSnack =>
+      'Demande acceptée. L\'expéditeur a 24 heures pour payer.';
+
+  @override
+  String get requestDeclinedSnack => 'Demande refusée.';
+
+  @override
+  String get declineTitle => 'Refuser cette demande ?';
+
+  @override
+  String get declineBody =>
+      'L\'expéditeur sera informé que vous ne pouvez pas le transporter.';
+
+  @override
+  String get declineReasonHint => 'Raison (facultatif)';
+
+  @override
+  String get keepIt => 'Garder';
+
+  @override
+  String get errAcceptFailed =>
+      'Impossible d\'accepter la demande. Veuillez réessayer.';
+
+  @override
+  String get errDeclineFailed =>
+      'Impossible de refuser la demande. Veuillez réessayer.';
+
+  @override
+  String get requestDetailsTitle => 'Détails de la demande';
+
+  @override
+  String answerWithin(String time) {
+    return 'Répondez sous $time';
+  }
+
+  @override
+  String payDueWithin(String time) {
+    return 'L\'expéditeur doit payer sous $time';
+  }
+
+  @override
+  String get itemPhotosTitle => 'PHOTOS DE L\'ARTICLE SCELLÉ';
+
+  @override
+  String get recipientHiddenNote =>
+      'Le nom et le téléphone du destinataire sont partagés une fois que vous acceptez.';
+
+  @override
+  String get senderVerifiedBadge => 'Vérifié';
+
+  @override
+  String get rateYourTraveler => 'Évaluez votre voyageur';
+
+  @override
+  String get deliveryCompleteLabel => 'LIVRAISON TERMINÉE';
+
+  @override
+  String get itemArrivedSafely => 'Votre article est bien arrivé';
+
+  @override
+  String get reviewHelpsOthers =>
+      'Votre avis aide d\'autres expéditeurs à trouver des voyageurs de confiance.';
+
+  @override
+  String get overallRating => 'NOTE GLOBALE';
+
+  @override
+  String get tapStarToRate => 'Touchez une étoile pour noter';
+
+  @override
+  String get whatStoodOut => 'QU\'EST-CE QUI VOUS A MARQUÉ ?';
+
+  @override
+  String get tagCommunication => 'Très bonne communication';
+
+  @override
+  String get tagCareful => 'Soigneux avec l\'article';
+
+  @override
+  String get tagFlexiblePickup => 'Remise flexible';
+
+  @override
+  String get writtenReview => 'AVIS ÉCRIT';
+
+  @override
+  String get reviewHint =>
+      'Racontez comment se sont passées la remise et la livraison. Restez respectueux et factuel.';
+
+  @override
+  String get reviewsFinal =>
+      'Les avis ne peuvent plus être modifiés une fois publiés.';
+
+  @override
+  String reviewSharedNote(String name) {
+    return 'Votre note est partagée avec $name après l\'envoi et ajoutée à son historique public de livraisons.';
+  }
+
+  @override
+  String reviewThanksName(String name) {
+    return 'Merci d\'avoir évalué $name. Votre avis aide la communauté à rester fiable et sûre.';
+  }
+
+  @override
+  String get errReviewFailed =>
+      'Impossible d\'envoyer votre avis. Veuillez réessayer.';
+
+  @override
+  String get errAlreadyReviewed => 'Vous avez déjà évalué cette livraison.';
+
+  @override
+  String get errNotDelivered =>
+      'Cet article n\'est pas encore marqué comme livré.';
+
+  @override
+  String get confirmReceipt => 'Confirmer la réception';
+
+  @override
+  String get youReviewed => 'Vous avez évalué cette livraison';
+
+  @override
+  String get errConfirmReceiptFailed =>
+      'Impossible de confirmer la réception. Veuillez réessayer.';
+
+  @override
+  String reviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avis',
+      one: '1 avis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ticketImageHidden =>
+      'Le billet n\'est pas affiché car sa référence de réservation n\'a pas pu être masquée. Nata a vérifié le nom du voyageur et la date du voyage lors de son envoi.';
+
+  @override
+  String get bookingRefHidden =>
+      'Masquée pour protéger la réservation du voyageur';
+
+  @override
+  String get completeYourPayment => 'Finalisez votre paiement';
+
+  @override
+  String get completeYourPaymentSub =>
+      'Terminez le paiement sur la page Flutterwave. Cette page se met à jour toute seule dès que le paiement est passé.';
+
+  @override
+  String get openPaymentPage => 'Ouvrir la page de paiement';
+
+  @override
+  String get iPaidCheckNow => 'J\'ai payé, vérifier';
+
+  @override
+  String get chooseAnotherWayToPay => 'Choisir un autre moyen de paiement';
+
+  @override
+  String get paymentReceived =>
+      'Paiement reçu. L\'argent est conservé en séquestre jusqu\'à la livraison.';
+
+  @override
+  String get paymentNotReceivedYet =>
+      'Nous n\'avons pas encore reçu le paiement. Si vous venez de payer, cela peut prendre une minute.';
+
+  @override
+  String get errPaymentFailed =>
+      'Le paiement n\'a pas abouti. Réessayez ou choisissez un autre moyen de paiement.';
+
+  @override
+  String get errPaymentStart =>
+      'Impossible d\'ouvrir la page de paiement. Veuillez réessayer.';
+
+  @override
+  String get errPaymentsUnavailable =>
+      'Les paiements ne sont pas disponibles pour le moment. Veuillez réessayer plus tard.';
+
+  @override
+  String get mobileMoneyCountry => 'Pays du mobile money';
+
+  @override
+  String get chooseCountry => 'Choisissez un pays';
+
+  @override
+  String get payerEmail => 'E-mail pour votre reçu';
+
+  @override
+  String get payerEmailHint => 'vous@exemple.com';
+
+  @override
+  String get payerEmailNote =>
+      'Le prestataire de paiement vous envoie votre reçu ici. Il reste privé et ne vous est demandé qu\'une fois.';
+
+  @override
+  String get enterEmailToPay => 'Saisissez votre e-mail pour payer';
+
+  @override
+  String get errEmailRequired => 'Saisissez votre e-mail pour payer.';
+
+  @override
+  String mobileMoneyChargedAs(String local, String price) {
+    return 'Débité dans la devise de votre portefeuille au taux du jour : $local. Le prix de la livraison reste $price.';
+  }
+
+  @override
+  String get errMobileMoneyUnavailable =>
+      'Le mobile money n\'est pas disponible pour ce pays. Choisissez un autre pays ou payez par carte.';
+
+  @override
+  String get errMobileMoneyOptions =>
+      'Impossible de charger les pays du mobile money.';
+
+  @override
+  String get bankTransfer => 'Virement bancaire';
+
+  @override
+  String get bankTransferSub => 'Payez sur un compte bancaire nigérian (NGN)';
+
+  @override
+  String bankTransferChargedAs(String local, String price) {
+    return 'Vous paierez $local par virement, au taux du jour. Le prix de la livraison reste $price. Flutterwave vous donne le compte à créditer.';
+  }
+
+  @override
+  String get errBankTransferQuote =>
+      'Impossible d\'obtenir le montant en nairas.';
+
+  @override
+  String get signInPromptTitle => 'Connectez-vous pour continuer';
+
+  @override
+  String get signInPromptBody =>
+      'Créez un compte gratuit pour envoyer des objets avec des voyageurs, publier vos voyages et suivre vos livraisons.';
+
+  @override
+  String signInPromptTraveler(String name) {
+    return 'Créez un compte gratuit pour voir le profil de $name et envoyer une demande de livraison.';
+  }
+
+  @override
+  String get signInPromptAddTrip =>
+      'Créez un compte gratuit pour publier votre voyage et gagner de l’argent en transportant des objets.';
+
+  @override
+  String get signInBenefitVerified => 'Uniquement des voyageurs vérifiés';
+
+  @override
+  String get signInBenefitEscrow => 'Paiement sécurisé jusqu’à la livraison';
+
+  @override
+  String get signInBenefitPhone =>
+      'Inscription avec votre numéro en une minute';
+
+  @override
+  String get notNow => 'Plus tard';
+
+  @override
+  String get verifyPromptTitle => 'Vérifiez d\'abord votre identité';
+
+  @override
+  String get verifyPendingTitle =>
+      'Votre vérification d\'identité est en cours';
+
+  @override
+  String get verifyPendingBody =>
+      'Vous pourrez publier des trajets et envoyer des demandes une fois votre pièce d\'identité approuvée. Nous vous préviendrons.';
+
+  @override
+  String get verifyMyIdentity => 'Vérifier mon identité';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get verifyToAddTrip =>
+      'Seuls les voyageurs vérifiés peuvent publier des trajets. Cela prend quelques minutes : une photo de votre pièce d\'identité et un selfie.';
+
+  @override
+  String get verifyToSendRequest =>
+      'Seuls les membres vérifiés peuvent envoyer des demandes de livraison. Cela prend quelques minutes : une photo de votre pièce d\'identité et un selfie.';
+
+  @override
+  String get errNotVerified =>
+      'Vérifiez d\'abord votre identité : seuls les membres vérifiés peuvent faire cela.';
+
+  @override
+  String get errTripFull =>
+      'Ce trajet transporte déjà des articles pour 3 expéditeurs.';
+
+  @override
+  String get errSenderOnTrip =>
+      'Vous avez déjà accepté une demande de cet expéditeur sur ce trajet.';
+
+  @override
+  String get continueBrowsing => 'Continuer la visite';
+
+  @override
+  String get sortByDate => 'Trier par date';
+
+  @override
+  String get sortEarliest => 'Plus tôt';
+
+  @override
+  String get sortLatest => 'Plus tard';
+
+  @override
+  String get sendWithTrustedTravelers =>
+      'Envoyez avec des voyageurs de confiance';
+
+  @override
+  String get guestHeroBadge => 'Voyageurs vérifiés · Paiement sécurisé';
+
+  @override
+  String get guestHeroTitle =>
+      'Envoyez vos colis à l\'étranger avec un voyageur qui s\'y rend déjà';
+
+  @override
+  String get guestHeroBody =>
+      'Trouvez un voyageur de confiance qui va vers votre destination. Votre paiement est conservé en sécurité jusqu\'à ce que votre destinataire confirme la livraison.';
+
+  @override
+  String get createFreeAccount => 'Créer un compte gratuit';
+
+  @override
+  String get travelersGoingSoon => 'Voyageurs au départ prochainement';
+
+  @override
+  String get preview => 'Aperçu';
+
+  @override
+  String get howItWorks => 'Comment ça marche';
+
+  @override
+  String get howStep1Title => 'Cherchez';
+
+  @override
+  String get howStep1Body => 'un voyageur qui va vers votre destination.';
+
+  @override
+  String get howStep2Title => 'Payez en séquestre';
+
+  @override
+  String get howStep2Body =>
+      'après avoir vérifié son billet et sa pièce d’identité.';
+
+  @override
+  String get howStep3Title => 'Le voyageur est payé';
+
+  @override
+  String get howStep3Body =>
+      'une fois que votre destinataire confirme la livraison.';
+
+  @override
+  String get pickedUpItem => 'J\'ai récupéré l\'article';
+
+  @override
+  String pickedUpOn(String date) {
+    return 'Récupéré le $date';
+  }
+
+  @override
+  String get pickedUp => 'Récupéré';
+
+  @override
+  String get notYet => 'Pas encore';
+
+  @override
+  String get pickUpFirst =>
+      'Indiquez d\'abord que vous avez récupéré l\'article.';
+
+  @override
+  String get errPickUpFailed =>
+      'Impossible d\'indiquer la récupération. Veuillez réessayer.';
+
+  @override
+  String handoverCodeNote(String city) {
+    return 'Retrouvez le destinataire à $city, remettez-lui l’article et demandez-lui le code de livraison.';
+  }
+
+  @override
+  String wrongCodeAttempts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count essais restants',
+      one: '1 essai restant',
+    );
+    return 'Ce code n\'est pas le bon. $_temp0.';
+  }
+
+  @override
+  String get codeLocked =>
+      'Trop de codes erronés. Contactez le support pour débloquer cette livraison.';
+
+  @override
+  String get codeNotReady =>
+      'L\'expéditeur n\'avait pas encore de code. Demandez-lui de partager celui qui apparaît maintenant dans son application.';
+
+  @override
+  String deliveredPayoutQueued(String amount) {
+    return 'Livré ! Votre paiement de $amount est en route.';
+  }
+
+  @override
+  String get deliveryCode => 'Code de livraison';
+
+  @override
+  String deliveryCodeNote(String name) {
+    return 'Donnez ce code à $name. Le voyageur en a besoin pour confirmer la livraison.';
+  }
+
+  @override
+  String textCodeTo(String name) {
+    return 'L’envoyer par SMS à $name';
+  }
+
+  @override
+  String get codeTextedResend => 'Envoyé par SMS · Renvoyer';
+
+  @override
+  String codeTexted(String name) {
+    return 'Code envoyé à $name par SMS.';
+  }
+
+  @override
+  String get errSmsUnavailable =>
+      'L\'envoi de SMS n\'est pas disponible pour le moment. Communiquez le code au destinataire vous-même.';
+
+  @override
+  String get errSmsTooSoon =>
+      'Le code vient d’être envoyé. Patientez quelques minutes avant de le renvoyer.';
+
+  @override
+  String get payoutCountry => 'Pays';
+
+  @override
+  String get bankAccount => 'Compte bancaire';
+
+  @override
+  String get bankLabel => 'Banque';
+
+  @override
+  String get providerLabel => 'Opérateur';
+
+  @override
+  String get chooseBank => 'Choisissez votre banque';
+
+  @override
+  String get chooseProvider => 'Choisissez votre opérateur';
+
+  @override
+  String get accountNumber => 'Numéro de compte';
+
+  @override
+  String get mobileMoneyNumber => 'Numéro mobile money';
+
+  @override
+  String get accountHolderName => 'Nom du titulaire';
+
+  @override
+  String get savePayoutAccount => 'Enregistrer le compte';
+
+  @override
+  String get payoutAccountNoteSecure =>
+      'Votre numéro de compte complet est conservé en sécurité sur notre serveur et sert uniquement à vous payer. L’application n’affiche que ses 4 derniers chiffres.';
+
+  @override
+  String noPayoutOptions(String country) {
+    return 'Nata ne peut pas encore payer vers $country.';
+  }
+
+  @override
+  String get errLoadPayoutOptions =>
+      'Impossible de charger les banques de ce pays.';
+
+  @override
+  String get errPayoutAccountInvalid =>
+      'Vérifiez le numéro de compte et le nom du titulaire.';
+
+  @override
+  String get errPayoutNotSupported =>
+      'Cette banque ne peut pas encore recevoir de paiements. Choisissez-en une autre.';
+
+  @override
+  String get errSavePayoutAccount =>
+      'Impossible d\'enregistrer le compte. Veuillez réessayer.';
+
+  @override
+  String get payoutAccountSaved => 'Compte de versement enregistré.';
+
+  @override
+  String withdrawSent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count paiements sont en route.',
+      one: 'Votre paiement est en route.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get withdrawNothing =>
+      'Rien à envoyer pour le moment. Si vous attendez un paiement, vérifiez que vous avez un compte de versement dans Paramètres de paiement.';
+
+  @override
+  String get backToProfile => 'Retour au profil';
+
+  @override
+  String get idStatusVerifiedTitle => 'Votre identité est vérifiée';
+
+  @override
+  String get idStatusVerifiedBody =>
+      'Les expéditeurs et les voyageurs voient que vous êtes vérifié. Les détails de votre pièce d’identité ne sont jamais montrés aux autres utilisateurs.';
+
+  @override
+  String get idStatusReviewTitle => 'Nous vérifions votre pièce d’identité';
+
+  @override
+  String get idStatusReviewBody =>
+      'Cela prend généralement moins de 24 heures. Vous pouvez parcourir l’app en attendant, mais pas encore envoyer ni accepter de demandes.';
+
+  @override
+  String get idStatusDocument => 'Pièce d’identité';
+
+  @override
+  String get idStatusFaceMatch => 'Reconnaissance faciale';
+
+  @override
+  String get idStatusVerifiedOn => 'Vérifiée le';
+
+  @override
+  String get idStatusSubmittedOn => 'Envoyée le';
+
+  @override
+  String get idStatusPassed => 'Réussie';
+
+  @override
+  String get idStatusInReview => 'En cours';
+
+  @override
+  String get idStatusReceived => 'Reçue';
+
+  @override
+  String get idStatusPrivacy =>
+      'Seuls votre photo et votre prénom apparaissent sur votre profil.';
+
+  @override
+  String get idDocPassport => 'Passeport';
+
+  @override
+  String get idDocDriversLicense => 'Permis de conduire';
+
+  @override
+  String get idDocNationalId => 'Carte d’identité';
+
+  @override
+  String get walletHistory => 'Historique du portefeuille';
+
+  @override
+  String get walletAvailable => 'Disponible';
+
+  @override
+  String get walletInEscrow => 'En séquestre';
+
+  @override
+  String get walletFilterAll => 'Tout';
+
+  @override
+  String get walletFilterPayouts => 'Versements';
+
+  @override
+  String get walletFilterPayments => 'Paiements';
+
+  @override
+  String walletPayoutTitle(String item) {
+    return 'Versement · $item';
+  }
+
+  @override
+  String walletPaymentTitle(String item) {
+    return 'Paiement · $item';
+  }
+
+  @override
+  String get walletPayoutFallback => 'Versement';
+
+  @override
+  String get walletPaymentFallback => 'Paiement';
+
+  @override
+  String walletPaymentTo(String name) {
+    return 'Demande de livraison à $name';
+  }
+
+  @override
+  String get walletStatusPending => 'En attente';
+
+  @override
+  String get walletStatusSending => 'En cours d’envoi';
+
+  @override
+  String get walletStatusPaid => 'Versé';
+
+  @override
+  String get walletStatusFailed => 'Échec · nouvel essai';
+
+  @override
+  String get walletStatusInEscrow => 'En séquestre';
+
+  @override
+  String get walletStatusReleased => 'Libéré';
+
+  @override
+  String get walletStatusRefunded => 'Remboursé';
+
+  @override
+  String get walletEmpty =>
+      'Aucune transaction pour l’instant. Vos paiements et versements apparaîtront ici.';
+
+  @override
+  String get errWalletHistory => 'Impossible de charger votre historique.';
+
+  @override
+  String get sbpTitle => 'Pourquoi les objets voyagent scellés';
+
+  @override
+  String get sbpBody =>
+      'Chaque objet doit être dans sa boîte d’origine, scellée en usine. Cela protège les voyageurs à la douane et les expéditeurs en cas de litige.';
+
+  @override
+  String get sbpRule1 => 'Emballage d’origine, jamais ouvert';
+
+  @override
+  String get sbpRule2 => 'Montré en photo avant la demande';
+
+  @override
+  String get sbpRule3 =>
+      'Le voyageur vérifie le scellé à la remise et peut refuser une boîte ouverte';
+
+  @override
+  String get sbpRule4 =>
+      'Objets interdits : argent liquide, médicaments sans ordonnance, batteries de plus de 100 Wh, liquides de plus de 100 ml, tout ce qui est illégal à destination';
+
+  @override
+  String get sbpCustoms =>
+      'Si la douane ouvre la boîte, le voyageur n’est pas responsable de l’objet.';
+
+  @override
+  String get ecScreenBody =>
+      'Une personne à joindre en cas de problème pendant une livraison. Jamais montrée aux autres utilisateurs.';
+
+  @override
+  String get ecSaveContact => 'Enregistrer le contact';
+
+  @override
+  String get ecSavedToast => 'Contact d’urgence enregistré.';
+
+  @override
+  String get ecProfileAdd => 'Ajoutez une personne à joindre';
+
+  @override
+  String get errLoadContact => 'Impossible de charger votre contact d’urgence.';
+
+  @override
+  String get notifRequestNewTitle => 'Nouvelle demande de livraison';
+
+  @override
+  String notifRequestNewBody(String name, String route) {
+    return '$name souhaite que vous transportiez un objet sur $route.';
+  }
+
+  @override
+  String get notifAcceptedTitle => 'Demande acceptée';
+
+  @override
+  String notifAcceptedBody(String name) {
+    return '$name a accepté votre demande. Payez dans les 24 heures pour la confirmer.';
+  }
+
+  @override
+  String get notifDeclinedTitle => 'Demande refusée';
+
+  @override
+  String notifDeclinedBody(String name, String route) {
+    return '$name ne peut pas prendre votre objet. Trouvez un autre voyageur sur $route.';
+  }
+
+  @override
+  String get notifExpiredTitle => 'Demande expirée';
+
+  @override
+  String notifExpiredUnansweredBody(String name) {
+    return '$name n’a pas répondu à temps. Trouvez un autre voyageur.';
+  }
+
+  @override
+  String get notifExpiredUnpaidBody =>
+      'Les 24 heures pour payer sont passées, la demande a été fermée.';
+
+  @override
+  String notifExpiredUnpaidTravelerBody(String name) {
+    return '$name n’a pas payé à temps, la demande a été fermée.';
+  }
+
+  @override
+  String get notifCancelledTitle => 'Demande annulée';
+
+  @override
+  String notifCancelledByTravelerBody(String name) {
+    return '$name a annulé votre demande.';
+  }
+
+  @override
+  String notifCancelledBySenderBody(String name, String route) {
+    return '$name a annulé sa demande sur $route.';
+  }
+
+  @override
+  String get notifPaidTitle => 'Paiement sécurisé';
+
+  @override
+  String notifPaidBody(String name) {
+    return '$name a payé. L’argent est conservé en sécurité jusqu’à la livraison, et le chat est ouvert.';
+  }
+
+  @override
+  String get notifPickedUpTitle => 'Objet récupéré';
+
+  @override
+  String notifPickedUpBody(String name) {
+    return '$name a votre objet et est en route.';
+  }
+
+  @override
+  String get notifDeliveredTitle => 'Objet livré';
+
+  @override
+  String notifDeliveredBody(String name) {
+    return '$name a livré votre objet. Confirmez sa réception.';
+  }
+
+  @override
+  String get notifPayoutTitle => 'Versement envoyé';
+
+  @override
+  String notifPayoutBody(String amount) {
+    return 'Votre versement de $amount est en route.';
+  }
+
+  @override
+  String get notifVerifiedTitle => 'Identité vérifiée';
+
+  @override
+  String get notifVerifiedBody =>
+      'Vous êtes vérifié. Vous pouvez maintenant envoyer et accepter des demandes de livraison.';
+
+  @override
+  String get notifRejectedTitle => 'Vérification échouée';
+
+  @override
+  String get notifRejectedBody =>
+      'Nous n’avons pas pu vérifier votre pièce d’identité. Réessayez avec une photo nette.';
+
+  @override
+  String crHeadline(String traveler, String recipient) {
+    return '$traveler indique avoir livré votre objet à $recipient';
+  }
+
+  @override
+  String crBody(String traveler) {
+    return 'Vérifiez qu’il est bien arrivé. En confirmant, vous pourrez noter $traveler.';
+  }
+
+  @override
+  String get crItem => 'Objet';
+
+  @override
+  String get crRoute => 'Trajet';
+
+  @override
+  String get crRecipient => 'Destinataire';
+
+  @override
+  String get crYes => 'Oui, il est arrivé';
+
+  @override
+  String get reportProblem => 'Signaler un problème';
+
+  @override
+  String get crReportNote => 'Vous pouvez signaler un problème pendant 3 jours';
+
+  @override
+  String get rpBody =>
+      'Dites-nous ce qui s’est passé. Notre équipe d’assistance vous contactera.';
+
+  @override
+  String get rpReason => 'Que s’est-il passé ?';
+
+  @override
+  String get rpNotReceived => 'L’objet n’est pas arrivé';
+
+  @override
+  String get rpDamaged => 'Il est arrivé endommagé';
+
+  @override
+  String get rpWrongItem => 'Ce n’est pas l’objet que j’ai envoyé';
+
+  @override
+  String get rpOpened => 'La boîte a été ouverte';
+
+  @override
+  String get rpOther => 'Autre chose';
+
+  @override
+  String get rpDetails => 'Détails';
+
+  @override
+  String get rpDetailsHint => 'Ajoutez ce qui peut nous aider à comprendre';
+
+  @override
+  String get rpSend => 'Envoyer le signalement';
+
+  @override
+  String get rpSent =>
+      'Merci. Nous avons reçu votre signalement et vous contacterons.';
+
+  @override
+  String get errAlreadyReported =>
+      'Vous avez déjà signalé un problème pour cette livraison.';
+
+  @override
+  String get errReportWindowClosed =>
+      'Le délai de 3 jours pour signaler un problème est passé.';
+
+  @override
+  String get notifProblemTitle => 'Problème signalé';
+
+  @override
+  String get notifProblemBody =>
+      'Un problème a été signalé sur l’une de vos livraisons. Notre équipe d’assistance vous contactera.';
+
+  @override
+  String get pickupPhotoHint =>
+      'Prenez une photo de la boîte scellée au moment de la récupérer.';
+
+  @override
+  String get errPhotoUpload => 'Impossible d’envoyer la photo. Réessayez.';
+
+  @override
+  String get notifRefundTitle => 'Remboursement envoyé';
+
+  @override
+  String notifRefundBody(String amount) {
+    return 'Votre remboursement de $amount est en route.';
+  }
+
+  @override
+  String get viewCode => 'Voir le code';
+
+  @override
+  String get chatCodeNote =>
+      'Votre destinataire donne ce code au voyageur lors de la remise. Ne le partagez pas avant.';
+
+  @override
+  String get close => 'Fermer';
+
+  @override
+  String get supportTitle => 'Support';
+
+  @override
+  String get supportSubtitle =>
+      'Équipe Nata · Signalements, blocages et paiements échoués';
+
+  @override
+  String get supportProblemsCard => 'Problèmes signalés';
+
+  @override
+  String get supportOpenSuffix => 'ouverts';
+
+  @override
+  String get supportProblemsLine => 'En attente d\'une décision';
+
+  @override
+  String get supportLockedCard => 'Livraisons bloquées';
+
+  @override
+  String get supportLockedSuffix => 'bloquées';
+
+  @override
+  String get supportLockedLine => 'Bloquées après 5 codes de livraison erronés';
+
+  @override
+  String get supportFailedCard => 'Paiements échoués';
+
+  @override
+  String get supportFailedSuffix => 'échoués';
+
+  @override
+  String get supportFailedLine =>
+      'Versements et remboursements échoués à relancer';
+
+  @override
+  String get supportRecentActivity => 'Activité récente';
+
+  @override
+  String get supportNoActivity => 'Aucune action du support pour l\'instant.';
+
+  @override
+  String get supportActResolved => 'Problème résolu';
+
+  @override
+  String get supportActRefunded => 'Expéditeur remboursé';
+
+  @override
+  String get supportActPayoutRetried => 'Versement relancé';
+
+  @override
+  String get supportActRefundRetried => 'Remboursement relancé';
+
+  @override
+  String get supportActUnlocked => 'Livraison débloquée';
+
+  @override
+  String get supportProblemsTitle => 'Problèmes signalés';
+
+  @override
+  String get supportOpen => 'Ouverts';
+
+  @override
+  String get supportResolved => 'Résolus';
+
+  @override
+  String get supportReportedBySender => 'Signalé par l\'expéditeur';
+
+  @override
+  String get supportReportedByTraveler => 'Signalé par le voyageur';
+
+  @override
+  String get supportInEscrow => 'En séquestre';
+
+  @override
+  String get supportViewDetails => 'Voir les détails';
+
+  @override
+  String get supportNoProblems => 'Aucun problème ici.';
+
+  @override
+  String get supportProblemDetail => 'Détail du problème';
+
+  @override
+  String get supportReporterDetails => 'Détails du signalement';
+
+  @override
+  String get supportNoDetails => 'Aucun détail donné.';
+
+  @override
+  String get supportPeople => 'Personnes';
+
+  @override
+  String get supportSender => 'Expéditeur';
+
+  @override
+  String get supportTraveler => 'Voyageur';
+
+  @override
+  String get supportTimeline => 'Chronologie de la livraison';
+
+  @override
+  String get supportPaid => 'Payé';
+
+  @override
+  String get supportPickedUp => 'Récupéré';
+
+  @override
+  String get supportDelivered => 'Livré';
+
+  @override
+  String get supportReported => 'Signalé';
+
+  @override
+  String get supportPaymentStatus => 'État du paiement';
+
+  @override
+  String get supportHeld => 'Retenu';
+
+  @override
+  String supportHeldLine(String amount) {
+    return '$amount retenus en séquestre';
+  }
+
+  @override
+  String get supportHeldSub => 'Pas versé avant la résolution';
+
+  @override
+  String get supportReleased => 'Versé';
+
+  @override
+  String supportReleasedLine(String amount) {
+    return '$amount versés au voyageur';
+  }
+
+  @override
+  String get supportRefunded => 'Remboursé';
+
+  @override
+  String supportRefundedLine(String amount) {
+    return '$amount rendus à l\'expéditeur';
+  }
+
+  @override
+  String get supportResolutionNote => 'Note de résolution';
+
+  @override
+  String get supportResolutionHint =>
+      'Décrivez ce qui a été décidé et pourquoi…';
+
+  @override
+  String get supportMarkResolved => 'Marquer comme résolu';
+
+  @override
+  String get supportRefundSender => 'Rembourser l\'expéditeur';
+
+  @override
+  String supportRefundConfirmTitle(String amount, String name) {
+    return 'Rembourser $amount à $name ?';
+  }
+
+  @override
+  String get supportRefundConfirmBody =>
+      'Le séquestre revient à l\'expéditeur et le voyageur n\'est pas payé. C\'est irréversible.';
+
+  @override
+  String get supportConfirmRefund => 'Confirmer le remboursement';
+
+  @override
+  String get supportResolvedSnack => 'Problème résolu.';
+
+  @override
+  String get supportRefundSnack =>
+      'Remboursement en file. Il part dans les 15 minutes.';
+
+  @override
+  String get supportPaymentsTitle => 'Paiements et blocages';
+
+  @override
+  String get supportFailedTab => 'Paiements échoués';
+
+  @override
+  String get supportLockedTab => 'Livraisons bloquées';
+
+  @override
+  String get supportPayout => 'Versement';
+
+  @override
+  String get supportRefund => 'Remboursement';
+
+  @override
+  String supportFlutterwaveSaid(String reason) {
+    return 'Flutterwave : « $reason »';
+  }
+
+  @override
+  String get supportRetrySent => 'Versement accepté par Flutterwave.';
+
+  @override
+  String get supportRetryFailed => 'Flutterwave l\'a de nouveau refusé.';
+
+  @override
+  String get supportRefundRequeued =>
+      'Remboursement remis en file. Il part dans les 15 minutes.';
+
+  @override
+  String get supportLocked => 'Bloquée';
+
+  @override
+  String get supportWrongAttempts => 'Codes erronés';
+
+  @override
+  String get supportUnlock => 'Débloquer la livraison';
+
+  @override
+  String get supportUnlockTitle => 'Débloquer cette livraison ?';
+
+  @override
+  String supportUnlockBody(String name) {
+    return '$name aura 5 essais de plus pour le code de livraison. Vérifiez que le voyageur a l\'article avant de débloquer.';
+  }
+
+  @override
+  String get supportConfirmUnlock => 'Confirmer le déblocage';
+
+  @override
+  String get supportUnlockedSnack => 'Livraison débloquée.';
+
+  @override
+  String get supportNothingFailed => 'Aucun paiement échoué.';
+
+  @override
+  String get supportNothingLocked => 'Aucune livraison bloquée.';
+
+  @override
+  String get supportRowSub =>
+      'Équipe Nata · Signalements, blocages et paiements';
+
+  @override
+  String get supportAdmin => 'Admin';
+
+  @override
+  String get supportLoadFailed =>
+      'Chargement impossible. Tirez vers le bas pour réessayer.';
+
+  @override
+  String get supportActionFailed => 'Ça n\'a pas marché. Réessayez.';
 }

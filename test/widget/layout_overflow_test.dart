@@ -4,8 +4,12 @@
 // wide on a 400px phone), with enlarged text, in every supported language
 // (translations are often longer than English). Any layout overflow makes the
 // framework report an exception, which fails the test.
+import 'package:carrywise_app/services/country_service.dart';
+import 'package:carrywise_app/screens/add_payout_account_screen.dart';
+import 'package:carrywise_app/services/auth_gate.dart';
 import 'dart:typed_data';
 
+import 'package:carrywise_app/screens/add_payment_method_screen.dart';
 import 'package:carrywise_app/screens/add_trip_screen.dart';
 import 'package:carrywise_app/screens/checkout_escrow_screen.dart';
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
@@ -17,6 +21,7 @@ import 'package:carrywise_app/screens/chat_thread_screen.dart';
 import 'package:carrywise_app/screens/login_screen.dart';
 import 'package:carrywise_app/screens/messages_screen.dart';
 import 'package:carrywise_app/screens/notifications_screen.dart';
+import 'package:carrywise_app/screens/payment_settings_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/review_screen.dart';
@@ -29,6 +34,15 @@ import 'package:carrywise_app/services/city_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
+import 'package:carrywise_app/services/payment_service.dart';
+import 'package:carrywise_app/services/emergency_contact_service.dart';
+import 'package:carrywise_app/services/request_service.dart';
+import 'package:carrywise_app/screens/confirm_receipt_screen.dart';
+import 'package:carrywise_app/screens/report_problem_screen.dart';
+import 'package:carrywise_app/screens/identity_status_screen.dart';
+import 'package:carrywise_app/screens/sealed_box_policy_screen.dart';
+import 'package:carrywise_app/screens/wallet_history_screen.dart';
+import 'package:carrywise_app/widgets/sign_in_prompt_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -158,9 +172,94 @@ void main() {
         ],
       ),
     ),
+    'Add payout account': () => AddPayoutAccountScreen(
+      service: FakePaymentService(),
+      initialCountry: const Country(
+        isoCode: 'KE',
+        name: 'Kenya',
+        phoneCode: '+254',
+      ),
+    ),
     'Home': () => HomeScreen(
       authService: FakeAuthService(),
       travelerService: FakeTravelerService(),
+    ),
+    // Signed out: "Hello, Guest" and Sign In at the top right.
+    'Home (guest)': () {
+      AuthGate.isSignedIn = () => false;
+      return HomeScreen(
+        authService: FakeAuthService(),
+        travelerService: FakeTravelerService(),
+      );
+    },
+    'Identity status (verified)': () => IdentityStatusScreen(
+      verified: true,
+      loadVerification: () async => {
+        'id_document_type': 'drivers_license',
+        'verified_at': '2025-09-30T09:00:00Z',
+      },
+    ),
+    'Identity status (review)': () => IdentityStatusScreen(
+      verified: false,
+      loadVerification: () async => {
+        'id_document_type': 'national_id',
+        'updated_at': '2025-09-30T09:00:00Z',
+      },
+    ),
+    'Sealed box policy': () => const SealedBoxPolicyScreen(),
+    'Confirm receipt': () => ConfirmReceiptScreen(
+      request: sampleSentRequest(
+        status: 'delivered',
+        items: const [
+          RequestItem(
+            name: 'Factory-sealed noise-cancelling headphones and charger',
+          ),
+        ],
+      ),
+      service: FakeRequestService(),
+    ),
+    'Report a problem': () =>
+        ReportProblemScreen(requestId: 'req-1', service: FakeRequestService()),
+    'Emergency contact': () => EmergencyContactScreen(
+      service: FakeEmergencyContactService(),
+      initial: const EmergencyContact(
+        fullName: 'Oluwaseun-Chukwuemeka Adewale-Okonkwo',
+        phone: '+447700900123',
+        relationship: EmergencyRelationship.colleague,
+      ),
+    ),
+    'Wallet history': () => WalletHistoryScreen(
+      available: 'XOF 1,234,567',
+      inEscrow: 'XOF 9,876,543',
+      service: FakePaymentService()
+        ..history = [
+          for (final s in WalletEntryStatus.values)
+            WalletEntry(
+              kind: s.index < 4
+                  ? WalletEntryKind.payout
+                  : WalletEntryKind.payment,
+              id: s.name,
+              amount: 1234567,
+              currency: 'XOF',
+              status: s,
+              date: DateTime(2030, 9, 30 - s.index),
+              item: 'Factory-sealed noise-cancelling headphones and charger',
+              fromCity: 'Johannesburg',
+              toCity: 'Ho Chi Minh City',
+              otherName: 'Oluwaseun-Chukwuemeka',
+            ),
+        ],
+    ),
+    // A long traveler name in the message.
+    'Sign-in prompt': () => const Scaffold(
+      body: Align(
+        alignment: Alignment.bottomCenter,
+        child: SignInPromptSheet(
+          message:
+              "Create a free account to see Oluwaseun-Chukwuemeka's profile "
+              'and send a delivery request.',
+        ),
+      ),
     ),
     'Notifications': () => NotificationsScreen(
       now: () => DateTime(2030, 6, 15, 12),
@@ -279,8 +378,27 @@ void main() {
       ),
     ),
     'Requests': () => const RequestsScreen(),
+    'Edit request': () => DeliveryRequestScreen(
+      trip: sampleSentRequest().trip,
+      editing: sampleSentRequest(),
+      service: FakeRequestService(),
+      cityService: FakeCityService(),
+      exchangeRates: FakeExchangeRateService(),
+      now: () => DateTime.utc(2030, 6, 21, 12),
+    ),
     'Delivery task details': () =>
         DeliveryTaskScreen(delivery: sampleDelivery()),
+    'Add payment method': () =>
+        const AddPaymentMethodScreen(holderFirstName: 'Fortune'),
+    'Payment settings': () => PaymentSettingsScreen(
+      availableBalance: 320,
+      escrowBalance: 180,
+      holderName: 'Fortune Niama',
+      service: FakePaymentService(
+        methods: samplePaymentMethods(),
+        accounts: [samplePayoutAccount()],
+      ),
+    ),
     'Profile (verified)': () => ProfileScreen(authService: FakeAuthService()),
     'Profile (pending)': () => ProfileScreen(
       authService: FakeAuthService()
@@ -309,9 +427,33 @@ void main() {
         maxSize: 'Envelope / Document and other long size text',
       ),
     ),
-    'Checkout (escrow)': () => const CheckoutEscrowScreen(),
-    'Delivery confirmation': () => const DeliveryConfirmScreen(),
-    'Review': () => const ReviewScreen(),
+    'Checkout (escrow)': () => CheckoutEscrowScreen(
+      request: sampleSentRequest(
+        status: 'accepted',
+        displayCurrency: 'XOF',
+        displayCost: 59126,
+        displayFee: 6440,
+        displayTotal: 65566,
+        expiresAt: DateTime.now().add(const Duration(hours: 23)),
+        ticketReceiptPath: 'traveler-1/ticket.pdf',
+        hasBookingReference: true,
+      ),
+      service: FakeRequestService(),
+    ),
+    'Delivery confirmation': () => DeliveryConfirmScreen(
+      delivery: sampleDelivery(),
+      paymentService: FakePaymentService(
+        accounts: [samplePayoutAccount(), sampleMobilePayoutAccount()],
+      ),
+    ),
+    'Review': () => ReviewScreen(
+      request: sampleSentRequest(
+        status: 'delivered',
+        travelerVerified: true,
+        receiptConfirmedAt: DateTime(2030, 6, 23),
+      ),
+      service: FakeRequestService(),
+    ),
     'Identity verification': () => const IdentityVerificationScreen(),
     'Sign in': () => const LoginScreen(),
     'Sign up': () => const SignUpScreen(),
@@ -339,7 +481,14 @@ void main() {
         ({Widget Function() build, Future<void> Function(WidgetTester) act})
       >{
         'Requests (outgoing tab)': (
-          build: () => const RequestsScreen(),
+          build: () => RequestsScreen(
+            requestService: FakeRequestService()
+              ..mine = [
+                sampleSentRequest(),
+                sampleSentRequest(id: 'r2', status: 'accepted'),
+                sampleSentRequest(id: 'r3', status: 'declined'),
+              ],
+          ),
           act: (t) => _tap(t, const ValueKey('requests-tab-1')),
         ),
         'My Trips (past tab)': (
@@ -399,7 +548,7 @@ void main() {
             travelerService: FakeTravelerService(),
           ),
           act: (t) async {
-            await t.tap(find.text('Anytime this month'));
+            await t.tap(find.byKey(const ValueKey('home-date-field')));
             await t.pump(const Duration(milliseconds: 500));
           },
         ),
@@ -429,20 +578,29 @@ void main() {
           build: () => const IdentityVerificationScreen(initialStep: 3),
           act: (t) async {},
         ),
-        'Delivery confirmation (photo added)': (
-          build: () => const DeliveryConfirmScreen(),
-          act: (t) => _tap(t, const ValueKey('handoff-photo')),
-        ),
-        'Delivery confirmation (confirming)': (
-          build: () => const DeliveryConfirmScreen(),
+        'Delivery confirmation (PIN entered)': (
+          build: () => DeliveryConfirmScreen(
+            delivery: sampleDelivery(),
+            paymentService: FakePaymentService(
+              accounts: [samplePayoutAccount()],
+            ),
+          ),
           act: (t) async {
-            await _tap(t, const ValueKey('handoff-photo'));
-            await t.tap(find.byKey(const ValueKey('delivery-confirm')));
-            await t.pump(const Duration(milliseconds: 200)); // "Confirming..."
-            // Tapping Confirm schedules a 1.2s navigation to the review
-            // screen; let it run so no timer is left pending at the end.
-            await t.pump(const Duration(milliseconds: 1500));
+            for (var i = 0; i < 4; i++) {
+              await t.enterText(
+                find.byKey(ValueKey('delivery-confirm-pin-$i')),
+                '7492'[i],
+              );
+            }
+            await t.pump();
           },
+        ),
+        'Delivery confirmation (no payout account)': (
+          build: () => DeliveryConfirmScreen(
+            delivery: sampleDelivery(),
+            paymentService: FakePaymentService(),
+          ),
+          act: (t) async {},
         ),
         'Sign in (error shown)': (
           build: () => const LoginScreen(),

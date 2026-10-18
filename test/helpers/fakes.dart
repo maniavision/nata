@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:carrywise_app/services/ticket_redaction_service.dart';
+import 'package:carrywise_app/services/ticket_check_service.dart';
 import 'dart:typed_data';
 
 import 'package:carrywise_app/services/app_update_service.dart';
@@ -17,6 +19,7 @@ import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
+import 'package:carrywise_app/services/payment_service.dart';
 
 /// A traveler trip for tests. Every field has a sensible default.
 TravelerTrip sampleTrip({
@@ -147,13 +150,37 @@ class FakeTravelerService extends Fake implements TravelerService {
     });
     if (searchGate != null) await searchGate!.future;
     if (failSearch) throw Exception('search failed');
+    final filtered = [
+      departureCountry,
+      departureCity,
+      arrivalCountry,
+      arrivalCity,
+    ].any((f) => f != null);
+    if (filtered && noneOnRoute) return const [];
     return trips;
   }
+
+  /// Searches with a route find nobody; searches without one find [trips].
+  bool noneOnRoute = false;
 
   @override
   Future<TravelerProfile?> getProfile(String travelerId) async {
     profileCalls.add(travelerId);
     return profile;
+  }
+
+  /// The traveler's reviews, newest first, and the total count.
+  List<TravelerReview> travelerReviews = [];
+  int? reviewTotal;
+  bool failReviews = false;
+
+  @override
+  Future<TravelerReviews> reviews(String travelerId, {int limit = 10}) async {
+    if (failReviews) throw StateError('reviews failed');
+    return (
+      reviews: travelerReviews.take(limit).toList(),
+      total: reviewTotal ?? travelerReviews.length,
+    );
   }
 }
 
@@ -167,6 +194,7 @@ class FakeAuthService extends Fake implements AuthService {
       'avatar_path': null,
       'verification_status': 'verified',
       'created_at': '2025-03-01T10:00:00+00:00',
+      'country_of_residence': 'NG',
     },
     this.balances = const {'available': 320.0, 'escrow': 150.0},
     this.stats = const {'trips': 4, 'parcels': 7},
@@ -192,6 +220,14 @@ class FakeAuthService extends Fake implements AuthService {
   /// For each request, whether the number was allowed to create an account.
   final List<bool> otpCreateUser = [];
   Object? otpError;
+
+  /// Countries saved with [saveCountryOfResidence].
+  final List<String> countriesSaved = [];
+
+  @override
+  Future<void> saveCountryOfResidence(String isoCode) async {
+    countriesSaved.add(isoCode);
+  }
 
   @override
   Future<void> sendOtp(String phone, {bool createUser = true}) async {
@@ -250,6 +286,9 @@ Trip sampleMyTrip({
   double? maxWeightKg = 3,
   String? maxSize = 'Shoebox (30×20×15 cm)',
   String receipt = 'user-1/111.pdf',
+
+  /// The blurred copy senders see; null for a trip that has none yet.
+  String? sharedTicket = 'user-1/111-shared.jpg',
   String? bookingReference,
   int requests = 0,
   int delivered = 0,
@@ -274,6 +313,7 @@ Trip sampleMyTrip({
     maxWeightKg: maxWeightKg,
     maxSize: maxSize,
     ticketReceiptPath: receipt,
+    ticketSharedPath: sharedTicket,
     status: status,
     bookingReference: bookingReference,
     requestsCount: requests,
@@ -300,6 +340,7 @@ class FakeTripService extends Fake implements TripService {
   final List<String?> deletedReceipts = [];
 
   static const uploadedPath = 'user-1/999.pdf';
+  static const sharedPath = 'user-1/999-shared.jpg';
 
   @override
   Future<List<Trip>> myTrips() async {
@@ -309,14 +350,26 @@ class FakeTripService extends Fake implements TripService {
   }
 
   @override
-  Future<String> uploadReceipt(PickedReceipt receipt) async {
+  Future<String> uploadReceipt(
+    PickedReceipt receipt, {
+    String suffix = '',
+  }) async {
     if (failUpload) throw Exception('upload failed');
     uploaded.add(receipt);
-    return uploadedPath;
+    return suffix == '-shared' ? sharedPath : uploadedPath;
   }
 
   @override
   Future<void> deleteReceipt(String? path) async => deletedReceipts.add(path);
+
+  /// Receipts downloaded to check them again.
+  final List<String> downloadedReceipts = [];
+
+  @override
+  Future<Uint8List> downloadReceipt(String path) async {
+    downloadedReceipts.add(path);
+    return Uint8List.fromList([1, 2, 3]);
+  }
 
   @override
   Future<void> createTrip(TripDraft draft) async {
@@ -516,7 +569,8 @@ ConversationSummary sampleConversation({
   String from = 'Lagos',
   String to = 'London',
   String item = 'iPhone 15 Pro (sealed)',
-  String status = 'accepted',
+  // Chat opens once the delivery is paid.
+  String status = 'paid',
   String? lastBody = 'Meeting you at the gate tomorrow.',
   String? lastAttachment,
   DateTime? lastAt,
@@ -661,7 +715,43 @@ class FakeMessageService extends Fake implements MessageService {
   }
 }
 
+/// Makes the blurred ticket copy on Add Trip: answers [result] (null: the
+/// booking reference could not be found) and records what it was asked.
+class FakeTicketRedaction extends Fake implements TicketRedactionService {
+  Uint8List? result;
+  final List<({String fileName, String? reference})> calls = [];
+
+  @override
+  Future<Uint8List?> redact(
+    Uint8List bytes,
+    String fileName, {
+    String? bookingReference,
+  }) async {
+    calls.add((fileName: fileName, reference: bookingReference));
+    return result;
+  }
+}
+
 // ── Delivery requests ─────────────────────────────────────────────────────────
+
+/// The ticket check on Add Trip, answering [result] and recording what it
+/// was asked.
+class FakeTicketCheck extends Fake implements TicketCheckService {
+  TicketCheckResult result = TicketCheckResult.passed;
+  final List<({String fileName, DateTime departure, DateTime arrival})> calls =
+      [];
+
+  @override
+  Future<TicketCheckResult> check({
+    required Uint8List bytes,
+    required String fileName,
+    required DateTime departure,
+    required DateTime arrival,
+  }) async {
+    calls.add((fileName: fileName, departure: departure, arrival: arrival));
+    return result;
+  }
+}
 
 /// In-memory stand-in for [RequestService].
 class FakeRequestService extends Fake implements RequestService {
@@ -691,7 +781,471 @@ class FakeRequestService extends Fake implements RequestService {
     sent.add((id: requestId, draft: draft, photos: photos));
     return requestId;
   }
+
+  /// The user's sent requests, for the Outgoing tab.
+  List<SentRequest> mine = [];
+  bool failList = false;
+  int listCalls = 0;
+
+  @override
+  Future<List<SentRequest>> myRequests() async {
+    listCalls++;
+    if (failList) throw StateError('list failed');
+    return mine;
+  }
+
+  /// Saved edits: the request, the new draft and the new photos (null =
+  /// unchanged).
+  final List<
+    ({SentRequest request, RequestDraft draft, List<PickedReceipt>? photos})
+  >
+  updated = [];
+
+  @override
+  Future<void> update(
+    SentRequest request,
+    RequestDraft draft, {
+    List<PickedReceipt>? photos,
+  }) async {
+    attempts++;
+    if (fail != null) throw fail!;
+    updated.add((request: request, draft: draft, photos: photos));
+  }
+
+  /// Requests on the user's trips, for the Incoming tab.
+  List<IncomingRequest> incoming = [];
+  bool failIncoming = false;
+  int incomingCalls = 0;
+
+  /// Accepted / declined request ids (with the decline reason).
+  final List<String> accepted = [];
+  final List<({String id, String? reason})> declined = [];
+  RequestException? failAnswer;
+
+  @override
+  Future<List<IncomingRequest>> incomingRequests() async {
+    incomingCalls++;
+    if (failIncoming) throw StateError('incoming failed');
+    return incoming;
+  }
+
+  /// Answering moves the request on, as the database would.
+  void _answer(String id, String status) {
+    incoming = [
+      for (final r in incoming)
+        r.id == id ? sampleIncoming(id: r.id, status: status) : r,
+    ].where((r) => r.status != 'declined').toList();
+  }
+
+  @override
+  Future<void> accept(String requestId) async {
+    if (failAnswer != null) throw failAnswer!;
+    accepted.add(requestId);
+    _answer(requestId, 'accepted');
+  }
+
+  @override
+  Future<void> decline(String requestId, {String? reason}) async {
+    if (failAnswer != null) throw failAnswer!;
+    declined.add((id: requestId, reason: reason));
+    _answer(requestId, 'declined');
+  }
+
+  @override
+  Future<String> photoUrl(String path) async =>
+      'https://example.test/signed/$path';
+
+  /// Payments started (request id and method); [failStartPayment] makes
+  /// starting fail. [paymentStatuses] are answered in order, the last one
+  /// repeating.
+  final List<({String id, PayMethod method, String? country, String? email})>
+  paymentsStarted = [];
+
+  /// The email the user pays with; null asks for one at checkout.
+  String? payerEmailValue = 'sender@example.com';
+  bool failPayerEmail = false;
+
+  @override
+  Future<String?> payerEmail() async {
+    if (failPayerEmail) throw StateError('payer email failed');
+    return payerEmailValue;
+  }
+
+  RequestException? failStartPayment;
+  PaymentLink nextPayment = PaymentLink(
+    Uri.parse('https://checkout.flutterwave.test/pay/abc'),
+    'nata-req-1-tx',
+  );
+  List<PaymentStatus> paymentStatuses = [PaymentStatus.pending];
+  final List<String> paymentChecks = [];
+
+  @override
+  Future<PaymentLink> startPayment(
+    String requestId,
+    PayMethod method, {
+    String? country,
+    String? email,
+  }) async {
+    if (failStartPayment != null) throw failStartPayment!;
+    paymentsStarted.add((
+      id: requestId,
+      method: method,
+      country: country,
+      email: email,
+    ));
+    return nextPayment;
+  }
+
+  /// The naira amount for a bank transfer; [failBankQuote] makes it fail.
+  LocalCharge bankQuote = const LocalCharge(currency: 'NGN', amount: 178381);
+  bool failBankQuote = false;
+
+  @override
+  Future<LocalCharge> bankTransferQuote(String requestId) async {
+    if (failBankQuote) throw StateError('bank quote failed');
+    return bankQuote;
+  }
+
+  /// Mobile money countries offered at checkout; [failMobileOptions] makes
+  /// loading them fail.
+  List<MobileMoneyOption> mobileOptions = const [
+    MobileMoneyOption(
+      countryCode: 'GH',
+      countryName: 'Ghana',
+      currency: 'GHS',
+      amount: 1210,
+    ),
+    MobileMoneyOption(
+      countryCode: 'KE',
+      countryName: 'Kenya',
+      currency: 'KES',
+      amount: 14230,
+      suggested: true,
+    ),
+  ];
+  bool failMobileOptions = false;
+
+  @override
+  Future<List<MobileMoneyOption>> mobileMoneyOptions(String requestId) async {
+    if (failMobileOptions) throw StateError('options failed');
+    return mobileOptions;
+  }
+
+  @override
+  Future<PaymentStatus> paymentStatus(String txRef) async {
+    paymentChecks.add(txRef);
+    final i = paymentChecks.length - 1;
+    return paymentStatuses[i < paymentStatuses.length
+        ? i
+        : paymentStatuses.length - 1];
+  }
+
+  /// The handover: delivery codes by request, codes texted, items picked up
+  /// and codes entered. [deliveryChecks] are answered in order, the last one
+  /// repeating.
+  Map<String, DeliveryCode> codes = {};
+  final List<String> codesTexted = [];
+  RequestException? failTextCode;
+  final List<String> pickedUp = [];
+  RequestException? failPickUp;
+  List<DeliveryCheckResult> deliveryChecks = [
+    (result: DeliveryCheck.delivered, attemptsLeft: 0),
+  ];
+  final List<({String id, String code, String? account})> deliveryAttempts = [];
+
+  @override
+  Future<DeliveryCode?> deliveryCode(String requestId) async =>
+      codes[requestId];
+
+  @override
+  Future<void> sendDeliveryCode(String requestId) async {
+    if (failTextCode != null) throw failTextCode!;
+    codesTexted.add(requestId);
+  }
+
+  @override
+  Future<void> markPickedUp(String requestId) async {
+    if (failPickUp != null) throw failPickUp!;
+    pickedUp.add(requestId);
+  }
+
+  /// Delivery photos uploaded; [failPhoto] makes uploading fail.
+  final List<({String id, DeliveryPhotoKind kind})> photos = [];
+  RequestException? failPhoto;
+
+  @override
+  Future<void> uploadDeliveryPhoto(
+    String requestId,
+    DeliveryPhotoKind kind,
+    Uint8List bytes,
+  ) async {
+    if (failPhoto != null) throw failPhoto!;
+    photos.add((id: requestId, kind: kind));
+  }
+
+  /// What deliveryPhotoUrls returns.
+  ({String? pickup, String? handover}) photoUrls = (
+    pickup: null,
+    handover: null,
+  );
+
+  @override
+  Future<({String? pickup, String? handover})> deliveryPhotoUrls(
+    String requestId,
+  ) async => photoUrls;
+
+  @override
+  Future<DeliveryCheckResult> confirmDelivery(
+    String requestId,
+    String code, {
+    String? payoutAccountId,
+  }) async {
+    deliveryAttempts.add((id: requestId, code: code, account: payoutAccountId));
+    final i = deliveryAttempts.length - 1;
+    return deliveryChecks[i < deliveryChecks.length
+        ? i
+        : deliveryChecks.length - 1];
+  }
+
+  /// Receipts confirmed and reviews sent; [failReview] makes both fail.
+  final List<String> receiptsConfirmed = [];
+  final List<({String id, int rating, List<String> tags, String comment})>
+  reviews = [];
+  RequestException? failReview;
+
+  /// When set, sending a review waits for it.
+  Completer<void>? reviewGate;
+
+  @override
+  Future<void> confirmReceipt(String requestId) async {
+    if (failReview != null) throw failReview!;
+    receiptsConfirmed.add(requestId);
+  }
+
+  /// How many times refunds were asked for.
+  int refundCalls = 0;
+
+  @override
+  Future<void> sendRefunds() async => refundCalls++;
+
+  /// Problems reported; [failReport] makes reporting fail.
+  final List<({String id, ProblemReason reason, String details})> reports = [];
+  RequestException? failReport;
+
+  @override
+  Future<void> reportProblem(
+    String requestId, {
+    required ProblemReason reason,
+    String details = '',
+  }) async {
+    if (failReport != null) throw failReport!;
+    reports.add((id: requestId, reason: reason, details: details));
+  }
+
+  @override
+  Future<void> submitReview(
+    String requestId, {
+    required int rating,
+    List<String> tags = const [],
+    String comment = '',
+  }) async {
+    if (reviewGate != null) await reviewGate!.future;
+    if (failReview != null) throw failReview!;
+    reviews.add((id: requestId, rating: rating, tags: tags, comment: comment));
+  }
+
+  /// Ticket checks confirmed (request ids); [failTicket] makes them fail.
+  final List<String> ticketChecks = [];
+  RequestException? failTicket;
+
+  /// When set, loading the ticket link fails.
+  bool failTicketUrl = false;
+
+  /// ID checks confirmed (request ids); [failId] makes them fail.
+  final List<String> idChecks = [];
+  RequestException? failId;
+
+  /// What travelerIdPhoto returns; [failIdPhoto] makes it throw.
+  TravelerIdPhoto? idPhoto = TravelerIdPhoto(
+    url: 'https://example.test/signed/id_photo.jpg',
+    idDocumentType: 'passport',
+    verifiedAt: DateTime.utc(2030, 5, 2, 9),
+  );
+  bool failIdPhoto = false;
+  final List<String> idPhotoCalls = [];
+
+  @override
+  Future<DateTime> confirmIdChecked(String requestId) async {
+    if (failId != null) throw failId!;
+    idChecks.add(requestId);
+    return DateTime(2030, 6, 21, 12);
+  }
+
+  @override
+  Future<TravelerIdPhoto?> travelerIdPhoto(String requestId) async {
+    idPhotoCalls.add(requestId);
+    if (failIdPhoto) throw StateError('no photo');
+    return idPhoto;
+  }
+
+  @override
+  Future<DateTime> confirmTicketChecked(String requestId) async {
+    if (failTicket != null) throw failTicket!;
+    ticketChecks.add(requestId);
+    return DateTime(2030, 6, 21, 12);
+  }
+
+  @override
+  Future<String> ticketUrl(String path) async {
+    if (failTicketUrl) throw StateError('no link');
+    return 'https://example.test/signed/$path';
+  }
+
+  /// Requests cancelled, in order. On success the matching request in [mine]
+  /// becomes cancelled with the fee, as the database would do.
+  final List<SentRequest> cancelled = [];
+
+  @override
+  Future<double> cancel(SentRequest request) async {
+    attempts++;
+    if (fail != null) throw fail!;
+    final fee = request.cancellationFeeNow ?? 0;
+    cancelled.add(request);
+    mine = [
+      for (final r in mine)
+        r.id == request.id
+            ? sampleSentRequest(
+                id: r.id,
+                status: 'cancelled',
+                cancellationFee: fee,
+                cancelledAt: DateTime(2030, 6, 10),
+              )
+            : r,
+    ];
+    return fee;
+  }
+
+  @override
+  Future<List<PickedReceipt>> downloadPhotos(List<String> paths) async => [
+    for (final p in paths)
+      PickedReceipt(
+        bytes: Uint8List(1024),
+        name: p.split('/').last,
+        extension: 'jpg',
+      ),
+  ];
 }
+
+/// A request on one of the user's trips, by default waiting for an answer.
+IncomingRequest sampleIncoming({
+  String id = 'in-1',
+  String status = 'pending',
+  String firstName = 'Chioma',
+  String lastName = 'Eze',
+  double payoutUsd = 32,
+  int senderDeliveries = 5,
+  bool senderVerified = true,
+  List<RequestItem>? items,
+  List<String> photoPaths = const ['sender-1/in-1/0.jpg'],
+  DateTime? expiresAt,
+  String? recipientName,
+  String? recipientPhone,
+}) => IncomingRequest(
+  id: id,
+  status: status,
+  createdAt: DateTime(2030, 6, 20, 9),
+  expiresAt: expiresAt,
+  payoutUsd: payoutUsd,
+  items:
+      items ??
+      const [
+        RequestItem(
+          name: 'Apple Watch Series 9',
+          category: RequestCategory.electronics,
+          description: 'Sealed box',
+        ),
+      ],
+  weightKg: 0.45,
+  dimensions: '15 x 8 x 4 cm',
+  sizeClass: RequestSizeClass.shoebox,
+  photoPaths: photoPaths,
+  senderId: 'sender-1',
+  senderFirstName: firstName,
+  senderLastName: lastName,
+  senderVerified: senderVerified,
+  senderDeliveries: senderDeliveries,
+  recipientName:
+      recipientName ?? (status == 'pending' ? null : 'David Adeleke'),
+  recipientPhone:
+      recipientPhone ?? (status == 'pending' ? null : '+447700900456'),
+  tripId: 'trip-1',
+  departureCity: 'Lagos',
+  departureCountry: 'NG',
+  arrivalCity: 'London',
+  arrivalCountry: 'GB',
+  departureDate: DateTime(2030, 6, 22),
+  arrivalDate: DateTime(2030, 6, 22),
+);
+
+/// A request the user sent, by default pending, for [sampleTrip].
+SentRequest sampleSentRequest({
+  String id = 'req-1',
+  String status = 'pending',
+  List<RequestItem>? items,
+  double? cancellationFee,
+  DateTime? cancelledAt,
+  String? displayCurrency,
+  double? displayTotal,
+  double? displayCancellationFee,
+  double? displayCost,
+  double? displayFee,
+  DateTime? expiresAt,
+  DateTime? ticketCheckedAt,
+  DateTime? idCheckedAt,
+  bool travelerVerified = false,
+  String? ticketReceiptPath,
+  bool? hasTicket,
+  bool hasBookingReference = false,
+  DateTime? receiptConfirmedAt,
+  bool reviewed = false,
+}) => SentRequest(
+  id: id,
+  status: status,
+  createdAt: DateTime(2030, 6, 1),
+  totalUsd: 110.91,
+  cancellationFee: cancellationFee,
+  cancelledAt: cancelledAt,
+  displayCurrency: displayCurrency,
+  displayTotal: displayTotal,
+  displayCancellationFee: displayCancellationFee,
+  displayCost: displayCost,
+  displayFee: displayFee,
+  expiresAt: expiresAt,
+  ticketCheckedAt: ticketCheckedAt,
+  idCheckedAt: idCheckedAt,
+  travelerVerified: travelerVerified,
+  ticketReceiptPath: ticketReceiptPath,
+  hasTicket: hasTicket,
+  hasBookingReference: hasBookingReference,
+  receiptConfirmedAt: receiptConfirmedAt,
+  reviewed: reviewed,
+  items:
+      items ??
+      const [
+        RequestItem(
+          name: 'AirPods Max',
+          category: RequestCategory.electronics,
+          description: 'Sealed box',
+        ),
+      ],
+  weightKg: 0.9,
+  dimensions: '20 x 18 x 9',
+  sizeClass: RequestSizeClass.shoebox,
+  recipientName: 'Jane Doe',
+  recipientPhone: '+447700900123',
+  photoPaths: const ['u/req-1/0.jpg'],
+  trip: sampleTrip(),
+);
 
 // ── Delivery pricing inputs ───────────────────────────────────────────────────
 
@@ -765,6 +1319,13 @@ class FakeEmergencyContactService extends Fake
     if (fail != null) throw fail!;
     saved.add(contact);
   }
+
+  /// The contact saved before the test started, if any.
+  EmergencyContact? existing;
+
+  @override
+  Future<EmergencyContact?> get() async =>
+      saved.isNotEmpty ? saved.last : existing;
 }
 
 /// Reports the update you give it, and remembers "Later".
@@ -806,10 +1367,296 @@ AcceptedDelivery sampleDelivery() => const AcceptedDelivery(
   itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
   itemName: 'iPad Mini 64GB (Space Gray)',
   itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
-  receivedPhotoUrl: 'https://example.com/box.jpg',
-  receivedPhotoName: 'received_sealed_box.jpg',
-  receivedPhotoCaption: 'Captured at Lagos Airport · Jun 22, 10:14 AM',
   recipientName: 'David Adeleke (London)',
   recipientPhone: '+44 7700 900456',
   meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
+  requestId: 'req-1',
 );
+
+/// [sampleDelivery], already picked up.
+AcceptedDelivery samplePickedUpDelivery() => AcceptedDelivery(
+  orderId: 'DEL-8842',
+  senderName: 'Sarah Adeleke',
+  senderPhotoUrl: 'https://example.com/sarah.jpg',
+  senderSubtitle: 'Sender · Escrow Funded',
+  senderPhone: '+234 803 555 0142',
+  payout: '\$38.00',
+  trip: 'Lagos (LOS) → London (LHR)',
+  routeCodes: 'LOS → LHR',
+  travelDate: 'Jun 22, 2025',
+  destinationCity: 'London',
+  itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
+  itemName: 'iPad Mini 64GB (Space Gray)',
+  itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
+  recipientName: 'David Adeleke (London)',
+  recipientPhone: '+44 7700 900456',
+  requestId: 'req-1',
+  pickedUpAt: DateTime(2030, 6, 22, 10, 14),
+);
+
+/// Capitals by country, standing in for nata.cities.is_capital.
+const _capitals = {
+  'NG': ('Nigeria', 'Abuja', 101),
+  'GB': ('United Kingdom', 'London', 102),
+  'US': ('United States', 'Washington', 103),
+  'CM': ('Cameroon', 'Yaoundé', 104),
+};
+
+/// A [HomeScreen.capitalLookup] backed by [_capitals]; records the lookups.
+final List<String> capitalLookups = [];
+Future<LocationSelection?> fakeCapitalLookup(String countryCode) async {
+  capitalLookups.add(countryCode);
+  final c = _capitals[countryCode];
+  if (c == null) return null;
+  return LocationSelection(
+    country: c.$1,
+    countryCode: countryCode,
+    city: c.$2,
+    displayLabel: '${c.$2}, ${c.$1}',
+    cityId: c.$3,
+  );
+}
+
+/// Stand-in for [PaymentService], keeping one default like the database does
+/// (first method added, or the last one marked default; deleting the default
+/// promotes the most recent one left).
+class FakePaymentService extends Fake implements PaymentService {
+  /// What walletHistory returns; throws when [failHistory].
+  List<WalletEntry> history = [];
+  bool failHistory = false;
+
+  @override
+  Future<List<WalletEntry>> walletHistory({int limit = 100}) async {
+    if (failHistory) throw StateError('history failed');
+    return history;
+  }
+
+  FakePaymentService({
+    List<PaymentMethod>? methods,
+    this.accounts = const [],
+    this.schedule = PayoutSchedule.automatic,
+  }) : saved = [...?methods];
+
+  final List<PaymentMethod> saved;
+  List<PayoutAccount> accounts;
+  PayoutSchedule schedule;
+
+  /// Payouts: the options by country, accounts added, and payouts sent.
+  Map<String, PayoutOptions> options = {
+    'NG': const PayoutOptions(
+      currency: 'NGN',
+      banks: [
+        PayoutProvider('044', 'Access Bank'),
+        PayoutProvider('058', 'GTBank'),
+      ],
+    ),
+    'KE': const PayoutOptions(
+      currency: 'KES',
+      banks: [PayoutProvider('01', 'KCB Bank')],
+      mobileMoney: [PayoutProvider('MPS', 'M-Pesa')],
+    ),
+  };
+  final List<
+    ({
+      PayoutAccountKind kind,
+      String country,
+      String code,
+      String number,
+      String holder,
+    })
+  >
+  addedAccounts = [];
+  PayoutAccountException? failAddAccount;
+  int payoutsSent = 0;
+
+  @override
+  Future<PayoutOptions> payoutOptions(String country) async =>
+      options[country] ?? const PayoutOptions();
+
+  @override
+  Future<PayoutAccount> addPayoutAccount({
+    required PayoutAccountKind kind,
+    required String country,
+    required PayoutProvider provider,
+    required String accountNumber,
+    required String holderName,
+  }) async {
+    if (failAddAccount != null) throw failAddAccount!;
+    addedAccounts.add((
+      kind: kind,
+      country: country,
+      code: provider.code,
+      number: accountNumber,
+      holder: holderName,
+    ));
+    final account = PayoutAccount(
+      id: 'pa${addedAccounts.length}',
+      kind: kind,
+      institutionName: provider.name,
+      countryCode: country,
+      accountLast4: accountNumber.substring(accountNumber.length - 4),
+      holderName: holderName,
+      isDefault: accounts.isEmpty,
+    );
+    accounts = [...accounts, account];
+    return account;
+  }
+
+  @override
+  Future<int> sendPayouts() async => ++payoutsSent;
+  bool failLoad = false;
+  bool failSave = false;
+  int _nextId = 1;
+
+  @override
+  Future<List<PaymentMethod>> methods() async {
+    if (failLoad) throw StateError('load failed');
+    return List.of(saved);
+  }
+
+  @override
+  Future<PaymentMethod> addMethod(PaymentMethod method) async {
+    if (failSave) throw StateError('save failed');
+    final makeDefault = method.isDefault || saved.isEmpty;
+    if (makeDefault) {
+      for (var i = 0; i < saved.length; i++) {
+        saved[i] = saved[i].copyWith(isDefault: false);
+      }
+    }
+    final stored = PaymentMethod.fromJson({
+      ...method.toInsertJson('u'),
+      'id': 'm${_nextId++}',
+      'is_default': makeDefault,
+    });
+    saved.add(stored);
+    return stored;
+  }
+
+  @override
+  Future<void> removeMethod(String id) async {
+    if (failSave) throw StateError('save failed');
+    final wasDefault = saved.any((m) => m.id == id && m.isDefault);
+    saved.removeWhere((m) => m.id == id);
+    if (wasDefault && saved.isNotEmpty) {
+      saved[saved.length - 1] = saved.last.copyWith(isDefault: true);
+    }
+  }
+
+  @override
+  Future<List<PayoutAccount>> payoutAccounts() async {
+    if (failLoad) throw StateError('load failed');
+    return accounts;
+  }
+
+  @override
+  Future<PayoutSchedule> payoutSchedule() async => schedule;
+}
+
+/// The design's sample: Apple Pay (default) and a Visa card.
+List<PaymentMethod> samplePaymentMethods() => const [
+  PaymentMethod(
+    id: 'apple-pay',
+    kind: PaymentMethodKind.applePay,
+    isDefault: true,
+    walletDeviceLabel: "Fortune's iPhone",
+  ),
+  PaymentMethod(
+    id: 'visa-4242',
+    kind: PaymentMethodKind.card,
+    cardBrand: 'Visa',
+    cardLast4: '4242',
+    cardExpMonth: 8,
+    cardExpYear: 2027,
+    cardHolderName: 'Fortune Niama',
+  ),
+];
+
+PayoutAccount samplePayoutAccount() => const PayoutAccount(
+  id: 'barclays',
+  institutionName: 'Barclays Bank',
+  countryCode: 'GB',
+  accountLast4: '2093',
+  holderName: 'Fortune Niama',
+  isDefault: true,
+);
+
+/// A mobile money payout account, next to [samplePayoutAccount]'s bank.
+PayoutAccount sampleMobilePayoutAccount() => const PayoutAccount(
+  id: 'mpesa',
+  kind: PayoutAccountKind.mobileMoney,
+  institutionName: 'M-Pesa',
+  countryCode: 'KE',
+  accountLast4: '5678',
+  holderName: 'Fortune Niama',
+);
+
+/// A 1×1 transparent PNG, for photos in tests.
+final kTransparentPng = Uint8List.fromList(const [
+  0x89,
+  0x50,
+  0x4E,
+  0x47,
+  0x0D,
+  0x0A,
+  0x1A,
+  0x0A,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x48,
+  0x44,
+  0x52,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x08,
+  0x06,
+  0x00,
+  0x00,
+  0x00,
+  0x1F,
+  0x15,
+  0xC4,
+  0x89,
+  0x00,
+  0x00,
+  0x00,
+  0x0A,
+  0x49,
+  0x44,
+  0x41,
+  0x54,
+  0x78,
+  0x9C,
+  0x63,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x05,
+  0x00,
+  0x01,
+  0x0D,
+  0x0A,
+  0x2D,
+  0xB4,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x49,
+  0x45,
+  0x4E,
+  0x44,
+  0xAE,
+  0x42,
+  0x60,
+  0x82,
+]);

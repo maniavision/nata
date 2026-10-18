@@ -3,10 +3,12 @@ package com.carrywise.carrywise_app
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.graphics.Rect
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
@@ -48,6 +50,9 @@ class MainActivity : FlutterFragmentActivity() {
 
         // Identity checks with ML Kit. Channel "nata/id_text":
         // - "recognizeText" { path } -> String: the text on the image
+        // - "textBoxes" { path } -> { words: [{ text, line, x, y, w, h }],
+        //   barcodes: [{ x, y, w, h }] }: each word read and each barcode
+        //   found, in the upright image's pixels (to blur parts of a ticket)
         // - "detectFace" { path } -> Boolean: whether it shows a human face
         // - "toJpeg" { path, maxSide } -> bytes: the image upright, scaled down
         //   to at most maxSide px, as JPEG (for the face match)
@@ -79,7 +84,7 @@ class MainActivity : FlutterFragmentActivity() {
                             }
                         }
                     }
-                    "recognizeText", "detectFace" -> {
+                    "recognizeText", "detectFace", "textBoxes" -> {
                         val image = try {
                             InputImage.fromFilePath(
                                 this,
@@ -89,7 +94,9 @@ class MainActivity : FlutterFragmentActivity() {
                             result.error("bad_image", e.message, null)
                             return@setMethodCallHandler
                         }
-                        if (call.method == "detectFace") {
+                        if (call.method == "textBoxes") {
+                            textBoxes(image, result)
+                        } else if (call.method == "detectFace") {
                             val detector = FaceDetection.getClient()
                             detector.process(image)
                                 .addOnSuccessListener { result.success(it.isNotEmpty()) }
@@ -108,6 +115,48 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             }
     }
+
+    private fun textBoxes(image: InputImage, result: MethodChannel.Result) {
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        recognizer.process(image)
+            .addOnSuccessListener { text ->
+                val words = mutableListOf<Map<String, Any>>()
+                var line = 0
+                for (block in text.textBlocks) {
+                    for (textLine in block.lines) {
+                        for (element in textLine.elements) {
+                            val rect = element.boundingBox ?: continue
+                            words.add(box(rect) + mapOf("text" to element.text, "line" to line))
+                        }
+                        line++
+                    }
+                }
+                val scanner = BarcodeScanning.getClient()
+                scanner.process(image)
+                    .addOnSuccessListener { codes ->
+                        result.success(
+                            mapOf(
+                                "words" to words,
+                                "barcodes" to codes.mapNotNull { it.boundingBox?.let(::box) },
+                            )
+                        )
+                    }
+                    // Without barcodes the words are still worth returning.
+                    .addOnFailureListener {
+                        result.success(mapOf("words" to words, "barcodes" to emptyList<Any>()))
+                    }
+                    .addOnCompleteListener { scanner.close() }
+            }
+            .addOnFailureListener { result.error("ocr_failed", it.message, null) }
+            .addOnCompleteListener { recognizer.close() }
+    }
+
+    private fun box(r: Rect): Map<String, Any> = mapOf(
+        "x" to r.left.toDouble(),
+        "y" to r.top.toDouble(),
+        "w" to r.width().toDouble(),
+        "h" to r.height().toDouble(),
+    )
 
     private fun analyzeFrame(
         nv21: ByteArray,

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import '../widgets/app_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
@@ -12,6 +13,7 @@ import 'home_screen.dart';
 import 'otp_screen.dart';
 import '../widgets/country_code_picker_sheet.dart';
 import '../l10n/l10n_ext.dart';
+import '../widgets/nata_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   /// Overrides for tests; they default to the real services / Home screen.
@@ -19,11 +21,16 @@ class LoginScreen extends StatefulWidget {
   final BiometricService? biometricService;
   final WidgetBuilder? homeBuilder;
 
+  /// The page a visitor was opening when asked to sign in: shown above Home
+  /// once they are in.
+  final WidgetBuilder? afterSignIn;
+
   const LoginScreen({
     super.key,
     this.authService,
     this.biometricService,
     this.homeBuilder,
+    this.afterSignIn,
   });
 
   @override
@@ -71,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _submit() async {
     final phone = _phoneController.text.trim().replaceAll(RegExp(r'\s+'), '');
     if (phone.isEmpty) {
-      setState(() => _error = 'Please enter your phone number.');
+      setState(() => _error = context.l10n.errEnterPhone);
       return;
     }
 
@@ -117,12 +124,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _goHome() {
-    Navigator.of(context).pushAndRemoveUntil(
+    final navigator = Navigator.of(context);
+    navigator.pushAndRemoveUntil(
       MaterialPageRoute(
         builder: widget.homeBuilder ?? (context) => const HomeScreen(),
       ),
       (route) => false,
     );
+    final next = widget.afterSignIn;
+    if (next != null) navigator.push(MaterialPageRoute(builder: next));
   }
 
   void _say(String message) {
@@ -187,12 +197,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String _friendlyError(String raw) {
     if (raw.contains('rate limit') || raw.contains('too many')) {
-      return 'Too many requests. Please wait a moment.';
+      return context.l10n.errTooManyRequests;
     }
     if (raw.contains('invalid') || raw.contains('phone')) {
-      return 'Invalid phone number. Please check and try again.';
+      return context.l10n.errInvalidPhone;
     }
-    return 'Something went wrong. Please try again.';
+    return context.l10n.errSomethingWrong;
   }
 
   @override
@@ -201,15 +211,38 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeroSection(),
-              _buildMainContent(),
-              _buildFooter(),
-              const SizedBox(height: 32),
-            ],
-          ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHeroSection(),
+                  _buildMainContent(),
+                  _buildFooter(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+            // Opened while browsing: a way back.
+            if (Navigator.of(context).canPop())
+              Positioned(
+                top: 12,
+                left: 16,
+                child: Semantics(
+                  button: true,
+                  label: context.l10n.continueBrowsing,
+                  child: _GlassCircleButton(
+                    key: const ValueKey('auth-close'),
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -285,19 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 13,
-                      ),
-                    ),
+                    const NataLogo(size: 24),
                     const SizedBox(width: 8),
                     Text(
                       context.l10n.appName,
@@ -432,7 +453,9 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
-      child: Row(children: [_tab(context.l10n.signIn, 0), _tab('Sign Up', 1)]),
+      child: Row(
+        children: [_tab(context.l10n.signIn, 0), _tab(context.l10n.signUp, 1)],
+      ),
     );
   }
 
@@ -443,7 +466,8 @@ class _LoginScreenState extends State<LoginScreen> {
         onTap: () {
           if (index == 1) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const SignUpScreen()),
+              // Same instant switch as the bottom tabs, not a page slide.
+              AppBottomNav.tabRoute<void>(const SignUpScreen()),
             );
           } else {
             setState(() => _selectedTab = index);
@@ -688,9 +712,8 @@ class _LoginScreenState extends State<LoginScreen> {
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const SignUpScreen(),
-                    ),
+                    // Same instant switch as the bottom tabs, not a page slide.
+                    AppBottomNav.tabRoute<void>(const SignUpScreen()),
                   );
                 },
                 child: Text(
@@ -746,7 +769,7 @@ class _LoginScreenState extends State<LoginScreen> {
 class _GlassCircleButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
-  const _GlassCircleButton({required this.child, this.onTap});
+  const _GlassCircleButton({super.key, required this.child, this.onTap});
 
   @override
   Widget build(BuildContext context) {

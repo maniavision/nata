@@ -138,6 +138,31 @@ void main() {
       expect(auth.otpCreateUser, [true]);
       expect(find.byType(OtpScreen), findsOneWidget);
     });
+
+    testWidgets('the picked country is passed on as country of residence', (
+      tester,
+    ) async {
+      final auth = FakeAuthService();
+      await pump(tester, SignUpScreen(authService: auth));
+      final fields = find.byType(TextField);
+      await tester.enterText(fields.at(0), 'Ada');
+      await tester.enterText(fields.at(1), 'Lovelace');
+      // Country of residence: Ghana (also sets the +233 phone code).
+      await tester.tap(fields.at(2));
+      await tester.pump();
+      await tester.enterText(fields.at(2), 'Ghana');
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('Ghana').last);
+      await tester.pump();
+      await tester.enterText(fields.at(3), '24 123 4567');
+
+      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.pumpAndSettle();
+
+      expect(auth.otpRequests.single, startsWith('+233'));
+      final otp = tester.widget<OtpScreen>(find.byType(OtpScreen));
+      expect(otp.countryOfResidence, 'GH');
+    });
   });
 
   group('"Resend code"', () {

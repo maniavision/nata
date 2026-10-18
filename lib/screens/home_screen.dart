@@ -1,4 +1,10 @@
 import 'dart:async';
+import '../widgets/nata_logo.dart';
+import 'sign_up_screen.dart';
+import 'login_screen.dart';
+import '../services/verify_gate.dart';
+import '../services/auth_gate.dart';
+import 'package:intl/intl.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -6,8 +12,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/home_search_memory.dart';
 import '../services/auth_service.dart';
+import '../services/city_service.dart';
+import '../services/country_service.dart';
 import '../services/notification_service.dart';
+import '../services/preferences_service.dart';
 import '../services/traveler_ranking.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
@@ -17,6 +27,9 @@ import 'add_trip_screen.dart';
 import 'notifications_screen.dart';
 import 'traveler_profile_screen.dart';
 import 'traveler_results_screen.dart';
+
+/// The capital of a country (by ISO code) as a departure, or null.
+typedef CapitalLookup = Future<LocationSelection?> Function(String countryCode);
 
 class HomeScreen extends StatefulWidget {
   /// Optional overrides (used by tests); default to the real services.
@@ -28,13 +41,36 @@ class HomeScreen extends StatefulWidget {
   /// seeded one).
   final Random? random;
 
+  /// Finds the default departure (the capital of the user's country); tests
+  /// replace it.
+  final CapitalLookup? capitalLookup;
+
   const HomeScreen({
     super.key,
     this.authService,
     this.travelerService,
     this.notificationService,
     this.random,
+    this.capitalLookup,
   });
+
+  /// The capital in nata.cities (is_capital), named like the location sheet
+  /// names its picks ("Abuja, Nigeria").
+  static Future<LocationSelection?> defaultCapitalLookup(
+    String countryCode,
+  ) async {
+    final iso = countryCode.trim().toUpperCase();
+    final capital = await CityService().capitalOf(iso);
+    if (capital == null) return null;
+    final country = (await CountryService().byIsoCode(iso))?.name ?? iso;
+    return LocationSelection(
+      country: country,
+      countryCode: iso,
+      city: capital.name,
+      displayLabel: '${capital.name}, $country',
+      cityId: capital.id,
+    );
+  }
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -49,12 +85,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String? _avatarPath;
   String _displayName = '...';
 
-  LocationSelection? _departure = const LocationSelection(
-    country: 'Nigeria',
-    countryCode: 'NG',
-    city: 'Lagos',
-    displayLabel: 'Lagos, Nigeria',
-  );
+  /// Starts on the capital of the user's country of residence (see
+  /// [_loadDefaultDeparture]); null until then, or if it isn't known.
+  LocationSelection? _departure;
   LocationSelection? _destination;
 
   // Upcoming travelers for the selected route (preview list + calendar).
@@ -84,11 +117,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ? _selectedDate!.add(const Duration(days: 3))
             : _selectedDate);
 
+  /// Puts the search back as the user left it (see [HomeSearchMemory]).
+  void _restoreSearch() {
+    _departure = HomeSearchMemory.departure;
+    _destination = HomeSearchMemory.destination;
+    _selectedDate = HomeSearchMemory.dateFrom(DateTime.now());
+    _flexibleDate = _selectedDate != null && HomeSearchMemory.flexible;
+  }
+
+  void _rememberSearch() {
+    HomeSearchMemory.departure = _departure;
+    HomeSearchMemory.destination = _destination;
+    HomeSearchMemory.date = _selectedDate;
+    HomeSearchMemory.flexible = _flexibleDate;
+  }
+
   @override
   void initState() {
     super.initState();
+    _restoreSearch();
     _loadProfile();
-    _loadTravelers();
+    // Travelers are searched from the default departure, so find it first.
+    _loadDefaultDeparture().whenComplete(() {
+      if (mounted) _loadTravelers();
+    });
     // Re-read the profile when the avatar changes elsewhere (e.g. Profile).
     AvatarImage.revision.addListener(_loadProfile);
     WidgetsBinding.instance.addObserver(this);
@@ -129,6 +181,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Upcoming travelers on the chosen route. A visitor who hasn't picked a
+  /// destination and has nobody leaving from their city sees the next
+  /// travelers from anywhere instead of an empty preview.
+  Future<List<TravelerTrip>> _searchTravelers() async {
+    final results = await _travelerService.search(
+      departureCountry: _departure?.countryCode,
+      departureCity: _departure?.city,
+      arrivalCountry: _destination?.countryCode,
+      arrivalCity: _destination?.city,
+      limit: 100,
+    );
+    if (results.isNotEmpty || _destination != null || AuthGate.isSignedIn()) {
+      return results;
+    }
+    return _travelerService.search(limit: 100);
+  }
+
   /// A quiet refresh: no spinner, and a failure keeps what is on screen (the
   /// previous results are simply re-drawn so the list still rotates).
   Future<void> _refreshTravelers() async {
@@ -136,13 +205,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _refreshingTravelers = true;
     final request = ++_travelersRequest;
     try {
-      final results = await _travelerService.search(
-        departureCountry: _departure?.countryCode,
-        departureCity: _departure?.city,
-        arrivalCountry: _destination?.countryCode,
-        arrivalCity: _destination?.city,
-        limit: 100,
-      );
+      final results = await _searchTravelers();
       if (!mounted || request != _travelersRequest) return;
       _applyTravelerResults(results);
     } catch (_) {
@@ -174,6 +237,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  /// The departure the search starts from: the capital of the country of
+  /// residence saved at sign-up, or, for accounts made before that was saved,
+  /// of the country remembered on this device.
+  Future<void> _loadDefaultDeparture() async {
+    try {
+      final profile = await (widget.authService ?? AuthService()).getProfile();
+      final saved = (profile?['country_of_residence'] as String?)?.trim();
+      final country = saved != null && saved.isNotEmpty
+          ? saved
+          : PreferencesService().countryIsoCode;
+      final capital =
+          await (widget.capitalLookup ?? HomeScreen.defaultCapitalLookup)(
+            country,
+          );
+      // Keep a departure the user picked while this was loading.
+      if (capital != null && mounted && _departure == null) {
+        setState(() => _departure = capital);
+        _rememberSearch();
+      }
+    } catch (e) {
+      debugPrint('[Home] default departure: $e');
+    }
+  }
+
   Future<void> _loadProfile() async {
     final auth = widget.authService ?? AuthService();
     final profile = await auth.getProfile();
@@ -196,13 +283,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _loadTravelers() async {
     final request = ++_travelersRequest;
     try {
-      final results = await _travelerService.search(
-        departureCountry: _departure?.countryCode,
-        departureCity: _departure?.city,
-        arrivalCountry: _destination?.countryCode,
-        arrivalCity: _destination?.city,
-        limit: 100,
-      );
+      final results = await _searchTravelers();
       if (!mounted || request != _travelersRequest) return;
       _applyTravelerResults(results);
     } catch (_) {
@@ -228,11 +309,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _pickDeparture() async {
     final result = await LocationSearchSheet.show(
       context,
-      title: 'Departing From',
+      title: context.l10n.departingFrom,
       initial: _departure,
     );
     if (result != null) {
       setState(() => _departure = result);
+      _rememberSearch();
       _reloadTravelers();
     }
   }
@@ -240,11 +322,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _pickDestination() async {
     final result = await LocationSearchSheet.show(
       context,
-      title: 'Destination',
+      title: context.l10n.destination,
       initial: _destination,
     );
     if (result != null) {
       setState(() => _destination = result);
+      _rememberSearch();
       _reloadTravelers();
     }
   }
@@ -252,31 +335,49 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    // Visitors who aren't signed in get their own Home: what Nata is, the
+    // search, a preview of travelers and how it works.
+    final guest = !AuthGate.isSignedIn();
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: Stack(
+          // Fill the screen so the bottom nav sits at the bottom even when
+          // the content is shorter than the screen.
+          fit: StackFit.expand,
           children: [
             SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 90),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(),
+                  guest ? _buildGuestHeader() : _buildHeader(),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        _buildSearchCard(),
-                        const SizedBox(height: 24),
-                        _buildAddTripButton(l),
-                        const SizedBox(height: 24),
-                        _buildTravelersSection(),
-                        const SizedBox(height: 16),
-                      ],
+                      children: guest
+                          ? [
+                              const SizedBox(height: 8),
+                              _buildGuestHero(),
+                              const SizedBox(height: 24),
+                              _buildSearchCard(),
+                              const SizedBox(height: 24),
+                              _buildTravelersSection(),
+                              const SizedBox(height: 24),
+                              _buildHowItWorks(),
+                              const SizedBox(height: 16),
+                            ]
+                          : [
+                              const SizedBox(height: 8),
+                              _buildSearchCard(),
+                              const SizedBox(height: 24),
+                              _buildAddTripButton(l),
+                              const SizedBox(height: 24),
+                              _buildTravelersSection(),
+                              const SizedBox(height: 16),
+                            ],
                     ),
                   ),
                 ],
@@ -314,31 +415,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ],
             ),
+            // No photo yet (or a visitor): a plain person icon.
             child: ClipOval(
-              child: _avatarPath != null
-                  ? AvatarImage(
-                      path: _avatarPath,
-                      fallback: Container(
-                        color: AppColors.secondary,
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                    )
-                  : Image.network(
-                      'https://lh3.googleusercontent.com/a/ACg8ocJ97aGjnJ1qNWsqUS-lOIkKvwls8WK-SI54YY8POZz7eBd4JRE=s96-c',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) => Container(
-                        color: AppColors.secondary,
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                    ),
+              child: AvatarImage(
+                key: const ValueKey('home-avatar'),
+                path: _avatarPath,
+                fallback: Container(
+                  color: AppColors.secondary,
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -347,7 +437,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello,',
+                  context.l10n.hello,
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     color: AppColors.mutedForeground,
@@ -367,12 +457,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           GestureDetector(
             key: const ValueKey('home-notifications'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    NotificationsScreen(service: widget.notificationService),
-              ),
-            ),
+            onTap: () {
+              if (!AuthGate.check(context)) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      NotificationsScreen(service: widget.notificationService),
+                ),
+              );
+            },
             child: Container(
               width: 40,
               height: 40,
@@ -387,6 +480,302 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ── Visitors ───────────────────────────────────────────────────────────────
+  Widget _buildGuestHeader() {
+    final l = context.l10n;
+    Widget pill(
+      String label, {
+      required bool filled,
+      required Key key,
+      required VoidCallback onTap,
+    }) {
+      return GestureDetector(
+        key: key,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: filled
+                ? AppColors.primary
+                : AppColors.secondary.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              color: filled
+                  ? AppColors.primaryForeground
+                  : AppColors.foreground,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      child: Row(
+        children: [
+          const NataLogo(size: 40),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.sendWithTrustedTravelers,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Long translations shrink the buttons a little rather than
+          // overflow on narrow phones.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  pill(
+                    l.signIn,
+                    filled: false,
+                    key: const ValueKey('home-sign-in'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  pill(
+                    l.signUp,
+                    filled: true,
+                    key: const ValueKey('home-sign-up'),
+                    onTap: _openSignUp,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openSignUp() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => const SignUpScreen()));
+
+  Widget _buildGuestHero() {
+    final l = context.l10n;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        key: const ValueKey('home-guest-hero'),
+        color: AppColors.primary,
+        child: Stack(
+          children: [
+            // Soft coral glow in the corner.
+            Positioned(
+              right: -32,
+              top: -32,
+              child: Container(
+                width: 128,
+                height: 128,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.25),
+                      blurRadius: 48,
+                      spreadRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          size: 12,
+                          color: AppColors.accent,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            l.guestHeroBadge.toUpperCase(),
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                              letterSpacing: 0.8,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l.guestHeroTitle,
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                      height: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l.guestHeroBody,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: AppColors.primaryForeground.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      key: const ValueKey('home-create-account'),
+                      onPressed: _openSignUp,
+                      icon: const Icon(
+                        Icons.person_add_alt_1_rounded,
+                        size: 18,
+                      ),
+                      label: Text(
+                        l.createFreeAccount,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: AppColors.accentForeground,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHowItWorks() {
+    final l = context.l10n;
+    Widget step(int n, String title, String body) => Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$n',
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.primaryForeground,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$title ',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    TextSpan(text: body),
+                  ],
+                ),
+                style: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  height: 1.5,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Container(
+      key: const ValueKey('home-how-it-works'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.howItWorks,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: AppColors.foreground,
+            ),
+          ),
+          step(1, l.howStep1Title, l.howStep1Body),
+          step(2, l.howStep2Title, l.howStep2Body),
+          step(3, l.howStep3Title, l.howStep3Body),
         ],
       ),
     );
@@ -412,7 +801,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Where are you sending?',
+            context.l10n.whereAreYouSending,
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w700,
               fontSize: 15,
@@ -426,8 +815,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: _locationRow(
               icon: Icons.location_on_outlined,
               iconColor: AppColors.mutedForeground,
-              label: 'DEPARTURE',
-              value: _departure?.displayLabel ?? 'Where are you sending from?',
+              label: context.l10n.departure.toUpperCase(),
+              value: _departure?.displayLabel ?? context.l10n.whereSendingFrom,
               hasValue: _departure != null,
             ),
           ),
@@ -438,23 +827,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: _locationRow(
               icon: Icons.location_on,
               iconColor: AppColors.accent,
-              label: 'DESTINATION',
+              label: context.l10n.destination.toUpperCase(),
               value:
-                  _destination?.displayLabel ?? 'e.g. London, United Kingdom',
+                  _destination?.displayLabel ?? context.l10n.destinationExample,
               hasValue: _destination != null,
             ),
           ),
           const SizedBox(height: 10),
           // Date
           GestureDetector(
+            key: const ValueKey('home-date-field'),
             onTap: () => _showDateSheet(context),
             child: _locationRow(
               icon: Icons.calendar_today_outlined,
               iconColor: AppColors.mutedForeground,
-              label: 'DELIVERY DATE',
+              label: context.l10n.deliveryDate,
               value: _selectedDate != null
-                  ? '${_fmtDate(_selectedDate!)}${_flexibleDate ? ' (±3d)' : ''}'
-                  : 'Anytime this month',
+                  ? '${_fmtDate(_selectedDate!)}${_flexibleDate ? ' ${context.l10n.flexibleShort}' : ''}'
+                  : context.l10n.anytimeThisMonth,
               hasValue: _selectedDate != null,
             ),
           ),
@@ -481,7 +871,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 color: Colors.white,
               ),
               label: Text(
-                'Search Travelers',
+                context.l10n.searchTravelersButton,
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
@@ -557,10 +947,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // ── Add a Trip button ──────────────────────────────────────────────────────
   Widget _buildAddTripButton(l) {
     return GestureDetector(
-      onTap: () {
-        Navigator.of(
+      onTap: () async {
+        if (!AuthGate.check(
           context,
-        ).push(MaterialPageRoute(builder: (context) => const AddTripScreen()));
+          message: context.l10n.signInPromptAddTrip,
+          next: (_) => const AddTripScreen(),
+        )) {
+          return;
+        }
+        final navigator = Navigator.of(context);
+        if (!await VerifyGate.check(
+          context,
+          message: context.l10n.verifyToAddTrip,
+        )) {
+          return;
+        }
+        navigator.push(
+          MaterialPageRoute(builder: (context) => const AddTripScreen()),
+        );
       },
       child: Container(
         width: double.infinity,
@@ -580,7 +984,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(width: 8),
             Text(
-              'Add a Trip',
+              context.l10n.addATripTitle,
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
@@ -595,41 +999,69 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   // ── Travelers section ──────────────────────────────────────────────────────
   Widget _buildTravelersSection() {
+    final guest = !AuthGate.isSignedIn();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Available Travelers',
-              style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: AppColors.foreground,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => TravelerResultsScreen(
-                      departure: _departure,
-                      destination: _destination,
-                      service: widget.travelerService,
-                    ),
-                  ),
-                );
-              },
+            // Long translations wrap instead of pushing the right side out.
+            Flexible(
               child: Text(
-                'View all',
-                style: GoogleFonts.dmSans(
+                guest
+                    ? context.l10n.travelersGoingSoon
+                    : context.l10n.availableTravelers,
+                style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: AppColors.accent,
+                  fontSize: 15,
+                  color: AppColors.foreground,
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            if (guest)
+              Row(
+                key: const ValueKey('home-preview-label'),
+                children: [
+                  const Icon(
+                    Icons.visibility_outlined,
+                    size: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    context.l10n.preview,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              )
+            else
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => TravelerResultsScreen(
+                        departure: _departure,
+                        destination: _destination,
+                        service: widget.travelerService,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(
+                  context.l10n.viewAll,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -661,7 +1093,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           children: [
             Expanded(
               child: Text(
-                'Could not load travelers.',
+                context.l10n.errLoadTravelers,
                 key: const ValueKey('home-travelers-error'),
                 style: GoogleFonts.dmSans(
                   fontSize: 12,
@@ -669,7 +1101,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            TextButton(onPressed: _reloadTravelers, child: const Text('Retry')),
+            TextButton(
+              onPressed: _reloadTravelers,
+              child: Text(context.l10n.retry),
+            ),
           ],
         ),
       );
@@ -678,7 +1113,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Text(
-          'No travelers on this route yet.',
+          context.l10n.noTravelersOnRoute,
           key: const ValueKey('home-travelers-empty'),
           style: GoogleFonts.dmSans(
             fontSize: 12,
@@ -694,14 +1129,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(bottom: 10),
               child: _TravelerRow(
                 trip: t,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => TravelerProfileScreen(
-                      trip: t,
-                      service: widget.travelerService,
-                    ),
-                  ),
-                ),
+                onTap: () {
+                  Widget profile(BuildContext context) => TravelerProfileScreen(
+                    trip: t,
+                    service: widget.travelerService,
+                  );
+                  if (!AuthGate.check(
+                    context,
+                    message: context.l10n.signInPromptTraveler(t.firstName),
+                    next: profile,
+                  )) {
+                    return;
+                  }
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: profile));
+                },
               ),
             ),
           )
@@ -714,7 +1157,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _showDateSheet(BuildContext context) async {
     final result = await DatePickerSheet.show(
       context,
-      title: 'Desired Delivery Date',
+      title: context.l10n.desiredDeliveryDateTitle,
       initialDate: _selectedDate,
       initialFlexible: _flexibleDate,
       flightCounts: _flightCounts,
@@ -726,27 +1169,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _selectedDate = result.date;
       _flexibleDate = result.date != null && result.flexible;
     });
+    _rememberSearch();
   }
 
-  String _fmtDate(DateTime d) {
-    const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return '${days[d.weekday - 1]}, ${months[d.month]} ${d.day}';
-  }
+  /// "Mon, Jun 22", in the app's language.
+  String _fmtDate(DateTime d) => DateFormat(
+    'EEE, MMM d',
+    Localizations.localeOf(context).toString(),
+  ).format(d);
 }
 
 // ── Traveler row ───────────────────────────────────────────────────────────
@@ -754,22 +1184,6 @@ class _TravelerRow extends StatelessWidget {
   final TravelerTrip trip;
   final VoidCallback onTap;
   const _TravelerRow({required this.trip, required this.onTap});
-
-  static const _months = [
-    '',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
 
   /// "Amara Kalu" -> "Amara K."
   String get _shortName {
@@ -864,18 +1278,23 @@ class _TravelerRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        trip.avgRating?.toStringAsFixed(1) ?? 'New',
+                        trip.avgRating?.toStringAsFixed(1) ??
+                            context.l10n.newTravelerRating,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w700,
                           fontSize: 11,
                           color: AppColors.foreground,
                         ),
                       ),
-                      Text(
-                        '  •  ${trip.itemsDelivered} deliveries',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
+                      Flexible(
+                        child: Text(
+                          '  •  ${context.l10n.deliveriesCount(trip.itemsDelivered)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11,
+                            color: AppColors.mutedForeground,
+                          ),
                         ),
                       ),
                     ],
@@ -896,7 +1315,9 @@ class _TravelerRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    '${_months[trip.departureDate.month]} ${trip.departureDate.day}',
+                    DateFormat.MMMd(
+                      Localizations.localeOf(context).toString(),
+                    ).format(trip.departureDate),
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
@@ -908,7 +1329,9 @@ class _TravelerRow extends StatelessWidget {
                 Text(
                   trip.maxWeightKg == null
                       ? ''
-                      : 'Up to ${trip.maxWeightKg!.toStringAsFixed(1)} kg',
+                      : context.l10n.upToKg(
+                          trip.maxWeightKg!.toStringAsFixed(1),
+                        ),
                   style: GoogleFonts.dmSans(
                     fontSize: 11,
                     color: AppColors.mutedForeground,

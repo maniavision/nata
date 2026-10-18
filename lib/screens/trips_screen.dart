@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/verify_gate.dart';
 import '../services/trip_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'add_trip_screen.dart';
@@ -74,6 +75,16 @@ class _TripsScreenState extends State<TripsScreen> {
         ..sort((a, b) => b.departureDate.compareTo(a.departureDate));
 
   Future<void> _openAddTrip({Trip? trip}) async {
+    // Editing an existing trip stays open; posting a new one needs a
+    // passed identity check.
+    if (trip == null &&
+        !await VerifyGate.check(
+          context,
+          message: context.l10n.verifyToAddTrip,
+        )) {
+      return;
+    }
+    if (!mounted) return;
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => AddTripScreen(trip: trip, service: widget.service),
@@ -567,7 +578,7 @@ class _TripsScreenState extends State<TripsScreen> {
                     l.maxWeightLabel,
                   ),
                   const SizedBox(width: 8),
-                  _statTile(t.sizeShortLabel, l.maxSizeLabel),
+                  _statTile(l.tripSizeShort(t.maxSize), l.maxSizeLabel),
                   const SizedBox(width: 8),
                   _statTile(
                     '${t.requestsCount}',

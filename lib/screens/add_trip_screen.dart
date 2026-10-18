@@ -1,4 +1,7 @@
 import 'dart:async';
+import '../services/ticket_check_service.dart';
+import '../services/ticket_redaction_service.dart';
+import 'package:intl/intl.dart';
 import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
@@ -39,6 +42,8 @@ class AddTripScreen extends StatefulWidget {
   final LocationPicker? locationPicker;
   final ReceiptPicker? receiptPicker;
   final ReceiptCamera? receiptCamera;
+  final TicketCheckService? ticketCheck;
+  final TicketRedactionService? ticketRedaction;
 
   const AddTripScreen({
     super.key,
@@ -47,6 +52,8 @@ class AddTripScreen extends StatefulWidget {
     this.locationPicker,
     this.receiptPicker,
     this.receiptCamera,
+    this.ticketCheck,
+    this.ticketRedaction,
   });
 
   @override
@@ -65,7 +72,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
   late List<String> _sizeOptions;
   late String _maxWeightLabel;
   late String _maxSize;
-  final _priceCtrl = TextEditingController();
   final _refCtrl = TextEditingController();
   late String _currency;
 
@@ -74,6 +80,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
   String? _existingReceiptPath;
 
   bool _saving = false;
+
+  /// The ticket is being read before saving.
+  bool _checkingTicket = false;
   String? _error;
 
   static const _baseWeights = <(String, double)>[
@@ -149,14 +158,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
       _maxSize = size;
     }
     _refCtrl.text = t.bookingReference ?? '';
-    _priceCtrl.text = t.price == t.price.roundToDouble()
-        ? t.price.toStringAsFixed(0)
-        : t.price.toStringAsFixed(2);
   }
 
   @override
   void dispose() {
-    _priceCtrl.dispose();
     _refCtrl.dispose();
     super.dispose();
   }
@@ -171,7 +176,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
       _existingReceiptPath = null;
       _maxWeightLabel = _baseWeights[1].$1;
       _maxSize = _baseSizes[1];
-      _priceCtrl.clear();
       _refCtrl.clear();
       _error = null;
     });
@@ -186,7 +190,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
     final picker = widget.locationPicker ?? _defaultLocationPicker;
     final result = await picker(
       context,
-      title: departure ? 'Departing From' : 'Arriving In',
+      title: departure ? context.l10n.departingFrom : context.l10n.arrivingIn,
       // The city field opens straight on that country's cities; the country
       // field starts from the country list.
       initial: startAtCity ? current : null,
@@ -212,7 +216,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
     final today = DateTime.now();
     final result = await DatePickerSheet.show(
       context,
-      title: departure ? 'Departure Date' : 'Arrival Date',
+      title: departure
+          ? context.l10n.departureDateTitle
+          : context.l10n.arrivalDateTitle,
       initialDate: departure ? _depDate : _arrDate,
       // A trip cannot arrive before it departs.
       firstDate: departure
@@ -239,7 +245,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
       _acceptReceipt(picked);
     } catch (e) {
       debugPrint('[AddTrip] receipt picker error: $e');
-      if (mounted) setState(() => _error = 'Could not open that file.');
+      if (mounted) setState(() => _error = context.l10n.errOpenFile);
     }
   }
 
@@ -259,7 +265,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
   void _acceptReceipt(PickedReceipt? picked) {
     if (picked == null || !mounted) return;
     if (picked.sizeBytes > _maxReceiptBytes) {
-      setState(() => _error = 'That file is too large (max 10 MB).');
+      setState(() => _error = context.l10n.errFileTooLarge);
       return;
     }
     setState(() {
@@ -302,12 +308,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
   }
 
   // ── Validation + save ──────────────────────────────────────────────────────
-  double? get _parsedPrice {
-    final p = double.tryParse(_priceCtrl.text.trim().replaceAll(',', '.'));
-    if (p == null || p <= 0 || p >= 100000000) return null;
-    return (p * 100).round() / 100;
-  }
-
   bool _sameCity(LocationSelection a, LocationSelection b) =>
       (a.cityId != null && a.cityId == b.cityId) ||
       (a.countryCode == b.countryCode && a.city == b.city);
@@ -329,7 +329,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
     if (ref != null && !TripDraft.bookingReferencePattern.hasMatch(ref)) {
       return l.errBookingReference;
     }
-    if (_parsedPrice == null) return l.errPrice;
     return null;
   }
 
@@ -366,8 +365,20 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
     TripService? service;
     String? uploadedPath;
+    String? uploadedSharedPath;
     try {
       service = widget.service ?? TripService();
+
+      // The ticket must be the traveler's, for this trip's dates.
+      final ticketProblem = await _checkTicket(service);
+      if (ticketProblem != null) {
+        if (!mounted) return;
+        setState(() {
+          _saving = false;
+          _error = ticketProblem;
+        });
+        return;
+      }
 
       var receiptPath = _existingReceiptPath ?? '';
       if (_receipt != null) {
@@ -375,18 +386,40 @@ class _AddTripScreenState extends State<AddTripScreen> {
         receiptPath = uploadedPath;
       }
 
+      // The copy senders see, with the booking reference blurred. Kept when
+      // the ticket and reference are unchanged; made again otherwise.
+      var sharedPath = widget.trip?.ticketSharedPath;
+      final remake =
+          _receipt != null ||
+          sharedPath == null ||
+          _bookingReference != widget.trip?.bookingReference;
+      if (receiptPath.isNotEmpty && remake) {
+        final shared = await _sharedCopy(service, receiptPath);
+        sharedPath = null;
+        if (shared != null) {
+          uploadedSharedPath = await service.uploadReceipt(
+            shared,
+            suffix: '-shared',
+          );
+          sharedPath = uploadedSharedPath;
+        }
+      }
+
       final draft = TripDraft(
         departureCityId: _departure!.cityId!,
         arrivalCityId: _arrival!.cityId!,
         departureDate: _depDate!,
         arrivalDate: _arrDate!,
-        price: _parsedPrice!,
+        // Prices come from the pricing formula, not from the traveler. The
+        // column is still required: 0 for new trips, unchanged on edits.
+        price: widget.trip?.price ?? 0,
         currency: _currency,
         maxWeightKg: _weightOptions
             .firstWhere((o) => o.$1 == _maxWeightLabel)
             .$2,
         maxSize: _maxSize,
         ticketReceiptPath: receiptPath,
+        ticketSharedPath: sharedPath,
         bookingReference: _bookingReference,
       );
 
@@ -395,6 +428,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
         // The old receipt is no longer referenced once a new one replaced it.
         if (uploadedPath != null) {
           unawaited(service.deleteReceipt(widget.trip!.ticketReceiptPath));
+        }
+        final oldShared = widget.trip!.ticketSharedPath;
+        if (oldShared != null && oldShared != sharedPath) {
+          unawaited(service.deleteReceipt(oldShared));
         }
       } else {
         await service.createTrip(draft);
@@ -410,13 +447,104 @@ class _AddTripScreenState extends State<AddTripScreen> {
       debugPrint('[AddTrip] save failed: $e');
       // Do not leave an orphaned upload behind.
       if (uploadedPath != null) unawaited(service?.deleteReceipt(uploadedPath));
+      if (uploadedSharedPath != null) {
+        unawaited(service?.deleteReceipt(uploadedSharedPath));
+      }
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = context.l10n.errSaveFailed;
+        _error = '$e'.contains('nata:not_verified')
+            ? context.l10n.errNotVerified
+            : context.l10n.errSaveFailed;
       });
     }
   }
+
+  /// The ticket with its booking reference blurred, for senders; null when
+  /// the reference could not be found (the ticket is then not shown to
+  /// senders) or the copy could not be made. Never blocks saving.
+  Future<PickedReceipt?> _sharedCopy(
+    TripService service,
+    String receiptPath,
+  ) async {
+    try {
+      final picked = _receipt;
+      final bytes = picked?.bytes ?? await service.downloadReceipt(receiptPath);
+      final name = picked?.name ?? receiptPath;
+      final copy = await (widget.ticketRedaction ?? TicketRedactionService())
+          .redact(bytes, name, bookingReference: _bookingReference)
+          .timeout(const Duration(seconds: 30));
+      if (copy == null) return null;
+      // JPEG starts FF D8; otherwise the PNG it could not compress.
+      final jpeg = copy.length > 1 && copy[0] == 0xFF && copy[1] == 0xD8;
+      return PickedReceipt(
+        bytes: copy,
+        name: 'ticket-shared.${jpeg ? 'jpg' : 'png'}',
+        extension: jpeg ? 'jpg' : 'png',
+      );
+    } catch (e) {
+      debugPrint('[AddTrip] could not make the shared ticket copy: $e');
+      return null;
+    }
+  }
+
+  /// Reads the ticket and checks the traveler's name and the trip's dates are
+  /// on it. Returns what is wrong, or null when it is fine (or can't be
+  /// checked). A ticket already on file is checked again only when the dates
+  /// changed.
+  Future<String?> _checkTicket(TripService service) async {
+    final l = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    Uint8List? bytes;
+    var fileName = '';
+    final picked = _receipt;
+    if (picked != null) {
+      bytes = picked.bytes;
+      fileName = picked.name;
+    } else {
+      final old = widget.trip;
+      final path = _existingReceiptPath;
+      final datesChanged =
+          old != null &&
+          (!_sameDay(old.departureDate, _depDate!) ||
+              !_sameDay(old.arrivalDate, _arrDate!));
+      if (path == null || !datesChanged) return null;
+      try {
+        bytes = await service.downloadReceipt(path);
+        fileName = path;
+      } catch (e) {
+        // Can't fetch it: don't block the edit over it.
+        debugPrint('[AddTrip] could not fetch the ticket to check it: $e');
+        return null;
+      }
+    }
+
+    setState(() => _checkingTicket = true);
+    try {
+      final result = await (widget.ticketCheck ?? TicketCheckService()).check(
+        bytes: bytes,
+        fileName: fileName,
+        departure: _depDate!,
+        arrival: _arrDate!,
+      );
+      return switch (result) {
+        TicketCheckResult.nameMismatch => l.errTicketNameMismatch,
+        TicketCheckResult.dateMismatch => l.errTicketDateMismatch(
+          DateFormat.yMMMMd(locale).format(_depDate!),
+        ),
+        TicketCheckResult.unreadable => l.errTicketUnreadable,
+        TicketCheckResult.passed || TicketCheckResult.unverifiable => null,
+      };
+    } catch (e) {
+      debugPrint('[AddTrip] ticket check failed: $e');
+      return null;
+    } finally {
+      if (mounted) setState(() => _checkingTicket = false);
+    }
+  }
+
+  static bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   // ── Build ──────────────────────────────────────────────────────────────────
   @override
@@ -489,15 +617,14 @@ class _AddTripScreenState extends State<AddTripScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Center(
-              child: Text(
-                _editing ? context.l10n.editTrip : context.l10n.addATripTitle,
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: AppColors.foreground,
-                ),
+            child: Text(
+              _editing ? context.l10n.editTrip : context.l10n.addATripTitle,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.foreground,
               ),
             ),
           ),
@@ -639,7 +766,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
         children: [
           _cardHeader(
             icon: Icons.location_on_outlined,
-            label: 'Departure details',
+            label: context.l10n.departureDetailsTitle,
             iconColor: AppColors.primary,
             labelColor: AppColors.primary,
             badge: context.l10n.from,
@@ -661,7 +788,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-departure-country',
-                  label: 'DEPARTURE COUNTRY',
+                  label: context.l10n.departureCountryLabel,
                   icon: Icons.language_rounded,
                   iconColor: AppColors.primary,
                   value: _departure?.country,
@@ -674,7 +801,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-departure-city',
-                  label: 'DEPARTURE CITY',
+                  label: context.l10n.departureCityLabel,
                   icon: Icons.location_city_rounded,
                   iconColor: AppColors.primary,
                   value: _departure?.city,
@@ -699,7 +826,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
         children: [
           _cardHeader(
             icon: Icons.location_on,
-            label: 'Arrival details',
+            label: context.l10n.arrivalDetailsTitle,
             iconColor: AppColors.accent,
             labelColor: AppColors.accent,
             badge: context.l10n.to,
@@ -721,7 +848,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-arrival-country',
-                  label: 'ARRIVAL COUNTRY',
+                  label: context.l10n.arrivalCountryLabel,
                   icon: Icons.language_rounded,
                   iconColor: AppColors.accent,
                   value: _arrival?.country,
@@ -734,7 +861,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _pickerField(
                   fieldKey: 'add-trip-arrival-city',
-                  label: 'ARRIVAL CITY',
+                  label: context.l10n.arrivalCityLabel,
                   icon: Icons.location_city_rounded,
                   iconColor: AppColors.accent,
                   value: _arrival?.city,
@@ -762,7 +889,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             : _existingReceiptPath!.split('/').last);
     final detail = _receipt != null
         ? '${_fmtSize(_receipt!.sizeBytes)}  '
-        : 'Receipt on file  ';
+        : '${context.l10n.receiptOnFile}  ';
 
     return _FormCard(
       child: Column(
@@ -839,7 +966,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                               ),
                             ),
                             Text(
-                              '✓ Attached',
+                              '✓ ${context.l10n.attached}',
                               style: GoogleFonts.dmSans(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 10,
@@ -998,7 +1125,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                       color: AppColors.foreground,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'e.g. X7KQ9R',
+                      hintText: context.l10n.bookingRefHint,
                       hintStyle: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
@@ -1037,9 +1164,17 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _buildDropdown(
                   fieldKey: 'add-trip-weight',
-                  label: 'MAX WEIGHT',
+                  label: context.l10n.maxWeight.toUpperCase(),
                   value: _maxWeightLabel,
                   options: _weightOptions.map((o) => o.$1).toList(),
+                  // Shown in the app's language; the English label is only
+                  // used to find the weight.
+                  display: (o) => context.l10n.upToKg(
+                    _weightOptions
+                        .firstWhere((w) => w.$1 == o)
+                        .$2
+                        .toStringAsFixed(1),
+                  ),
                   onChanged: (v) =>
                       setState(() => _maxWeightLabel = v ?? _maxWeightLabel),
                 ),
@@ -1048,91 +1183,18 @@ class _AddTripScreenState extends State<AddTripScreen> {
               Expanded(
                 child: _buildDropdown(
                   fieldKey: 'add-trip-size',
-                  label: 'MAX ITEM SIZE',
+                  label: context.l10n.maxItemSize.toUpperCase(),
                   value: _maxSize,
                   options: _sizeOptions,
+                  // Saved in English (the database reads it), shown translated.
+                  display: context.l10n.tripSize,
                   onChanged: (v) => setState(() => _maxSize = v ?? _maxSize),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          _priceField(),
         ],
       ),
-    );
-  }
-
-  Widget _priceField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '${context.l10n.tripPrice} ($_currency)',
-          style: GoogleFonts.dmSans(
-            fontWeight: FontWeight.w700,
-            fontSize: 10,
-            letterSpacing: 1.2,
-            color: AppColors.mutedForeground,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.input,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.local_offer_rounded,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('add-trip-price'),
-                  controller: _priceCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (_) {
-                    if (_error != null) setState(() => _error = null);
-                  },
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.foreground,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'e.g. 30',
-                    hintStyle: GoogleFonts.dmSans(
-                      fontSize: 12,
-                      color: AppColors.mutedForeground,
-                    ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          context.l10n.tripPriceHint,
-          style: GoogleFonts.dmSans(
-            fontSize: 10,
-            color: AppColors.mutedForeground,
-          ),
-        ),
-      ],
     );
   }
 
@@ -1142,6 +1204,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
     required String value,
     required List<String> options,
     required ValueChanged<String?> onChanged,
+    String Function(String option)? display,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1186,7 +1249,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                     (o) => DropdownMenuItem(
                       value: o,
                       child: Text(
-                        o,
+                        display?.call(o) ?? o,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w600,
                           fontSize: 11,
@@ -1327,7 +1390,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
                           size: 18,
                         ),
                   label: Text(
-                    _editing
+                    _checkingTicket
+                        ? context.l10n.checkingTicket
+                        : _editing
                         ? context.l10n.saveChanges
                         : context.l10n.saveAndPublish,
                     style: GoogleFonts.dmSans(
@@ -1494,27 +1559,12 @@ class _AddTripScreenState extends State<AddTripScreen> {
     );
   }
 
-  String _fmtDate(DateTime d) => '${_monthName(d.month)} ${d.day}, ${d.year}';
+  String _fmtDate(DateTime d) =>
+      DateFormat.yMMMMd(Localizations.localeOf(context).toString()).format(d);
 
   String _fmtSize(int bytes) => bytes >= 1024 * 1024
       ? '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB'
       : '${(bytes / 1024).clamp(0.1, double.infinity).toStringAsFixed(1)} KB';
-
-  String _monthName(int m) => const [
-    '',
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ][m];
 }
 
 /// Keeps a booking reference valid as the user types: letters and digits only,

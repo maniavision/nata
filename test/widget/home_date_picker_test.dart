@@ -56,7 +56,11 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       appWrapper(
-        HomeScreen(authService: FakeAuthService(), travelerService: service),
+        HomeScreen(
+          authService: FakeAuthService(),
+          travelerService: service,
+          capitalLookup: fakeCapitalLookup,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -183,6 +187,30 @@ void main() {
       expect(summary(tester).data, startsWith(fmtLong(today)));
     });
 
+    testWidgets('the picked date is still there when Home is opened again', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      await openSheet(tester);
+      await tapKey(tester, 'date-filter-1'); // This Week
+      await tapKey(tester, 'date-filter-3'); // Flexible
+      await tapKey(tester, 'date-confirm');
+      expect(find.text('${fmt(endOfWeek(0))} (±3d)'), findsOneWidget);
+
+      // Leaving Home and coming back builds a new Home screen.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await pumpHome(tester);
+
+      expect(find.text('${fmt(endOfWeek(0))} (±3d)'), findsOneWidget);
+      // ...and Search Travelers uses it.
+      await tester.tap(find.text('Search Travelers'));
+      await tester.pumpAndSettle();
+      expect(
+        service.searchCalls.last['date'],
+        endOfWeek(0).add(const Duration(days: 3)),
+      );
+    });
+
     testWidgets('"This Week" chip selects the end of this week', (
       tester,
     ) async {
@@ -297,7 +325,7 @@ void main() {
       await search(tester);
 
       expect(service.searchCalls.last['date'], isNull);
-      expect(service.searchCalls.last['departureCity'], 'Lagos');
+      expect(service.searchCalls.last['departureCity'], 'Abuja');
     });
 
     testWidgets('search is sent with the picked date', (tester) async {

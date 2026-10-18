@@ -251,6 +251,7 @@ void main() {
         'max_weight_kg': 5.0,
         'max_size': 'Backpack size',
         'ticket_receipt_path': 'user-1/1.pdf',
+        'ticket_shared_path': null,
         'booking_reference': null,
         'status': 'pending_review',
       });

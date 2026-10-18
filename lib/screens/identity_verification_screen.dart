@@ -13,6 +13,7 @@ import '../services/id_document_check_service.dart';
 import '../services/preferences_service.dart';
 import '../services/request_service.dart' show RequestInput;
 import '../widgets/country_code_picker_sheet.dart';
+import '../widgets/page_header.dart';
 import '../widgets/face_scan_step.dart';
 import '../services/verification_service.dart';
 import 'home_screen.dart';
@@ -71,9 +72,7 @@ class _IdentityVerificationScreenState
 
   Future<void> _submitAndNext() async {
     if (_documentBytes == null) {
-      setState(
-        () => _submitError = 'Please capture or upload your ID document first.',
-      );
+      setState(() => _submitError = context.l10n.errCaptureIdFirst);
       return;
     }
 
@@ -162,7 +161,7 @@ class _IdentityVerificationScreenState
       if (mounted) {
         setState(() {
           _submitting = false;
-          _submitError = 'Upload failed. Please try again.';
+          _submitError = context.l10n.errUploadFailed;
         });
       }
     }
@@ -309,6 +308,30 @@ class _Step1 extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildIdUploadCard(context),
+                const SizedBox(height: 8),
+                // Travelers are told who sees what before they upload.
+                Row(
+                  key: const ValueKey('id-shared-note'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.visibility_outlined,
+                      size: 14,
+                      color: AppColors.mutedForeground,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        context.l10n.idSharedWithSendersNote,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          height: 1.4,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 _buildFaceScanPreview(context),
                 const SizedBox(height: 16),
@@ -319,9 +342,9 @@ class _Step1 extends StatelessWidget {
         ),
         _buildFooter(
           buttonLabel: submitting
-              ? 'Uploading...'
+              ? context.l10n.uploadingEllipsis
               : documentBytes != null
-              ? 'Submit for Verification'
+              ? context.l10n.submitForVerification
               : context.l10n.scanIdToContinue,
           buttonColor: documentBytes != null
               ? AppColors.accent
@@ -359,42 +382,55 @@ class _Step1 extends StatelessWidget {
                   ),
                 ),
               ),
-              Row(
-                children: [
-                  Text(
-                    context.l10n.required,
+              const SizedBox(width: 8),
+              // Shrinks rather than overflow with long translations.
+              Expanded(
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      children: [
+                        Text(
+                          context.l10n.required,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            letterSpacing: 1.2,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppColors.accent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Text(
+                    context.l10n.skipForNowId,
+                    textAlign: TextAlign.end,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      letterSpacing: 1.4,
+                      fontSize: 12,
                       color: AppColors.mutedForeground,
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Text(
-                  context.l10n.skipForNowId,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.mutedForeground,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _buildProgressBar(step: 0, context: context),
         ],
       ),
@@ -405,7 +441,7 @@ class _Step1 extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFF1ED),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
       ),
       padding: const EdgeInsets.all(14),
@@ -420,7 +456,7 @@ class _Step1 extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.shield_outlined,
+              Icons.gpp_maybe_rounded,
               size: 18,
               color: AppColors.accent,
             ),
@@ -438,13 +474,13 @@ class _Step1 extends StatelessWidget {
                     color: AppColors.foreground,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   context.l10n.actionRequiredBody,
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     color: AppColors.mutedForeground,
-                    height: 1.5,
+                    height: 1.625,
                   ),
                 ),
               ],
@@ -457,9 +493,9 @@ class _Step1 extends StatelessWidget {
 
   Widget _buildIdUploadCard(BuildContext context) {
     final types = [
-      (Icons.book_outlined, 'Passport'),
-      (Icons.credit_card_rounded, "Driver's Lic."),
-      (Icons.badge_outlined, 'National ID'),
+      (Icons.menu_book_rounded, context.l10n.passportOption),
+      (Icons.credit_card_rounded, context.l10n.driversLicense),
+      (Icons.badge_rounded, context.l10n.nationalId),
     ];
 
     return Container(
@@ -513,7 +549,7 @@ class _Step1 extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w800,
-                        fontSize: 13,
+                        fontSize: 14,
                         color: AppColors.foreground,
                       ),
                     ),
@@ -537,18 +573,18 @@ class _Step1 extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  context.l10n.activeStep,
+                  context.l10n.activeStep.toUpperCase(),
                   style: GoogleFonts.dmSans(
                     fontWeight: FontWeight.w700,
                     fontSize: 10,
-                    letterSpacing: 1.0,
+                    letterSpacing: 0.5,
                     color: AppColors.accent,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           // ID type selector
           Row(
             children: types.asMap().entries.map((e) {
@@ -557,8 +593,11 @@ class _Step1 extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onIdTypeChanged(e.key),
                   child: Container(
-                    margin: EdgeInsets.only(right: e.key < 2 ? 8 : 0),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    margin: EdgeInsets.only(right: e.key < 2 ? 6 : 0),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: selected ? AppColors.primary : AppColors.input,
                       borderRadius: BorderRadius.circular(12),
@@ -582,7 +621,7 @@ class _Step1 extends StatelessWidget {
                             fontWeight: selected
                                 ? FontWeight.w700
                                 : FontWeight.w500,
-                            fontSize: 10,
+                            fontSize: 11,
                             color: selected
                                 ? Colors.white
                                 : AppColors.foreground,
@@ -595,7 +634,7 @@ class _Step1 extends StatelessWidget {
               );
             }).toList(),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           // Upload zone — shows preview if document picked, else picker buttons
           documentBytes != null
               ? _buildDocumentPreview(context)
@@ -673,7 +712,7 @@ class _Step1 extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                documentFileName ?? 'Document selected',
+                documentFileName ?? context.l10n.documentSelected,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.dmSans(
@@ -686,7 +725,7 @@ class _Step1 extends StatelessWidget {
             GestureDetector(
               onTap: () => _showPickerOptions(context),
               child: Text(
-                'Change',
+                context.l10n.change,
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
@@ -702,66 +741,72 @@ class _Step1 extends StatelessWidget {
 
   // Picker zone when no document selected
   Widget _buildPickerZone(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.input,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+    return CustomPaint(
+      foregroundPainter: const _DashedRRectBorder(
+        color: AppColors.border,
+        radius: 28,
       ),
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.secondary,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.add_a_photo_rounded,
-              size: 24,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            context.l10n.takePhotoOrUpload,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              color: AppColors.foreground,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            context.l10n.allCornersVisible,
-            style: GoogleFonts.dmSans(
-              fontSize: 10,
-              color: AppColors.mutedForeground,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _uploadButton(
-                context,
-                Icons.camera_alt_rounded,
-                context.l10n.useCamera,
-                onTap: () => _pickFromCamera(context),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.input,
+          borderRadius: BorderRadius.circular(28),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                shape: BoxShape.circle,
               ),
-              _uploadButton(
-                context,
-                Icons.photo_library_rounded,
-                context.l10n.chooseFile,
-                onTap: () => _pickFromGallery(context),
+              child: const Icon(
+                Icons.add_a_photo_rounded,
+                size: 24,
+                color: AppColors.primary,
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.takePhotoOrUpload,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              context.l10n.allCornersVisible,
+              style: GoogleFonts.dmSans(
+                fontSize: 10,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _uploadButton(
+                  context,
+                  Icons.camera_alt_rounded,
+                  context.l10n.useCamera,
+                  onTap: () => _pickFromCamera(context),
+                ),
+                _uploadButton(
+                  context,
+                  Icons.photo_library_rounded,
+                  context.l10n.chooseFile,
+                  onTap: () => _pickFromGallery(context),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -775,7 +820,7 @@ class _Step1 extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(999),
@@ -791,13 +836,15 @@ class _Step1 extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 14, color: AppColors.foreground),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                color: AppColors.foreground,
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.foreground,
+                ),
               ),
             ),
           ],
@@ -872,7 +919,7 @@ class _Step1 extends StatelessWidget {
       debugPrint('[Step1] camera error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera error: ${e.toString()}')),
+          SnackBar(content: Text(context.l10n.errCameraDetail(e.toString()))),
         );
       }
     }
@@ -899,7 +946,7 @@ class _Step1 extends StatelessWidget {
       debugPrint('[Step1] file picker error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File picker error: ${e.toString()}')),
+          SnackBar(content: Text(context.l10n.errFilePicker(e.toString()))),
         );
       }
     }
@@ -916,63 +963,105 @@ class _Step1 extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: AppColors.muted,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '2',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  color: AppColors.mutedForeground,
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  color: AppColors.muted,
+                  shape: BoxShape.circle,
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.faceScan,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: AppColors.foreground,
+                child: Center(
+                  child: Text(
+                    '2',
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.mutedForeground,
+                    ),
                   ),
                 ),
-                Text(
-                  context.l10n.faceScanSub,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.faceScan,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    Text(
+                      context.l10n.faceScanSub,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.muted,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  context.l10n.nextStep.toUpperCase(),
                   style: GoogleFonts.dmSans(
-                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    letterSpacing: 0.5,
                     color: AppColors.mutedForeground,
                   ),
                 ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.muted,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              context.l10n.nextStep,
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w700,
-                fontSize: 10,
-                letterSpacing: 1.0,
-                color: AppColors.mutedForeground,
               ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    Icons.face_retouching_natural_rounded,
+                    size: 22,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    context.l10n.faceScanLivenessNote,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      height: 1.375,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -994,25 +1083,41 @@ class _Step1 extends StatelessWidget {
           children: [
             const Icon(Icons.lock_rounded, size: 14, color: Color(0xFF168A68)),
             const SizedBox(width: 4),
-            Text(
-              context.l10n.encrypted256,
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                color: AppColors.mutedForeground,
+            Flexible(
+              child: Text(
+                context.l10n.encrypted256,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
               ),
             ),
           ],
         ),
+        Container(
+          width: 4,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AppColors.mutedForeground.withValues(alpha: 0.4),
+            shape: BoxShape.circle,
+          ),
+        ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.bolt_rounded, size: 14, color: AppColors.accent),
+            const Icon(
+              Icons.offline_bolt_rounded,
+              size: 14,
+              color: AppColors.accent,
+            ),
             const SizedBox(width: 4),
-            Text(
-              context.l10n.instantAi,
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                color: AppColors.mutedForeground,
+            Flexible(
+              child: Text(
+                context.l10n.instantAi,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
               ),
             ),
           ],
@@ -1115,16 +1220,12 @@ class _Step3 extends StatelessWidget {
                         color: AppColors.background,
                       ),
                       child: ClipOval(
-                        child: Image.network(
-                          'https://lh3.googleusercontent.com/a/ACg8ocJ97aGjnJ1qNWsqUS-lOIkKvwls8WK-SI54YY8POZz7eBd4JRE=s96-c',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stack) => Container(
-                            color: AppColors.secondary,
-                            child: const Icon(
-                              Icons.person,
-                              size: 48,
-                              color: AppColors.primary,
-                            ),
+                        child: Container(
+                          color: AppColors.secondary,
+                          child: const Icon(
+                            Icons.person,
+                            size: 48,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -1312,7 +1413,7 @@ class _Step3 extends StatelessWidget {
             context,
             Icons.credit_card_rounded,
             context.l10n.passportIdDoc,
-            'Verified',
+            context.l10n.verifiedLabel,
             const Color(0xFF168A68),
           ),
           const SizedBox(height: 10),
@@ -1320,7 +1421,7 @@ class _Step3 extends StatelessWidget {
             context,
             Icons.face_retouching_natural,
             context.l10n.biometricLiveness,
-            '99.8% Match',
+            context.l10n.matchPercent('99.8%'),
             const Color(0xFF168A68),
           ),
           const SizedBox(height: 10),
@@ -1328,7 +1429,7 @@ class _Step3 extends StatelessWidget {
             context,
             Icons.shield_rounded,
             context.l10n.trustLimit,
-            '\$2,500 / delivery',
+            context.l10n.amountPerDelivery(r'$2,500'),
             AppColors.accent,
           ),
         ],
@@ -1486,20 +1587,28 @@ Widget _buildProgressBar({required int step, required BuildContext context}) {
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            l.identityVerificationTitle.toUpperCase(),
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-              letterSpacing: 1.2,
-              color: AppColors.primary,
+          // Scales down rather than overflow with long translations.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l.identityVerificationTitle.toUpperCase(),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  letterSpacing: 1.44,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             step == 0 ? l.step1of2 : l.step2of2,
             style: GoogleFonts.dmSans(
               fontWeight: step == 1 ? FontWeight.w800 : FontWeight.w700,
-              fontSize: 11,
+              fontSize: 12,
               color: step == 1 ? AppColors.accent : AppColors.mutedForeground,
             ),
           ),
@@ -1626,11 +1735,18 @@ class _StepEmergency extends StatefulWidget {
   /// Called once the contact is saved, or when the user chooses to skip.
   final VoidCallback onDone;
 
+  /// Opened from Profile rather than during verification: a plain page
+  /// header, no Skip or progress, "Save contact", and [initial] filled in.
+  final bool standalone;
+  final EmergencyContact? initial;
+
   const _StepEmergency({
     super.key,
     required this.service,
     required this.onBack,
     required this.onDone,
+    this.standalone = false,
+    this.initial,
   });
 
   @override
@@ -1662,7 +1778,33 @@ class _StepEmergencyState extends State<_StepEmergency> {
   @override
   void initState() {
     super.initState();
-    _applyUserCountry();
+    final initial = widget.initial;
+    if (initial == null) {
+      _applyUserCountry();
+    } else {
+      _nameCtrl.text = initial.fullName;
+      _relationship = initial.relationship;
+      _phoneCtrl.text = initial.phone;
+      _applyCountryOf(initial.phone);
+    }
+  }
+
+  /// Splits a saved "+233241234567" into its country and local number.
+  Future<void> _applyCountryOf(String phone) async {
+    final all = await CountryService().all();
+    Country? best;
+    for (final c in all) {
+      if (phone.startsWith(c.phoneCode) &&
+          (best == null || c.phoneCode.length > best.phoneCode.length)) {
+        best = c;
+      }
+    }
+    if (best == null || !mounted || _countryChosenByUser) return;
+    final country = best;
+    setState(() {
+      _country = country;
+      _phoneCtrl.text = phone.substring(country.phoneCode.length);
+    });
   }
 
   Future<void> _applyUserCountry() async {
@@ -1681,19 +1823,6 @@ class _StepEmergencyState extends State<_StepEmergency> {
       _countryChosenByUser = true;
       _error = null;
     });
-  }
-
-  /// The number in international format: the picked country code plus the
-  /// local number (its leading trunk "0" dropped, e.g. UK 07700 -> +44 7700).
-  /// A number typed with its own "+" code is taken as is.
-  static String? _internationalPhone(String phoneCode, String input) {
-    final typed = input.trim();
-    if (typed.startsWith('+')) return RequestInput.normalizePhone(typed);
-    final local = typed
-        .replaceAll(RegExp(r'[\s\-().]'), '')
-        .replaceFirst(RegExp(r'^0+'), '');
-    if (local.isEmpty) return null;
-    return RequestInput.normalizePhone('$phoneCode$local');
   }
 
   @override
@@ -1725,7 +1854,10 @@ class _StepEmergencyState extends State<_StepEmergency> {
       setState(() => _error = l.errContactName);
       return;
     }
-    final phone = _internationalPhone(_country.phoneCode, _phoneCtrl.text);
+    final phone = RequestInput.internationalPhone(
+      _country.phoneCode,
+      _phoneCtrl.text,
+    );
     if (phone == null) {
       setState(() => _error = l.errContactPhone);
       return;
@@ -1760,28 +1892,37 @@ class _StepEmergencyState extends State<_StepEmergency> {
     final l = context.l10n;
     return Column(
       children: [
-        _header(l),
+        if (widget.standalone)
+          PageHeader(title: l.emergencyContactLabel)
+        else
+          _header(l),
         Expanded(
           child: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              widget.standalone ? 20 : 8,
+              20,
+              24,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l.ecTitle,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 24,
-                    letterSpacing: -0.5,
-                    color: AppColors.foreground,
+                if (!widget.standalone)
+                  Text(
+                    l.ecTitle,
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 24,
+                      letterSpacing: -0.5,
+                      color: AppColors.foreground,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 4),
                 Text(
-                  l.ecBody,
+                  widget.standalone ? l.ecScreenBody : l.ecBody,
                   style: GoogleFonts.dmSans(
-                    fontSize: 12,
+                    fontSize: widget.standalone ? 13 : 12,
                     color: AppColors.mutedForeground,
                   ),
                 ),
@@ -2172,7 +2313,7 @@ class _StepEmergencyState extends State<_StepEmergency> {
                       children: [
                         Flexible(
                           child: Text(
-                            l.ecFinish,
+                            widget.standalone ? l.ecSaveContact : l.ecFinish,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.dmSans(
@@ -2182,12 +2323,14 @@ class _StepEmergencyState extends State<_StepEmergency> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: Colors.white,
-                        ),
+                        if (!widget.standalone) ...[
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ],
                       ],
                     ),
             ),
@@ -2272,6 +2415,62 @@ class _StepEmergencyState extends State<_StepEmergency> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A dashed rounded-rectangle outline (border-2 border-dashed).
+class _DashedRRectBorder extends CustomPainter {
+  final Color color;
+  final double radius;
+  const _DashedRRectBorder({required this.color, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    final rect = (Offset.zero & size).deflate(1);
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+    for (final metric in path.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += 10) {
+        canvas.drawPath(metric.extractPath(d, d + 6), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRRectBorder old) =>
+      old.color != color || old.radius != radius;
+}
+
+/// The emergency contact form on its own page, opened from Profile. Pops
+/// with true once the contact is saved.
+class EmergencyContactScreen extends StatelessWidget {
+  /// The saved contact, filled in for editing.
+  final EmergencyContact? initial;
+
+  /// Override for tests; defaults to the real [EmergencyContactService].
+  final EmergencyContactService? service;
+
+  const EmergencyContactScreen({super.key, this.initial, this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: _StepEmergency(
+          service: service ?? EmergencyContactService(),
+          standalone: true,
+          initial: initial,
+          onBack: () => Navigator.of(context).pop(),
+          onDone: () => Navigator.of(context).pop(true),
+        ),
       ),
     );
   }

@@ -49,7 +49,7 @@ class IdDocumentCheckService {
     Future<String?> Function(Uint8List bytes, String fileName)? readText,
     Future<bool?> Function(Uint8List bytes, String fileName)? detectFace,
     Future<Map<String, dynamic>?> Function()? loadProfile,
-  }) : _readText = readText ?? _readDocumentText,
+  }) : _readText = readText ?? readDocumentText,
        _detectFace = detectFace ?? _detectDocumentFace,
        _loadProfile = loadProfile ?? AuthService().getProfile;
 
@@ -297,7 +297,7 @@ class IdDocumentCheckService {
   /// True when every word of [name] appears as a whole word in [text].
   /// Case, accents, hyphens/apostrophes and passport MRZ fillers ('<') are
   /// ignored, so "Jean-Éric" matches "JEAN ERIC" and "P<CMRDUPONT<<JEAN<ERIC".
-  @visibleForTesting
+  /// Also used for flight tickets (TicketCheckService).
   static bool nameAppearsIn(String text, String name) {
     final words = _normalize(name).split(' ').where((w) => w.isNotEmpty);
     if (words.isEmpty) return false;
@@ -318,6 +318,12 @@ class IdDocumentCheckService {
           mrzChunks.any((c) => c.length == w.length + 3 && c.endsWith(w)),
     );
   }
+
+  /// Upper case, no accents, only letters and single spaces.
+  static String normalize(String s) => _normalize(s);
+
+  /// [s] with accented letters replaced by plain ones (upper case input).
+  static String stripAccents(String s) => _stripAccents(s);
 
   static String _normalize(String s) {
     final upper = _stripAccents(s.toUpperCase());
@@ -361,8 +367,9 @@ class IdDocumentCheckService {
     return buf.toString();
   }
 
-  /// PDFs are read with pdfrx, images with native OCR.
-  static Future<String?> _readDocumentText(Uint8List bytes, String fileName) =>
+  /// PDFs are read with pdfrx, images with native OCR. Also used for flight
+  /// tickets (TicketCheckService).
+  static Future<String?> readDocumentText(Uint8List bytes, String fileName) =>
       fileName.toLowerCase().endsWith('.pdf')
       ? _extractPdfText(bytes, fileName)
       : _recognizeText(bytes, fileName);
@@ -472,6 +479,27 @@ class IdDocumentCheckService {
     }
     return null;
   }
+
+  /// The first pages of a PDF as PNGs (also used to blur a flight ticket).
+  static Future<List<Uint8List>> renderPdfPages(
+    Uint8List bytes,
+    String fileName,
+  ) => _renderPdfPages(bytes, fileName);
+
+  /// A photo turned upright and scaled to at most [maxSide] px, as JPEG.
+  static Future<Uint8List?> uprightJpeg(
+    Uint8List bytes,
+    String fileName, {
+    int maxSide = 2000,
+  }) =>
+      _invokeOnFile<Uint8List>('toJpeg', bytes, fileName, {'maxSide': maxSide});
+
+  /// Each word read on an image and each barcode found, with their positions
+  /// (see IdTextRecognizer.swift / MainActivity.kt). Null if it could not run.
+  static Future<Map<Object?, Object?>?> textBoxes(
+    Uint8List bytes,
+    String fileName,
+  ) => _invokeOnFile<Map<Object?, Object?>>('textBoxes', bytes, fileName);
 
   /// An ID is at most a few pages (front, back); don't render a whole book.
   static const _maxPdfPages = 3;

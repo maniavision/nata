@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n_ext.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../services/country_service.dart';
@@ -116,7 +117,7 @@ class _CountryCodePickerSheetState extends State<CountryCodePickerSheet> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Select Country Code',
+                        context.l10n.selectCountryCode,
                         style: GoogleFonts.manrope(
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
@@ -170,7 +171,7 @@ class _CountryCodePickerSheetState extends State<CountryCodePickerSheet> {
                             color: AppColors.foreground,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Search country...',
+                            hintText: context.l10n.searchCountryHint,
                             hintStyle: GoogleFonts.dmSans(
                               fontSize: 14,
                               color: AppColors.mutedForeground,
@@ -211,7 +212,7 @@ class _CountryCodePickerSheetState extends State<CountryCodePickerSheet> {
                     : _filtered.isEmpty
                     ? Center(
                         child: Text(
-                          'No countries found',
+                          context.l10n.noCountriesFound,
                           style: GoogleFonts.dmSans(
                             fontSize: 14,
                             color: AppColors.mutedForeground,

@@ -1,244 +1,248 @@
-import 'dart:typed_data';
+import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
-import 'package:carrywise_app/screens/requests_screen.dart';
+import 'package:carrywise_app/services/request_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
+import '../helpers/fakes.dart';
 
-const delivery = AcceptedDelivery(
-  orderId: 'DEL-8842',
-  senderName: 'Sarah Adeleke',
-  senderPhotoUrl: 'https://example.com/sarah.jpg',
-  senderSubtitle: 'Sender · Escrow Funded',
-  senderPhone: '+234 803 555 0142',
-  payout: '\$38.00',
-  trip: 'Lagos (LOS) → London (LHR)',
-  routeCodes: 'LOS → LHR',
-  travelDate: 'Jun 22, 2025',
-  destinationCity: 'London',
-  itemSummary: 'iPad Mini (Sealed Box · 0.6 kg)',
-  itemName: 'iPad Mini 64GB (Space Gray)',
-  itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
-  receivedPhotoUrl: 'https://example.com/box.jpg',
-  receivedPhotoName: 'received_sealed_box.jpg',
-  receivedPhotoCaption: 'Captured at Lagos Airport · Jun 22, 10:14 AM',
-  recipientName: 'David Adeleke (London)',
-  recipientPhone: '+44 7700 900456',
-  meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
-);
-
+/// The traveler's delivery: pick the item up, then hand it over with the
+/// recipient's code (on Delivery & Payout Release).
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
-  void bigScreen(WidgetTester tester) {
+  late FakeRequestService service;
+  bool? popped;
+
+  /// What the camera returns next (null: the traveler cancelled).
+  Uint8List? nextPhoto;
+  var photosTaken = 0;
+
+  setUp(() {
+    service = FakeRequestService();
+    popped = null;
+    nextPhoto = kTransparentPng;
+    photosTaken = 0;
+  });
+
+  Future<void> pump(
+    WidgetTester tester,
+    AcceptedDelivery delivery, {
+    Locale locale = const Locale('en'),
+  }) async {
     tester.view.physicalSize = const Size(900, 3000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-  }
-
-  Future<void> pump(
-    WidgetTester tester, {
-    PhotoPicker? picker,
-    Locale locale = const Locale('en'),
-  }) async {
-    bigScreen(tester);
     await tester.pumpWidget(
       appWrapper(
-        DeliveryTaskScreen(delivery: delivery, photoPicker: picker),
+        Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                popped = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) => DeliveryTaskScreen(
+                      delivery: delivery,
+                      requestService: service,
+                      photoPicker: (_) async {
+                        photosTaken++;
+                        return nextPhoto;
+                      },
+                      paymentService: FakePaymentService(
+                        accounts: [samplePayoutAccount()],
+                      ),
+                    ),
+                  ),
+                );
+              },
+              child: const Text('open'),
+            ),
+          ),
+        ),
         locale: locale,
       ),
     );
-    await tester.pump();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
   }
 
-  group('DeliveryTaskScreen', () {
-    testWidgets('shows the order, sender, payout and route', (tester) async {
-      await pump(tester);
+  ElevatedButton confirmButton(WidgetTester t) => t.widget<ElevatedButton>(
+    find.byKey(const ValueKey('delivery-task-confirm')),
+  );
 
-      expect(find.text('Delivery Task Details'), findsOneWidget);
-      expect(find.text('Order #DEL-8842'), findsOneWidget);
-      expect(find.text('In Progress'), findsOneWidget);
-      expect(find.text('Sarah Adeleke'), findsOneWidget);
-      expect(find.text('Sender · Verified Identity'), findsOneWidget);
-      expect(find.text('YOUR PAYOUT'), findsOneWidget);
-      expect(find.textContaining('\$38.00'), findsWidgets);
-      expect(find.text('LOS → LHR'), findsOneWidget);
-      expect(find.text('Jun 22, 2025'), findsOneWidget);
-    });
+  Future<void> attachHandover(WidgetTester tester) async {
+    await tester.tap(
+      find.byKey(const ValueKey('delivery-task-attach-handover')),
+    );
+    await tester.pumpAndSettle();
+  }
 
-    testWidgets('shows the item and both proof steps', (tester) async {
-      await pump(tester);
+  testWidgets('shows the order, sender, payout, route and item', (
+    tester,
+  ) async {
+    await pump(tester, sampleDelivery());
 
-      expect(find.text('ITEM TO CARRY'), findsOneWidget);
-      expect(find.text('iPad Mini 64GB (Space Gray)'), findsOneWidget);
-      expect(find.text('Item Received from Sender'), findsOneWidget);
-      expect(find.text('received_sealed_box.jpg'), findsOneWidget);
-      expect(find.text('Item Delivered to Recipient'), findsOneWidget);
-      expect(find.text('Pending Delivery'), findsOneWidget);
-      expect(find.textContaining('at the London destination'), findsOneWidget);
-      expect(find.text('David Adeleke (London)'), findsOneWidget);
-      expect(find.text('+44 7700 900456'), findsOneWidget);
-      expect(find.text('LHR Terminal 4 Arrivals Lounge'), findsOneWidget);
-      expect(
-        find.text('Confirm Delivery & Claim \$38.00 Payout'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('confirming without a handover photo asks for one', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
-      await tester.pump();
-
-      expect(find.text('Attach the handover photo first.'), findsOneWidget);
-    });
-
-    testWidgets('attaching the handover photo marks step 2 attached', (
-      tester,
-    ) async {
-      // A 1x1 transparent PNG.
-      final png = Uint8List.fromList([
-        0x89,
-        0x50,
-        0x4E,
-        0x47,
-        0x0D,
-        0x0A,
-        0x1A,
-        0x0A,
-        0x00,
-        0x00,
-        0x00,
-        0x0D,
-        0x49,
-        0x48,
-        0x44,
-        0x52,
-        0x00,
-        0x00,
-        0x00,
-        0x01,
-        0x00,
-        0x00,
-        0x00,
-        0x01,
-        0x08,
-        0x06,
-        0x00,
-        0x00,
-        0x00,
-        0x1F,
-        0x15,
-        0xC4,
-        0x89,
-        0x00,
-        0x00,
-        0x00,
-        0x0A,
-        0x49,
-        0x44,
-        0x41,
-        0x54,
-        0x78,
-        0x9C,
-        0x63,
-        0x00,
-        0x01,
-        0x00,
-        0x00,
-        0x05,
-        0x00,
-        0x01,
-        0x0D,
-        0x0A,
-        0x2D,
-        0xB4,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x49,
-        0x45,
-        0x4E,
-        0x44,
-        0xAE,
-        0x42,
-        0x60,
-        0x82,
-      ]);
-      await pump(tester, picker: (_) async => png);
-      await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
-      await tester.pump();
-
-      await tester.tap(find.byKey(const ValueKey('delivery-task-handover')));
-      await tester.pump();
-
-      expect(find.text('Handover photo attached'), findsOneWidget);
-      expect(find.text('Pending Delivery'), findsNothing);
-      expect(find.text('Attached'), findsNWidgets(2));
-      // The error goes away once the photo is there.
-      expect(find.text('Attach the handover photo first.'), findsNothing);
-    });
-
-    testWidgets('a cancelled photo pick changes nothing', (tester) async {
-      await pump(tester, picker: (_) async => null);
-
-      await tester.tap(find.byKey(const ValueKey('delivery-task-handover')));
-      await tester.pump();
-
-      expect(find.text('Pending Delivery'), findsOneWidget);
-    });
-
-    testWidgets('is translated', (tester) async {
-      await pump(tester, locale: const Locale('fr'));
-
-      expect(find.text('Détails de la livraison'), findsOneWidget);
-      expect(find.text('Commande n° DEL-8842'), findsOneWidget);
-    });
+    expect(find.text('Delivery Task Details'), findsOneWidget);
+    expect(find.text('Order #DEL-8842'), findsOneWidget);
+    expect(find.text('Sarah Adeleke'), findsOneWidget);
+    expect(find.text('LOS → LHR'), findsOneWidget);
+    expect(find.text('iPad Mini 64GB (Space Gray)'), findsOneWidget);
+    expect(find.text('David Adeleke (London)'), findsOneWidget);
+    expect(find.text('LHR Terminal 4 Arrivals Lounge'), findsOneWidget);
   });
 
-  group('from the Requests page', () {
-    Future<void> openRequests(WidgetTester tester) async {
-      bigScreen(tester);
-      await tester.pumpWidget(appWrapper(const RequestsScreen()));
-      await tester.pump();
+  testWidgets('before pickup: confirming delivery is locked', (tester) async {
+    await pump(tester, sampleDelivery());
+
+    expect(find.text('Not yet'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('delivery-task-picked-up')),
+      findsOneWidget,
+    );
+    expect(confirmButton(tester).onPressed, isNull);
+  });
+
+  testWidgets("\"I've picked up the item\" records it and unlocks the code", (
+    tester,
+  ) async {
+    await pump(tester, sampleDelivery());
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-picked-up')));
+    await tester.pumpAndSettle();
+
+    // The sealed box is photographed first.
+    expect(photosTaken, 1);
+    expect(service.photos, [(id: 'req-1', kind: DeliveryPhotoKind.pickup)]);
+    expect(
+      find.byKey(const ValueKey('delivery-task-pickup-photo')),
+      findsOneWidget,
+    );
+    expect(service.pickedUp, ['req-1']);
+    expect(find.text('Picked up'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('delivery-task-picked-up-at')),
+      findsOneWidget,
+    );
+    // Still locked until the handover photo is attached.
+    expect(confirmButton(tester).onPressed, isNull);
+    await attachHandover(tester);
+    expect(confirmButton(tester).onPressed, isNotNull);
+
+    // Requests reloads on return.
+    await tester.tap(find.byKey(const ValueKey('delivery-task-back')));
+    await tester.pumpAndSettle();
+    expect(popped, isTrue);
+  });
+
+  testWidgets('no photo, no pickup', (tester) async {
+    nextPhoto = null;
+    await pump(tester, sampleDelivery());
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-picked-up')));
+    await tester.pumpAndSettle();
+
+    expect(photosTaken, 1);
+    expect(service.photos, isEmpty);
+    expect(service.pickedUp, isEmpty);
+    expect(find.text('Not yet'), findsOneWidget);
+  });
+
+  testWidgets('a failed pickup is explained and can be retried', (
+    tester,
+  ) async {
+    service.failPickUp = const RequestException(RequestFailure.other);
+    await pump(tester, sampleDelivery());
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-picked-up')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text("Couldn't mark it as picked up. Please try again."),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('delivery-task-picked-up')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('picked up: Confirm Delivery opens the code entry', (
+    tester,
+  ) async {
+    await pump(tester, samplePickedUpDelivery());
+
+    expect(find.text('Picked up'), findsOneWidget);
+    expect(confirmButton(tester).onPressed, isNull);
+    await attachHandover(tester);
+    expect(find.text('Handover photo attached'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(service.photos, [(id: 'req-1', kind: DeliveryPhotoKind.handover)]);
+    expect(find.byType(DeliveryConfirmScreen), findsOneWidget);
+  });
+
+  testWidgets('a failed handover upload is explained', (tester) async {
+    await pump(tester, samplePickedUpDelivery());
+    await attachHandover(tester);
+    service.failPhoto = const RequestException(RequestFailure.other);
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text("Couldn't upload the photo. Please try again."),
+      findsOneWidget,
+    );
+    expect(find.byType(DeliveryConfirmScreen), findsNothing);
+  });
+
+  testWidgets('once delivered, it goes back to Requests', (tester) async {
+    await pump(tester, samplePickedUpDelivery());
+    await attachHandover(tester);
+    await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
+    await tester.pumpAndSettle();
+
+    for (var i = 0; i < 4; i++) {
+      await tester.enterText(
+        find.byKey(ValueKey('delivery-confirm-pin-$i')),
+        '1234'[i],
+      );
     }
+    await tester.pump();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('delivery-confirm-release')),
+    );
+    await tester.tap(find.byKey(const ValueKey('delivery-confirm-release')));
+    await tester.pumpAndSettle();
 
-    testWidgets('tapping the accepted request opens its details', (
+    expect(find.byType(DeliveryTaskScreen), findsNothing);
+    expect(popped, isTrue);
+    expect(find.textContaining('Delivered!'), findsOneWidget);
+  });
+
+  testWidgets('no phone call button without the sender\'s number', (
+    tester,
+  ) async {
+    await pump(
       tester,
-    ) async {
-      await openRequests(tester);
+      AcceptedDelivery.fromIncoming(
+        sampleIncoming(status: 'paid'),
+        payout: r'$38',
+        locale: 'en',
+      ),
+    );
 
-      await tester.tap(find.text('Sarah Adeleke'));
-      await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('delivery-task-call')), findsNothing);
+    expect(find.byKey(const ValueKey('delivery-task-message')), findsOneWidget);
+  });
 
-      expect(find.byType(DeliveryTaskScreen), findsOneWidget);
-      expect(find.text('Order #DEL-8842'), findsOneWidget);
-    });
+  testWidgets('is translated', (tester) async {
+    await pump(tester, sampleDelivery(), locale: const Locale('fr'));
 
-    testWidgets('so does Manage Delivery & Attach Proof', (tester) async {
-      await openRequests(tester);
-
-      await tester.tap(find.byKey(const ValueKey('manage-delivery')));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DeliveryTaskScreen), findsOneWidget);
-    });
-
-    testWidgets('back returns to the Requests page', (tester) async {
-      await openRequests(tester);
-      await tester.tap(find.text('Sarah Adeleke'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const ValueKey('delivery-task-back')));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DeliveryTaskScreen), findsNothing);
-      expect(find.byType(RequestsScreen), findsOneWidget);
-    });
+    expect(find.text('Détails de la livraison'), findsOneWidget);
+    expect(find.text("J'ai récupéré l'article"), findsOneWidget);
   });
 }

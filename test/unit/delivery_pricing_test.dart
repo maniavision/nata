@@ -258,9 +258,9 @@ void main() {
       );
 
       expect(q.hours, 24);
-      expect(q.costUsd, 100.68);
-      expect(q.feeUsd, 10.07); // 10% of 100.68, rounded
-      expect(q.totalUsd, 110.75);
+      expect(q.costUsd, 101); // the formula gives 100.68, rounded up
+      expect(q.feeUsd, 11); // 10% of 101 is 10.10, rounded up
+      expect(q.totalUsd, 112);
     });
 
     test('a flight further away is cheaper', () {
@@ -280,7 +280,7 @@ void main() {
       expect(later.totalUsd, lessThan(soon.totalUsd));
     });
 
-    test('the fee is 10% of the cost', () {
+    test('the fee is 10% of the cost, rounded up to a whole dollar', () {
       for (final km in [100.0, 2500.0, 9000.0]) {
         final q = DeliveryQuote.compute(
           distanceKm: km,
@@ -288,7 +288,32 @@ void main() {
           now: now,
           weightKg: 2,
         );
-        expect(q.feeUsd, closeTo(q.costUsd * 0.10, 0.006));
+        expect(q.feeUsd, (q.costUsd * 0.10 - 1e-9).ceilToDouble());
+        expect(q.feeUsd, greaterThanOrEqualTo(q.costUsd * 0.10));
+        expect(q.feeUsd - q.costUsd * 0.10, lessThan(1));
+      }
+    });
+
+    test('every amount is a whole dollar, never rounded down', () {
+      for (final km in [0.0, 123.4, 2500.0, 5012.3, 19999.9]) {
+        for (final kg in [0.0, 0.45, 0.9, 2.5, 10.0]) {
+          final q = DeliveryQuote.compute(
+            distanceKm: km,
+            departureDate: DateTime(2030, 6, 20),
+            now: now,
+            weightKg: kg,
+          );
+          final exact = CostCalculator.calculateCost(
+            distanceKm: km,
+            deliveryTimeInHours: q.hours,
+            weightKg: kg,
+          );
+          for (final v in [q.costUsd, q.feeUsd, q.totalUsd]) {
+            expect(v, v.roundToDouble(), reason: '$km km, $kg kg');
+          }
+          expect(q.costUsd, greaterThanOrEqualTo(exact));
+          expect(q.costUsd - exact, lessThan(1));
+        }
       }
     });
 
@@ -323,8 +348,25 @@ void main() {
         weightKg: 0.9,
       );
 
-      // 5 + 61.88 (5012.31 km) + 2.70 (0.9 kg) + 31.25 (750 / 24 h) = 100.83
-      expect(q.costUsd, 100.83);
+      // 5 + 61.88 (5012.31 km) + 2.70 (0.9 kg) + 31.25 (750 / 24 h) = 100.83,
+      // rounded up to 101; the fee is 10.10, rounded up to 11.
+      expect(q.costUsd, 101);
+      expect(q.feeUsd, 11);
+    });
+  });
+
+  group('ceilWhole', () {
+    test('rounds any fraction up', () {
+      expect(ceilWhole(100.01), 101);
+      expect(ceilWhole(100.5), 101);
+      expect(ceilWhole(100.99), 101);
+    });
+
+    test('leaves whole amounts alone, despite how doubles store them', () {
+      expect(ceilWhole(100), 100);
+      expect(ceilWhole(30 * 0.1), 3); // 3.0000000000000004 as a double
+      expect(ceilWhole(110 * 0.1), 11); // 11.000000000000002
+      expect(ceilWhole(0), 0);
     });
   });
 }
