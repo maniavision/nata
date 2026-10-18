@@ -527,6 +527,11 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errSessionExpired;
       case RequestFailure.tripUnavailable:
         return l.errTripUnavailable;
+      case RequestFailure.notVerified:
+        return l.errNotVerified;
+      case RequestFailure.tripFull:
+      case RequestFailure.senderOnTrip:
+        return l.errTripFull;
       case RequestFailure.ownTrip:
         return l.errOwnTrip;
       case RequestFailure.weightTooHeavy:

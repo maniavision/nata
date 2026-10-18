@@ -2,6 +2,7 @@ import 'dart:async';
 import '../widgets/nata_logo.dart';
 import 'sign_up_screen.dart';
 import 'login_screen.dart';
+import '../services/verify_gate.dart';
 import '../services/auth_gate.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
@@ -946,7 +947,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // ── Add a Trip button ──────────────────────────────────────────────────────
   Widget _buildAddTripButton(l) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (!AuthGate.check(
           context,
           message: context.l10n.signInPromptAddTrip,
@@ -954,9 +955,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         )) {
           return;
         }
-        Navigator.of(
+        final navigator = Navigator.of(context);
+        if (!await VerifyGate.check(
           context,
-        ).push(MaterialPageRoute(builder: (context) => const AddTripScreen()));
+          message: context.l10n.verifyToAddTrip,
+        )) {
+          return;
+        }
+        navigator.push(
+          MaterialPageRoute(builder: (context) => const AddTripScreen()),
+        );
       },
       child: Container(
         width: double.infinity,

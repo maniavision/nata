@@ -5444,6 +5444,66 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get notNow;
 
+  /// No description provided for @verifyPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity first'**
+  String get verifyPromptTitle;
+
+  /// No description provided for @verifyPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your identity check is under review'**
+  String get verifyPendingTitle;
+
+  /// No description provided for @verifyPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can post trips and send requests once your ID is approved. We\'ll notify you.'**
+  String get verifyPendingBody;
+
+  /// No description provided for @verifyMyIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify my identity'**
+  String get verifyMyIdentity;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @verifyToAddTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Only verified travelers can post trips. It takes a few minutes: a photo of your ID and a selfie.'**
+  String get verifyToAddTrip;
+
+  /// No description provided for @verifyToSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Only verified members can send delivery requests. It takes a few minutes: a photo of your ID and a selfie.'**
+  String get verifyToSendRequest;
+
+  /// No description provided for @errNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity first: only verified members can do this.'**
+  String get errNotVerified;
+
+  /// No description provided for @errTripFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip already carries items for 3 senders.'**
+  String get errTripFull;
+
+  /// No description provided for @errSenderOnTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'You already accepted a request from this sender on this trip.'**
+  String get errSenderOnTrip;
+
   /// No description provided for @continueBrowsing.
   ///
   /// In en, this message translates to:

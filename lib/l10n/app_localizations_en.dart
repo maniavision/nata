@@ -3062,6 +3062,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notNow => 'Not now';
 
   @override
+  String get verifyPromptTitle => 'Verify your identity first';
+
+  @override
+  String get verifyPendingTitle => 'Your identity check is under review';
+
+  @override
+  String get verifyPendingBody =>
+      'You can post trips and send requests once your ID is approved. We\'ll notify you.';
+
+  @override
+  String get verifyMyIdentity => 'Verify my identity';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get verifyToAddTrip =>
+      'Only verified travelers can post trips. It takes a few minutes: a photo of your ID and a selfie.';
+
+  @override
+  String get verifyToSendRequest =>
+      'Only verified members can send delivery requests. It takes a few minutes: a photo of your ID and a selfie.';
+
+  @override
+  String get errNotVerified =>
+      'Verify your identity first: only verified members can do this.';
+
+  @override
+  String get errTripFull => 'This trip already carries items for 3 senders.';
+
+  @override
+  String get errSenderOnTrip =>
+      'You already accepted a request from this sender on this trip.';
+
+  @override
   String get continueBrowsing => 'Continue browsing';
 
   @override

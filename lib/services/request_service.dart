@@ -128,6 +128,16 @@ enum RequestFailure {
   /// Payments aren't set up on the server (no payment provider key).
   paymentsUnavailable,
 
+  /// The user hasn't passed the identity check (only verified members post
+  /// trips and send requests).
+  notVerified,
+
+  /// The trip already carries items for 3 senders.
+  tripFull,
+
+  /// The traveler already accepted a request from this sender on the trip.
+  senderOnTrip,
+
   /// The account has no email, which the payment provider needs: checkout
   /// asks for one.
   emailRequired,
@@ -1413,6 +1423,9 @@ class RequestService {
     bool has(String code) => message.contains('nata:$code');
 
     if (has('not_signed_in')) return RequestFailure.notSignedIn;
+    if (has('not_verified')) return RequestFailure.notVerified;
+    if (has('trip_full')) return RequestFailure.tripFull;
+    if (has('sender_on_trip')) return RequestFailure.senderOnTrip;
     if (has('trip_unavailable')) return RequestFailure.tripUnavailable;
     if (has('own_trip')) return RequestFailure.ownTrip;
     if (has('weight_too_heavy')) return RequestFailure.weightTooHeavy;

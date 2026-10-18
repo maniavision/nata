@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
+import '../services/verify_gate.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
 import 'delivery_request_screen.dart';
@@ -947,8 +948,15 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 child: SizedBox(
                   height: 48,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(
+                    onPressed: () async {
+                      final navigator = Navigator.of(context);
+                      if (!await VerifyGate.check(
+                        context,
+                        message: context.l10n.verifyToSendRequest,
+                      )) {
+                        return;
+                      }
+                      navigator.push(
                         MaterialPageRoute(
                           builder: (context) =>
                               DeliveryRequestScreen(trip: _trip),

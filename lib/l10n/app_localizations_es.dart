@@ -3107,6 +3107,42 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notNow => 'Ahora no';
 
   @override
+  String get verifyPromptTitle => 'Primero verifica tu identidad';
+
+  @override
+  String get verifyPendingTitle =>
+      'Tu verificación de identidad está en revisión';
+
+  @override
+  String get verifyPendingBody =>
+      'Podrás publicar viajes y enviar solicitudes cuando se apruebe tu documento. Te avisaremos.';
+
+  @override
+  String get verifyMyIdentity => 'Verificar mi identidad';
+
+  @override
+  String get ok => 'Aceptar';
+
+  @override
+  String get verifyToAddTrip =>
+      'Solo los viajeros verificados pueden publicar viajes. Toma unos minutos: una foto de tu documento y un selfi.';
+
+  @override
+  String get verifyToSendRequest =>
+      'Solo los miembros verificados pueden enviar solicitudes de entrega. Toma unos minutos: una foto de tu documento y un selfi.';
+
+  @override
+  String get errNotVerified =>
+      'Primero verifica tu identidad: solo los miembros verificados pueden hacer esto.';
+
+  @override
+  String get errTripFull => 'Este viaje ya lleva artículos de 3 remitentes.';
+
+  @override
+  String get errSenderOnTrip =>
+      'Ya aceptaste una solicitud de este remitente en este viaje.';
+
+  @override
   String get continueBrowsing => 'Seguir explorando';
 
   @override

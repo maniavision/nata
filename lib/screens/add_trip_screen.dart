@@ -453,7 +453,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = context.l10n.errSaveFailed;
+        _error = '$e'.contains('nata:not_verified')
+            ? context.l10n.errNotVerified
+            : context.l10n.errSaveFailed;
       });
     }
   }

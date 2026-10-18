@@ -30,6 +30,8 @@ class IncomingRequestActions {
         SnackBar(
           content: Text(switch (e.reason) {
             RequestFailure.rateUnavailable => l.errRateUnavailable,
+            RequestFailure.tripFull => l.errTripFull,
+            RequestFailure.senderOnTrip => l.errSenderOnTrip,
             RequestFailure.notPending => l.errRequestNotPending,
             RequestFailure.requestNotFound => l.errRequestNotFound,
             RequestFailure.notSignedIn => l.errSessionExpired,

@@ -3125,6 +3125,43 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notNow => 'Plus tard';
 
   @override
+  String get verifyPromptTitle => 'Vérifiez d\'abord votre identité';
+
+  @override
+  String get verifyPendingTitle =>
+      'Votre vérification d\'identité est en cours';
+
+  @override
+  String get verifyPendingBody =>
+      'Vous pourrez publier des trajets et envoyer des demandes une fois votre pièce d\'identité approuvée. Nous vous préviendrons.';
+
+  @override
+  String get verifyMyIdentity => 'Vérifier mon identité';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get verifyToAddTrip =>
+      'Seuls les voyageurs vérifiés peuvent publier des trajets. Cela prend quelques minutes : une photo de votre pièce d\'identité et un selfie.';
+
+  @override
+  String get verifyToSendRequest =>
+      'Seuls les membres vérifiés peuvent envoyer des demandes de livraison. Cela prend quelques minutes : une photo de votre pièce d\'identité et un selfie.';
+
+  @override
+  String get errNotVerified =>
+      'Vérifiez d\'abord votre identité : seuls les membres vérifiés peuvent faire cela.';
+
+  @override
+  String get errTripFull =>
+      'Ce trajet transporte déjà des articles pour 3 expéditeurs.';
+
+  @override
+  String get errSenderOnTrip =>
+      'Vous avez déjà accepté une demande de cet expéditeur sur ce trajet.';
+
+  @override
   String get continueBrowsing => 'Continuer la visite';
 
   @override

@@ -1451,6 +1451,16 @@
   "signInBenefitEscrow": "Pago protegido hasta la entrega",
   "signInBenefitPhone": "Regístrate con tu número en un minuto",
   "notNow": "Ahora no",
+  "verifyPromptTitle": "Primero verifica tu identidad",
+  "verifyPendingTitle": "Tu verificación de identidad está en revisión",
+  "verifyPendingBody": "Podrás publicar viajes y enviar solicitudes cuando se apruebe tu documento. Te avisaremos.",
+  "verifyMyIdentity": "Verificar mi identidad",
+  "ok": "Aceptar",
+  "verifyToAddTrip": "Solo los viajeros verificados pueden publicar viajes. Toma unos minutos: una foto de tu documento y un selfi.",
+  "verifyToSendRequest": "Solo los miembros verificados pueden enviar solicitudes de entrega. Toma unos minutos: una foto de tu documento y un selfi.",
+  "errNotVerified": "Primero verifica tu identidad: solo los miembros verificados pueden hacer esto.",
+  "errTripFull": "Este viaje ya lleva artículos de 3 remitentes.",
+  "errSenderOnTrip": "Ya aceptaste una solicitud de este remitente en este viaje.",
   "continueBrowsing": "Seguir explorando",
 
 
