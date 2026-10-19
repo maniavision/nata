@@ -22,6 +22,8 @@ Future<Country?> showCountryCodePicker(BuildContext context, Country selected) {
   return showModalBottomSheet<Country>(
     context: context,
     isScrollControlled: true,
+    // Keeps the sheet below the status bar.
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.foreground.withValues(alpha: 0.4),
     builder: (ctx) => CountryCodePickerSheet(
@@ -100,7 +102,8 @@ class _CountryCodePickerSheetState extends State<CountryCodePickerSheet> {
             MediaQuery.of(context).size.height * 0.80,
             MediaQuery.of(context).size.height -
                 MediaQuery.of(context).viewInsets.bottom -
-                MediaQuery.of(context).padding.top -
+                // The sheet hides the status bar's height; read the screen's.
+                MediaQueryData.fromView(View.of(context)).padding.top -
                 8,
           ),
           color: AppColors.card,
