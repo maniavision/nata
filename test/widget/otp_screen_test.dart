@@ -181,6 +181,77 @@ void languageAfterSignInTests() {
       }
     }
 
+    testWidgets('a code autofilled from the SMS fills all six boxes', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        appWrapper(
+          OtpScreen(
+            phone: '+18327920000',
+            isSignUp: false,
+            authService: auth,
+            saveSettings: () async => saves++,
+            onSuccess: () => signedIn = true,
+          ),
+        ),
+      );
+      await tester.pump();
+      final boxes = find.byType(TextField);
+
+      // iOS puts the whole code into the focused (first) box.
+      await tester.enterText(boxes.at(0), '384920');
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      final values = [
+        for (var i = 0; i < 6; i++)
+          tester.widget<TextField>(boxes.at(i)).controller!.text,
+      ];
+      expect(values, ['3', '8', '4', '9', '2', '0']);
+      verify(() => auth.verifyOtp('+18327920000', '384920')).called(1);
+    });
+
+    testWidgets('typing over a filled box keeps one digit', (tester) async {
+      await tester.pumpWidget(
+        appWrapper(
+          OtpScreen(
+            phone: '+1832',
+            isSignUp: false,
+            authService: auth,
+            onSuccess: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+      final boxes = find.byType(TextField);
+      await tester.enterText(boxes.at(0), '3');
+      await tester.pump();
+      await tester.enterText(boxes.at(0), '37');
+      await tester.pump();
+
+      expect(tester.widget<TextField>(boxes.at(0)).controller!.text, '7');
+      expect(tester.widget<TextField>(boxes.at(1)).controller!.text, '');
+    });
+
+    testWidgets('the first box is the one-time-code field for autofill', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        appWrapper(
+          OtpScreen(
+            phone: '+1832',
+            isSignUp: false,
+            authService: auth,
+            onSuccess: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+      final first = tester.widget<TextField>(find.byType(TextField).first);
+      expect(first.autofillHints, contains(AutofillHints.oneTimeCode));
+    });
+
     testWidgets('the language picked before signing in is kept and saved', (
       tester,
     ) async {
