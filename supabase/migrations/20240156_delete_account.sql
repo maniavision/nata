@@ -183,8 +183,12 @@ begin
   delete from nata.user_settings where user_id = uid;
   delete from nata.identity_verifications where user_id = uid;
   -- Payouts keep their reference and amounts; the account details go.
-  update nata.payouts set payout_account_id = null where traveler_id = uid;
+  update nata.payouts
+     set payout_account_id = null, payout_method_id = null
+   where traveler_id = uid;
   delete from nata.payout_accounts where user_id = uid;
+  delete from nata.payout_methods where user_id = uid;
+  delete from nata.device_tokens where user_id = uid;
 
   -- The profile becomes "Deleted user": every optional text or date column
   -- (phone, bio, birthday...) is cleared, whatever columns it has today.
