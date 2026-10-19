@@ -1699,7 +1699,7 @@ abstract class AppLocalizations {
   /// No description provided for @driversLicense.
   ///
   /// In en, this message translates to:
-  /// **'Driver\'s Lic.'**
+  /// **'License'**
   String get driversLicense;
 
   /// No description provided for @nationalId.

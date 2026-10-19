@@ -848,10 +848,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get passportOption => 'Pasaporte';
 
   @override
-  String get driversLicense => 'Lic. de conducir';
+  String get driversLicense => 'Licencia';
 
   @override
-  String get nationalId => 'Cédula nacional';
+  String get nationalId => 'Cédula';
 
   @override
   String get takePhotoOrUpload => 'Toma una foto o sube la página frontal';

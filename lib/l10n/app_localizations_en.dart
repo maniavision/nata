@@ -842,7 +842,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passportOption => 'Passport';
 
   @override
-  String get driversLicense => 'Driver\'s Lic.';
+  String get driversLicense => 'License';
 
   @override
   String get nationalId => 'National ID';

@@ -850,7 +850,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get passportOption => 'Passeport';
 
   @override
-  String get driversLicense => 'Permis de conduire';
+  String get driversLicense => 'Permis';
 
   @override
   String get nationalId => 'Carte d\'identité';
