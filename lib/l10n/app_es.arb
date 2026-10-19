@@ -1691,6 +1691,10 @@
   "errReportWindowClosed": "Ya pasaron los 3 días para informar de un problema.",
   "notifProblemTitle": "Problema informado",
   "notifProblemBody": "Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.",
+  "notifMessageTitle": "Nuevo mensaje de {name}",
+  "notifMessageBody": "{message}",
+  "notifMessagePhotoBody": "Te envió una foto",
+  "chatTyping": "escribiendo…",
 
   "pickupPhotoHint": "Toma una foto de la caja sellada al recibirla.",
   "errPhotoUpload": "No se pudo subir la foto. Inténtalo de nuevo.",

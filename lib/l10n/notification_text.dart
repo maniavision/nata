@@ -40,6 +40,12 @@ import 'app_localizations.dart';
       l.notifCancelledBySenderBody(sender, route),
     ),
     'request_paid' => (l.notifPaidTitle, l.notifPaidBody(sender)),
+    'message_new' => (
+      l.notifMessageTitle(s('author')),
+      s('message').isEmpty && p['photo'] == true
+          ? l.notifMessagePhotoBody
+          : l.notifMessageBody(s('message')),
+    ),
     'item_picked_up' => (l.notifPickedUpTitle, l.notifPickedUpBody(traveler)),
     'item_delivered' => (l.notifDeliveredTitle, l.notifDeliveredBody(traveler)),
     'payout_paid' => (

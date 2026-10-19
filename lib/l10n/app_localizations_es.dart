@@ -3725,6 +3725,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.';
 
   @override
+  String notifMessageTitle(String name) {
+    return 'Nuevo mensaje de $name';
+  }
+
+  @override
+  String notifMessageBody(String message) {
+    return '$message';
+  }
+
+  @override
+  String get notifMessagePhotoBody => 'Te envió una foto';
+
+  @override
+  String get chatTyping => 'escribiendo…';
+
+  @override
   String get pickupPhotoHint =>
       'Toma una foto de la caja sellada al recibirla.';
 

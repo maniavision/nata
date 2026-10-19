@@ -1691,6 +1691,10 @@
   "errReportWindowClosed": "Le délai de 3 jours pour signaler un problème est passé.",
   "notifProblemTitle": "Problème signalé",
   "notifProblemBody": "Un problème a été signalé sur l’une de vos livraisons. Notre équipe d’assistance vous contactera.",
+  "notifMessageTitle": "Nouveau message de {name}",
+  "notifMessageBody": "{message}",
+  "notifMessagePhotoBody": "Vous a envoyé une photo",
+  "chatTyping": "écrit…",
 
   "pickupPhotoHint": "Prenez une photo de la boîte scellée au moment de la récupérer.",
   "errPhotoUpload": "Impossible d’envoyer la photo. Réessayez.",
