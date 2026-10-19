@@ -6,6 +6,7 @@ import 'package:carrywise_app/services/message_service.dart';
 import 'package:carrywise_app/services/trip_service.dart' show PickedReceipt;
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
@@ -722,6 +723,25 @@ void main() {
       expect(find.byKey(const ValueKey('chat-notice')), findsOneWidget);
       expect(find.text('Could not open the camera or photos.'), findsOneWidget);
       expect(service.sent, isEmpty);
+    });
+
+    testWidgets('camera access turned off explains how to turn it on', (
+      tester,
+    ) async {
+      pickerError = PlatformException(
+        code: 'camera_access_denied',
+        message: 'The user did not allow camera access.',
+      );
+      await pump(tester);
+
+      await tapKey(tester, 'chat-camera');
+
+      expect(find.byKey(const ValueKey('camera-denied')), findsOneWidget);
+      expect(find.text('Camera access is off'), findsOneWidget);
+      expect(find.textContaining('PlatformException'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('camera-denied-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('camera-denied')), findsNothing);
     });
 
     testWidgets('a photo over 10 MB is refused', (tester) async {

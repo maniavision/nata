@@ -18,6 +18,7 @@ import '../widgets/face_scan_step.dart';
 import '../services/verification_service.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
+import '../widgets/camera_denied_sheet.dart';
 
 class IdentityVerificationScreen extends StatefulWidget {
   /// Which step to open on: 0 = ID upload, 1 = face scan (not part of the flow
@@ -917,7 +918,9 @@ class _Step1 extends StatelessWidget {
       onDocumentPicked(bytes, 'id_document_$ext.$ext', mime);
     } catch (e) {
       debugPrint('[Step1] camera error: $e');
-      if (context.mounted) {
+      if (context.mounted && isCameraDenied(e)) {
+        await showCameraDeniedSheet(context);
+      } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.errCameraDetail(e.toString()))),
         );

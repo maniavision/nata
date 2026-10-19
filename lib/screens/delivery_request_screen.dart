@@ -17,6 +17,7 @@ import '../services/traveler_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
 import '../widgets/country_code_picker_sheet.dart' show flagEmoji;
+import '../widgets/camera_denied_sheet.dart';
 
 /// Takes or chooses an item photo. [camera] true = take it with the camera.
 /// Replaceable in tests.
@@ -389,8 +390,12 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         _photosChanged = true;
         _error = null;
       });
-    } catch (_) {
-      if (mounted) setState(() => _error = context.l10n.chatCameraFailed);
+    } catch (e) {
+      if (mounted && isCameraDenied(e)) {
+        await showCameraDeniedSheet(context);
+      } else if (mounted) {
+        setState(() => _error = context.l10n.chatCameraFailed);
+      }
     }
   }
 

@@ -3063,6 +3063,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notNow => 'Not now';
 
   @override
+  String get cameraOffTitle => 'Camera access is off';
+
+  @override
+  String get cameraOffBody =>
+      'Nata needs your camera to take this photo. Turn on Camera for Nata in your phone\'s Settings, then come back and try again.';
+
+  @override
+  String get cameraOffPath => 'Settings > Nata Delivery > Camera';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
   String get verifyPromptTitle => 'Verify your identity first';
 
   @override

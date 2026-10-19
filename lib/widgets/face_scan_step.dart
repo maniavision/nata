@@ -8,6 +8,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/face_verification_service.dart';
 import '../services/liveness.dart';
+import 'camera_denied_sheet.dart';
 
 /// Identity verification, step 2: a live selfie matched with the ID photo.
 ///
@@ -103,6 +104,7 @@ class _FaceScanStepState extends State<FaceScanStep> {
       final denied =
           e.code.contains('AccessDenied') || e.code.contains('Restricted');
       _fail(denied ? (l) => l.faceScanCameraDenied : (l) => l.faceScanError);
+      if (denied && mounted) await showCameraDeniedSheet(context);
     } catch (e) {
       debugPrint('[FaceScan] camera error: $e');
       _fail((l) => l.faceScanError);
