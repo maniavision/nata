@@ -3091,11 +3091,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verify your identity first: only verified members can do this.';
 
   @override
-  String get errTripFull => 'This trip already carries items for 3 senders.';
+  String get errTripFull =>
+      'This trip already has 3 deliveries in progress. A place frees up when one is delivered.';
 
   @override
   String get errSenderOnTrip =>
-      'You already accepted a request from this sender on this trip.';
+      'You already have a delivery in progress from this sender on this trip.';
 
   @override
   String get continueBrowsing => 'Continue browsing';

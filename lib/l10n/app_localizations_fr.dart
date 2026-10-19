@@ -3155,11 +3155,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errTripFull =>
-      'Ce trajet transporte déjà des articles pour 3 expéditeurs.';
+      'Ce trajet a déjà 3 livraisons en cours. Une place se libère dès qu\'une est livrée.';
 
   @override
   String get errSenderOnTrip =>
-      'Vous avez déjà accepté une demande de cet expéditeur sur ce trajet.';
+      'Vous avez déjà une livraison en cours de cet expéditeur sur ce trajet.';
 
   @override
   String get continueBrowsing => 'Continuer la visite';
