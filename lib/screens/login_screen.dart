@@ -25,12 +25,17 @@ class LoginScreen extends StatefulWidget {
   /// once they are in.
   final WidgetBuilder? afterSignIn;
 
+  /// Ask for Face ID as soon as the page opens (when it is switched on).
+  /// Off in tests of the Face ID button itself.
+  final bool autoFaceId;
+
   const LoginScreen({
     super.key,
     this.authService,
     this.biometricService,
     this.homeBuilder,
     this.afterSignIn,
+    this.autoFaceId = true,
   });
 
   @override
@@ -57,6 +62,23 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _applyRememberedCountry();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoFaceId());
+  }
+
+  /// Once Face ID is switched on, opening this page asks for the face right
+  /// away, so the user is signed in without tapping anything. Quiet when it
+  /// can't be used: the phone number form is still there.
+  Future<void> _autoFaceId() async {
+    if (!mounted || !widget.autoFaceId || !PreferencesService().faceIdEnabled) {
+      return;
+    }
+    final auth = widget.authService ?? AuthService();
+    if (!auth.hasActiveSession) return;
+    final biometrics = widget.biometricService ?? BiometricService();
+    if (await biometrics.availability() != BiometricAvailability.available) {
+      return;
+    }
+    if (mounted) await _onFaceId();
   }
 
   /// Uses the country the user registered with (kept on the device, also after
