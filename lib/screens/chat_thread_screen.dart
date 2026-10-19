@@ -12,6 +12,7 @@ import '../services/message_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
 import '../widgets/camera_denied_sheet.dart';
+import 'messages_screen.dart';
 
 /// Takes or chooses a photo to send. [camera] true = take one with the camera.
 /// Replaceable in tests.
@@ -28,8 +29,12 @@ class ChatThreadScreen extends StatefulWidget {
   final ChatPhotoPicker? photoPicker;
   final DateTime Function()? now;
 
-  /// How often new messages are fetched while the chat is open.
+  /// How often new messages are fetched while the chat is open and the live
+  /// connection is not available.
   final Duration refreshEvery;
+
+  /// With the live connection, a slower safety refresh.
+  final Duration liveRefreshEvery;
 
   const ChatThreadScreen({
     super.key,
@@ -39,6 +44,7 @@ class ChatThreadScreen extends StatefulWidget {
     this.photoPicker,
     this.now,
     this.refreshEvery = const Duration(seconds: 4),
+    this.liveRefreshEvery = const Duration(seconds: 30),
   });
 
   @override
@@ -69,6 +75,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
 
   Timer? _timer;
 
+  /// New messages, read receipts and typing, as they happen.
+  ChatLive? _live;
+
+  /// The other person is typing (cleared a few seconds after the last sign).
+  bool _otherTyping = false;
+  Timer? _typingTimer;
+  static const _typingShownFor = Duration(seconds: 4);
+
   MessageService get _service => widget.service ?? MessageService();
   DateTime get _now => (widget.now ?? DateTime.now)();
   String? get _me => _service.currentUserId;
@@ -79,24 +93,52 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     super.initState();
     _load();
     WidgetsBinding.instance.addObserver(this);
+    _connect();
     _startTimer();
+  }
+
+  void _connect() {
+    try {
+      _live = _service.live(
+        _c.id,
+        onChange: () {
+          if (mounted) _load(quiet: true);
+        },
+        onTyping: () {
+          if (!mounted) return;
+          _typingTimer?.cancel();
+          _typingTimer = Timer(_typingShownFor, () {
+            if (mounted) setState(() => _otherTyping = false);
+          });
+          if (!_otherTyping) setState(() => _otherTyping = true);
+        },
+      );
+    } catch (e) {
+      debugPrint('[Chat] live unavailable: $e');
+      _live = null;
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    _typingTimer?.cancel();
+    unawaited(_live?.close());
     _inputCtrl.dispose();
     super.dispose();
   }
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(widget.refreshEvery, (_) {
-      if (!mounted) return;
-      if (ModalRoute.of(context)?.isCurrent == false) return;
-      _load(quiet: true);
-    });
+    _timer = Timer.periodic(
+      _live == null ? widget.refreshEvery : widget.liveRefreshEvery,
+      (_) {
+        if (!mounted) return;
+        if (ModalRoute.of(context)?.isCurrent == false) return;
+        _load(quiet: true);
+      },
+    );
   }
 
   @override
@@ -116,10 +158,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     try {
       final messages = await _service.messages(_c.id);
       if (!mounted) return;
+      final me0 = _me;
+      final theyWrote =
+          messages.length > _server.length && messages.last.authorId != me0;
       setState(() {
         _server = messages;
         _loading = false;
         _failed = false;
+        if (theyWrote) _otherTyping = false;
       });
       // Anything the other person wrote is now seen.
       final me = _me;
@@ -361,15 +407,18 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
                     ],
                   ),
                   Text(
-                    c.itemDescription.isEmpty
+                    _otherTyping
+                        ? context.l10n.chatTyping
+                        : c.itemDescription.isEmpty
                         ? c.routeLabel
                         : '${c.routeLabel} · ${c.itemDescription}',
+                    key: const ValueKey('chat-subtitle'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.dmSans(
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
-                      color: _green,
+                      color: _otherTyping ? AppColors.accent : _green,
                     ),
                   ),
                 ],
@@ -606,6 +655,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
       entries.add(m);
     }
     final reversed = entries.reversed.toList();
+    if (_otherTyping) reversed.insert(0, const _TypingMarker());
 
     return ListView.builder(
       key: const ValueKey('chat-list'),
@@ -616,7 +666,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
         final e = reversed[i];
         return Padding(
           padding: const EdgeInsets.only(top: 14),
-          child: e is DateTime
+          child: e is _TypingMarker
+              ? const Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TypingBubble(),
+                )
+              : e is DateTime
               ? _buildDateChip(e)
               : _buildBubble(e as ChatMessage),
         );
@@ -874,6 +929,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
                           child: TextField(
                             key: const ValueKey('chat-input'),
                             controller: _inputCtrl,
+                            onChanged: (v) {
+                              if (v.trim().isNotEmpty) _live?.typing();
+                            },
                             minLines: 1,
                             maxLines: 4,
                             keyboardType: TextInputType.multiline,
@@ -1073,5 +1131,133 @@ class _AttachmentViewState extends State<_AttachmentView> {
       );
     }
     return ClipRRect(borderRadius: BorderRadius.circular(12), child: photo);
+  }
+}
+
+class _TypingMarker {
+  const _TypingMarker();
+}
+
+/// "The other person is typing": three dots pulsing in an incoming bubble
+/// (designed in Sleek, "Chat Thread (Typing)").
+class TypingBubble extends StatefulWidget {
+  const TypingBubble({super.key});
+
+  @override
+  State<TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<TypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _anim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('chat-typing'),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(4),
+          topRight: Radius.circular(16),
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: AnimatedBuilder(
+        animation: _anim,
+        builder: (context, _) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Opacity(
+                // Each dot brightens in turn.
+                opacity:
+                    0.35 +
+                    0.65 *
+                        (1 -
+                                ((_anim.value * 3 - i) % 3 - 0.5).abs().clamp(
+                                  0.0,
+                                  1.0,
+                                ))
+                            .clamp(0.0, 1.0),
+                child: Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    color: AppColors.mutedForeground,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens the chat [conversationId] (from a notification or a push): finds
+/// the conversation, then shows it; the Messages list if it can't.
+class ChatFromNotification extends StatefulWidget {
+  final String conversationId;
+  final MessageService? service;
+
+  const ChatFromNotification({
+    super.key,
+    required this.conversationId,
+    this.service,
+  });
+
+  @override
+  State<ChatFromNotification> createState() => _ChatFromNotificationState();
+}
+
+class _ChatFromNotificationState extends State<ChatFromNotification> {
+  late final Future<ConversationSummary?> _found = _find();
+
+  Future<ConversationSummary?> _find() async {
+    try {
+      final all = await (widget.service ?? MessageService()).conversations();
+      for (final c in all) {
+        if (c.id == widget.conversationId) return c;
+      }
+    } catch (e) {
+      debugPrint('[Chat] open from notification: $e');
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ConversationSummary?>(
+      future: _found,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            ),
+          );
+        }
+        final c = snap.data;
+        if (c == null) return MessagesScreen(service: widget.service);
+        return ChatThreadScreen(conversation: c, service: widget.service);
+      },
+    );
   }
 }

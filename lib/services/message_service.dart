@@ -263,6 +263,49 @@ class MessageService {
     return ChatMessage.fromJson(Map<String, dynamic>.from(row as Map));
   }
 
+  /// Live updates for one open conversation over Supabase Realtime, on the
+  /// private channel "chat:<id>" (only its two members may join it; see
+  /// migration 20240158): [onChange] when a message arrives or one is read,
+  /// [onTyping] when the other person is typing. Null if it can't connect;
+  /// the chat then keeps refreshing on a timer.
+  ChatLive? live(
+    String conversationId, {
+    required void Function() onChange,
+    required void Function() onTyping,
+  }) {
+    final me = currentUserId;
+    if (me == null) return null;
+    try {
+      final channel = _client.channel(
+        'chat:$conversationId',
+        opts: const RealtimeChannelConfig(private: true),
+      );
+      channel
+        ..onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'nata',
+          table: 'messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'conversation_id',
+            value: conversationId,
+          ),
+          callback: (_) => onChange(),
+        )
+        ..onBroadcast(
+          event: 'typing',
+          callback: (payload) {
+            if (payload['user'] != me) onTyping();
+          },
+        )
+        ..subscribe();
+      return _RealtimeChatLive(_client, channel, me);
+    } catch (e) {
+      debugPrint('[MessageService] live error: $e');
+      return null;
+    }
+  }
+
   /// Marks what the other person wrote as read.
   Future<void> markRead(String conversationId) async {
     try {
@@ -310,4 +353,40 @@ class MessageService {
     );
     return url;
   }
+}
+
+/// An open chat's live connection (see [MessageService.live]).
+abstract class ChatLive {
+  /// Tells the other person this user is typing. Sent at most every few
+  /// seconds however often it is called.
+  void typing();
+
+  Future<void> close();
+}
+
+class _RealtimeChatLive implements ChatLive {
+  _RealtimeChatLive(this._client, this._channel, this._me);
+
+  final SupabaseClient _client;
+  final RealtimeChannel _channel;
+  final String _me;
+  DateTime _lastTyping = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const _typingEvery = Duration(seconds: 2);
+
+  @override
+  void typing() {
+    final now = DateTime.now();
+    if (now.difference(_lastTyping) < _typingEvery) return;
+    _lastTyping = now;
+    _channel
+        .sendBroadcastMessage(event: 'typing', payload: {'user': _me})
+        .catchError((Object e) {
+          debugPrint('[MessageService] typing error: $e');
+          return ChannelResponse.error;
+        });
+  }
+
+  @override
+  Future<void> close() => _client.removeChannel(_channel);
 }

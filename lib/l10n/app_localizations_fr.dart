@@ -3748,6 +3748,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un problème a été signalé sur l’une de vos livraisons. Notre équipe d’assistance vous contactera.';
 
   @override
+  String notifMessageTitle(String name) {
+    return 'Nouveau message de $name';
+  }
+
+  @override
+  String notifMessageBody(String message) {
+    return '$message';
+  }
+
+  @override
+  String get notifMessagePhotoBody => 'Vous a envoyé une photo';
+
+  @override
+  String get chatTyping => 'écrit…';
+
+  @override
   String get pickupPhotoHint =>
       'Prenez une photo de la boîte scellée au moment de la récupérer.';
 

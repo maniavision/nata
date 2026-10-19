@@ -698,6 +698,23 @@ class FakeMessageService extends Fake implements MessageService {
   Future<void> markRead(String conversationId) async =>
       markedRead.add(conversationId);
 
+  /// Set to give chats a live connection (otherwise they refresh on a timer).
+  FakeChatLive? liveConnection;
+  void Function()? liveOnChange;
+  void Function()? liveOnTyping;
+
+  @override
+  ChatLive? live(
+    String conversationId, {
+    required void Function() onChange,
+    required void Function() onTyping,
+  }) {
+    if (liveConnection == null) return null;
+    liveOnChange = onChange;
+    liveOnTyping = onTyping;
+    return liveConnection;
+  }
+
   @override
   Future<String> uploadAttachment(
     String conversationId,
@@ -1660,3 +1677,15 @@ final kTransparentPng = Uint8List.fromList(const [
   0x60,
   0x82,
 ]);
+
+/// A chat's live connection in tests: counts typing signals and closes.
+class FakeChatLive implements ChatLive {
+  int typingSent = 0;
+  bool closed = false;
+
+  @override
+  void typing() => typingSent++;
+
+  @override
+  Future<void> close() async => closed = true;
+}

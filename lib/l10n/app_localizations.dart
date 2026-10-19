@@ -6446,6 +6446,30 @@ abstract class AppLocalizations {
   /// **'A problem was reported on one of your deliveries. Our support team will contact you.'**
   String get notifProblemBody;
 
+  /// No description provided for @notifMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New message from {name}'**
+  String notifMessageTitle(String name);
+
+  /// No description provided for @notifMessageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{message}'**
+  String notifMessageBody(String message);
+
+  /// No description provided for @notifMessagePhotoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent you a photo'**
+  String get notifMessagePhotoBody;
+
+  /// No description provided for @chatTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'typing…'**
+  String get chatTyping;
+
   /// No description provided for @pickupPhotoHint.
   ///
   /// In en, this message translates to:

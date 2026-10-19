@@ -1733,6 +1733,12 @@
   "errReportWindowClosed": "The 3 days to report a problem have passed.",
   "notifProblemTitle": "Problem reported",
   "notifProblemBody": "A problem was reported on one of your deliveries. Our support team will contact you.",
+  "notifMessageTitle": "New message from {name}",
+  "@notifMessageTitle": {"placeholders": {"name": {"type": "String"}}},
+  "notifMessageBody": "{message}",
+  "@notifMessageBody": {"placeholders": {"message": {"type": "String"}}},
+  "notifMessagePhotoBody": "Sent you a photo",
+  "chatTyping": "typing…",
 
   "pickupPhotoHint": "Take a photo of the sealed box as you receive it.",
   "errPhotoUpload": "Couldn't upload the photo. Please try again.",

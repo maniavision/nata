@@ -8,7 +8,8 @@
  * (nata.user_settings.language; texts.ts, generated from the app's .arb
  * files), sends it to every registered device, removes tokens Firebase says
  * are gone, and stamps pushed_at. The push carries the notification's id,
- * event and related request so the app opens the right page on tap.
+ * event and related request (or conversation, for a message) so the app opens
+ * the right page on tap.
  *
  * Secret: FCM_SERVICE_ACCOUNT, the Firebase service account JSON
  * (scripts/setup_push.sh). Without it: 503 push_unavailable.
@@ -108,7 +109,7 @@ async function accessToken(sa: ServiceAccount): Promise<string> {
 // ── Text in the user's language ─────────────────────────────────────────────
 
 /** Whose name {name} is, per event (as notification_text.dart passes it). */
-const NAME_FROM: Record<string, "sender" | "traveler"> = {
+const NAME_FROM: Record<string, "sender" | "traveler" | "author"> = {
   request_new: "sender",
   request_accepted: "traveler",
   request_declined: "traveler",
@@ -119,6 +120,8 @@ const NAME_FROM: Record<string, "sender" | "traveler"> = {
   request_paid: "sender",
   item_picked_up: "traveler",
   item_delivered: "traveler",
+  message_new: "author",
+  message_photo: "author",
 };
 
 const SYMBOLS: Record<string, string> = { USD: "$", EUR: "€", GBP: "£" };
@@ -136,6 +139,10 @@ function textFor(
   payload: Record<string, unknown>,
   stored: { title: string; body: string },
 ): { title: string; body: string } {
+  // A message that is only a photo reads "sent you a photo".
+  if (event === "message_new" && payload.photo && !String(payload.message ?? "").trim()) {
+    event = "message_photo";
+  }
   const pair = (TEXTS[lang] ?? TEXTS.en)[event];
   if (!pair) return stored;
   const s = (k: string) => String(payload[k] ?? "").trim();
@@ -145,6 +152,7 @@ function textFor(
     route: s("route"),
     name: NAME_FROM[event] ? s(NAME_FROM[event]) : "",
     amount: money(Number(payload.amount ?? 0), s("currency")),
+    message: s("message"),
   };
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (_, k) => values[k] ?? "");
   return { title: fill(pair[0]), body: fill(pair[1]) };
@@ -220,6 +228,7 @@ Deno.serve(async (req: Request) => {
               event,
               type: String(n.type ?? ""),
               related_id: String(n.related_id ?? ""),
+              conversation_id: String(payload.conversation_id ?? ""),
             },
             android: { priority: "high", notification: { sound: "default" } },
             apns: { payload: { aps: { sound: "default" } } },
