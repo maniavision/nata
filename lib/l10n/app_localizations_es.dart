@@ -3136,11 +3136,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Primero verifica tu identidad: solo los miembros verificados pueden hacer esto.';
 
   @override
-  String get errTripFull => 'Este viaje ya lleva artículos de 3 remitentes.';
+  String get errTripFull =>
+      'Este viaje ya tiene 3 entregas en curso. Se libera un lugar cuando se entrega una.';
 
   @override
   String get errSenderOnTrip =>
-      'Ya aceptaste una solicitud de este remitente en este viaje.';
+      'Ya tienes una entrega en curso de este remitente en este viaje.';
 
   @override
   String get continueBrowsing => 'Seguir explorando';

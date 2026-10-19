@@ -1482,8 +1482,8 @@
   "verifyToAddTrip": "Only verified travelers can post trips. It takes a few minutes: a photo of your ID and a selfie.",
   "verifyToSendRequest": "Only verified members can send delivery requests. It takes a few minutes: a photo of your ID and a selfie.",
   "errNotVerified": "Verify your identity first: only verified members can do this.",
-  "errTripFull": "This trip already carries items for 3 senders.",
-  "errSenderOnTrip": "You already accepted a request from this sender on this trip.",
+  "errTripFull": "This trip already has 3 deliveries in progress. A place frees up when one is delivered.",
+  "errSenderOnTrip": "You already have a delivery in progress from this sender on this trip.",
   "@signInPromptTraveler": {"placeholders": {"name": {"type": "String"}}},
   "continueBrowsing": "Continue browsing",
 

@@ -5495,13 +5495,13 @@ abstract class AppLocalizations {
   /// No description provided for @errTripFull.
   ///
   /// In en, this message translates to:
-  /// **'This trip already carries items for 3 senders.'**
+  /// **'This trip already has 3 deliveries in progress. A place frees up when one is delivered.'**
   String get errTripFull;
 
   /// No description provided for @errSenderOnTrip.
   ///
   /// In en, this message translates to:
-  /// **'You already accepted a request from this sender on this trip.'**
+  /// **'You already have a delivery in progress from this sender on this trip.'**
   String get errSenderOnTrip;
 
   /// No description provided for @continueBrowsing.

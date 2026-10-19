@@ -132,10 +132,10 @@ enum RequestFailure {
   /// trips and send requests).
   notVerified,
 
-  /// The trip already carries items for 3 senders.
+  /// The trip already has 3 deliveries in progress (delivered ones free a place).
   tripFull,
 
-  /// The traveler already accepted a request from this sender on the trip.
+  /// The traveler already has a delivery in progress from this sender on the trip.
   senderOnTrip,
 
   /// The account has no email, which the payment provider needs: checkout
