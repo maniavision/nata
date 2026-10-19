@@ -223,6 +223,8 @@
   },
   "tripsCarried": "VIAJES REALIZADOS",
   "parcelsSent": "PAQUETES ENVIADOS",
+  "tripsCount": "{count, plural, =1{1 viaje} other{{count} viajes}}",
+  "parcelsCount": "{count, plural, =1{1 paquete} other{{count} paquetes}}",
   "natawallet": "BILLETERA NATA",
   "escrowProtected": "Protegido con depósito",
   "availableForPayout": "Disponible para retiro",

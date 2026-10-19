@@ -10,6 +10,7 @@ import '../widgets/avatar_image.dart';
 import 'delivery_request_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
+import '../widgets/one_line_text.dart';
 
 /// Shows a traveler's profile and the trip the user picked.
 ///
@@ -287,6 +288,8 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               final gap = constraints.maxWidth >= 300 ? 24.0 : 12.0;
               return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                // Numbers on one line even when a label wraps.
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Flexible(child: _stat('$_delivered', l.itemsDeliveredStat)),
                   SizedBox(width: gap),
@@ -539,29 +542,35 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             l.itemSizeAndWeight,
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _capacityTile(
-                  label: l.weightLimit.toUpperCase(),
-                  value: _trip.maxWeightKg == null
-                      ? '—'
-                      : l.upToKg(_trip.maxWeightKg!.toStringAsFixed(1)),
-                  sub: l.checkBaggage,
+          // Both cards the same height, whatever the language.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _capacityTile(
+                    key: 'capacity-weight',
+                    label: l.weightLimit.toUpperCase(),
+                    value: _trip.maxWeightKg == null
+                        ? '—'
+                        : l.upToKg(_trip.maxWeightKg!.toStringAsFixed(1)),
+                    sub: l.checkBaggage,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _capacityTile(
-                  label: l.sizeLimit.toUpperCase(),
-                  // "Shoebox" over "Max 30×20×15 cm", as in the design.
-                  value: l
-                      .tripSize(_trip.maxSize)
-                      .replaceAll(RegExp(r'\s*\(.*\)'), ''),
-                  sub: _sizeDims == null ? '' : l.maxDims(_sizeDims!),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _capacityTile(
+                    key: 'capacity-size',
+                    label: l.sizeLimit.toUpperCase(),
+                    // "Shoebox" over "Max 30×20×15 cm", as in the design.
+                    value: l
+                        .tripSize(_trip.maxSize)
+                        .replaceAll(RegExp(r'\s*\(.*\)'), ''),
+                    sub: _sizeDims == null ? '' : l.maxDims(_sizeDims!),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           Container(
@@ -618,11 +627,13 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   }
 
   Widget _capacityTile({
+    required String key,
     required String label,
     required String value,
     required String sub,
   }) {
     return Container(
+      key: ValueKey(key),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.secondary.withValues(alpha: 0.6),
@@ -631,7 +642,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          OneLineText(
             label,
             style: GoogleFonts.dmSans(
               fontWeight: FontWeight.w700,

@@ -616,6 +616,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get parcelsSent => 'PAQUETES ENVIADOS';
 
   @override
+  String tripsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count viajes',
+      one: '1 viaje',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parcelsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count paquetes',
+      one: '1 paquete',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get natawallet => 'BILLETERA NATA';
 
   @override

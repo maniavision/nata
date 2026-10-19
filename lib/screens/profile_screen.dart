@@ -23,6 +23,7 @@ import 'wallet_history_screen.dart';
 import 'payment_settings_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
+import '../widgets/one_line_text.dart';
 
 class ProfileScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -642,33 +643,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
           const Divider(color: AppColors.border, height: 1),
           const SizedBox(height: 16),
-          // Stats grid
-          Row(
-            children: [
-              Expanded(
-                child: _statTile(
-                  context.l10n.tripsCarried,
-                  '$_tripsCount ${_tripsCount == 1 ? "Trip" : "Trips"}',
-                  AppColors.foreground,
+          // Stats grid: both tiles the same height in every language.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _statTile(
+                    context.l10n.tripsCarried,
+                    context.l10n.tripsCount(_tripsCount),
+                    AppColors.foreground,
+                    key: 'profile-stat-trips',
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _statTile(
-                  context.l10n.parcelsSent,
-                  '$_parcelsCount ${_parcelsCount == 1 ? "Parcel" : "Parcels"}',
-                  AppColors.accent,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _statTile(
+                    context.l10n.parcelsSent,
+                    context.l10n.parcelsCount(_parcelsCount),
+                    AppColors.accent,
+                    key: 'profile-stat-parcels',
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _statTile(String label, String value, Color valueColor) {
+  Widget _statTile(
+    String label,
+    String value,
+    Color valueColor, {
+    String? key,
+  }) {
     return Container(
+      key: key == null ? null : ValueKey(key),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.input,
@@ -677,7 +689,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          Text(
+          OneLineText(
             label,
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(

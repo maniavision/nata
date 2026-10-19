@@ -47,6 +47,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
+import '../helpers/alignment.dart';
 import '../helpers/fakes.dart';
 import '../helpers/test_fonts.dart';
 
@@ -58,6 +59,21 @@ const _sizes = {
   'narrow 360px': Size(360, 3200),
   'phone 402px': Size(402, 3200),
 };
+
+// Side-by-side buttons, chips, tiles and fields that must line up (same top
+// and same height) in every language, screen width and text size. A group is
+// checked on every screen state where all of its keys are shown.
+const _alignedGroups = [
+  ['id-type-0', 'id-type-1', 'id-type-2'],
+  ['add-trip-take-photo', 'add-trip-upload-receipt'],
+  ['add-trip-departure-country', 'add-trip-departure-city'],
+  ['add-trip-arrival-country', 'add-trip-arrival-city'],
+  ['add-trip-weight', 'add-trip-size'],
+  ['add-payment-card-expiry', 'add-payment-card-cvv'],
+  ['request-size-envelope', 'request-size-shoebox', 'request-size-backpack'],
+  ['capacity-weight', 'capacity-size'],
+  ['profile-stat-trips', 'profile-stat-parcels'],
+];
 
 // The stand-in font (Roboto) is about 11% narrower than the app's real font
 // (DM Sans); this was measured against a real overflow on a device. So 1.12 is
@@ -774,6 +790,7 @@ void main() {
               }
 
               expect(tester.takeException(), isNull);
+              expectAlignedGroups(tester, _alignedGroups);
             });
           }
         }
