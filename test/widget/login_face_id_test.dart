@@ -43,6 +43,7 @@ void main() {
         LoginScreen(
           authService: auth,
           biometricService: bio,
+          autoFaceId: false,
           homeBuilder: (_) => const Scaffold(body: Text('HOME-SCREEN')),
         ),
         locale: locale,
@@ -55,6 +56,55 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('login-face-id')));
     await tester.pumpAndSettle();
   }
+
+  group('opening the sign-in page', () {
+    Future<void> open(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          LoginScreen(
+            authService: auth,
+            biometricService: bio,
+            homeBuilder: (_) => const Scaffold(body: Text('HOME-SCREEN')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('with Face ID on, asks for the face and signs in', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(bio.authenticateCalls, 1);
+      expect(find.text('HOME-SCREEN'), findsOneWidget);
+    });
+
+    testWidgets('with Face ID off, waits for the phone number', (tester) async {
+      PreferencesService().setFaceIdEnabled(false);
+      await open(tester);
+      expect(bio.authenticateCalls, 0);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('without a kept session, says nothing', (tester) async {
+      auth.hasSession = false;
+      await open(tester);
+      expect(bio.authenticateCalls, 0);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('closing the prompt leaves the page as it is', (tester) async {
+      bio.result = BiometricResult.cancelled;
+      await open(tester);
+      expect(bio.authenticateCalls, 1);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+  });
 
   group('the Face ID button', () {
     testWidgets('is there, with the Face ID label', (tester) async {
@@ -88,6 +138,7 @@ void main() {
           LoginScreen(
             authService: auth,
             biometricService: bio,
+            autoFaceId: false,
             homeBuilder: (_) => const Scaffold(body: Text('HOME-SCREEN')),
             afterSignIn: (_) => const Scaffold(body: Text('TRAVELER-PAGE')),
           ),
