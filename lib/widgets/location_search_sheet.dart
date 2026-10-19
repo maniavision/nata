@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:async';
 import '../l10n/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -174,8 +175,14 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final sheetHeight = MediaQuery.of(context).size.height * 0.85;
-    final bottomPad = MediaQuery.of(context).viewInsets.bottom;
+    final media = MediaQuery.of(context);
+    final bottomPad = media.viewInsets.bottom;
+    // Never taller than the space between the status bar and the keyboard,
+    // or the header (and its back arrow) slides under the status bar.
+    final sheetHeight = math.min(
+      media.size.height * 0.85,
+      media.size.height - bottomPad - media.padding.top - 8,
+    );
 
     return AnimatedPadding(
       padding: EdgeInsets.only(bottom: bottomPad),
@@ -327,17 +334,30 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
     child: Row(
       children: [
-        Text(
-          _flagEmoji(_selectedCountry?.isoCode ?? ''),
-          style: const TextStyle(fontSize: 16),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          _selectedCountry?.name ?? '',
-          style: GoogleFonts.dmSans(
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-            color: AppColors.primary,
+        // Tapping the country goes back to choose another one.
+        GestureDetector(
+          key: const ValueKey('location-breadcrumb-country'),
+          behavior: HitTestBehavior.opaque,
+          onTap: _goBackToCountry,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Text(
+                  _flagEmoji(_selectedCountry?.isoCode ?? ''),
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _selectedCountry?.name ?? '',
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(width: 4),
