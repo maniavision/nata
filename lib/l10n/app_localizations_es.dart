@@ -3129,6 +3129,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notNow => 'Ahora no';
 
   @override
+  String get cameraOffTitle => 'El acceso a la cámara está desactivado';
+
+  @override
+  String get cameraOffBody =>
+      'Nata necesita tu cámara para tomar esta foto. Activa la cámara para Nata en los Ajustes de tu teléfono y vuelve a intentarlo.';
+
+  @override
+  String get cameraOffPath => 'Ajustes > Nata Delivery > Cámara';
+
+  @override
+  String get openSettings => 'Abrir Ajustes';
+
+  @override
   String get verifyPromptTitle => 'Primero verifica tu identidad';
 
   @override

@@ -3149,6 +3149,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notNow => 'Plus tard';
 
   @override
+  String get cameraOffTitle => 'L\'accès à l\'appareil photo est désactivé';
+
+  @override
+  String get cameraOffBody =>
+      'Nata a besoin de votre appareil photo pour prendre cette photo. Activez l\'appareil photo pour Nata dans les Réglages de votre téléphone, puis revenez réessayer.';
+
+  @override
+  String get cameraOffPath => 'Réglages > Nata Delivery > Appareil photo';
+
+  @override
+  String get openSettings => 'Ouvrir les Réglages';
+
+  @override
   String get verifyPromptTitle => 'Vérifiez d\'abord votre identité';
 
   @override

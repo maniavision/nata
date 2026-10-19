@@ -11,6 +11,7 @@ import '../services/request_service.dart';
 import '../services/message_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
+import '../widgets/camera_denied_sheet.dart';
 
 /// Takes or chooses a photo to send. [camera] true = take one with the camera.
 /// Replaceable in tests.
@@ -231,8 +232,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
         _localPhotos[local.id] = picked;
       });
       await _deliver(local);
-    } catch (_) {
-      if (mounted) setState(() => _notice = context.l10n.chatCameraFailed);
+    } catch (e) {
+      if (mounted && isCameraDenied(e)) {
+        await showCameraDeniedSheet(context);
+      } else if (mounted) {
+        setState(() => _notice = context.l10n.chatCameraFailed);
+      }
     }
   }
 

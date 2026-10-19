@@ -5456,6 +5456,30 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get notNow;
 
+  /// No description provided for @cameraOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is off'**
+  String get cameraOffTitle;
+
+  /// No description provided for @cameraOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata needs your camera to take this photo. Turn on Camera for Nata in your phone\'s Settings, then come back and try again.'**
+  String get cameraOffBody;
+
+  /// No description provided for @cameraOffPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings > Nata Delivery > Camera'**
+  String get cameraOffPath;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
   /// No description provided for @verifyPromptTitle.
   ///
   /// In en, this message translates to:
