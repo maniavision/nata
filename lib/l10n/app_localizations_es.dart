@@ -3958,4 +3958,87 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get supportActionFailed => 'No funcionó. Inténtalo de nuevo.';
+
+  @override
+  String get deleteAccountRow => 'Eliminar cuenta';
+
+  @override
+  String get deleteAccountRowSub => 'Elimina tu cuenta de Nata para siempre';
+
+  @override
+  String get daTitle => '¿Eliminar tu cuenta?';
+
+  @override
+  String get daBody => 'No se puede deshacer.';
+
+  @override
+  String get daWhatWeDelete => 'Lo que eliminamos';
+
+  @override
+  String get daDeleteProfile => 'Tu perfil, nombre y foto';
+
+  @override
+  String get daDeleteId => 'Tus documentos de identidad y selfie';
+
+  @override
+  String get daDeletePayment => 'Métodos de pago y cuentas de cobro guardados';
+
+  @override
+  String get daDeleteMessages => 'Tus mensajes, viajes y solicitudes abiertas';
+
+  @override
+  String get daDeleteNotifications => 'Notificaciones y dispositivos';
+
+  @override
+  String get daWhatWeKeep => 'Lo que conservamos';
+
+  @override
+  String get daKeepPayments => 'Registros de pagos y cobros, anonimizados';
+
+  @override
+  String get daKeepPaymentsSub => 'Necesarios para la contabilidad';
+
+  @override
+  String get daKeepDeliveries => 'Entregas completadas y reseñas';
+
+  @override
+  String get daKeepDeliveriesSub => 'Se muestran como «Usuario eliminado»';
+
+  @override
+  String get daUnderstand => 'Entiendo que es definitivo';
+
+  @override
+  String get daConfirmButton => 'Eliminar mi cuenta';
+
+  @override
+  String get daFailed => 'No se pudo eliminar tu cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get daLoadFailed => 'No se pudo comprobar tu cuenta.';
+
+  @override
+  String get daBlockedTitle => 'Aún no puedes eliminar tu cuenta';
+
+  @override
+  String get daBlockedBody =>
+      'Termina o resuelve esto primero y vuelve a intentarlo.';
+
+  @override
+  String get daBlockedEscrow => 'Dinero retenido en depósito';
+
+  @override
+  String get daBlockedPayments => 'Cobros o reembolsos en curso';
+
+  @override
+  String get daBlockedDeliveries => 'Entregas en curso';
+
+  @override
+  String get daBlockedDisputes => 'Problemas reportados abiertos';
+
+  @override
+  String get daBlockedStaff =>
+      'Las cuentas del personal las elimina el soporte de Nata';
+
+  @override
+  String get daNeedHelp => '¿Necesitas ayuda? Contacta con el soporte de Nata.';
 }

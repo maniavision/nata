@@ -3911,4 +3911,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportActionFailed => 'That didn\'t work. Please try again.';
+
+  @override
+  String get deleteAccountRow => 'Delete account';
+
+  @override
+  String get deleteAccountRowSub => 'Permanently remove your Nata account';
+
+  @override
+  String get daTitle => 'Delete your account?';
+
+  @override
+  String get daBody => 'This can\'t be undone.';
+
+  @override
+  String get daWhatWeDelete => 'What we delete';
+
+  @override
+  String get daDeleteProfile => 'Your profile, name and photo';
+
+  @override
+  String get daDeleteId => 'Your ID documents and selfie';
+
+  @override
+  String get daDeletePayment => 'Saved payment methods and payout accounts';
+
+  @override
+  String get daDeleteMessages => 'Your messages, trips and open requests';
+
+  @override
+  String get daDeleteNotifications => 'Notifications and devices';
+
+  @override
+  String get daWhatWeKeep => 'What we keep';
+
+  @override
+  String get daKeepPayments => 'Payment and payout records, anonymised';
+
+  @override
+  String get daKeepPaymentsSub => 'Needed for accounting';
+
+  @override
+  String get daKeepDeliveries => 'Completed deliveries and reviews';
+
+  @override
+  String get daKeepDeliveriesSub => 'Shown as \"Deleted user\"';
+
+  @override
+  String get daUnderstand => 'I understand this is permanent';
+
+  @override
+  String get daConfirmButton => 'Delete my account';
+
+  @override
+  String get daFailed => 'Couldn\'t delete your account. Please try again.';
+
+  @override
+  String get daLoadFailed => 'Couldn\'t check your account.';
+
+  @override
+  String get daBlockedTitle => 'You can\'t delete your account yet';
+
+  @override
+  String get daBlockedBody => 'Finish or resolve these first, then try again.';
+
+  @override
+  String get daBlockedEscrow => 'Money held in escrow';
+
+  @override
+  String get daBlockedPayments => 'Payouts or refunds on the way';
+
+  @override
+  String get daBlockedDeliveries => 'Deliveries in progress';
+
+  @override
+  String get daBlockedDisputes => 'Open problem reports';
+
+  @override
+  String get daBlockedStaff => 'Staff accounts are removed by Nata support';
+
+  @override
+  String get daNeedHelp => 'Need help? Contact Nata support.';
 }
