@@ -102,6 +102,10 @@ class _OtpScreenState extends State<OtpScreen> {
 
   void _onDigitChanged(int index, String value) {
     setState(() => _error = null);
+    if (value.length > 1) {
+      _fillFrom(index, value);
+      return;
+    }
     if (value.length == 1 && index < 5) {
       _focus[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
@@ -109,6 +113,46 @@ class _OtpScreenState extends State<OtpScreen> {
     }
     // Auto-submit when last digit filled
     if (index == 5 && value.isNotEmpty) {
+      _verify();
+    }
+  }
+
+  /// Several digits arrived in one box: the code iOS / Android offers from
+  /// the SMS, or a pasted code. A full code fills all six boxes; otherwise
+  /// (typing over a filled box) the box keeps the digit just typed.
+  void _fillFrom(int index, String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length >= 6) {
+      final code = digits.substring(digits.length - 6);
+      for (var i = 0; i < 6; i++) {
+        _digitCtrl[i].text = code[i];
+      }
+      _focus[5].requestFocus();
+      setState(() {});
+      _verify();
+      return;
+    }
+    final start = index;
+    var i = start;
+    // A partial paste: spread it from this box onwards.
+    if (digits.length > 2) {
+      for (final d in digits.split('')) {
+        if (i > 5) break;
+        _digitCtrl[i].text = d;
+        i++;
+      }
+    } else {
+      _digitCtrl[index].text = digits.isEmpty ? '' : digits[digits.length - 1];
+      i = index + 1;
+    }
+    _digitCtrl[start].selection = TextSelection.collapsed(
+      offset: _digitCtrl[start].text.length,
+    );
+    setState(() {});
+    if (i <= 5) {
+      _focus[i].requestFocus();
+    } else {
+      _focus[5].requestFocus();
       _verify();
     }
   }
@@ -497,7 +541,9 @@ class _OtpScreenState extends State<OtpScreen> {
         focusNode: _focus[index],
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
-        maxLength: 1,
+        // No 1-character limit: the code from the SMS arrives as all six
+        // digits in one box and is spread over the boxes (_fillFrom).
+        autofillHints: index == 0 ? const [AutofillHints.oneTimeCode] : null,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         style: GoogleFonts.jetBrainsMono(
           fontWeight: FontWeight.w700,
