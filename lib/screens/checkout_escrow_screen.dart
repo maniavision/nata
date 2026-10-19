@@ -74,6 +74,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   MobileMoneyOption? _mobileChoice;
   bool get _payingByMobile => _paymentMethod == 2;
 
+  /// Mobile money is charged in the wallet's own currency, so it is only
+  /// offered when the price isn't in dollars, euros or pounds (create-payment
+  /// refuses it then too).
+  bool get _mobileMoneyOffered => !const {'USD', 'EUR', 'GBP'}.contains(
+    (_r.displayCurrency ?? widget.money.currency).trim().toUpperCase(),
+  );
+
   /// Bank transfer is paid in naira: the amount, loaded when it is chosen.
   bool get _payingByBank => _paymentMethod == 3;
   LocalCharge? _bankQuote;
@@ -910,6 +917,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       ),
     ];
 
+    // Each method keeps its index (2 = mobile money), hidden or not.
+    final shown = methods
+        .asMap()
+        .entries
+        .where((e) => e.key != 2 || _mobileMoneyOffered)
+        .toList();
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -933,12 +947,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          ...methods.asMap().entries.map((e) {
+          ...shown.asMap().entries.map((entry) {
+            final e = entry.value;
             final m = e.value;
             final selected = _paymentMethod == e.key;
             return Padding(
               padding: EdgeInsets.only(
-                bottom: e.key < methods.length - 1 ? 8 : 0,
+                bottom: entry.key < shown.length - 1 ? 8 : 0,
               ),
               child: GestureDetector(
                 onTap: () {

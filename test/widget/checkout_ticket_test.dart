@@ -24,9 +24,10 @@ void main() {
     bool verified = true,
     bool? onFile,
     DateTime? expiresAt,
+    String currency = 'XOF',
   }) => sampleSentRequest(
     status: 'accepted',
-    displayCurrency: 'XOF',
+    displayCurrency: currency,
     displayCost: 59126,
     displayFee: 6440,
     displayTotal: 65566,
@@ -677,6 +678,29 @@ void main() {
 
       expect(find.text('This request can no longer be paid.'), findsOneWidget);
       expect(idStatus('Not validated'), findsOneWidget);
+    });
+  });
+
+  group('mobile money by currency', () {
+    Future<void> show(WidgetTester tester, String currency) async {
+      await pump(
+        tester,
+        accepted(currency: currency, checkedAt: now, idCheckedAt: now),
+      );
+    }
+
+    for (final currency in ['USD', 'EUR', 'GBP']) {
+      testWidgets('is hidden for a price in $currency', (tester) async {
+        await show(tester, currency);
+        expect(find.text('Mobile Money'), findsNothing);
+        expect(find.text('Credit or Debit Card'), findsOneWidget);
+        expect(find.text('Bank Transfer'), findsOneWidget);
+      });
+    }
+
+    testWidgets('is offered for a price in XOF', (tester) async {
+      await show(tester, 'XOF');
+      expect(find.text('Mobile Money'), findsOneWidget);
     });
   });
 }

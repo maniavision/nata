@@ -8,7 +8,8 @@
  * accepted (display_total / display_currency), never taken from the app.
  * Mobile money is charged in the currency of the wallet's [country] instead,
  * converted at the latest rate (nata.mobile_money_charge); the fixed price
- * is kept as base_amount. Bank transfer is charged in naira the same way
+ * is kept as base_amount. Mobile money isn't offered for prices in USD, EUR
+ * or GBP. Bank transfer is charged in naira the same way
  * (nata.local_charge).
  *
  * Allowed only for the request's sender, while it is accepted and before its
@@ -252,6 +253,10 @@ Deno.serve(async (req: Request) => {
   let amount = baseAmount;
   let currency = baseCurrency;
   let paymentOptions = OPTIONS[method];
+  if (method === "mobile_money" && ["USD", "EUR", "GBP"].includes(baseCurrency)) {
+    // Prices in dollars, euros or pounds are paid by card or bank transfer.
+    return json({ error: "mobile_money_unavailable" }, 409);
+  }
   if (method === "mobile_money") {
     const { data: charge, error } = await db
       .rpc("mobile_money_charge", { p_request_id: requestId, p_country: country })
