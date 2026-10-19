@@ -1258,6 +1258,18 @@ abstract class AppLocalizations {
   /// **'PARCELS SENT'**
   String get parcelsSent;
 
+  /// No description provided for @tripsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Trip} other{{count} Trips}}'**
+  String tripsCount(int count);
+
+  /// No description provided for @parcelsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Parcel} other{{count} Parcels}}'**
+  String parcelsCount(int count);
+
   /// No description provided for @natawallet.
   ///
   /// In en, this message translates to:
@@ -1699,7 +1711,7 @@ abstract class AppLocalizations {
   /// No description provided for @driversLicense.
   ///
   /// In en, this message translates to:
-  /// **'Driver\'s Lic.'**
+  /// **'License'**
   String get driversLicense;
 
   /// No description provided for @nationalId.

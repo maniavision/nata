@@ -31,8 +31,47 @@ void main() {
       await tester.pumpWidget(buildScreen());
       await tester.pump();
 
-      // Passport, Driver's Lic., National ID
+      // Passport, License, National ID
       expect(find.text('Passport'), findsOneWidget);
+    });
+
+    // On a narrow phone (iPhone SE width) and in every language, the three
+    // ID type buttons keep one line each and the same height.
+    for (final locale in const [Locale('en'), Locale('fr'), Locale('es')]) {
+      testWidgets('ID type buttons line up in ${locale.languageCode}', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(320, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          appWrapper(const IdentityVerificationScreen(), locale: locale),
+        );
+        await tester.pump();
+
+        final heights = [
+          for (var i = 0; i < 3; i++)
+            tester.getSize(find.byKey(ValueKey('id-type-$i'))).height,
+        ];
+        expect(heights.toSet(), hasLength(1), reason: '$heights');
+        final tops = [
+          for (var i = 0; i < 3; i++)
+            tester.getTopLeft(find.byKey(ValueKey('id-type-$i'))).dy,
+        ];
+        expect(tops.toSet(), hasLength(1), reason: '$tops');
+      });
+    }
+
+    testWidgets('French uses the short "Permis"', (tester) async {
+      await tester.pumpWidget(
+        appWrapper(
+          const IdentityVerificationScreen(),
+          locale: const Locale('fr'),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Permis'), findsOneWidget);
+      expect(find.text('Permis de conduire'), findsNothing);
     });
 
     testWidgets('renders Use Camera button', (tester) async {

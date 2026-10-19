@@ -45,7 +45,7 @@ void main() {
   });
 
   group('IdDocumentType', () {
-    // The ID screen's buttons are Passport, Driver's Lic., National ID, and
+    // The ID screen's buttons are Passport, License, National ID, and
     // the screen picks the type by index: the enum must keep that order.
     test('follows the order of the ID screen buttons', () {
       expect(IdDocumentType.values, [

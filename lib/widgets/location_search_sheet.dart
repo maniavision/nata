@@ -38,19 +38,31 @@ class LocationSearchSheet extends StatefulWidget {
   final String title;
   final LocationSelection? initial;
 
-  const LocationSearchSheet({super.key, required this.title, this.initial});
+  /// Where countries and cities come from. Replaced in tests.
+  final LocationSearchService? service;
+
+  const LocationSearchSheet({
+    super.key,
+    required this.title,
+    this.initial,
+    this.service,
+  });
 
   static Future<LocationSelection?> show(
     BuildContext context, {
     required String title,
     LocationSelection? initial,
+    LocationSearchService? service,
   }) {
     return showModalBottomSheet<LocationSelection>(
       context: context,
       isScrollControlled: true,
+      // Keeps the sheet (and its back arrow) below the status bar.
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: AppColors.foreground.withValues(alpha: 0.4),
-      builder: (_) => LocationSearchSheet(title: title, initial: initial),
+      builder: (_) =>
+          LocationSearchSheet(title: title, initial: initial, service: service),
     );
   }
 
@@ -112,13 +124,12 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     setState(() => _loading = true);
     try {
       if (_step == 0) {
-        final results = await LocationSearchService().searchCountries(query);
+        final results = await (widget.service ?? LocationSearchService())
+            .searchCountries(query);
         if (mounted) setState(() => _countryResults = results);
       } else {
-        final results = await LocationSearchService().searchCities(
-          query,
-          countryCode: _selectedCountry?.isoCode,
-        );
+        final results = await (widget.service ?? LocationSearchService())
+            .searchCities(query, countryCode: _selectedCountry?.isoCode);
         if (mounted) setState(() => _cityResults = results);
       }
     } finally {
@@ -177,11 +188,16 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final bottomPad = media.viewInsets.bottom;
-    // Never taller than the space between the status bar and the keyboard,
-    // or the header (and its back arrow) slides under the status bar.
-    final sheetHeight = math.min(
-      media.size.height * 0.85,
-      media.size.height - bottomPad - media.padding.top - 8,
+    // A bottom sheet hides the status bar's height from its content, so it is
+    // read from the screen itself. Never taller than the space between the
+    // status bar and the keyboard, or the back arrow slides under it.
+    final topPad = MediaQueryData.fromView(View.of(context)).padding.top;
+    final sheetHeight = math.max(
+      0.0,
+      math.min(
+        media.size.height * 0.85,
+        media.size.height - bottomPad - topPad - 8,
+      ),
     );
 
     return AnimatedPadding(
@@ -335,28 +351,35 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     child: Row(
       children: [
         // Tapping the country goes back to choose another one.
-        GestureDetector(
-          key: const ValueKey('location-breadcrumb-country'),
-          behavior: HitTestBehavior.opaque,
-          onTap: _goBackToCountry,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              children: [
-                Text(
-                  _flagEmoji(_selectedCountry?.isoCode ?? ''),
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  _selectedCountry?.name ?? '',
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: AppColors.primary,
+        Flexible(
+          child: GestureDetector(
+            key: const ValueKey('location-breadcrumb-country'),
+            behavior: HitTestBehavior.opaque,
+            onTap: _goBackToCountry,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _flagEmoji(_selectedCountry?.isoCode ?? ''),
+                    style: const TextStyle(fontSize: 16),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      _selectedCountry?.name ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -368,6 +391,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
         ),
         Text(
           context.l10n.selectCity,
+          maxLines: 1,
           style: GoogleFonts.dmSans(
             fontSize: 13,
             color: AppColors.mutedForeground,

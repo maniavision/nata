@@ -18,6 +18,7 @@ import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
 import '../widgets/country_code_picker_sheet.dart' show flagEmoji;
 import '../widgets/camera_denied_sheet.dart';
+import '../widgets/one_line_text.dart';
 
 /// Takes or chooses an item photo. [camera] true = take it with the camera.
 /// Replaceable in tests.
@@ -1275,18 +1276,22 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
           const SizedBox(height: 14),
           _fieldLabel(l.packageSize.toUpperCase(), small: true),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              for (final c in RequestSizeClass.values)
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: c == RequestSizeClass.values.last ? 0 : 8,
+          // Same height for all three, even when one name wraps.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final c in RequestSizeClass.values)
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: c == RequestSizeClass.values.last ? 0 : 8,
+                      ),
+                      child: _sizeTile(c),
                     ),
-                    child: _sizeTile(c),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1852,10 +1857,9 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     ),
   );
 
-  Widget _fieldLabel(String text, {bool small = false}) => Text(
+  // One line in every language, so side-by-side fields line up.
+  Widget _fieldLabel(String text, {bool small = false}) => OneLineText(
     text,
-    maxLines: 2,
-    overflow: TextOverflow.ellipsis,
     style: GoogleFonts.dmSans(
       fontWeight: FontWeight.w700,
       fontSize: small ? 10 : 11,
