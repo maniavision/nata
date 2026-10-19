@@ -591,6 +591,7 @@ class _Step1 extends StatelessWidget {
               final selected = idType == e.key;
               return Expanded(
                 child: GestureDetector(
+                  key: ValueKey('id-type-${e.key}'),
                   onTap: () => onIdTypeChanged(e.key),
                   child: Container(
                     margin: EdgeInsets.only(right: e.key < 2 ? 6 : 0),
@@ -615,16 +616,26 @@ class _Step1 extends StatelessWidget {
                               : AppColors.mutedForeground,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          e.value.$2,
-                          style: GoogleFonts.dmSans(
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            fontSize: 11,
-                            color: selected
-                                ? Colors.white
-                                : AppColors.foreground,
+                        // One line, shrunk if needed, so the three chips
+                        // stay the same height in every language.
+                        SizedBox(
+                          height: 16,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              e.value.$2,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                fontSize: 11,
+                                color: selected
+                                    ? Colors.white
+                                    : AppColors.foreground,
+                              ),
+                            ),
                           ),
                         ),
                       ],

@@ -6,6 +6,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
 import '../services/request_service.dart' show RequestInput;
+import '../widgets/one_line_text.dart';
 
 /// Card checks, kept apart from the screen so they can be tested.
 class CardInput {
@@ -685,7 +686,8 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
 
   Widget _label(String text, {bool small = false}) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
-    child: Text(
+    // One line in every language, so side-by-side fields line up.
+    child: OneLineText(
       text.toUpperCase(),
       style: GoogleFonts.dmSans(
         fontWeight: FontWeight.w700,

@@ -617,6 +617,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get parcelsSent => 'COLIS ENVOYÉS';
 
   @override
+  String tripsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyages',
+      one: '1 voyage',
+      zero: '0 voyage',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parcelsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis',
+      one: '1 colis',
+      zero: '0 colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get natawallet => 'PORTEFEUILLE NATA';
 
   @override
@@ -850,7 +874,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get passportOption => 'Passeport';
 
   @override
-  String get driversLicense => 'Permis de conduire';
+  String get driversLicense => 'Permis';
 
   @override
   String get nationalId => 'Carte d\'identité';
