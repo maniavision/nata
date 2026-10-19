@@ -36,12 +36,17 @@ class IdentityVerificationScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [FaceVerificationService].
   final FaceVerificationService? faceService;
 
+  /// The page "Skip for now" opens when there is nothing to go back to
+  /// (verification opened right after sign-up). Replaced in tests.
+  final WidgetBuilder? homeBuilder;
+
   const IdentityVerificationScreen({
     super.key,
     this.initialStep = 0,
     this.emergencyService,
     this.idCheck,
     this.faceService,
+    this.homeBuilder,
   });
 
   @override
@@ -168,6 +173,22 @@ class _IdentityVerificationScreenState
     }
   }
 
+  /// Back or "Skip for now": to the page underneath, or Home when
+  /// verification was opened right after sign-up and is the only page
+  /// (closing it would leave an empty, black screen).
+  void _leave() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: widget.homeBuilder ?? (context) => const HomeScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -194,7 +215,7 @@ class _IdentityVerificationScreenState
                   idType: _idType,
                   onIdTypeChanged: (t) => setState(() => _idType = t),
                   onNext: _submitAndNext,
-                  onBack: () => Navigator.of(context).pop(),
+                  onBack: _leave,
                   documentBytes: _documentBytes,
                   documentFileName: _documentFileName,
                   onDocumentPicked: _onDocumentPicked,
@@ -417,7 +438,8 @@ class _Step1 extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  key: const ValueKey('id-skip'),
+                  onTap: onBack,
                   child: Text(
                     context.l10n.skipForNowId,
                     textAlign: TextAlign.end,

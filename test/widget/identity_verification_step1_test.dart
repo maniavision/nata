@@ -74,6 +74,55 @@ void main() {
       expect(find.text('Permis de conduire'), findsNothing);
     });
 
+    testWidgets('right after sign-up, "Skip for now" goes to Home', (
+      tester,
+    ) async {
+      // Sign-up replaces every page with verification: nothing underneath.
+      await tester.pumpWidget(
+        appWrapper(
+          IdentityVerificationScreen(
+            homeBuilder: (_) => const Scaffold(body: Text('HOME')),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const ValueKey('id-skip')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('HOME'), findsOneWidget);
+      expect(find.byType(IdentityVerificationScreen), findsNothing);
+    });
+
+    testWidgets('opened from another page, "Skip for now" goes back to it', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        appWrapper(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => IdentityVerificationScreen(
+                    homeBuilder: (_) => const Scaffold(body: Text('HOME')),
+                  ),
+                ),
+              ),
+              child: const Text('PROFILE'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('PROFILE'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('id-skip')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PROFILE'), findsOneWidget);
+      expect(find.text('HOME'), findsNothing);
+    });
+
     testWidgets('renders Use Camera button', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pump();
