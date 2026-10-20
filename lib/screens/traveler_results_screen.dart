@@ -641,3 +641,29 @@ class _TravelerCardState extends State<_TravelerCard> {
     );
   }
 }
+
+/// The search a "traveler going your way" alert opens (event trip_match):
+/// the saved route, any date. Null if the alert lacks its places.
+Widget? resultsForRouteAlert(Map<String, dynamic> payload) {
+  LocationSelection? place(String side) {
+    // A number in the in-app notification, text in a push.
+    final raw = payload['${side}_city_id'];
+    final id = raw is num ? raw.toInt() : int.tryParse('${raw ?? ''}');
+    final city = (payload['${side}_city'] as String?) ?? '';
+    final country = (payload['${side}_country'] as String?) ?? '';
+    final code = ((payload['${side}_country_code'] as String?) ?? '').trim();
+    if (id == null || city.isEmpty) return null;
+    return LocationSelection(
+      country: country,
+      countryCode: code,
+      city: city,
+      displayLabel: country.isEmpty ? city : '$city, $country',
+      cityId: id,
+    );
+  }
+
+  final from = place('from');
+  final to = place('to');
+  if (from == null || to == null) return null;
+  return TravelerResultsScreen(departure: from, destination: to);
+}

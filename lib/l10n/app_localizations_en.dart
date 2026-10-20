@@ -3679,6 +3679,81 @@ class AppLocalizationsEn extends AppLocalizations {
       'A problem was reported on one of your deliveries. Our support team will contact you.';
 
   @override
+  String get notifTripMatchTitle => 'A traveler is going your way';
+
+  @override
+  String notifTripMatchBody(String name, String route) {
+    return '$name is flying $route. Send your item with them.';
+  }
+
+  @override
+  String get routeAlerts => 'Route alerts';
+
+  @override
+  String get routeAlertsSub => 'Get notified when a traveler flies your routes';
+
+  @override
+  String get routeAlertsIntro =>
+      'Save the routes you often send on. When a verified traveler posts a trip on one of them, we\'ll notify you.';
+
+  @override
+  String get routeAlertsSaved => 'SAVED ROUTES';
+
+  @override
+  String routeAlertsCount(int count) {
+    return '$count of 5';
+  }
+
+  @override
+  String get routeAlertsAdd => 'Add a route';
+
+  @override
+  String get routeAlertsMax => 'Up to 5 routes';
+
+  @override
+  String get routeAlertsEmptyTitle => 'No routes yet';
+
+  @override
+  String get routeAlertsEmptyBody =>
+      'Add the routes you send on and we\'ll tell you when a traveler flies them.';
+
+  @override
+  String get routeAlertsFrom => 'From';
+
+  @override
+  String get routeAlertsTo => 'To';
+
+  @override
+  String get routeAlertsChooseCity => 'Choose a city';
+
+  @override
+  String get routeAlertsSave => 'Save route';
+
+  @override
+  String get routeAlertsRemove => 'Remove route';
+
+  @override
+  String get routeAlertsSavedToast =>
+      'Route saved. We\'ll let you know when a traveler flies it.';
+
+  @override
+  String get routeAlertsErrSame => 'Pick two different cities.';
+
+  @override
+  String get routeAlertsErrLimit =>
+      'You can save up to 5 routes. Remove one to add another.';
+
+  @override
+  String get routeAlertsErrExists => 'You already have this route.';
+
+  @override
+  String get routeAlertsErrFailed =>
+      'Couldn\'t save the route. Please try again.';
+
+  @override
+  String get routeAlertsLoadFailed => 'Couldn\'t load your routes.';
+
+  @override
   String notifMessageTitle(String name) {
     return 'New message from $name';
   }

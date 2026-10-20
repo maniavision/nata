@@ -618,6 +618,62 @@ void main() {
     });
   });
 
+  group('a traveler on a saved route', () {
+    final alert = AppNotification(
+      id: 't1',
+      type: 'trip',
+      title: 'Stored',
+      body: 'Stored',
+      imageUrl: null,
+      isRead: false,
+      createdAt: now,
+      payload: const {
+        'event': 'trip_match',
+        'traveler': 'Daniel',
+        'route': 'Lagos → London',
+        'from_city_id': 10,
+        'from_city': 'Lagos',
+        'to_city_id': 20,
+        'to_city': 'London',
+      },
+    );
+
+    testWidgets('says who and where', (tester) async {
+      service = FakeNotificationService(items: [alert]);
+      await pump(tester);
+      expect(find.text('A traveler is going your way'), findsOneWidget);
+      expect(
+        find.text('Daniel is flying Lagos → London. Send your item with them.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tapping it opens the search for that route', (tester) async {
+      service = FakeNotificationService(items: [alert]);
+      Map<String, dynamic>? opened;
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          NotificationsScreen(
+            service: service,
+            now: () => now,
+            routeResultsBuilder: (p) {
+              opened = p;
+              return const Scaffold(body: Text('RESULTS'));
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('A traveler is going your way'));
+      await tester.pumpAndSettle();
+      expect(opened?['to_city'], 'London');
+      expect(find.text('RESULTS'), findsOneWidget);
+    });
+  });
+
   group('a new message', () {
     AppNotification message(Map<String, dynamic> details) => AppNotification(
       id: 'm1',

@@ -10,6 +10,7 @@ import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'requests_screen.dart';
 import 'chat_thread_screen.dart';
+import 'traveler_results_screen.dart';
 
 /// "2 min ago", "1 hr ago", "Yesterday", "Jun 12" ...
 String notificationTimeLabel(AppLocalizations l, DateTime now, DateTime then) {
@@ -42,12 +43,17 @@ class NotificationsScreen extends StatefulWidget {
   /// [ChatFromNotification].
   final Widget Function(String conversationId)? chatBuilder;
 
+  /// Builds the search a route alert opens. Defaults to
+  /// [resultsForRouteAlert].
+  final Widget? Function(Map<String, dynamic> payload)? routeResultsBuilder;
+
   const NotificationsScreen({
     super.key,
     this.service,
     this.now,
     this.requestsBuilder,
     this.chatBuilder,
+    this.routeResultsBuilder,
   });
 
   @override
@@ -118,6 +124,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   /// Requests; a new message opens its chat.
   void _open(AppNotification n) {
     _markRead(n);
+    if (n.event == 'trip_match') {
+      final results =
+          widget.routeResultsBuilder?.call(n.payload) ??
+          resultsForRouteAlert(n.payload);
+      if (results != null) {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => results));
+      }
+      return;
+    }
     final chat = n.payload['conversation_id'] as String?;
     if (n.event == 'message_new' && chat != null && chat.isNotEmpty) {
       Navigator.of(context).push(

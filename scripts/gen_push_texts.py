@@ -27,6 +27,7 @@ EVENTS = {
     "identity_rejected": ("notifRejectedTitle", "notifRejectedBody"),
     "problem_reported": ("notifProblemTitle", "notifProblemBody"),
     "message_new": ("notifMessageTitle", "notifMessageBody"),
+    "trip_match": ("notifTripMatchTitle", "notifTripMatchBody"),
     "message_photo": ("notifMessageTitle", "notifMessagePhotoBody"),
 }
 
