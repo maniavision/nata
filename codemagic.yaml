@@ -15,6 +15,10 @@
 # Mark them all "Secure". The keystore and key.properties are written during
 # the build only and are never committed (android/.gitignore).
 #
+# Flutter is pinned (flutter: 3.41.7) to the version the app is tested with
+# locally; newer stable releases break pdfrx_engine 0.4.5. Raise it together
+# with pdfrx when upgrading Flutter.
+#
 # Version: the name comes from pubspec.yaml (version: 1.0.0+1 -> 1.0.0), the
 # build number from Codemagic's $BUILD_NUMBER. Raise the name in pubspec.yaml
 # before tagging a release.
@@ -107,7 +111,7 @@ workflows:
       cancel_previous_builds: true
 
     environment:
-      flutter: stable
+      flutter: 3.41.7
       java: 17
 
     cache:
@@ -151,7 +155,7 @@ workflows:
       app_store_connect: 7S9U63DGF6
 
     environment:
-      flutter: stable
+      flutter: 3.41.7
       xcode: latest
       cocoapods: default
       groups:
@@ -195,7 +199,7 @@ workflows:
       app_store_connect: 7S9U63DGF6
 
     environment:
-      flutter: stable
+      flutter: 3.41.7
       xcode: latest
       cocoapods: default
       groups:
@@ -237,7 +241,7 @@ workflows:
           include: true
 
     environment:
-      flutter: stable
+      flutter: 3.41.7
       java: 17
       groups:
         - android_credentials
@@ -278,7 +282,7 @@ workflows:
           include: true
 
     environment:
-      flutter: stable
+      flutter: 3.41.7
       java: 17
       groups:
         - android_credentials

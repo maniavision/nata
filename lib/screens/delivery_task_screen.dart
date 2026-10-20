@@ -12,6 +12,7 @@ import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
 import 'delivery_confirm_screen.dart';
 import 'messages_screen.dart';
+import '../widgets/camera_denied_sheet.dart';
 
 /// A request the traveler accepted and is now carrying, as Requests >
 /// Incoming shows it.
@@ -186,6 +187,9 @@ class DeliveryTaskScreen extends StatefulWidget {
       return photo?.readAsBytes();
     } catch (e) {
       debugPrint('[DeliveryTask] photo error: $e');
+      if (context.mounted && isCameraDenied(e)) {
+        await showCameraDeniedSheet(context);
+      }
       return null;
     }
   }

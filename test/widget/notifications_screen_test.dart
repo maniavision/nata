@@ -618,6 +618,74 @@ void main() {
     });
   });
 
+  group('a new message', () {
+    AppNotification message(Map<String, dynamic> details) => AppNotification(
+      id: 'm1',
+      type: 'message',
+      title: 'Stored',
+      body: 'Stored',
+      imageUrl: null,
+      isRead: false,
+      createdAt: now,
+      payload: {
+        'event': 'message_new',
+        'conversation_id': 'conv-9',
+        ...details,
+      },
+    );
+
+    testWidgets('shows who wrote and what', (tester) async {
+      service = FakeNotificationService(
+        items: [
+          message({'author': 'Amara', 'message': 'Just landed!'}),
+        ],
+      );
+      await pump(tester);
+      expect(find.text('New message from Amara'), findsOneWidget);
+      expect(find.text('Just landed!'), findsOneWidget);
+    });
+
+    testWidgets('a photo says so', (tester) async {
+      service = FakeNotificationService(
+        items: [
+          message({'author': 'Amara', 'message': '', 'photo': true}),
+        ],
+      );
+      await pump(tester, locale: const Locale('fr'));
+      expect(find.text('Nouveau message de Amara'), findsOneWidget);
+      expect(find.text('Vous a envoyé une photo'), findsOneWidget);
+    });
+
+    testWidgets('tapping it opens the chat', (tester) async {
+      service = FakeNotificationService(
+        items: [
+          message({'author': 'Amara', 'message': 'Hi'}),
+        ],
+      );
+      String? opened;
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          NotificationsScreen(
+            service: service,
+            now: () => now,
+            chatBuilder: (id) {
+              opened = id;
+              return const Scaffold(body: Text('CHAT'));
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hi'));
+      await tester.pumpAndSettle();
+      expect(opened, 'conv-9');
+      expect(find.text('CHAT'), findsOneWidget);
+    });
+  });
+
   group('written from the event, in the user\'s language', () {
     AppNotification event(String name, Map<String, dynamic> details) =>
         AppNotification(

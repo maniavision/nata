@@ -614,6 +614,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parcelsSent => 'PARCELS SENT';
 
   @override
+  String tripsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trips',
+      one: '1 Trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parcelsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Parcels',
+      one: '1 Parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get natawallet => 'NATA WALLET';
 
   @override
@@ -842,7 +864,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passportOption => 'Passport';
 
   @override
-  String get driversLicense => 'Driver\'s Lic.';
+  String get driversLicense => 'License';
 
   @override
   String get nationalId => 'National ID';
@@ -3063,6 +3085,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notNow => 'Not now';
 
   @override
+  String get cameraOffTitle => 'Camera access is off';
+
+  @override
+  String get cameraOffBody =>
+      'Nata needs your camera to take this photo. Turn on Camera for Nata in your phone\'s Settings, then come back and try again.';
+
+  @override
+  String get cameraOffPath => 'Settings > Nata Delivery > Camera';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
   String get verifyPromptTitle => 'Verify your identity first';
 
   @override
@@ -3091,11 +3126,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verify your identity first: only verified members can do this.';
 
   @override
-  String get errTripFull => 'This trip already carries items for 3 senders.';
+  String get errTripFull =>
+      'This trip already has 3 deliveries in progress. A place frees up when one is delivered.';
 
   @override
   String get errSenderOnTrip =>
-      'You already accepted a request from this sender on this trip.';
+      'You already have a delivery in progress from this sender on this trip.';
 
   @override
   String get continueBrowsing => 'Continue browsing';
@@ -3641,6 +3677,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notifProblemBody =>
       'A problem was reported on one of your deliveries. Our support team will contact you.';
+
+  @override
+  String notifMessageTitle(String name) {
+    return 'New message from $name';
+  }
+
+  @override
+  String notifMessageBody(String message) {
+    return '$message';
+  }
+
+  @override
+  String get notifMessagePhotoBody => 'Sent you a photo';
+
+  @override
+  String get chatTyping => 'typing…';
 
   @override
   String get pickupPhotoHint =>

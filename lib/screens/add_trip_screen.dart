@@ -15,6 +15,8 @@ import '../services/preferences_service.dart';
 import '../services/trip_service.dart';
 import '../widgets/date_picker_sheet.dart';
 import '../widgets/location_search_sheet.dart';
+import '../widgets/camera_denied_sheet.dart';
+import '../widgets/one_line_text.dart';
 
 /// Opens a location picker; replaceable in tests.
 typedef LocationPicker =
@@ -257,7 +259,11 @@ class _AddTripScreenState extends State<AddTripScreen> {
     } catch (e) {
       // Also covers a missing camera (simulator) and a denied permission.
       debugPrint('[AddTrip] camera error: $e');
-      if (mounted) setState(() => _error = context.l10n.errCamera);
+      if (mounted && isCameraDenied(e)) {
+        await showCameraDeniedSheet(context);
+      } else if (mounted) {
+        setState(() => _error = context.l10n.errCamera);
+      }
     }
   }
 
@@ -1055,11 +1061,9 @@ class _AddTripScreenState extends State<AddTripScreen> {
             Icon(icon, size: 16, color: fg),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(
+              child: OneLineText(
                 label,
                 textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
@@ -1209,7 +1213,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        // One line in every language, so side-by-side fields line up.
+        OneLineText(
           label,
           style: GoogleFonts.dmSans(
             fontWeight: FontWeight.w700,
@@ -1504,7 +1509,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        // One line in every language, so side-by-side fields line up.
+        OneLineText(
           label,
           style: GoogleFonts.dmSans(
             fontWeight: FontWeight.w700,

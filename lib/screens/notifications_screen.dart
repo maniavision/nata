@@ -9,6 +9,7 @@ import '../services/notification_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'requests_screen.dart';
+import 'chat_thread_screen.dart';
 
 /// "2 min ago", "1 hr ago", "Yesterday", "Jun 12" ...
 String notificationTimeLabel(AppLocalizations l, DateTime now, DateTime then) {
@@ -37,11 +38,16 @@ class NotificationsScreen extends StatefulWidget {
   /// [RequestsScreen].
   final Widget Function(int tab)? requestsBuilder;
 
+  /// Builds the chat a message notification opens. Defaults to
+  /// [ChatFromNotification].
+  final Widget Function(String conversationId)? chatBuilder;
+
   const NotificationsScreen({
     super.key,
     this.service,
     this.now,
     this.requestsBuilder,
+    this.chatBuilder,
   });
 
   @override
@@ -109,9 +115,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   /// Marks it read and, when it is about a request, opens that side of
-  /// Requests.
+  /// Requests; a new message opens its chat.
   void _open(AppNotification n) {
     _markRead(n);
+    final chat = n.payload['conversation_id'] as String?;
+    if (n.event == 'message_new' && chat != null && chat.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) =>
+              widget.chatBuilder?.call(chat) ??
+              ChatFromNotification(conversationId: chat),
+        ),
+      );
+      return;
+    }
     final tab = requestsTabFor(n);
     if (tab == null) return;
     Navigator.of(context).push(

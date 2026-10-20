@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../l10n/l10n_ext.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,6 +22,8 @@ Future<Country?> showCountryCodePicker(BuildContext context, Country selected) {
   return showModalBottomSheet<Country>(
     context: context,
     isScrollControlled: true,
+    // Keeps the sheet below the status bar.
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.foreground.withValues(alpha: 0.4),
     builder: (ctx) => CountryCodePickerSheet(
@@ -94,7 +97,15 @@ class _CountryCodePickerSheetState extends State<CountryCodePickerSheet> {
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.80,
+          // Kept below the status bar when the keyboard is up.
+          height: math.min(
+            MediaQuery.of(context).size.height * 0.80,
+            MediaQuery.of(context).size.height -
+                MediaQuery.of(context).viewInsets.bottom -
+                // The sheet hides the status bar's height; read the screen's.
+                MediaQueryData.fromView(View.of(context)).padding.top -
+                8,
+          ),
           color: AppColors.card,
           child: Column(
             children: [

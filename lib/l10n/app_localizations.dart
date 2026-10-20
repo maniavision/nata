@@ -1258,6 +1258,18 @@ abstract class AppLocalizations {
   /// **'PARCELS SENT'**
   String get parcelsSent;
 
+  /// No description provided for @tripsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Trip} other{{count} Trips}}'**
+  String tripsCount(int count);
+
+  /// No description provided for @parcelsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Parcel} other{{count} Parcels}}'**
+  String parcelsCount(int count);
+
   /// No description provided for @natawallet.
   ///
   /// In en, this message translates to:
@@ -1699,7 +1711,7 @@ abstract class AppLocalizations {
   /// No description provided for @driversLicense.
   ///
   /// In en, this message translates to:
-  /// **'Driver\'s Lic.'**
+  /// **'License'**
   String get driversLicense;
 
   /// No description provided for @nationalId.
@@ -5444,6 +5456,30 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get notNow;
 
+  /// No description provided for @cameraOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is off'**
+  String get cameraOffTitle;
+
+  /// No description provided for @cameraOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata needs your camera to take this photo. Turn on Camera for Nata in your phone\'s Settings, then come back and try again.'**
+  String get cameraOffBody;
+
+  /// No description provided for @cameraOffPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings > Nata Delivery > Camera'**
+  String get cameraOffPath;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
   /// No description provided for @verifyPromptTitle.
   ///
   /// In en, this message translates to:
@@ -5495,13 +5531,13 @@ abstract class AppLocalizations {
   /// No description provided for @errTripFull.
   ///
   /// In en, this message translates to:
-  /// **'This trip already carries items for 3 senders.'**
+  /// **'This trip already has 3 deliveries in progress. A place frees up when one is delivered.'**
   String get errTripFull;
 
   /// No description provided for @errSenderOnTrip.
   ///
   /// In en, this message translates to:
-  /// **'You already accepted a request from this sender on this trip.'**
+  /// **'You already have a delivery in progress from this sender on this trip.'**
   String get errSenderOnTrip;
 
   /// No description provided for @continueBrowsing.
@@ -6409,6 +6445,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A problem was reported on one of your deliveries. Our support team will contact you.'**
   String get notifProblemBody;
+
+  /// No description provided for @notifMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New message from {name}'**
+  String notifMessageTitle(String name);
+
+  /// No description provided for @notifMessageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{message}'**
+  String notifMessageBody(String message);
+
+  /// No description provided for @notifMessagePhotoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent you a photo'**
+  String get notifMessagePhotoBody;
+
+  /// No description provided for @chatTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'typing…'**
+  String get chatTyping;
 
   /// No description provided for @pickupPhotoHint.
   ///

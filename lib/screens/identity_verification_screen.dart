@@ -18,6 +18,7 @@ import '../widgets/face_scan_step.dart';
 import '../services/verification_service.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
+import '../widgets/camera_denied_sheet.dart';
 
 class IdentityVerificationScreen extends StatefulWidget {
   /// Which step to open on: 0 = ID upload, 1 = face scan (not part of the flow
@@ -35,12 +36,17 @@ class IdentityVerificationScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [FaceVerificationService].
   final FaceVerificationService? faceService;
 
+  /// The page "Skip for now" opens when there is nothing to go back to
+  /// (verification opened right after sign-up). Replaced in tests.
+  final WidgetBuilder? homeBuilder;
+
   const IdentityVerificationScreen({
     super.key,
     this.initialStep = 0,
     this.emergencyService,
     this.idCheck,
     this.faceService,
+    this.homeBuilder,
   });
 
   @override
@@ -167,6 +173,22 @@ class _IdentityVerificationScreenState
     }
   }
 
+  /// Back or "Skip for now": to the page underneath, or Home when
+  /// verification was opened right after sign-up and is the only page
+  /// (closing it would leave an empty, black screen).
+  void _leave() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: widget.homeBuilder ?? (context) => const HomeScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -193,7 +215,7 @@ class _IdentityVerificationScreenState
                   idType: _idType,
                   onIdTypeChanged: (t) => setState(() => _idType = t),
                   onNext: _submitAndNext,
-                  onBack: () => Navigator.of(context).pop(),
+                  onBack: _leave,
                   documentBytes: _documentBytes,
                   documentFileName: _documentFileName,
                   onDocumentPicked: _onDocumentPicked,
@@ -416,7 +438,8 @@ class _Step1 extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  key: const ValueKey('id-skip'),
+                  onTap: onBack,
                   child: Text(
                     context.l10n.skipForNowId,
                     textAlign: TextAlign.end,
@@ -591,6 +614,7 @@ class _Step1 extends StatelessWidget {
               final selected = idType == e.key;
               return Expanded(
                 child: GestureDetector(
+                  key: ValueKey('id-type-${e.key}'),
                   onTap: () => onIdTypeChanged(e.key),
                   child: Container(
                     margin: EdgeInsets.only(right: e.key < 2 ? 6 : 0),
@@ -615,16 +639,26 @@ class _Step1 extends StatelessWidget {
                               : AppColors.mutedForeground,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          e.value.$2,
-                          style: GoogleFonts.dmSans(
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            fontSize: 11,
-                            color: selected
-                                ? Colors.white
-                                : AppColors.foreground,
+                        // One line, shrunk if needed, so the three chips
+                        // stay the same height in every language.
+                        SizedBox(
+                          height: 16,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              e.value.$2,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: GoogleFonts.dmSans(
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                fontSize: 11,
+                                color: selected
+                                    ? Colors.white
+                                    : AppColors.foreground,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -917,7 +951,9 @@ class _Step1 extends StatelessWidget {
       onDocumentPicked(bytes, 'id_document_$ext.$ext', mime);
     } catch (e) {
       debugPrint('[Step1] camera error: $e');
-      if (context.mounted) {
+      if (context.mounted && isCameraDenied(e)) {
+        await showCameraDeniedSheet(context);
+      } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.errCameraDetail(e.toString()))),
         );

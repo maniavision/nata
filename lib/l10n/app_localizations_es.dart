@@ -616,6 +616,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get parcelsSent => 'PAQUETES ENVIADOS';
 
   @override
+  String tripsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count viajes',
+      one: '1 viaje',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parcelsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count paquetes',
+      one: '1 paquete',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get natawallet => 'BILLETERA NATA';
 
   @override
@@ -848,10 +870,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get passportOption => 'Pasaporte';
 
   @override
-  String get driversLicense => 'Lic. de conducir';
+  String get driversLicense => 'Licencia';
 
   @override
-  String get nationalId => 'Cédula nacional';
+  String get nationalId => 'Cédula';
 
   @override
   String get takePhotoOrUpload => 'Toma una foto o sube la página frontal';
@@ -3107,6 +3129,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notNow => 'Ahora no';
 
   @override
+  String get cameraOffTitle => 'El acceso a la cámara está desactivado';
+
+  @override
+  String get cameraOffBody =>
+      'Nata necesita tu cámara para tomar esta foto. Activa la cámara para Nata en los Ajustes de tu teléfono y vuelve a intentarlo.';
+
+  @override
+  String get cameraOffPath => 'Ajustes > Nata Delivery > Cámara';
+
+  @override
+  String get openSettings => 'Abrir Ajustes';
+
+  @override
   String get verifyPromptTitle => 'Primero verifica tu identidad';
 
   @override
@@ -3136,11 +3171,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Primero verifica tu identidad: solo los miembros verificados pueden hacer esto.';
 
   @override
-  String get errTripFull => 'Este viaje ya lleva artículos de 3 remitentes.';
+  String get errTripFull =>
+      'Este viaje ya tiene 3 entregas en curso. Se libera un lugar cuando se entrega una.';
 
   @override
   String get errSenderOnTrip =>
-      'Ya aceptaste una solicitud de este remitente en este viaje.';
+      'Ya tienes una entrega en curso de este remitente en este viaje.';
 
   @override
   String get continueBrowsing => 'Seguir explorando';
@@ -3687,6 +3723,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get notifProblemBody =>
       'Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.';
+
+  @override
+  String notifMessageTitle(String name) {
+    return 'Nuevo mensaje de $name';
+  }
+
+  @override
+  String notifMessageBody(String message) {
+    return '$message';
+  }
+
+  @override
+  String get notifMessagePhotoBody => 'Te envió una foto';
+
+  @override
+  String get chatTyping => 'escribiendo…';
 
   @override
   String get pickupPhotoHint =>
