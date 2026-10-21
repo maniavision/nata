@@ -19,12 +19,19 @@
 # locally; newer stable releases break pdfrx_engine 0.4.5. Raise it together
 # with pdfrx when upgrading Flutter.
 #
-# Version: the name comes from pubspec.yaml (version: 1.0.0+1 -> 1.0.0), the
-# build number from Codemagic's $BUILD_NUMBER. Raise the name in pubspec.yaml
-# before tagging a release.
+# Versions (see docs/RELEASING.md):
+#   * Version name (1.2.3): pubspec.yaml. Release with scripts/release.sh,
+#     which raises it, commits and tags v1.2.3. A tag build fails if the tag
+#     and pubspec.yaml disagree.
+#   * Build number: always one more than the highest already in the store
+#     (TestFlight + App Store for iOS, every Google Play track for Android),
+#     and never below Codemagic's own counter. So testing and production
+#     builds never clash, and a hand-uploaded build is accounted for.
 
 definitions:
   ios_bundle_id: &ios_bundle_id com.nata.nataApp
+  # App Store Connect's id for "Nata Delivery" (App Information > Apple ID).
+  ios_app_id: &ios_app_id 6824326148
   android_package: &android_package com.nata.nataapp
 
   email: &email
@@ -63,11 +70,34 @@ definitions:
         keychain add-certificates
         xcode-project use-profiles
 
+    # A release tag must match pubspec.yaml's version name.
+    - &check_tag
+      name: Check the release tag matches pubspec.yaml
+      script: |
+        if [ -n "${CM_TAG:-}" ]; then
+          PUBSPEC=$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9.]+).*/\1/')
+          if [ "v$PUBSPEC" != "$CM_TAG" ]; then
+            echo "Tag $CM_TAG doesn't match pubspec.yaml ($PUBSPEC). Use scripts/release.sh."
+            exit 1
+          fi
+          echo "Releasing $PUBSPEC"
+        fi
+
+    - &ios_build_number
+      name: Pick the iOS build number
+      script: |
+        TF=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
+        AS=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
+        LATEST=$(( ${TF:-0} > ${AS:-0} ? ${TF:-0} : ${AS:-0} ))
+        NEXT=$(( LATEST + 1 > BUILD_NUMBER ? LATEST + 1 : BUILD_NUMBER ))
+        echo "Latest in App Store Connect: $LATEST -> building $NEXT"
+        echo "NEXT_BUILD_NUMBER=$NEXT" >> "$CM_ENV"
+
     - &ios_build
       name: Build IPA
       script: |
         flutter build ipa --release \
-          --build-number=$BUILD_NUMBER \
+          --build-number=$NEXT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
 
     - &android_signing
@@ -85,11 +115,22 @@ definitions:
         test -s "$CM_BUILD_DIR/android/app/keystore.jks" || { echo "Keystore missing"; exit 1; }
         echo "key.properties written"
 
+    - &android_build_number
+      name: Pick the Android build number
+      script: |
+        # Highest version code on any Google Play track (0 before the first
+        # upload, or if the service account can't read it yet).
+        LATEST=$(google-play get-latest-build-number \
+          --package-name "$PACKAGE_NAME" 2>/dev/null || echo 0)
+        NEXT=$(( ${LATEST:-0} + 1 > BUILD_NUMBER ? ${LATEST:-0} + 1 : BUILD_NUMBER ))
+        echo "Latest on Google Play: ${LATEST:-0} -> building $NEXT"
+        echo "NEXT_BUILD_NUMBER=$NEXT" >> "$CM_ENV"
+
     - &android_build
       name: Build App Bundle (AAB)
       script: |
         flutter build appbundle --release \
-          --build-number=$BUILD_NUMBER
+          --build-number=$NEXT_BUILD_NUMBER
 
 workflows:
 
@@ -162,9 +203,12 @@ workflows:
         - ios_credentials
       vars:
         BUNDLE_ID: *ios_bundle_id
+        APP_STORE_APP_ID: *ios_app_id
 
     scripts:
+      - *check_tag
       - *ios_signing
+      - *ios_build_number
       - *pub_get
       - *analyze
       - *test
@@ -206,9 +250,12 @@ workflows:
         - ios_credentials
       vars:
         BUNDLE_ID: *ios_bundle_id
+        APP_STORE_APP_ID: *ios_app_id
 
     scripts:
+      - *check_tag
       - *ios_signing
+      - *ios_build_number
       - *pub_get
       - *analyze
       - *test
@@ -249,7 +296,9 @@ workflows:
         PACKAGE_NAME: *android_package
 
     scripts:
+      - *check_tag
       - *android_signing
+      - *android_build_number
       - *pub_get
       - *analyze
       - *test
@@ -290,7 +339,9 @@ workflows:
         PACKAGE_NAME: *android_package
 
     scripts:
+      - *check_tag
       - *android_signing
+      - *android_build_number
       - *pub_get
       - *analyze
       - *test
