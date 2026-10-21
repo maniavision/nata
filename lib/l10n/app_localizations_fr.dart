@@ -4075,4 +4075,92 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportActionFailed => 'Ça n\'a pas marché. Réessayez.';
+
+  @override
+  String get deleteAccountRow => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountRowSub =>
+      'Supprimer définitivement votre compte Nata';
+
+  @override
+  String get daTitle => 'Supprimer votre compte ?';
+
+  @override
+  String get daBody => 'Cette action est irréversible.';
+
+  @override
+  String get daWhatWeDelete => 'Ce que nous supprimons';
+
+  @override
+  String get daDeleteProfile => 'Votre profil, nom et photo';
+
+  @override
+  String get daDeleteId => 'Vos pièces d’identité et votre selfie';
+
+  @override
+  String get daDeletePayment =>
+      'Moyens de paiement et comptes de versement enregistrés';
+
+  @override
+  String get daDeleteMessages => 'Vos messages, trajets et demandes en cours';
+
+  @override
+  String get daDeleteNotifications => 'Notifications et appareils';
+
+  @override
+  String get daWhatWeKeep => 'Ce que nous conservons';
+
+  @override
+  String get daKeepPayments =>
+      'Historique des paiements et versements, anonymisé';
+
+  @override
+  String get daKeepPaymentsSub => 'Nécessaire à la comptabilité';
+
+  @override
+  String get daKeepDeliveries => 'Livraisons terminées et avis';
+
+  @override
+  String get daKeepDeliveriesSub => 'Affichés comme « Utilisateur supprimé »';
+
+  @override
+  String get daUnderstand => 'Je comprends que c’est définitif';
+
+  @override
+  String get daConfirmButton => 'Supprimer mon compte';
+
+  @override
+  String get daFailed =>
+      'Impossible de supprimer votre compte. Veuillez réessayer.';
+
+  @override
+  String get daLoadFailed => 'Impossible de vérifier votre compte.';
+
+  @override
+  String get daBlockedTitle =>
+      'Vous ne pouvez pas encore supprimer votre compte';
+
+  @override
+  String get daBlockedBody =>
+      'Terminez ou réglez d’abord ces points, puis réessayez.';
+
+  @override
+  String get daBlockedEscrow => 'Argent bloqué sous séquestre';
+
+  @override
+  String get daBlockedPayments => 'Versements ou remboursements en cours';
+
+  @override
+  String get daBlockedDeliveries => 'Livraisons en cours';
+
+  @override
+  String get daBlockedDisputes => 'Signalements de problème ouverts';
+
+  @override
+  String get daBlockedStaff =>
+      'Les comptes du personnel sont supprimés par le support Nata';
+
+  @override
+  String get daNeedHelp => 'Besoin d’aide ? Contactez le support Nata.';
 }

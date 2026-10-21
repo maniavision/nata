@@ -14,6 +14,7 @@ import '../services/preferences_service.dart';
 import '../widgets/avatar_image.dart';
 import '../services/emergency_contact_service.dart';
 import '../services/traveler_service.dart';
+import 'delete_account_screen.dart';
 import 'identity_status_screen.dart';
 import 'identity_verification_screen.dart';
 import 'sealed_box_policy_screen.dart';
@@ -1134,6 +1135,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: context.l10n.emergencyContactLabel,
         subtitle: _emergencyContact?.fullName ?? context.l10n.ecProfileAdd,
         onTap: _openEmergencyContact,
+      ),
+      _SettingsItem(
+        key: const ValueKey('profile-delete-account'),
+        icon: Icons.delete_outline_rounded,
+        iconBg: const Color(0xFFFEE2E2),
+        iconColor: AppColors.destructive,
+        title: context.l10n.deleteAccountRow,
+        subtitle: context.l10n.deleteAccountRowSub,
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const DeleteAccountScreen())),
       ),
     ];
 
