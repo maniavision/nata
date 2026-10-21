@@ -6446,6 +6446,78 @@ abstract class AppLocalizations {
   /// **'A problem was reported on one of your deliveries. Our support team will contact you.'**
   String get notifProblemBody;
 
+  /// No description provided for @nameEditTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit name'**
+  String get nameEditTooltip;
+
+  /// No description provided for @nameEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your name'**
+  String get nameEditTitle;
+
+  /// No description provided for @nameEditHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your name exactly as it appears on your ID. It can\'t be changed once your identity is verified.'**
+  String get nameEditHelper;
+
+  /// No description provided for @nameSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get nameSave;
+
+  /// No description provided for @nameErrEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your first and last name.'**
+  String get nameErrEmpty;
+
+  /// No description provided for @nameErrLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name can\'t be changed now that your identity check has started.'**
+  String get nameErrLocked;
+
+  /// No description provided for @nameErrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save your name. Please try again.'**
+  String get nameErrFailed;
+
+  /// No description provided for @nameLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name matches your ID'**
+  String get nameLockedTitle;
+
+  /// No description provided for @nameLockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name was checked against your ID, so it can\'t be changed in the app. If it\'s wrong or has legally changed, our support team can update it.'**
+  String get nameLockedBody;
+
+  /// No description provided for @nameContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get nameContactSupport;
+
+  /// No description provided for @nameSupportSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Name change request'**
+  String get nameSupportSubject;
+
+  /// No description provided for @nameUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Name updated.'**
+  String get nameUpdated;
+
   /// No description provided for @notifMessageTitle.
   ///
   /// In en, this message translates to:

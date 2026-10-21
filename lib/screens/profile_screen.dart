@@ -24,6 +24,7 @@ import 'payment_settings_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
+import '../widgets/name_sheets.dart';
 
 class ProfileScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -52,6 +53,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _displayName = '...';
   String _memberSinceDate = '...';
   String _verificationStatus = 'unverified'; // unverified, pending, verified
+  String _firstName = '';
+  String _lastName = '';
+
+  /// The pencil next to the name: edit it while unverified, otherwise the
+  /// "matches your ID" sheet with a way to contact support.
+  Future<void> _editName() async {
+    final changed = await showNameSheet(
+      context,
+      verificationStatus: _verificationStatus,
+      firstName: _firstName,
+      lastName: _lastName,
+      save: (first, last) => _auth.updateName(first, last),
+    );
+    if (changed == true && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.nameUpdated)));
+      _loadProfile();
+    }
+  }
+
   double _availableBalance = 0.0;
   double _escrowBalance = 0.0;
   int _tripsCount = 0;
@@ -122,6 +144,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _avatarPath = profile['avatar_path'];
           final first = profile['first_name'] ?? '';
           final last = profile['last_name'] ?? '';
+          _firstName = first;
+          _lastName = last;
           if (first.isNotEmpty || last.isNotEmpty) {
             _displayName = '$first $last'.trim();
           }
@@ -168,6 +192,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _avatarPath = profile['avatar_path'];
           final first = profile['first_name'] ?? '';
           final last = profile['last_name'] ?? '';
+          _firstName = first;
+          _lastName = last;
           if (first.isNotEmpty || last.isNotEmpty) {
             _displayName = '$first $last'.trim();
           }
@@ -513,13 +539,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _displayName,
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                        color: AppColors.foreground,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          key: const ValueKey('profile-edit-name'),
+                          tooltip: context.l10n.nameEditTooltip,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: _editName,
+                          icon: const Icon(
+                            Icons.edit_rounded,
+                            size: 18,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(

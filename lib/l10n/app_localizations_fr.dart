@@ -3748,6 +3748,46 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un problème a été signalé sur l’une de vos livraisons. Notre équipe d’assistance vous contactera.';
 
   @override
+  String get nameEditTooltip => 'Modifier le nom';
+
+  @override
+  String get nameEditTitle => 'Modifier votre nom';
+
+  @override
+  String get nameEditHelper =>
+      'Indiquez votre nom exactement comme sur votre pièce d\'identité. Il ne pourra plus être modifié une fois votre identité vérifiée.';
+
+  @override
+  String get nameSave => 'Enregistrer';
+
+  @override
+  String get nameErrEmpty => 'Saisissez votre prénom et votre nom.';
+
+  @override
+  String get nameErrLocked =>
+      'Votre nom ne peut plus être modifié, la vérification de votre identité a commencé.';
+
+  @override
+  String get nameErrFailed => 'Impossible d\'enregistrer votre nom. Réessayez.';
+
+  @override
+  String get nameLockedTitle =>
+      'Votre nom correspond à votre pièce d\'identité';
+
+  @override
+  String get nameLockedBody =>
+      'Votre nom a été vérifié avec votre pièce d\'identité, il ne peut donc pas être modifié dans l\'application. S\'il est incorrect ou a changé légalement, notre équipe d\'assistance peut le mettre à jour.';
+
+  @override
+  String get nameContactSupport => 'Contacter l\'assistance';
+
+  @override
+  String get nameSupportSubject => 'Demande de changement de nom';
+
+  @override
+  String get nameUpdated => 'Nom mis à jour.';
+
+  @override
   String notifMessageTitle(String name) {
     return 'Nouveau message de $name';
   }
