@@ -110,7 +110,9 @@ class _NataAppState extends State<NataApp> {
             textTheme: GoogleFonts.dmSansTextTheme(),
             useMaterial3: true,
           ),
-          home: const SplashScreen(),
+          // The splash (language and currency) is for first-time visitors;
+          // a member who has used this device starts on Sign In.
+          home: startScreen(),
         ),
       ),
     );

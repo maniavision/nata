@@ -156,13 +156,53 @@ void main() {
   });
 
   group('PreferencesService reset', () {
-    test('reset restores language and currency', () {
+    test('logging out keeps language and currency', () {
       final prefs = PreferencesService();
       prefs.setLanguage(AppLanguage.french);
       prefs.setCurrency(AppCurrency.xof);
       prefs.reset();
-      expect(prefs.language, AppLanguage.english);
-      expect(prefs.currency, AppCurrency.usd);
+      expect(prefs.language, AppLanguage.french);
+      expect(prefs.currency, AppCurrency.xof);
+    });
+
+    test('the device remembers language, currency and the account', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = PreferencesService();
+      await prefs.resetAll();
+      prefs.setLanguage(AppLanguage.spanish);
+      prefs.setCurrency(AppCurrency.eur);
+      prefs.rememberAccount();
+      await prefs.pendingWrites;
+
+      // A fresh start reads it back.
+      final stored = await SharedPreferences.getInstance();
+      expect(stored.getString('language'), 'es');
+      expect(stored.getString('currency'), 'EUR');
+      expect(stored.getBool('has_account'), isTrue);
+
+      await prefs.resetAll();
+      SharedPreferences.setMockInitialValues({
+        'language': 'fr',
+        'currency': 'XOF',
+        'has_account': true,
+      });
+      await prefs.restore();
+      expect(prefs.language, AppLanguage.french);
+      expect(prefs.currency, AppCurrency.xof);
+      expect(prefs.hasAccountOnDevice, isTrue);
+      await prefs.resetAll();
+    });
+
+    test('deleting the account forgets it on the device', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = PreferencesService();
+      await prefs.resetAll();
+      prefs.rememberAccount();
+      prefs.forgetAccount();
+      await prefs.pendingWrites;
+      expect(prefs.hasAccountOnDevice, isFalse);
+      final stored = await SharedPreferences.getInstance();
+      expect(stored.getBool('has_account'), isFalse);
     });
 
     test('reset keeps the country the user registered with', () {

@@ -91,7 +91,9 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       // The sign-in is already gone on the server.
       debugPrint('[DeleteAccount] sign out: $e');
     }
-    PreferencesService().reset();
+    PreferencesService()
+      ..reset()
+      ..forgetAccount();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(

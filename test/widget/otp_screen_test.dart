@@ -134,6 +134,7 @@ void languageAfterSignInTests() {
   group('Language after signing in', () {
     late MockAuthService auth;
     late int saves;
+    late int loads;
     late bool signedIn;
 
     setUp(() async {
@@ -150,6 +151,7 @@ void languageAfterSignInTests() {
         ),
       ).thenAnswer((_) async {});
       saves = 0;
+      loads = 0;
       signedIn = false;
     });
     tearDown(() => PreferencesService().resetAll());
@@ -164,6 +166,7 @@ void languageAfterSignInTests() {
             lastName: isSignUp ? 'Niama' : '',
             authService: auth,
             saveSettings: () async => saves++,
+            loadSettings: () async => loads++,
             onSuccess: () => signedIn = true,
           ),
         ),
@@ -252,20 +255,18 @@ void languageAfterSignInTests() {
       expect(first.autofillHints, contains(AutofillHints.oneTimeCode));
     });
 
-    testWidgets('the language picked before signing in is kept and saved', (
+    testWidgets('signing in applies the account\'s saved settings', (
       tester,
     ) async {
-      // Picked on the language & currency screen.
       PreferencesService().setLanguage(AppLanguage.french);
-      PreferencesService().setCurrency(AppCurrency.eur);
 
       await signIn(tester);
 
       expect(signedIn, isTrue);
-      expect(PreferencesService().language, AppLanguage.french);
-      expect(PreferencesService().currency, AppCurrency.eur);
-      // Saved to the account, not replaced by what the account had.
-      expect(saves, 1);
+      // Loaded from the account, not overwritten with this device's choice.
+      expect(loads, 1);
+      expect(saves, 0);
+      expect(PreferencesService().hasAccountOnDevice, isTrue);
     });
 
     testWidgets('signing up saves it too', (tester) async {
@@ -276,6 +277,8 @@ void languageAfterSignInTests() {
       expect(signedIn, isTrue);
       expect(PreferencesService().language, AppLanguage.spanish);
       expect(saves, 1);
+      expect(loads, 0);
+      expect(PreferencesService().hasAccountOnDevice, isTrue);
     });
   });
 }

@@ -784,3 +784,16 @@ class _CurrencyOption {
   final String label;
   const _CurrencyOption({required this.code, required this.label});
 }
+
+/// The first page: the splash (language and currency) for a first-time
+/// visitor, Sign In for a member who has used this device or still has a
+/// saved session. [login] and [splash] are replaced in tests.
+Widget startScreen({
+  WidgetBuilder? login,
+  WidgetBuilder? splash,
+}) => Builder(
+  builder: (context) =>
+      PreferencesService().hasAccountOnDevice || AuthGate.isSignedIn()
+      ? (login ?? (_) => const LoginScreen())(context)
+      : (splash ?? (_) => const SplashScreen())(context),
+);
