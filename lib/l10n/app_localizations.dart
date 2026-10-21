@@ -6578,6 +6578,48 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load your routes.'**
   String get routeAlertsLoadFailed;
 
+  /// No description provided for @homeGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get homeGetStarted;
+
+  /// No description provided for @homeVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity'**
+  String get homeVerifyTitle;
+
+  /// No description provided for @homeVerifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Takes 2 minutes. Needed to send or carry items.'**
+  String get homeVerifyBody;
+
+  /// No description provided for @homeVerifyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify now'**
+  String get homeVerifyAction;
+
+  /// No description provided for @homeRoutesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get alerts for your routes'**
+  String get homeRoutesTitle;
+
+  /// No description provided for @homeRoutesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll tell you when a traveler flies the routes you send on.'**
+  String get homeRoutesBody;
+
+  /// No description provided for @homeRoutesAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a route'**
+  String get homeRoutesAction;
+
   /// No description provided for @notifMessageTitle.
   ///
   /// In en, this message translates to:

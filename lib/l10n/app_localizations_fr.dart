@@ -3824,6 +3824,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get routeAlertsLoadFailed => 'Impossible de charger vos trajets.';
 
   @override
+  String get homeGetStarted => 'Pour commencer';
+
+  @override
+  String get homeVerifyTitle => 'Vérifiez votre identité';
+
+  @override
+  String get homeVerifyBody =>
+      '2 minutes suffisent. Nécessaire pour envoyer ou transporter des articles.';
+
+  @override
+  String get homeVerifyAction => 'Vérifier';
+
+  @override
+  String get homeRoutesTitle => 'Alertes pour vos trajets';
+
+  @override
+  String get homeRoutesBody =>
+      'Nous vous prévenons quand un voyageur fait vos trajets d\'envoi.';
+
+  @override
+  String get homeRoutesAction => 'Ajouter un trajet';
+
+  @override
   String notifMessageTitle(String name) {
     return 'Nouveau message de $name';
   }

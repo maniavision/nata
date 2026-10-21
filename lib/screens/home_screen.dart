@@ -21,6 +21,8 @@ import '../services/preferences_service.dart';
 import '../services/traveler_ranking.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/home_reminders.dart';
+import '../services/route_alert_service.dart';
 import '../widgets/date_picker_sheet.dart';
 import '../widgets/location_search_sheet.dart';
 import 'add_trip_screen.dart';
@@ -36,6 +38,7 @@ class HomeScreen extends StatefulWidget {
   final AuthService? authService;
   final TravelerService? travelerService;
   final NotificationService? notificationService;
+  final RouteAlertService? routeAlertService;
 
   /// Source of randomness for the "Available Travelers" picks (tests pass a
   /// seeded one).
@@ -50,6 +53,7 @@ class HomeScreen extends StatefulWidget {
     this.authService,
     this.travelerService,
     this.notificationService,
+    this.routeAlertService,
     this.random,
     this.capitalLookup,
   });
@@ -97,6 +101,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// Everything the last search returned; the picks are drawn from it.
   List<TravelerTrip> _lastResults = const [];
   Map<DateTime, int> _flightCounts = const {};
+
+  /// For the "Get started" reminders (null until the profile loads).
+  String? _verificationStatus;
+  String? _userId;
+
   bool _loadingTravelers = true;
   bool _travelersFailed = false;
   int _travelersRequest = 0;
@@ -267,6 +276,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (profile != null && mounted) {
       setState(() {
         _avatarPath = profile['avatar_path'];
+        _verificationStatus = profile['verification_status'] as String?;
+        _userId = profile['id'] as String?;
         final first = profile['first_name'] ?? '';
         final last = profile['last_name'] ?? '';
         if (first.isNotEmpty || last.isNotEmpty) {
@@ -371,6 +382,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ]
                           : [
                               const SizedBox(height: 8),
+                              HomeReminders(
+                                verificationStatus: _verificationStatus,
+                                userId: _userId,
+                                onChanged: _loadProfile,
+                                routeService: widget.routeAlertService,
+                              ),
                               _buildSearchCard(),
                               const SizedBox(height: 24),
                               _buildAddTripButton(l),

@@ -3801,6 +3801,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get routeAlertsLoadFailed => 'No se pudieron cargar tus rutas.';
 
   @override
+  String get homeGetStarted => 'Para empezar';
+
+  @override
+  String get homeVerifyTitle => 'Verifica tu identidad';
+
+  @override
+  String get homeVerifyBody =>
+      'Solo 2 minutos. Necesario para enviar o llevar artículos.';
+
+  @override
+  String get homeVerifyAction => 'Verificar';
+
+  @override
+  String get homeRoutesTitle => 'Alertas para tus rutas';
+
+  @override
+  String get homeRoutesBody =>
+      'Te avisamos cuando un viajero haga las rutas en las que envías.';
+
+  @override
+  String get homeRoutesAction => 'Añadir una ruta';
+
+  @override
   String notifMessageTitle(String name) {
     return 'Nuevo mensaje de $name';
   }
