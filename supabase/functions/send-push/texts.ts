@@ -72,6 +72,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "New message from {name}",
       "{message}"
     ],
+    "trip_match": [
+      "A traveler is going your way",
+      "{name} is flying {route}. Send your item with them."
+    ],
     "message_photo": [
       "New message from {name}",
       "Sent you a photo"
@@ -146,6 +150,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Nuevo mensaje de {name}",
       "{message}"
     ],
+    "trip_match": [
+      "Un viajero hace tu ruta",
+      "{name} viaja {route}. Confíale tu artículo."
+    ],
     "message_photo": [
       "Nuevo mensaje de {name}",
       "Te envió una foto"
@@ -219,6 +227,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "message_new": [
       "Nouveau message de {name}",
       "{message}"
+    ],
+    "trip_match": [
+      "Un voyageur fait votre trajet",
+      "{name} part {route}. Confiez-lui votre article."
     ],
     "message_photo": [
       "Nouveau message de {name}",

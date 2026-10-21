@@ -40,6 +40,10 @@ import 'app_localizations.dart';
       l.notifCancelledBySenderBody(sender, route),
     ),
     'request_paid' => (l.notifPaidTitle, l.notifPaidBody(sender)),
+    'trip_match' => (
+      l.notifTripMatchTitle,
+      l.notifTripMatchBody(traveler, route),
+    ),
     'message_new' => (
       l.notifMessageTitle(s('author')),
       s('message').isEmpty && p['photo'] == true
