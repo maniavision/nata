@@ -11,6 +11,7 @@ import '../services/support_service.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/page_header.dart';
 import 'notifications_screen.dart' show notificationTimeLabel;
+import '../widgets/nata_toast.dart';
 
 // The Support section for Nata staff, as designed in Sleek (Support,
 // Reported Problems, Problem Detail, Payments & Locks). Profile opens it
@@ -362,7 +363,7 @@ String _ago(BuildContext context, DateTime then) =>
     notificationTimeLabel(context.l10n, DateTime.now(), then);
 
 void _snack(BuildContext context, String text) =>
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    ScaffoldMessenger.of(context).showSnackBar(nataToast(text));
 
 // ── Support (dashboard) ─────────────────────────────────────────────────────
 

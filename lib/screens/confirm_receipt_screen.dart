@@ -6,6 +6,7 @@ import '../main.dart';
 import '../services/request_service.dart';
 import '../widgets/page_header.dart';
 import 'report_problem_screen.dart';
+import '../widgets/nata_toast.dart';
 
 /// How the sender left Confirm Receipt.
 enum ReceiptOutcome { confirmed, reported }
@@ -58,7 +59,7 @@ class _ConfirmReceiptScreenState extends State<ConfirmReceiptScreen> {
       if (mounted) Navigator.of(context).pop(ReceiptOutcome.confirmed);
     } catch (_) {
       messenger.showSnackBar(
-        SnackBar(content: Text(l.errConfirmReceiptFailed)),
+        nataToast(l.errConfirmReceiptFailed, tone: ToastTone.error),
       );
       if (mounted) setState(() => _confirming = false);
     }
@@ -76,7 +77,7 @@ class _ConfirmReceiptScreenState extends State<ConfirmReceiptScreen> {
       ),
     );
     if (sent != true || !mounted) return;
-    messenger.showSnackBar(SnackBar(content: Text(l.rpSent)));
+    messenger.showSnackBar(nataToast(l.rpSent, tone: ToastTone.success));
     Navigator.of(context).pop(ReceiptOutcome.reported);
   }
 

@@ -13,6 +13,7 @@ import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
 import '../widgets/camera_denied_sheet.dart';
 import 'messages_screen.dart';
+import '../widgets/nata_toast.dart';
 
 /// Takes or chooses a photo to send. [camera] true = take one with the camera.
 /// Replaceable in tests.
@@ -538,7 +539,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     }
     if (!mounted) return;
     if (code == null) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
       return;
     }
     final value = code.code;

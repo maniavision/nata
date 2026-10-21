@@ -19,6 +19,7 @@ import '../services/verification_service.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/camera_denied_sheet.dart';
+import '../widgets/nata_toast.dart';
 
 class IdentityVerificationScreen extends StatefulWidget {
   /// Which step to open on: 0 = ID upload, 1 = face scan (not part of the flow
@@ -955,7 +956,10 @@ class _Step1 extends StatelessWidget {
         await showCameraDeniedSheet(context);
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errCameraDetail(e.toString()))),
+          nataToast(
+            context.l10n.errCameraDetail(e.toString()),
+            tone: ToastTone.error,
+          ),
         );
       }
     }
@@ -982,7 +986,10 @@ class _Step1 extends StatelessWidget {
       debugPrint('[Step1] file picker error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errFilePicker(e.toString()))),
+          nataToast(
+            context.l10n.errFilePicker(e.toString()),
+            tone: ToastTone.error,
+          ),
         );
       }
     }

@@ -9,6 +9,7 @@ import '../services/country_service.dart';
 import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
 import '../widgets/country_code_picker_sheet.dart';
+import '../widgets/nata_toast.dart';
 
 /// Picks a country (the one remembered on this device to start with).
 typedef PayoutCountryPicker =
@@ -173,7 +174,9 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
           return 0;
         }),
       );
-      messenger.showSnackBar(SnackBar(content: Text(l.payoutAccountSaved)));
+      messenger.showSnackBar(
+        nataToast(l.payoutAccountSaved, tone: ToastTone.success),
+      );
       navigator.pop(account);
     } on PayoutAccountException catch (e) {
       if (!mounted) return;

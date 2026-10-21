@@ -8,6 +8,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/nata_toast.dart';
 
 /// Accepting and declining a request, shared by the Incoming card and the
 /// request details screen. Each returns true when the request changed.
@@ -23,27 +24,29 @@ class IncomingRequestActions {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await service.accept(request.id);
-      messenger.showSnackBar(SnackBar(content: Text(l.requestAcceptedSnack)));
+      messenger.showSnackBar(
+        nataToast(l.requestAcceptedSnack, tone: ToastTone.success),
+      );
       return true;
     } on RequestException catch (e) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(switch (e.reason) {
-            RequestFailure.rateUnavailable => l.errRateUnavailable,
-            RequestFailure.tripFull => l.errTripFull,
-            RequestFailure.senderOnTrip => l.errSenderOnTrip,
-            RequestFailure.notPending => l.errRequestNotPending,
-            RequestFailure.requestNotFound => l.errRequestNotFound,
-            RequestFailure.notSignedIn => l.errSessionExpired,
-            _ => l.errAcceptFailed,
-          }),
-        ),
+        nataToast(switch (e.reason) {
+          RequestFailure.rateUnavailable => l.errRateUnavailable,
+          RequestFailure.tripFull => l.errTripFull,
+          RequestFailure.senderOnTrip => l.errSenderOnTrip,
+          RequestFailure.notPending => l.errRequestNotPending,
+          RequestFailure.requestNotFound => l.errRequestNotFound,
+          RequestFailure.notSignedIn => l.errSessionExpired,
+          _ => l.errAcceptFailed,
+        }, tone: ToastTone.error),
       );
       // Already answered or gone: the list should show what it is now.
       return e.reason == RequestFailure.notPending ||
           e.reason == RequestFailure.requestNotFound;
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errAcceptFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errAcceptFailed, tone: ToastTone.error),
+      );
       return false;
     }
   }
@@ -65,23 +68,25 @@ class IncomingRequestActions {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await service.decline(request.id, reason: reason.isEmpty ? null : reason);
-      messenger.showSnackBar(SnackBar(content: Text(l.requestDeclinedSnack)));
+      messenger.showSnackBar(
+        nataToast(l.requestDeclinedSnack, tone: ToastTone.success),
+      );
       return true;
     } on RequestException catch (e) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(switch (e.reason) {
-            RequestFailure.notPending => l.errRequestNotPending,
-            RequestFailure.requestNotFound => l.errRequestNotFound,
-            RequestFailure.notSignedIn => l.errSessionExpired,
-            _ => l.errDeclineFailed,
-          }),
-        ),
+        nataToast(switch (e.reason) {
+          RequestFailure.notPending => l.errRequestNotPending,
+          RequestFailure.requestNotFound => l.errRequestNotFound,
+          RequestFailure.notSignedIn => l.errSessionExpired,
+          _ => l.errDeclineFailed,
+        }, tone: ToastTone.error),
       );
       return e.reason == RequestFailure.notPending ||
           e.reason == RequestFailure.requestNotFound;
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errDeclineFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errDeclineFailed, tone: ToastTone.error),
+      );
       return false;
     }
   }

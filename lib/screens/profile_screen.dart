@@ -24,6 +24,7 @@ import 'payment_settings_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
+import '../widgets/nata_toast.dart';
 
 class ProfileScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -254,14 +255,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.profilePictureUpdated)),
+            nataToast(
+              context.l10n.profilePictureUpdated,
+              tone: ToastTone.success,
+            ),
           );
         }
       } catch (e) {
         debugPrint('Upload error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.errUploadImage('$e'))),
+            nataToast(context.l10n.errUploadImage('$e'), tone: ToastTone.error),
           );
         }
       } finally {
@@ -721,13 +725,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final sent = await PaymentService().sendPayouts();
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(sent > 0 ? l.withdrawSent(sent) : l.withdrawNothing),
+        nataToast(
+          sent > 0 ? l.withdrawSent(sent) : l.withdrawNothing,
+          tone: sent > 0 ? ToastTone.success : ToastTone.info,
         ),
       );
     } catch (e) {
       debugPrint('[Profile] withdraw: $e');
-      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
     }
   }
 
@@ -970,9 +977,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (saved != true || !mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.ecSavedToast)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      nataToast(context.l10n.ecSavedToast, tone: ToastTone.success),
+    );
     _loadEmergencyContact();
   }
 

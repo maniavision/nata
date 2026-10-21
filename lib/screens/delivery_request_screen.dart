@@ -19,6 +19,7 @@ import '../widgets/avatar_image.dart';
 import '../widgets/country_code_picker_sheet.dart' show flagEmoji;
 import '../widgets/camera_denied_sheet.dart';
 import '../widgets/one_line_text.dart';
+import '../widgets/nata_toast.dart';
 
 /// Takes or chooses an item photo. [camera] true = take it with the camera.
 /// Replaceable in tests.
@@ -500,7 +501,9 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(context.l10n.requestUpdated)));
+          ..showSnackBar(
+            nataToast(context.l10n.requestUpdated, tone: ToastTone.success),
+          );
         Navigator.of(context).pop(true);
         return;
       }
@@ -508,7 +511,9 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(context.l10n.requestSent)));
+        ..showSnackBar(
+          nataToast(context.l10n.requestSent, tone: ToastTone.success),
+        );
       // Back to the start of the app: the request is on its way.
       Navigator.of(context).popUntil((route) => route.isFirst);
     } on RequestException catch (e) {
