@@ -195,6 +195,10 @@ void main() {
 
       expect(auth.otpRequests, ['+12025550123']);
       expect(PreferencesService().countryIsoCode, 'US');
+      // The name goes with the request, for the profile made on confirmation.
+      expect(auth.otpProfiles, [
+        {'first_name': 'Ada', 'last_name': 'Lovelace'},
+      ]);
     });
 
     testWidgets('registering with another country remembers it', (
