@@ -33,6 +33,10 @@ class OtpScreen extends StatefulWidget {
   /// defaults to [PreferencesService.saveToProfile].
   final Future<void> Function()? saveSettings;
 
+  /// Applies the account's saved language and currency after signing in;
+  /// defaults to [PreferencesService.loadFromProfile].
+  final Future<void> Function()? loadSettings;
+
   const OtpScreen({
     super.key,
     required this.phone,
@@ -43,6 +47,7 @@ class OtpScreen extends StatefulWidget {
     required this.onSuccess,
     this.authService,
     this.saveSettings,
+    this.loadSettings,
   });
 
   @override
@@ -180,11 +185,15 @@ class _OtpScreenState extends State<OtpScreen> {
           final country = widget.countryOfResidence;
           if (country != null) await _auth.saveCountryOfResidence(country);
         }
-        // The app always starts on the language & currency screen, so what
-        // was picked there is the user's current choice. Save it to the
-        // account (sign-up and sign-in alike) instead of replacing it with
-        // what the account had before.
-        await (widget.saveSettings ?? PreferencesService().saveToProfile)();
+        // A new account keeps the language and currency picked on the
+        // splash; a returning member gets the ones saved on their account.
+        final prefs = PreferencesService();
+        if (widget.isSignUp) {
+          await (widget.saveSettings ?? prefs.saveToProfile)();
+        } else {
+          await (widget.loadSettings ?? prefs.loadFromProfile)();
+        }
+        prefs.rememberAccount();
         if (mounted) widget.onSuccess();
       } else {
         setState(() {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import '../widgets/app_bottom_nav.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
+import '../services/auth_gate.dart';
 import '../services/biometric_service.dart';
 import '../services/country_service.dart';
 import '../services/preferences_service.dart';
@@ -201,6 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       switch (await biometrics.authenticate(l.faceIdReason)) {
         case BiometricResult.success:
+          unawaited(PreferencesService().loadFromProfile());
           if (mounted) _goHome();
         case BiometricResult.cancelled:
           break; // the user closed the prompt: say nothing
@@ -246,8 +249,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            // Opened while browsing: a way back.
-            if (Navigator.of(context).canPop())
+            // A way to browse without signing in: back where they came
+            // from, or the visitor Home when the app opened here. Not while
+            // a session is kept: that one is unlocked with Face ID only.
+            if (Navigator.of(context).canPop() || !AuthGate.isSignedIn())
               Positioned(
                 top: 12,
                 left: 16,
@@ -256,7 +261,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   label: context.l10n.continueBrowsing,
                   child: _GlassCircleButton(
                     key: const ValueKey('auth-close'),
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () {
+                      final navigator = Navigator.of(context);
+                      if (navigator.canPop()) {
+                        navigator.pop();
+                      } else {
+                        navigator.pushReplacement(
+                          MaterialPageRoute(
+                            builder:
+                                widget.homeBuilder ?? (_) => const HomeScreen(),
+                          ),
+                        );
+                      }
+                    },
                     child: const Icon(
                       Icons.close_rounded,
                       size: 20,
