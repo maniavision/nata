@@ -219,6 +219,7 @@ class FakeAuthService extends Fake implements AuthService {
 
   /// For each request, whether the number was allowed to create an account.
   final List<bool> otpCreateUser = [];
+  final List<Map<String, dynamic>?> otpProfiles = [];
   Object? otpError;
 
   /// Countries saved with [saveCountryOfResidence].
@@ -230,8 +231,13 @@ class FakeAuthService extends Fake implements AuthService {
   }
 
   @override
-  Future<void> sendOtp(String phone, {bool createUser = true}) async {
+  Future<void> sendOtp(
+    String phone, {
+    bool createUser = true,
+    Map<String, dynamic>? profile,
+  }) async {
     otpRequests.add(phone);
+    otpProfiles.add(profile);
     otpCreateUser.add(createUser);
     if (otpError != null) throw otpError!;
   }

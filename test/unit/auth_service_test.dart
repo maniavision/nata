@@ -74,6 +74,32 @@ void sendOtpTests() {
       expect(asked(), isTrue);
     });
 
+    test('signing up sends the name with the request', () async {
+      when(
+        () => auth.signInWithOtp(
+          phone: any(named: 'phone'),
+          shouldCreateUser: any(named: 'shouldCreateUser'),
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async {});
+
+      await service.sendOtp(
+        '+242061234567',
+        profile: {'first_name': 'Ada', 'last_name': 'Mavoungou'},
+      );
+
+      final data =
+          verify(
+                () => auth.signInWithOtp(
+                  phone: '+242061234567',
+                  shouldCreateUser: true,
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map;
+      expect(data, {'first_name': 'Ada', 'last_name': 'Mavoungou'});
+    });
+
     test('logging in never creates an account', () async {
       answerWith(null);
 

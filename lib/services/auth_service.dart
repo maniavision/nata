@@ -45,12 +45,28 @@ class AuthService {
   ///  * false (log in): the number must already be in auth.users. Nothing is
   ///    created and no SMS is sent otherwise; [AccountNotFoundException] is
   ///    thrown instead. Supabase enforces this, not just the app.
-  Future<void> sendOtp(String phone, {bool createUser = true}) async {
+  ///
+  /// [profile] (first and last name, on sign-up) travels with the request,
+  /// so the profile created when the code is confirmed already has the name
+  /// (see migration 20240161).
+  Future<void> sendOtp(
+    String phone, {
+    bool createUser = true,
+    Map<String, dynamic>? profile,
+  }) async {
     try {
-      await _client.auth.signInWithOtp(
-        phone: phone,
-        shouldCreateUser: createUser,
-      );
+      if (profile == null) {
+        await _client.auth.signInWithOtp(
+          phone: phone,
+          shouldCreateUser: createUser,
+        );
+      } else {
+        await _client.auth.signInWithOtp(
+          phone: phone,
+          shouldCreateUser: createUser,
+          data: profile,
+        );
+      }
     } on AuthException catch (e) {
       if (!createUser && isAccountNotFound(e)) {
         throw const AccountNotFoundException();

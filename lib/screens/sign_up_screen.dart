@@ -140,7 +140,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      await (widget.authService ?? AuthService()).sendOtp(e164);
+      await (widget.authService ?? AuthService()).sendOtp(
+        e164,
+        profile: {'first_name': firstName, 'last_name': lastName},
+      );
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
