@@ -69,9 +69,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       save: (first, last) => _auth.updateName(first, last),
     );
     if (changed == true && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.nameUpdated)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        nataToast(context.l10n.nameUpdated, tone: ToastTone.success),
+      );
       _loadProfile();
     }
   }
