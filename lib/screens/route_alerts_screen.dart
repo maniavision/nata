@@ -5,6 +5,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/route_alert_service.dart';
 import '../widgets/location_search_sheet.dart';
+import '../widgets/nata_toast.dart';
 
 /// Picks a place (country, then city). Replaced in tests.
 typedef RoutePlacePicker =
@@ -72,7 +73,7 @@ class _RouteAlertsScreenState extends State<RouteAlertsScreen> {
     );
     if (saved == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.routeAlertsSavedToast)),
+        nataToast(context.l10n.routeAlertsSavedToast, tone: ToastTone.success),
       );
       _load();
     }
