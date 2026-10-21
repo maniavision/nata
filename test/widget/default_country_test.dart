@@ -146,6 +146,20 @@ void main() {
       // The leading 0 of a national number is dropped.
       expect(auth.otpRequests, ['+447911123456']);
     });
+
+    testWidgets('a Congo-Brazzaville number keeps its 0', (tester) async {
+      PreferencesService().setCountry('CG');
+      final auth = FakeAuthService();
+      await pumpLogin(tester, auth: auth);
+      expect(find.text('+242'), findsOneWidget);
+
+      await tester.enterText(field(0), '06 877 7804');
+      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.pumpAndSettle();
+
+      // There the 0 is part of the number: +242 06 877 7804.
+      expect(auth.otpRequests, ['+242068777804']);
+    });
   });
 
   group('Sign up: default country', () {
@@ -195,6 +209,23 @@ void main() {
 
       expect(auth.otpRequests, ['+12025550123']);
       expect(PreferencesService().countryIsoCode, 'US');
+    });
+
+    testWidgets('signing up with a Congo-Brazzaville number keeps its 0', (
+      tester,
+    ) async {
+      PreferencesService().setCountry('CG');
+      final auth = FakeAuthService();
+      await pumpSignUp(tester, auth: auth);
+      expect(find.text('+242'), findsOneWidget);
+
+      await tester.enterText(field(0), 'Ada');
+      await tester.enterText(field(1), 'Mavoungou');
+      await tester.enterText(field(3), '06 877 7804');
+      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.pumpAndSettle();
+
+      expect(auth.otpRequests, ['+242068777804']);
     });
 
     testWidgets('registering with another country remembers it', (

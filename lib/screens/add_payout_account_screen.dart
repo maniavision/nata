@@ -10,6 +10,7 @@ import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
 import '../widgets/country_code_picker_sheet.dart';
 import '../widgets/nata_toast.dart';
+import '../services/phone_number.dart';
 
 /// Picks a country (the one remembered on this device to start with).
 typedef PayoutCountryPicker =
@@ -140,8 +141,13 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
     if (local.startsWith(code) && local.length > code.length + 6) {
       return local;
     }
-    if (local.startsWith('0')) local = local.substring(1);
-    return '$code$local';
+    // Keeps the 0 where it belongs to the number (see phone_number.dart).
+    final e164 = internationalPhoneNumber(
+      dialCode: code,
+      input: local,
+      isoCode: _country?.isoCode,
+    );
+    return e164 == null ? '$code$local' : e164.substring(1);
   }
 
   Future<void> _save() async {

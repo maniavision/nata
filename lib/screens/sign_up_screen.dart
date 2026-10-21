@@ -12,6 +12,7 @@ import 'identity_verification_screen.dart';
 import 'otp_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/nata_logo.dart';
+import '../services/phone_number.dart';
 
 class SignUpScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -122,9 +123,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    // Build E.164 — prefix +234 and strip leading 0 if present
-    final normalized = phone.startsWith('0') ? phone.substring(1) : phone;
-    final e164 = '${_selectedCountry.phoneCode}$normalized';
+    // International form, keeping the 0 where it belongs to the number
+    // (Congo-Brazzaville 06... -> +242 06...) and dropping it elsewhere.
+    final e164 = internationalPhoneNumber(
+      dialCode: _selectedCountry.phoneCode,
+      input: phone,
+      isoCode: _selectedCountry.isoCode,
+    )!;
 
     // Store selected country in PreferencesService before sending OTP
     PreferencesService().setCountry(_selectedCountry.isoCode);

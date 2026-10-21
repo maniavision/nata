@@ -17,6 +17,7 @@ import '../widgets/country_code_picker_sheet.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/nata_logo.dart';
 import '../widgets/nata_toast.dart';
+import '../services/phone_number.dart';
 
 class LoginScreen extends StatefulWidget {
   /// Overrides for tests; they default to the real services / Home screen.
@@ -107,8 +108,13 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    final normalized = phone.startsWith('0') ? phone.substring(1) : phone;
-    final e164 = '${_selectedCountry.phoneCode}$normalized';
+    // International form, keeping the 0 where it belongs to the number
+    // (Congo-Brazzaville 06... -> +242 06...) and dropping it elsewhere.
+    final e164 = internationalPhoneNumber(
+      dialCode: _selectedCountry.phoneCode,
+      input: phone,
+      isoCode: _selectedCountry.isoCode,
+    )!;
 
     setState(() {
       _loading = true;

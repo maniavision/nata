@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'delivery_pricing.dart';
 import 'trip_service.dart' show PickedReceipt;
 import 'traveler_service.dart' show TravelerTrip;
+import 'phone_number.dart';
 
 /// What kind of item is being sent.
 enum RequestCategory {
@@ -425,11 +426,9 @@ class RequestInput {
   static String? internationalPhone(String phoneCode, String input) {
     final typed = input.trim();
     if (typed.startsWith('+')) return normalizePhone(typed);
-    final local = typed
-        .replaceAll(RegExp(r'[\s\-().]'), '')
-        .replaceFirst(RegExp(r'^0+'), '');
-    if (local.isEmpty) return null;
-    return normalizePhone('$phoneCode$local');
+    // Keeps the 0 where it belongs to the number (see phone_number.dart).
+    final e164 = internationalPhoneNumber(dialCode: phoneCode, input: typed);
+    return e164 == null ? null : normalizePhone(e164);
   }
 }
 
