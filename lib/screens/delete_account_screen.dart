@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
 import '../widgets/page_header.dart';
 import 'login_screen.dart';
+import '../widgets/nata_toast.dart';
 
 const _green = Color(0xFF168A68);
 const _greenBg = Color(0xFFE4F4EE);
@@ -80,7 +81,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       setState(() => _deleting = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.daFailed)));
+      ).showSnackBar(nataToast(context.l10n.daFailed, tone: ToastTone.error));
       return;
     }
 

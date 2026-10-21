@@ -17,6 +17,7 @@ import '../widgets/date_picker_sheet.dart';
 import '../widgets/location_search_sheet.dart';
 import '../widgets/camera_denied_sheet.dart';
 import '../widgets/one_line_text.dart';
+import '../widgets/nata_toast.dart';
 
 /// Opens a location picker; replaceable in tests.
 typedef LocationPicker =
@@ -446,7 +447,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
       if (!mounted) return;
       final l = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_editing ? l.tripUpdated : l.tripSubmitted)),
+        nataToast(
+          _editing ? l.tripUpdated : l.tripSubmitted,
+          tone: ToastTone.success,
+        ),
       );
       Navigator.of(context).pop(true);
     } catch (e) {

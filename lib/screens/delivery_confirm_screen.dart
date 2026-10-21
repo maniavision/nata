@@ -9,6 +9,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
 import 'delivery_task_screen.dart';
+import '../widgets/nata_toast.dart';
 
 const _green = Color(0xFF168A68);
 const _greenBg = Color(0xFFE4F4EE);
@@ -135,7 +136,10 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
                 }),
           );
           messenger.showSnackBar(
-            SnackBar(content: Text(l.deliveredPayoutQueued(d.payout))),
+            nataToast(
+              l.deliveredPayoutQueued(d.payout),
+              tone: ToastTone.success,
+            ),
           );
           final next = widget.next;
           if (next == null) {
@@ -195,7 +199,7 @@ class _DeliveryConfirmScreenState extends State<DeliveryConfirmScreen> {
       ),
     );
     if (sent == true) {
-      messenger.showSnackBar(SnackBar(content: Text(l.rpSent)));
+      messenger.showSnackBar(nataToast(l.rpSent, tone: ToastTone.success));
     }
   }
 

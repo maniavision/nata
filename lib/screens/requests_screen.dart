@@ -16,6 +16,7 @@ import 'confirm_receipt_screen.dart';
 import 'review_screen.dart';
 import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
+import '../widgets/nata_toast.dart';
 
 class RequestsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RequestService].
@@ -123,7 +124,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     try {
       await (widget.requestService ?? RequestService()).sendDeliveryCode(r.id);
       messenger.showSnackBar(
-        SnackBar(content: Text(l.codeTexted(r.recipientName))),
+        nataToast(l.codeTexted(r.recipientName), tone: ToastTone.success),
       );
       final code = _codes[r.id];
       if (code != null && mounted) {
@@ -136,16 +137,16 @@ class _RequestsScreenState extends State<RequestsScreen> {
       }
     } on RequestException catch (e) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(switch (e.reason) {
-            RequestFailure.smsUnavailable => l.errSmsUnavailable,
-            RequestFailure.tooSoon => l.errSmsTooSoon,
-            _ => l.errRequestFailed,
-          }),
-        ),
+        nataToast(switch (e.reason) {
+          RequestFailure.smsUnavailable => l.errSmsUnavailable,
+          RequestFailure.tooSoon => l.errSmsTooSoon,
+          _ => l.errRequestFailed,
+        }, tone: ToastTone.error),
       );
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
     } finally {
       if (mounted) setState(() => _texting.remove(r.id));
     }
@@ -258,7 +259,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final service = widget.requestService ?? RequestService();
     try {
       await service.cancel(request);
-      messenger.showSnackBar(SnackBar(content: Text(l.requestCancelled)));
+      messenger.showSnackBar(
+        nataToast(l.requestCancelled, tone: ToastTone.success),
+      );
       // Paid: the money (less the fee) goes back right away. If this call
       // fails the refund stays queued and is sent later.
       if (request.isPaid) {
@@ -270,18 +273,18 @@ class _RequestsScreenState extends State<RequestsScreen> {
       }
     } on RequestException catch (e) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(switch (e.reason) {
-            RequestFailure.feeChanged => l.errFeeChanged,
-            RequestFailure.notCancellable => l.errNotCancellable,
-            RequestFailure.notSignedIn => l.errSessionExpired,
-            RequestFailure.requestNotFound => l.errRequestNotFound,
-            _ => l.errCancelFailed,
-          }),
-        ),
+        nataToast(switch (e.reason) {
+          RequestFailure.feeChanged => l.errFeeChanged,
+          RequestFailure.notCancellable => l.errNotCancellable,
+          RequestFailure.notSignedIn => l.errSessionExpired,
+          RequestFailure.requestNotFound => l.errRequestNotFound,
+          _ => l.errCancelFailed,
+        }, tone: ToastTone.error),
       );
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errCancelFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errCancelFailed, tone: ToastTone.error),
+      );
     }
     // Reload either way: the status may have changed under us.
     if (mounted) _loadSent();

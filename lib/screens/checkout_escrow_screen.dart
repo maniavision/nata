@@ -10,6 +10,7 @@ import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/nata_toast.dart';
 
 /// Pays for an accepted request. Step 1: the sender checks the traveler's
 /// flight ticket; step 2: the photo on the traveler's ID and their verified
@@ -208,22 +209,21 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         setState(() => _needsEmail = true);
       }
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(switch (e.reason) {
-            RequestFailure.notPayable => l.errRequestNotPayable,
-            RequestFailure.paymentsUnavailable => l.errPaymentsUnavailable,
-            RequestFailure.emailRequired => l.errEmailRequired,
-            RequestFailure.mobileMoneyUnavailable =>
-              l.errMobileMoneyUnavailable,
-            RequestFailure.rateUnavailable => l.errRateUnavailable,
-            RequestFailure.notSignedIn => l.errSessionExpired,
-            _ => l.errPaymentStart,
-          }),
-        ),
+        nataToast(switch (e.reason) {
+          RequestFailure.notPayable => l.errRequestNotPayable,
+          RequestFailure.paymentsUnavailable => l.errPaymentsUnavailable,
+          RequestFailure.emailRequired => l.errEmailRequired,
+          RequestFailure.mobileMoneyUnavailable => l.errMobileMoneyUnavailable,
+          RequestFailure.rateUnavailable => l.errRateUnavailable,
+          RequestFailure.notSignedIn => l.errSessionExpired,
+          _ => l.errPaymentStart,
+        }, tone: ToastTone.error),
       );
     } catch (e) {
       debugPrint('[Checkout] start payment: $e');
-      messenger.showSnackBar(SnackBar(content: Text(l.errPaymentStart)));
+      messenger.showSnackBar(
+        nataToast(l.errPaymentStart, tone: ToastTone.error),
+      );
     } finally {
       if (mounted) setState(() => _startingPayment = false);
     }
@@ -241,7 +241,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       debugPrint('[Checkout] open payment page: $e');
     }
     if (!opened) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errPaymentStart)));
+      messenger.showSnackBar(
+        nataToast(l.errPaymentStart, tone: ToastTone.error),
+      );
     }
   }
 
@@ -294,18 +296,20 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               debugPrint('[Checkout] delivery code SMS: $e');
             }),
           );
-          messenger.showSnackBar(SnackBar(content: Text(l.paymentReceived)));
+          messenger.showSnackBar(
+            nataToast(l.paymentReceived, tone: ToastTone.success),
+          );
           navigator.pop(true);
         case PaymentStatus.failed:
           _poll?.cancel();
           await (widget.closePaymentPage ?? _closeInApp)();
           setState(() => _payment = null);
-          messenger.showSnackBar(SnackBar(content: Text(l.errPaymentFailed)));
+          messenger.showSnackBar(
+            nataToast(l.errPaymentFailed, tone: ToastTone.error),
+          );
         case PaymentStatus.pending:
           if (manual) {
-            messenger.showSnackBar(
-              SnackBar(content: Text(l.paymentNotReceivedYet)),
-            );
+            messenger.showSnackBar(nataToast(l.paymentNotReceivedYet));
             // Keep watching after a manual check.
             if (!(_poll?.isActive ?? false)) _startPolling();
           }
@@ -313,7 +317,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     } catch (e) {
       debugPrint('[Checkout] payment status: $e');
       if (manual) {
-        messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+        messenger.showSnackBar(
+          nataToast(l.errRequestFailed, tone: ToastTone.error),
+        );
       }
     } finally {
       _checkingPayment = false;
@@ -357,16 +363,17 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       if (mounted) setState(() => _idChecked = true);
     } on RequestException catch (e) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            e.reason == RequestFailure.notPayable
-                ? l.errRequestNotPayable
-                : l.errRequestFailed,
-          ),
+        nataToast(
+          e.reason == RequestFailure.notPayable
+              ? l.errRequestNotPayable
+              : l.errRequestFailed,
+          tone: ToastTone.error,
         ),
       );
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
     } finally {
       if (mounted) setState(() => _confirmingId = false);
     }
@@ -401,16 +408,17 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       if (mounted) setState(() => _ticketChecked = true);
     } on RequestException catch (e) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            e.reason == RequestFailure.notPayable
-                ? l.errRequestNotPayable
-                : l.errRequestFailed,
-          ),
+        nataToast(
+          e.reason == RequestFailure.notPayable
+              ? l.errRequestNotPayable
+              : l.errRequestFailed,
+          tone: ToastTone.error,
         ),
       );
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errRequestFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
     } finally {
       if (mounted) setState(() => _confirming = false);
     }

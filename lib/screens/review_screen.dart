@@ -6,6 +6,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/nata_toast.dart';
 
 /// The sender rates the traveler once they confirmed they received the item:
 /// stars, what stood out, and a written review. Reviews are public as soon as
@@ -97,19 +98,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
         comment: _comment.text,
       );
       messenger.showSnackBar(
-        SnackBar(content: Text(l.reviewThanksName(_shortName))),
+        nataToast(l.reviewThanksName(_shortName), tone: ToastTone.success),
       );
       if (mounted) Navigator.of(context).pop(true);
     } on RequestException catch (e) {
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(switch (e.reason) {
-            RequestFailure.alreadyReviewed => l.errAlreadyReviewed,
-            RequestFailure.notDelivered => l.errNotDelivered,
-            RequestFailure.notSignedIn => l.errSessionExpired,
-            _ => l.errReviewFailed,
-          }),
-        ),
+        nataToast(switch (e.reason) {
+          RequestFailure.alreadyReviewed => l.errAlreadyReviewed,
+          RequestFailure.notDelivered => l.errNotDelivered,
+          RequestFailure.notSignedIn => l.errSessionExpired,
+          _ => l.errReviewFailed,
+        }, tone: ToastTone.error),
       );
       if (!mounted) return;
       setState(() => _sending = false);
@@ -118,7 +117,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
         Navigator.of(context).pop(true);
       }
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.errReviewFailed)));
+      messenger.showSnackBar(
+        nataToast(l.errReviewFailed, tone: ToastTone.error),
+      );
       if (mounted) setState(() => _sending = false);
     }
   }

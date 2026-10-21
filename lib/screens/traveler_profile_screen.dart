@@ -11,6 +11,7 @@ import 'delivery_request_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
+import '../widgets/nata_toast.dart';
 
 /// Shows a traveler's profile and the trip the user picked.
 ///
@@ -900,7 +901,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
         key: const ValueKey('profile-message-locked'),
         onTap: () => ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(l.messageUnlocksAfterPayment))),
+          ..showSnackBar(nataToast(l.messageUnlocksAfterPayment)),
         child: Container(
           height: 48,
           decoration: BoxDecoration(

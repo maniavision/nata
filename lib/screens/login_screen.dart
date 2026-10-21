@@ -14,6 +14,7 @@ import 'otp_screen.dart';
 import '../widgets/country_code_picker_sheet.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/nata_logo.dart';
+import '../widgets/nata_toast.dart';
 
 class LoginScreen extends StatefulWidget {
   /// Overrides for tests; they default to the real services / Home screen.
@@ -161,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(nataToast(message));
   }
 
   /// The "Face ID" button: unlocks the session that is still kept on this
