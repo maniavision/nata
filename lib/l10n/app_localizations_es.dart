@@ -3725,6 +3725,46 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.';
 
   @override
+  String get nameEditTooltip => 'Editar nombre';
+
+  @override
+  String get nameEditTitle => 'Edita tu nombre';
+
+  @override
+  String get nameEditHelper =>
+      'Usa tu nombre tal como aparece en tu documento. No podrás cambiarlo una vez verificada tu identidad.';
+
+  @override
+  String get nameSave => 'Guardar';
+
+  @override
+  String get nameErrEmpty => 'Escribe tu nombre y apellido.';
+
+  @override
+  String get nameErrLocked =>
+      'Tu nombre ya no se puede cambiar porque la verificación de tu identidad ha empezado.';
+
+  @override
+  String get nameErrFailed =>
+      'No se pudo guardar tu nombre. Inténtalo de nuevo.';
+
+  @override
+  String get nameLockedTitle => 'Tu nombre coincide con tu documento';
+
+  @override
+  String get nameLockedBody =>
+      'Tu nombre se comprobó con tu documento, así que no se puede cambiar en la app. Si es incorrecto o ha cambiado legalmente, nuestro equipo de soporte puede actualizarlo.';
+
+  @override
+  String get nameContactSupport => 'Contactar con soporte';
+
+  @override
+  String get nameSupportSubject => 'Solicitud de cambio de nombre';
+
+  @override
+  String get nameUpdated => 'Nombre actualizado.';
+
+  @override
   String notifMessageTitle(String name) {
     return 'Nuevo mensaje de $name';
   }
@@ -4010,4 +4050,87 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get supportActionFailed => 'No funcionó. Inténtalo de nuevo.';
+
+  @override
+  String get deleteAccountRow => 'Eliminar cuenta';
+
+  @override
+  String get deleteAccountRowSub => 'Elimina tu cuenta de Nata para siempre';
+
+  @override
+  String get daTitle => '¿Eliminar tu cuenta?';
+
+  @override
+  String get daBody => 'No se puede deshacer.';
+
+  @override
+  String get daWhatWeDelete => 'Lo que eliminamos';
+
+  @override
+  String get daDeleteProfile => 'Tu perfil, nombre y foto';
+
+  @override
+  String get daDeleteId => 'Tus documentos de identidad y selfie';
+
+  @override
+  String get daDeletePayment => 'Métodos de pago y cuentas de cobro guardados';
+
+  @override
+  String get daDeleteMessages => 'Tus mensajes, viajes y solicitudes abiertas';
+
+  @override
+  String get daDeleteNotifications => 'Notificaciones y dispositivos';
+
+  @override
+  String get daWhatWeKeep => 'Lo que conservamos';
+
+  @override
+  String get daKeepPayments => 'Registros de pagos y cobros, anonimizados';
+
+  @override
+  String get daKeepPaymentsSub => 'Necesarios para la contabilidad';
+
+  @override
+  String get daKeepDeliveries => 'Entregas completadas y reseñas';
+
+  @override
+  String get daKeepDeliveriesSub => 'Se muestran como «Usuario eliminado»';
+
+  @override
+  String get daUnderstand => 'Entiendo que es definitivo';
+
+  @override
+  String get daConfirmButton => 'Eliminar mi cuenta';
+
+  @override
+  String get daFailed => 'No se pudo eliminar tu cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get daLoadFailed => 'No se pudo comprobar tu cuenta.';
+
+  @override
+  String get daBlockedTitle => 'Aún no puedes eliminar tu cuenta';
+
+  @override
+  String get daBlockedBody =>
+      'Termina o resuelve esto primero y vuelve a intentarlo.';
+
+  @override
+  String get daBlockedEscrow => 'Dinero retenido en depósito';
+
+  @override
+  String get daBlockedPayments => 'Cobros o reembolsos en curso';
+
+  @override
+  String get daBlockedDeliveries => 'Entregas en curso';
+
+  @override
+  String get daBlockedDisputes => 'Problemas reportados abiertos';
+
+  @override
+  String get daBlockedStaff =>
+      'Las cuentas del personal las elimina el soporte de Nata';
+
+  @override
+  String get daNeedHelp => '¿Necesitas ayuda? Contacta con el soporte de Nata.';
 }
