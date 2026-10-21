@@ -6446,6 +6446,180 @@ abstract class AppLocalizations {
   /// **'A problem was reported on one of your deliveries. Our support team will contact you.'**
   String get notifProblemBody;
 
+  /// No description provided for @notifTripMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A traveler is going your way'**
+  String get notifTripMatchTitle;
+
+  /// No description provided for @notifTripMatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is flying {route}. Send your item with them.'**
+  String notifTripMatchBody(String name, String route);
+
+  /// No description provided for @routeAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Route alerts'**
+  String get routeAlerts;
+
+  /// No description provided for @routeAlertsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a traveler flies your routes'**
+  String get routeAlertsSub;
+
+  /// No description provided for @routeAlertsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the routes you often send on. When a verified traveler posts a trip on one of them, we\'ll notify you.'**
+  String get routeAlertsIntro;
+
+  /// No description provided for @routeAlertsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVED ROUTES'**
+  String get routeAlertsSaved;
+
+  /// No description provided for @routeAlertsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 5'**
+  String routeAlertsCount(int count);
+
+  /// No description provided for @routeAlertsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a route'**
+  String get routeAlertsAdd;
+
+  /// No description provided for @routeAlertsMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 5 routes'**
+  String get routeAlertsMax;
+
+  /// No description provided for @routeAlertsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No routes yet'**
+  String get routeAlertsEmptyTitle;
+
+  /// No description provided for @routeAlertsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the routes you send on and we\'ll tell you when a traveler flies them.'**
+  String get routeAlertsEmptyBody;
+
+  /// No description provided for @routeAlertsFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get routeAlertsFrom;
+
+  /// No description provided for @routeAlertsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get routeAlertsTo;
+
+  /// No description provided for @routeAlertsChooseCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a city'**
+  String get routeAlertsChooseCity;
+
+  /// No description provided for @routeAlertsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save route'**
+  String get routeAlertsSave;
+
+  /// No description provided for @routeAlertsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove route'**
+  String get routeAlertsRemove;
+
+  /// No description provided for @routeAlertsSavedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Route saved. We\'ll let you know when a traveler flies it.'**
+  String get routeAlertsSavedToast;
+
+  /// No description provided for @routeAlertsErrSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick two different cities.'**
+  String get routeAlertsErrSame;
+
+  /// No description provided for @routeAlertsErrLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can save up to 5 routes. Remove one to add another.'**
+  String get routeAlertsErrLimit;
+
+  /// No description provided for @routeAlertsErrExists.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have this route.'**
+  String get routeAlertsErrExists;
+
+  /// No description provided for @routeAlertsErrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the route. Please try again.'**
+  String get routeAlertsErrFailed;
+
+  /// No description provided for @routeAlertsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your routes.'**
+  String get routeAlertsLoadFailed;
+
+  /// No description provided for @homeGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get homeGetStarted;
+
+  /// No description provided for @homeVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity'**
+  String get homeVerifyTitle;
+
+  /// No description provided for @homeVerifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Takes 2 minutes. Needed to send or carry items.'**
+  String get homeVerifyBody;
+
+  /// No description provided for @homeVerifyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify now'**
+  String get homeVerifyAction;
+
+  /// No description provided for @homeRoutesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get alerts for your routes'**
+  String get homeRoutesTitle;
+
+  /// No description provided for @homeRoutesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll tell you when a traveler flies the routes you send on.'**
+  String get homeRoutesBody;
+
+  /// No description provided for @homeRoutesAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a route'**
+  String get homeRoutesAction;
+
   /// No description provided for @nameEditTooltip.
   ///
   /// In en, this message translates to:

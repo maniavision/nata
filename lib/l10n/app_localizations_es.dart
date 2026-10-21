@@ -3725,6 +3725,105 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.';
 
   @override
+  String get notifTripMatchTitle => 'Un viajero hace tu ruta';
+
+  @override
+  String notifTripMatchBody(String name, String route) {
+    return '$name viaja $route. Confíale tu artículo.';
+  }
+
+  @override
+  String get routeAlerts => 'Alertas de rutas';
+
+  @override
+  String get routeAlertsSub =>
+      'Recibe un aviso cuando un viajero haga tus rutas';
+
+  @override
+  String get routeAlertsIntro =>
+      'Guarda las rutas en las que sueles enviar. Cuando un viajero verificado publique un viaje en una de ellas, te avisaremos.';
+
+  @override
+  String get routeAlertsSaved => 'RUTAS GUARDADAS';
+
+  @override
+  String routeAlertsCount(int count) {
+    return '$count de 5';
+  }
+
+  @override
+  String get routeAlertsAdd => 'Añadir una ruta';
+
+  @override
+  String get routeAlertsMax => 'Hasta 5 rutas';
+
+  @override
+  String get routeAlertsEmptyTitle => 'Aún no hay rutas';
+
+  @override
+  String get routeAlertsEmptyBody =>
+      'Añade las rutas en las que envías y te diremos cuando un viajero las haga.';
+
+  @override
+  String get routeAlertsFrom => 'Desde';
+
+  @override
+  String get routeAlertsTo => 'Hasta';
+
+  @override
+  String get routeAlertsChooseCity => 'Elige una ciudad';
+
+  @override
+  String get routeAlertsSave => 'Guardar ruta';
+
+  @override
+  String get routeAlertsRemove => 'Eliminar ruta';
+
+  @override
+  String get routeAlertsSavedToast =>
+      'Ruta guardada. Te avisaremos cuando un viajero la haga.';
+
+  @override
+  String get routeAlertsErrSame => 'Elige dos ciudades distintas.';
+
+  @override
+  String get routeAlertsErrLimit =>
+      'Puedes guardar hasta 5 rutas. Elimina una para añadir otra.';
+
+  @override
+  String get routeAlertsErrExists => 'Ya tienes esta ruta.';
+
+  @override
+  String get routeAlertsErrFailed =>
+      'No se pudo guardar la ruta. Inténtalo de nuevo.';
+
+  @override
+  String get routeAlertsLoadFailed => 'No se pudieron cargar tus rutas.';
+
+  @override
+  String get homeGetStarted => 'Para empezar';
+
+  @override
+  String get homeVerifyTitle => 'Verifica tu identidad';
+
+  @override
+  String get homeVerifyBody =>
+      'Solo 2 minutos. Necesario para enviar o llevar artículos.';
+
+  @override
+  String get homeVerifyAction => 'Verificar';
+
+  @override
+  String get homeRoutesTitle => 'Alertas para tus rutas';
+
+  @override
+  String get homeRoutesBody =>
+      'Te avisamos cuando un viajero haga las rutas en las que envías.';
+
+  @override
+  String get homeRoutesAction => 'Añadir una ruta';
+
+  @override
   String get nameEditTooltip => 'Editar nombre';
 
   @override

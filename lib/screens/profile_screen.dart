@@ -25,6 +25,7 @@ import 'payment_settings_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
+import 'route_alerts_screen.dart';
 import '../widgets/name_sheets.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -1057,6 +1058,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         subtitle: 'USD, EUR, GBP, XOF',
         trailing: '${prefs.currency.code} (${prefs.currency.symbol})',
         onTap: _showCurrencyPicker,
+      ),
+      _SettingsItem(
+        key: const ValueKey('profile-route-alerts'),
+        icon: Icons.notification_add_rounded,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.routeAlerts,
+        subtitle: context.l10n.routeAlertsSub,
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const RouteAlertsScreen())),
       ),
       _SettingsItem(
         icon: Icons.shield_rounded,

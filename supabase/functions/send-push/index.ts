@@ -120,6 +120,7 @@ const NAME_FROM: Record<string, "sender" | "traveler" | "author"> = {
   request_paid: "sender",
   item_picked_up: "traveler",
   item_delivered: "traveler",
+  trip_match: "traveler",
   message_new: "author",
   message_photo: "author",
 };
@@ -229,6 +230,15 @@ Deno.serve(async (req: Request) => {
               type: String(n.type ?? ""),
               related_id: String(n.related_id ?? ""),
               conversation_id: String(payload.conversation_id ?? ""),
+              // A route alert opens the search for its route.
+              ...(event === "trip_match"
+                ? Object.fromEntries(
+                  [
+                    "from_city_id", "from_city", "from_country", "from_country_code",
+                    "to_city_id", "to_city", "to_country", "to_country_code",
+                  ].map((k) => [k, String(payload[k] ?? "")]),
+                )
+                : {}),
             },
             android: { priority: "high", notification: { sound: "default" } },
             apns: { payload: { aps: { sound: "default" } } },

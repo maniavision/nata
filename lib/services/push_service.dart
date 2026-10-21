@@ -11,6 +11,7 @@ import '../l10n/notification_text.dart' show requestsTabForEvent;
 import '../screens/notifications_screen.dart';
 import '../screens/requests_screen.dart';
 import '../screens/chat_thread_screen.dart';
+import '../screens/traveler_results_screen.dart';
 
 /// Push notifications (20240155_push_notifications.sql, send-push).
 ///
@@ -111,6 +112,15 @@ class PushService {
     final navigator = _navigator?.currentState;
     if (navigator == null || _client.auth.currentUser == null) return;
     final event = message.data['event'] as String?;
+    if (event == 'trip_match') {
+      final results = resultsForRouteAlert(message.data);
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => results ?? const NotificationsScreen(),
+        ),
+      );
+      return;
+    }
     final chat = message.data['conversation_id'] as String?;
     if (event == 'message_new' && chat != null && chat.isNotEmpty) {
       navigator.push(

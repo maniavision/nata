@@ -3748,6 +3748,105 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un problème a été signalé sur l’une de vos livraisons. Notre équipe d’assistance vous contactera.';
 
   @override
+  String get notifTripMatchTitle => 'Un voyageur fait votre trajet';
+
+  @override
+  String notifTripMatchBody(String name, String route) {
+    return '$name part $route. Confiez-lui votre article.';
+  }
+
+  @override
+  String get routeAlerts => 'Alertes trajets';
+
+  @override
+  String get routeAlertsSub =>
+      'Soyez averti quand un voyageur fait vos trajets';
+
+  @override
+  String get routeAlertsIntro =>
+      'Enregistrez les trajets sur lesquels vous envoyez souvent. Quand un voyageur vérifié publie un voyage sur l\'un d\'eux, nous vous prévenons.';
+
+  @override
+  String get routeAlertsSaved => 'TRAJETS ENREGISTRÉS';
+
+  @override
+  String routeAlertsCount(int count) {
+    return '$count sur 5';
+  }
+
+  @override
+  String get routeAlertsAdd => 'Ajouter un trajet';
+
+  @override
+  String get routeAlertsMax => 'Jusqu\'à 5 trajets';
+
+  @override
+  String get routeAlertsEmptyTitle => 'Aucun trajet pour l\'instant';
+
+  @override
+  String get routeAlertsEmptyBody =>
+      'Ajoutez vos trajets d\'envoi et nous vous dirons quand un voyageur les fait.';
+
+  @override
+  String get routeAlertsFrom => 'De';
+
+  @override
+  String get routeAlertsTo => 'À';
+
+  @override
+  String get routeAlertsChooseCity => 'Choisir une ville';
+
+  @override
+  String get routeAlertsSave => 'Enregistrer le trajet';
+
+  @override
+  String get routeAlertsRemove => 'Supprimer le trajet';
+
+  @override
+  String get routeAlertsSavedToast =>
+      'Trajet enregistré. Nous vous préviendrons quand un voyageur le fait.';
+
+  @override
+  String get routeAlertsErrSame => 'Choisissez deux villes différentes.';
+
+  @override
+  String get routeAlertsErrLimit =>
+      'Vous pouvez enregistrer jusqu\'à 5 trajets. Supprimez-en un pour en ajouter un autre.';
+
+  @override
+  String get routeAlertsErrExists => 'Vous avez déjà ce trajet.';
+
+  @override
+  String get routeAlertsErrFailed =>
+      'Impossible d\'enregistrer le trajet. Réessayez.';
+
+  @override
+  String get routeAlertsLoadFailed => 'Impossible de charger vos trajets.';
+
+  @override
+  String get homeGetStarted => 'Pour commencer';
+
+  @override
+  String get homeVerifyTitle => 'Vérifiez votre identité';
+
+  @override
+  String get homeVerifyBody =>
+      '2 minutes suffisent. Nécessaire pour envoyer ou transporter des articles.';
+
+  @override
+  String get homeVerifyAction => 'Vérifier';
+
+  @override
+  String get homeRoutesTitle => 'Alertes pour vos trajets';
+
+  @override
+  String get homeRoutesBody =>
+      'Nous vous prévenons quand un voyageur fait vos trajets d\'envoi.';
+
+  @override
+  String get homeRoutesAction => 'Ajouter un trajet';
+
+  @override
   String get nameEditTooltip => 'Modifier le nom';
 
   @override
