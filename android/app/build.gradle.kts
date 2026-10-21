@@ -46,8 +46,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.carrywise.carrywise_app"
+        // The Google Play package name (fixed for good once published). The
+        // Kotlin namespace above stays as it was; only this is what users
+        // and the stores see.
+        applicationId = "com.nata.nataapp"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

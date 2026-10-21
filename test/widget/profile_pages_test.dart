@@ -1,8 +1,10 @@
+import 'package:carrywise_app/screens/delete_account_screen.dart';
 import 'package:carrywise_app/screens/identity_status_screen.dart';
 import 'package:carrywise_app/screens/identity_verification_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/sealed_box_policy_screen.dart';
 import 'package:carrywise_app/screens/wallet_history_screen.dart';
+import 'package:carrywise_app/services/account_service.dart';
 import 'package:carrywise_app/services/emergency_contact_service.dart';
 import 'package:carrywise_app/services/payment_service.dart';
 import 'package:flutter/material.dart';
@@ -177,6 +179,194 @@ void main() {
         find.byKey(const ValueKey('contact-name')),
       );
       expect(name.controller!.text, 'Kofi Boateng');
+    });
+  });
+
+  group('Delete account', () {
+    testWidgets('Profile has a Delete account row that opens it', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      await tester.pumpWidget(
+        appWrapper(
+          ProfileScreen(
+            authService: FakeAuthService()..profile = profile('verified'),
+            emergencyService: FakeEmergencyContactService(),
+            travelerService: FakeTravelerService(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete account'), findsOneWidget);
+      expect(find.text('Permanently remove your Nata account'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('profile-delete-account')));
+      await tester.pumpAndSettle();
+      expect(find.byType(DeleteAccountScreen), findsOneWidget);
+    });
+
+    Future<FakeAuthService> pumpDelete(
+      WidgetTester tester, {
+      required Future<AccountDeletionBlockers> Function() blockers,
+      Future<void> Function()? delete,
+    }) async {
+      tallScreen(tester);
+      final auth = FakeAuthService();
+      await tester.pumpWidget(
+        appWrapper(
+          DeleteAccountScreen(
+            loadBlockers: blockers,
+            deleteAccount: delete ?? () async {},
+            authService: auth,
+            afterDeleted: (_) => const Text('Welcome'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return auth;
+    }
+
+    ElevatedButton confirmButton(WidgetTester tester) =>
+        tester.widget(find.byKey(const ValueKey('delete-account-confirm')));
+
+    testWidgets('says what is deleted and what is kept', (tester) async {
+      await pumpDelete(
+        tester,
+        blockers: () async => AccountDeletionBlockers.none,
+      );
+
+      expect(find.text('Delete your account?'), findsOneWidget);
+      expect(find.text('Your ID documents and selfie'), findsOneWidget);
+      expect(
+        find.text('Payment and payout records, anonymised'),
+        findsOneWidget,
+      );
+      expect(find.text('Shown as "Deleted user"'), findsOneWidget);
+    });
+
+    testWidgets('deletes only once confirmed, then signs out', (tester) async {
+      var deletes = 0;
+      final auth = await pumpDelete(
+        tester,
+        blockers: () async => AccountDeletionBlockers.none,
+        delete: () async => deletes++,
+      );
+
+      expect(confirmButton(tester).onPressed, isNull);
+      await tester.tap(find.byKey(const ValueKey('delete-account-confirm')));
+      await tester.pumpAndSettle();
+      expect(deletes, 0);
+
+      await tester.tap(find.byKey(const ValueKey('delete-account-understand')));
+      await tester.pump();
+      expect(confirmButton(tester).onPressed, isNotNull);
+
+      await tester.tap(find.byKey(const ValueKey('delete-account-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(deletes, 1);
+      expect(auth.signOutCalls, 1);
+      expect(find.text('Welcome'), findsOneWidget);
+      expect(find.byType(DeleteAccountScreen), findsNothing);
+    });
+
+    testWidgets('blocked while money or deliveries are in flight', (
+      tester,
+    ) async {
+      await pumpDelete(
+        tester,
+        blockers: () async => const AccountDeletionBlockers(
+          escrow: 1,
+          deliveries: 2,
+          disputes: 1,
+        ),
+      );
+
+      expect(find.text("You can't delete your account yet"), findsOneWidget);
+      expect(find.text('Money held in escrow'), findsOneWidget);
+      expect(find.text('Deliveries in progress'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('Open problem reports'), findsOneWidget);
+      expect(find.text('Payouts or refunds on the way'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('delete-account-confirm')),
+        findsNothing,
+      );
+      expect(find.text('Back to Profile'), findsOneWidget);
+    });
+
+    testWidgets('staff are told support removes their account', (tester) async {
+      await pumpDelete(
+        tester,
+        blockers: () async => const AccountDeletionBlockers(staff: true),
+      );
+
+      expect(
+        find.text('Staff accounts are removed by Nata support'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('refused by the server: shows what blocks it', (tester) async {
+      var blocked = false;
+      final auth = await pumpDelete(
+        tester,
+        blockers: () async => blocked
+            ? const AccountDeletionBlockers(payments: 1)
+            : AccountDeletionBlockers.none,
+        delete: () async {
+          blocked = true;
+          throw const AccountDeletionBlockedException(
+            'nata:account_has_payments_in_flight',
+          );
+        },
+      );
+
+      await tester.tap(find.byKey(const ValueKey('delete-account-understand')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('delete-account-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Payouts or refunds on the way'), findsOneWidget);
+      expect(auth.signOutCalls, 0);
+    });
+
+    testWidgets('a failure keeps the account and says so', (tester) async {
+      final auth = await pumpDelete(
+        tester,
+        blockers: () async => AccountDeletionBlockers.none,
+        delete: () async => throw Exception('offline'),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('delete-account-understand')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('delete-account-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("Couldn't delete your account. Please try again."),
+        findsOneWidget,
+      );
+      expect(auth.signOutCalls, 0);
+      expect(find.byType(DeleteAccountScreen), findsOneWidget);
+    });
+
+    testWidgets('a load error, then retry', (tester) async {
+      var fail = true;
+      await pumpDelete(
+        tester,
+        blockers: () async {
+          if (fail) throw Exception('offline');
+          return AccountDeletionBlockers.none;
+        },
+      );
+      expect(find.text("Couldn't check your account."), findsOneWidget);
+
+      fail = false;
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.text('Delete your account?'), findsOneWidget);
     });
   });
 

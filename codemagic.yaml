@@ -25,7 +25,7 @@
 
 definitions:
   ios_bundle_id: &ios_bundle_id com.nata.nataApp
-  android_package: &android_package com.carrywise.carrywise_app
+  android_package: &android_package com.nata.nataapp
 
   email: &email
     email:

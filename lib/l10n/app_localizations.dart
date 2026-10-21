@@ -6620,6 +6620,78 @@ abstract class AppLocalizations {
   /// **'Add a route'**
   String get homeRoutesAction;
 
+  /// No description provided for @nameEditTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit name'**
+  String get nameEditTooltip;
+
+  /// No description provided for @nameEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your name'**
+  String get nameEditTitle;
+
+  /// No description provided for @nameEditHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your name exactly as it appears on your ID. It can\'t be changed once your identity is verified.'**
+  String get nameEditHelper;
+
+  /// No description provided for @nameSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get nameSave;
+
+  /// No description provided for @nameErrEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your first and last name.'**
+  String get nameErrEmpty;
+
+  /// No description provided for @nameErrLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name can\'t be changed now that your identity check has started.'**
+  String get nameErrLocked;
+
+  /// No description provided for @nameErrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save your name. Please try again.'**
+  String get nameErrFailed;
+
+  /// No description provided for @nameLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name matches your ID'**
+  String get nameLockedTitle;
+
+  /// No description provided for @nameLockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name was checked against your ID, so it can\'t be changed in the app. If it\'s wrong or has legally changed, our support team can update it.'**
+  String get nameLockedBody;
+
+  /// No description provided for @nameContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get nameContactSupport;
+
+  /// No description provided for @nameSupportSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Name change request'**
+  String get nameSupportSubject;
+
+  /// No description provided for @nameUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Name updated.'**
+  String get nameUpdated;
+
   /// No description provided for @notifMessageTitle.
   ///
   /// In en, this message translates to:
@@ -7141,6 +7213,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That didn\'t work. Please try again.'**
   String get supportActionFailed;
+
+  /// No description provided for @deleteAccountRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountRow;
+
+  /// No description provided for @deleteAccountRowSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove your Nata account'**
+  String get deleteAccountRowSub;
+
+  /// No description provided for @daTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get daTitle;
+
+  /// No description provided for @daBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone.'**
+  String get daBody;
+
+  /// No description provided for @daWhatWeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'What we delete'**
+  String get daWhatWeDelete;
+
+  /// No description provided for @daDeleteProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile, name and photo'**
+  String get daDeleteProfile;
+
+  /// No description provided for @daDeleteId.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ID documents and selfie'**
+  String get daDeleteId;
+
+  /// No description provided for @daDeletePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved payment methods and payout accounts'**
+  String get daDeletePayment;
+
+  /// No description provided for @daDeleteMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Your messages, trips and open requests'**
+  String get daDeleteMessages;
+
+  /// No description provided for @daDeleteNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications and devices'**
+  String get daDeleteNotifications;
+
+  /// No description provided for @daWhatWeKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'What we keep'**
+  String get daWhatWeKeep;
+
+  /// No description provided for @daKeepPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment and payout records, anonymised'**
+  String get daKeepPayments;
+
+  /// No description provided for @daKeepPaymentsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Needed for accounting'**
+  String get daKeepPaymentsSub;
+
+  /// No description provided for @daKeepDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed deliveries and reviews'**
+  String get daKeepDeliveries;
+
+  /// No description provided for @daKeepDeliveriesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown as \"Deleted user\"'**
+  String get daKeepDeliveriesSub;
+
+  /// No description provided for @daUnderstand.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand this is permanent'**
+  String get daUnderstand;
+
+  /// No description provided for @daConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get daConfirmButton;
+
+  /// No description provided for @daFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete your account. Please try again.'**
+  String get daFailed;
+
+  /// No description provided for @daLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check your account.'**
+  String get daLoadFailed;
+
+  /// No description provided for @daBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t delete your account yet'**
+  String get daBlockedTitle;
+
+  /// No description provided for @daBlockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish or resolve these first, then try again.'**
+  String get daBlockedBody;
+
+  /// No description provided for @daBlockedEscrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Money held in escrow'**
+  String get daBlockedEscrow;
+
+  /// No description provided for @daBlockedPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payouts or refunds on the way'**
+  String get daBlockedPayments;
+
+  /// No description provided for @daBlockedDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliveries in progress'**
+  String get daBlockedDeliveries;
+
+  /// No description provided for @daBlockedDisputes.
+  ///
+  /// In en, this message translates to:
+  /// **'Open problem reports'**
+  String get daBlockedDisputes;
+
+  /// No description provided for @daBlockedStaff.
+  ///
+  /// In en, this message translates to:
+  /// **'Staff accounts are removed by Nata support'**
+  String get daBlockedStaff;
+
+  /// No description provided for @daNeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help? Contact Nata support.'**
+  String get daNeedHelp;
 }
 
 class _AppLocalizationsDelegate
