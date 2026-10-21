@@ -81,6 +81,23 @@ class AuthService {
 
   /// After a new sign-up, saves [firstName] and [lastName] to
   /// nata.profiles (the row is auto-created by the DB trigger).
+  /// Changes the member's name. Refused once their identity check has
+  /// started (migration 20240160): throws [NameLockedException].
+  Future<void> updateName(String firstName, String lastName) async {
+    final userId = currentUser?.id;
+    if (userId == null) return;
+    try {
+      await _client
+          .schema('nata')
+          .from('profiles')
+          .update({'first_name': firstName, 'last_name': lastName})
+          .eq('id', userId);
+    } on PostgrestException catch (e) {
+      if (e.message.contains('name_locked')) throw const NameLockedException();
+      rethrow;
+    }
+  }
+
   Future<void> updateProfile({
     String? firstName,
     String? lastName,
@@ -432,4 +449,9 @@ class AuthService {
     // The next person to sign in on this device starts with an empty search.
     HomeSearchMemory.clear();
   }
+}
+
+/// The name can't be changed once the identity check has started.
+class NameLockedException implements Exception {
+  const NameLockedException();
 }

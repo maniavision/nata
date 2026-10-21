@@ -3725,6 +3725,46 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo.';
 
   @override
+  String get nameEditTooltip => 'Editar nombre';
+
+  @override
+  String get nameEditTitle => 'Edita tu nombre';
+
+  @override
+  String get nameEditHelper =>
+      'Usa tu nombre tal como aparece en tu documento. No podrás cambiarlo una vez verificada tu identidad.';
+
+  @override
+  String get nameSave => 'Guardar';
+
+  @override
+  String get nameErrEmpty => 'Escribe tu nombre y apellido.';
+
+  @override
+  String get nameErrLocked =>
+      'Tu nombre ya no se puede cambiar porque la verificación de tu identidad ha empezado.';
+
+  @override
+  String get nameErrFailed =>
+      'No se pudo guardar tu nombre. Inténtalo de nuevo.';
+
+  @override
+  String get nameLockedTitle => 'Tu nombre coincide con tu documento';
+
+  @override
+  String get nameLockedBody =>
+      'Tu nombre se comprobó con tu documento, así que no se puede cambiar en la app. Si es incorrecto o ha cambiado legalmente, nuestro equipo de soporte puede actualizarlo.';
+
+  @override
+  String get nameContactSupport => 'Contactar con soporte';
+
+  @override
+  String get nameSupportSubject => 'Solicitud de cambio de nombre';
+
+  @override
+  String get nameUpdated => 'Nombre actualizado.';
+
+  @override
   String notifMessageTitle(String name) {
     return 'Nuevo mensaje de $name';
   }

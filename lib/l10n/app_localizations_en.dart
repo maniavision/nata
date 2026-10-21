@@ -3679,6 +3679,45 @@ class AppLocalizationsEn extends AppLocalizations {
       'A problem was reported on one of your deliveries. Our support team will contact you.';
 
   @override
+  String get nameEditTooltip => 'Edit name';
+
+  @override
+  String get nameEditTitle => 'Edit your name';
+
+  @override
+  String get nameEditHelper =>
+      'Use your name exactly as it appears on your ID. It can\'t be changed once your identity is verified.';
+
+  @override
+  String get nameSave => 'Save';
+
+  @override
+  String get nameErrEmpty => 'Enter your first and last name.';
+
+  @override
+  String get nameErrLocked =>
+      'Your name can\'t be changed now that your identity check has started.';
+
+  @override
+  String get nameErrFailed => 'Couldn\'t save your name. Please try again.';
+
+  @override
+  String get nameLockedTitle => 'Your name matches your ID';
+
+  @override
+  String get nameLockedBody =>
+      'Your name was checked against your ID, so it can\'t be changed in the app. If it\'s wrong or has legally changed, our support team can update it.';
+
+  @override
+  String get nameContactSupport => 'Contact support';
+
+  @override
+  String get nameSupportSubject => 'Name change request';
+
+  @override
+  String get nameUpdated => 'Name updated.';
+
+  @override
   String notifMessageTitle(String name) {
     return 'New message from $name';
   }
