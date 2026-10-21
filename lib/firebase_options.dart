@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDXXtJeH4jyZLbf47fEmbYmYfQiyDdGMZo',
-    appId: '1:646360492290:android:744bcbb526b38c7d38ba1b',
+    appId: '1:646360492290:android:3fc97dd5a8cf16e838ba1b',
     messagingSenderId: '646360492290',
     projectId: 'nata-app-a03de',
     storageBucket: 'nata-app-a03de.firebasestorage.app',

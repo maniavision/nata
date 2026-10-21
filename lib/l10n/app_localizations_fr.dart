@@ -3824,6 +3824,46 @@ class AppLocalizationsFr extends AppLocalizations {
   String get routeAlertsLoadFailed => 'Impossible de charger vos trajets.';
 
   @override
+  String get nameEditTooltip => 'Modifier le nom';
+
+  @override
+  String get nameEditTitle => 'Modifier votre nom';
+
+  @override
+  String get nameEditHelper =>
+      'Indiquez votre nom exactement comme sur votre pièce d\'identité. Il ne pourra plus être modifié une fois votre identité vérifiée.';
+
+  @override
+  String get nameSave => 'Enregistrer';
+
+  @override
+  String get nameErrEmpty => 'Saisissez votre prénom et votre nom.';
+
+  @override
+  String get nameErrLocked =>
+      'Votre nom ne peut plus être modifié, la vérification de votre identité a commencé.';
+
+  @override
+  String get nameErrFailed => 'Impossible d\'enregistrer votre nom. Réessayez.';
+
+  @override
+  String get nameLockedTitle =>
+      'Votre nom correspond à votre pièce d\'identité';
+
+  @override
+  String get nameLockedBody =>
+      'Votre nom a été vérifié avec votre pièce d\'identité, il ne peut donc pas être modifié dans l\'application. S\'il est incorrect ou a changé légalement, notre équipe d\'assistance peut le mettre à jour.';
+
+  @override
+  String get nameContactSupport => 'Contacter l\'assistance';
+
+  @override
+  String get nameSupportSubject => 'Demande de changement de nom';
+
+  @override
+  String get nameUpdated => 'Nom mis à jour.';
+
+  @override
   String notifMessageTitle(String name) {
     return 'Nouveau message de $name';
   }
@@ -4111,4 +4151,92 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportActionFailed => 'Ça n\'a pas marché. Réessayez.';
+
+  @override
+  String get deleteAccountRow => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountRowSub =>
+      'Supprimer définitivement votre compte Nata';
+
+  @override
+  String get daTitle => 'Supprimer votre compte ?';
+
+  @override
+  String get daBody => 'Cette action est irréversible.';
+
+  @override
+  String get daWhatWeDelete => 'Ce que nous supprimons';
+
+  @override
+  String get daDeleteProfile => 'Votre profil, nom et photo';
+
+  @override
+  String get daDeleteId => 'Vos pièces d’identité et votre selfie';
+
+  @override
+  String get daDeletePayment =>
+      'Moyens de paiement et comptes de versement enregistrés';
+
+  @override
+  String get daDeleteMessages => 'Vos messages, trajets et demandes en cours';
+
+  @override
+  String get daDeleteNotifications => 'Notifications et appareils';
+
+  @override
+  String get daWhatWeKeep => 'Ce que nous conservons';
+
+  @override
+  String get daKeepPayments =>
+      'Historique des paiements et versements, anonymisé';
+
+  @override
+  String get daKeepPaymentsSub => 'Nécessaire à la comptabilité';
+
+  @override
+  String get daKeepDeliveries => 'Livraisons terminées et avis';
+
+  @override
+  String get daKeepDeliveriesSub => 'Affichés comme « Utilisateur supprimé »';
+
+  @override
+  String get daUnderstand => 'Je comprends que c’est définitif';
+
+  @override
+  String get daConfirmButton => 'Supprimer mon compte';
+
+  @override
+  String get daFailed =>
+      'Impossible de supprimer votre compte. Veuillez réessayer.';
+
+  @override
+  String get daLoadFailed => 'Impossible de vérifier votre compte.';
+
+  @override
+  String get daBlockedTitle =>
+      'Vous ne pouvez pas encore supprimer votre compte';
+
+  @override
+  String get daBlockedBody =>
+      'Terminez ou réglez d’abord ces points, puis réessayez.';
+
+  @override
+  String get daBlockedEscrow => 'Argent bloqué sous séquestre';
+
+  @override
+  String get daBlockedPayments => 'Versements ou remboursements en cours';
+
+  @override
+  String get daBlockedDeliveries => 'Livraisons en cours';
+
+  @override
+  String get daBlockedDisputes => 'Signalements de problème ouverts';
+
+  @override
+  String get daBlockedStaff =>
+      'Les comptes du personnel sont supprimés par le support Nata';
+
+  @override
+  String get daNeedHelp => 'Besoin d’aide ? Contactez le support Nata.';
 }
