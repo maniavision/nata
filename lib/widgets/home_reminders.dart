@@ -7,6 +7,9 @@ import '../main.dart';
 import '../screens/identity_verification_screen.dart';
 import '../screens/route_alerts_screen.dart';
 import '../services/route_alert_service.dart';
+import '../services/biometric_service.dart';
+import '../services/preferences_service.dart';
+import 'nata_toast.dart';
 
 /// "Get started" on Home for a new member (designed in Sleek, "Home (New
 /// Member Reminders)"): verify your identity, and save the routes you send
@@ -27,6 +30,7 @@ class HomeReminders extends StatefulWidget {
   final RouteAlertService? routeService;
   final WidgetBuilder? verifyBuilder;
   final WidgetBuilder? routesBuilder;
+  final BiometricService? biometrics;
 
   const HomeReminders({
     super.key,
@@ -36,9 +40,12 @@ class HomeReminders extends StatefulWidget {
     this.routeService,
     this.verifyBuilder,
     this.routesBuilder,
+    this.biometrics,
   });
 
   static String dismissKey(String userId) => 'route_reminder_dismissed_$userId';
+  static String faceIdDismissKey(String userId) =>
+      'faceid_reminder_dismissed_$userId';
 
   @override
   State<HomeReminders> createState() => _HomeRemindersState();
@@ -49,16 +56,98 @@ class _HomeRemindersState extends State<HomeReminders> {
   bool? _hasRoutes;
   bool _routesDismissed = true;
 
+  /// The phone can do Face ID / fingerprint (null until known).
+  bool? _biometricsReady;
+  bool _faceIdDismissed = true;
+  bool _turningOnFaceId = false;
+
+  BiometricService get _biometrics => widget.biometrics ?? BiometricService();
+
   @override
   void initState() {
     super.initState();
     _loadRoutes();
+    _loadFaceId();
+    PreferencesService().addListener(_onPrefs);
+  }
+
+  @override
+  void dispose() {
+    PreferencesService().removeListener(_onPrefs);
+    super.dispose();
+  }
+
+  void _onPrefs() {
+    if (mounted) setState(() {});
   }
 
   @override
   void didUpdateWidget(HomeReminders old) {
     super.didUpdateWidget(old);
-    if (old.userId != widget.userId) _loadRoutes();
+    if (old.userId != widget.userId) {
+      _loadRoutes();
+      _loadFaceId();
+    }
+  }
+
+  Future<void> _loadFaceId() async {
+    final id = widget.userId;
+    if (id == null || PreferencesService().faceIdEnabled) return;
+    var dismissed = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      dismissed = prefs.getBool(HomeReminders.faceIdDismissKey(id)) ?? false;
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _faceIdDismissed = dismissed);
+    if (dismissed) return;
+    final ready =
+        await _biometrics.availability() == BiometricAvailability.available;
+    if (mounted) setState(() => _biometricsReady = ready);
+  }
+
+  /// Asks for the face once, then signs in with it from now on.
+  Future<void> _turnOnFaceId() async {
+    if (_turningOnFaceId) return;
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _turningOnFaceId = true);
+    try {
+      final result = await _biometrics.authenticate(l.faceIdEnableReason);
+      if (!mounted) return;
+      switch (result) {
+        case BiometricResult.success:
+          PreferencesService().setFaceIdEnabled(true);
+          messenger.showSnackBar(
+            nataToast(l.faceIdTurnedOn, tone: ToastTone.success),
+          );
+        case BiometricResult.cancelled:
+          break;
+        case BiometricResult.failed:
+          messenger.showSnackBar(
+            nataToast(l.faceIdEnableFailed, tone: ToastTone.error),
+          );
+        case BiometricResult.lockedOut:
+          messenger.showSnackBar(
+            nataToast(l.faceIdLocked, tone: ToastTone.error),
+          );
+        case BiometricResult.notEnrolled:
+        case BiometricResult.notAvailable:
+          setState(() => _biometricsReady = false);
+      }
+    } finally {
+      if (mounted) setState(() => _turningOnFaceId = false);
+    }
+  }
+
+  Future<void> _dismissFaceId() async {
+    setState(() => _faceIdDismissed = true);
+    final id = widget.userId;
+    if (id == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(HomeReminders.faceIdDismissKey(id), true);
+    } catch (_) {}
   }
 
   Future<void> _loadRoutes() async {
@@ -99,11 +188,17 @@ class _HomeRemindersState extends State<HomeReminders> {
 
   bool get _showVerify => widget.verificationStatus == 'unverified';
   bool get _showRoutes => !_routesDismissed && _hasRoutes == false;
+  bool get _showFaceId =>
+      !_faceIdDismissed &&
+      _biometricsReady == true &&
+      !PreferencesService().faceIdEnabled;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    if (!_showVerify && !_showRoutes) return const SizedBox.shrink();
+    if (!_showVerify && !_showRoutes && !_showFaceId) {
+      return const SizedBox.shrink();
+    }
     return Padding(
       key: const ValueKey('home-reminders'),
       padding: const EdgeInsets.only(bottom: 16),
@@ -150,6 +245,23 @@ class _HomeRemindersState extends State<HomeReminders> {
                 widget.routesBuilder ?? (_) => const RouteAlertsScreen(),
               ),
               onDismiss: _dismissRoutes,
+              dismissKey: 'reminder-routes-dismiss',
+            ),
+          if (_showFaceId && (_showVerify || _showRoutes))
+            const SizedBox(height: 10),
+          if (_showFaceId)
+            _ReminderCard(
+              key: const ValueKey('reminder-faceid'),
+              actionKey: 'reminder-faceid-action',
+              icon: Icons.face_retouching_natural,
+              tint: AppColors.primary,
+              title: l.homeFaceIdTitle,
+              body: l.homeFaceIdBody,
+              action: l.homeFaceIdAction,
+              filled: false,
+              onAction: _turnOnFaceId,
+              onDismiss: _dismissFaceId,
+              dismissKey: 'reminder-faceid-dismiss',
             ),
         ],
       ),
@@ -167,10 +279,12 @@ class _ReminderCard extends StatelessWidget {
   final VoidCallback onAction;
   final VoidCallback? onDismiss;
   final String actionKey;
+  final String? dismissKey;
 
   const _ReminderCard({
     super.key,
     required this.actionKey,
+    this.dismissKey,
     required this.icon,
     required this.tint,
     required this.title,
@@ -269,7 +383,7 @@ class _ReminderCard extends StatelessWidget {
           ),
           if (onDismiss != null)
             IconButton(
-              key: const ValueKey('reminder-routes-dismiss'),
+              key: ValueKey(dismissKey ?? '$actionKey-dismiss'),
               tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
               visualDensity: VisualDensity.compact,
               onPressed: onDismiss,

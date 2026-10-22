@@ -6620,6 +6620,42 @@ abstract class AppLocalizations {
   /// **'Add a route'**
   String get homeRoutesAction;
 
+  /// No description provided for @homeFaceIdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Face ID'**
+  String get homeFaceIdTitle;
+
+  /// No description provided for @homeFaceIdBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Next time, your face signs you in. No code needed.'**
+  String get homeFaceIdBody;
+
+  /// No description provided for @homeFaceIdAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Face ID'**
+  String get homeFaceIdAction;
+
+  /// No description provided for @faceIdEnableReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you to turn on Face ID'**
+  String get faceIdEnableReason;
+
+  /// No description provided for @faceIdTurnedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID is on. Next time, your face signs you in.'**
+  String get faceIdTurnedOn;
+
+  /// No description provided for @faceIdEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID didn\'t recognise you. Try again.'**
+  String get faceIdEnableFailed;
+
   /// No description provided for @nameEditTooltip.
   ///
   /// In en, this message translates to:

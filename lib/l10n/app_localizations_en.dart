@@ -3777,6 +3777,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeRoutesAction => 'Add a route';
 
   @override
+  String get homeFaceIdTitle => 'Sign in with Face ID';
+
+  @override
+  String get homeFaceIdBody =>
+      'Next time, your face signs you in. No code needed.';
+
+  @override
+  String get homeFaceIdAction => 'Turn on Face ID';
+
+  @override
+  String get faceIdEnableReason => 'Confirm it\'s you to turn on Face ID';
+
+  @override
+  String get faceIdTurnedOn =>
+      'Face ID is on. Next time, your face signs you in.';
+
+  @override
+  String get faceIdEnableFailed => 'Face ID didn\'t recognise you. Try again.';
+
+  @override
   String get nameEditTooltip => 'Edit name';
 
   @override
