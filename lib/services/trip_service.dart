@@ -273,7 +273,8 @@ class TripDraft {
 
 /// Reads and writes the signed-in traveler's trips.
 ///
-/// Needs `supabase/migrations/20240110_trips_management.sql`.
+/// Needs `supabase/migrations/20240110_trips_management.sql` (restored on live
+/// by `20240162_trips_access.sql`).
 class TripService {
   final SupabaseClient _client;
 
