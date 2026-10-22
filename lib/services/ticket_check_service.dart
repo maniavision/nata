@@ -31,7 +31,8 @@ enum TicketCheckResult {
 /// - the traveler's nata.profiles first_name and last_name are on it,
 /// - the trip's departure date is on it, in any of the usual ticket formats.
 ///
-/// Text: pdfrx for PDFs, native OCR for photos (shared with the ID check).
+/// Text: native OCR, PDFs rendered to images first (shared with the ID
+/// check).
 class TicketCheckService {
   TicketCheckService({
     Future<String?> Function(Uint8List bytes, String fileName)? readText,
