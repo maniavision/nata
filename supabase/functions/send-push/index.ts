@@ -7,7 +7,8 @@
  * pushed, it writes the title and body in the user's language
  * (nata.user_settings.language; texts.ts, generated from the app's .arb
  * files), sends it to every registered device, removes tokens Firebase says
- * are gone, and stamps pushed_at. The push carries the notification's id,
+ * are gone, and stamps pushed_at. Each push sets the app icon's badge to the
+ * person's unread notifications. The push carries the notification's id,
  * event and related request (or conversation, for a message) so the app opens
  * the right page on tap.
  *
@@ -206,8 +207,20 @@ Deno.serve(async (req: Request) => {
   const dead: string[] = [];
   const pushed: string[] = [];
 
+  // The app icon's badge: each person's unread notifications, as of now.
+  const unread = new Map<string, number>();
+  await Promise.all(users.map(async (u) => {
+    const { count } = await db
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", u)
+      .eq("is_read", false);
+    unread.set(u, count ?? 0);
+  }));
+
   for (const n of notes) {
     const payload = (n.payload ?? {}) as Record<string, unknown>;
+    const badge = unread.get(n.user_id as string) ?? 0;
     const event = String(payload.event ?? "");
     const { title, body } = textFor(
       langOf.get(n.user_id) ?? "en",
@@ -240,8 +253,11 @@ Deno.serve(async (req: Request) => {
                 )
                 : {}),
             },
-            android: { priority: "high", notification: { sound: "default" } },
-            apns: { payload: { aps: { sound: "default" } } },
+            android: {
+              priority: "high",
+              notification: { sound: "default", notification_count: badge },
+            },
+            apns: { payload: { aps: { sound: "default", badge } } },
           },
         }),
       });

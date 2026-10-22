@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +12,7 @@ import '../widgets/avatar_image.dart';
 import 'requests_screen.dart';
 import 'chat_thread_screen.dart';
 import 'traveler_results_screen.dart';
+import '../services/app_badge.dart';
 
 /// "2 min ago", "1 hr ago", "Yesterday", "Jun 12" ...
 String notificationTimeLabel(AppLocalizations l, DateTime now, DateTime then) {
@@ -94,6 +96,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _loading = false;
         _failed = false;
       });
+      unawaited(AppBadge.refresh());
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -164,6 +167,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (_) {
       if (mounted) _replace(n.id, (x) => x.copyWith(isRead: false));
     }
+    unawaited(AppBadge.refresh());
   }
 
   Future<void> _markAllRead() async {
@@ -175,6 +179,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (_) {
       if (mounted) setState(() => _items = before);
     }
+    unawaited(AppBadge.refresh());
   }
 
   void _replace(String id, AppNotification Function(AppNotification) f) {

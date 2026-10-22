@@ -14,6 +14,7 @@ import '../widgets/avatar_image.dart';
 import '../widgets/camera_denied_sheet.dart';
 import 'messages_screen.dart';
 import '../widgets/nata_toast.dart';
+import '../services/app_badge.dart';
 
 /// Takes or chooses a photo to send. [camera] true = take one with the camera.
 /// Replaceable in tests.
@@ -171,7 +172,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
       // Anything the other person wrote is now seen.
       final me = _me;
       if (messages.any((m) => m.authorId != me && m.readAt == null)) {
-        unawaited(_service.markRead(_c.id));
+        // Reading the chat also reads its message notifications: the app
+        // icon badge goes down with them.
+        unawaited(_service.markRead(_c.id).whenComplete(AppBadge.refresh));
       }
     } catch (_) {
       if (!mounted || quiet) return;

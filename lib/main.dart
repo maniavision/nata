@@ -8,6 +8,7 @@ import 'services/push_service.dart';
 import 'services/preferences_service.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/app_update_listener.dart';
+import 'services/app_badge.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +50,7 @@ class NataApp extends StatefulWidget {
   State<NataApp> createState() => _NataAppState();
 }
 
-class _NataAppState extends State<NataApp> {
+class _NataAppState extends State<NataApp> with WidgetsBindingObserver {
   final PreferencesService _prefs = PreferencesService();
 
   // Mirror the locale in a ValueNotifier so existing code using
@@ -66,6 +67,13 @@ class _NataAppState extends State<NataApp> {
     // Keep the ValueNotifier in sync with PreferencesService changes.
     _prefs.addListener(_onPrefsChanged);
     PushService.instance.start(_navigatorKey);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Back in the app: the icon badge shows the current unread count.
+    if (state == AppLifecycleState.resumed) AppBadge.refresh();
   }
 
   void _onPrefsChanged() {
@@ -76,6 +84,7 @@ class _NataAppState extends State<NataApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _prefs.removeListener(_onPrefsChanged);
     _localeNotifier.dispose();
     super.dispose();
