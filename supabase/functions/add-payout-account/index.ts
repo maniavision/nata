@@ -71,12 +71,13 @@ async function flutterwave(
  * The mobile money Flutterwave pays out to, by country, with its bank code.
  * Check these against Flutterwave's transfer docs in test mode before going
  * live; banks come from Flutterwave's own list instead.
+ *
+ * In the CFA franc countries (XOF / XAF) Flutterwave pays out with one code
+ * (FMM) to the operators of that country, so each country lists its own.
  */
-const FRANCO = [
-  { code: "FMM", name: "Orange Money" },
-  { code: "FMM", name: "MTN Mobile Money" },
-  { code: "FMM", name: "Moov Money" },
-];
+function fmm(...names: string[]): { code: string; name: string }[] {
+  return names.map((name) => ({ code: "FMM", name }));
+}
 const MOBILE_MONEY: Record<string, { code: string; name: string }[]> = {
   KE: [{ code: "MPS", name: "M-Pesa" }],
   GH: [
@@ -92,8 +93,18 @@ const MOBILE_MONEY: Record<string, { code: string; name: string }[]> = {
   RW: [{ code: "MPS", name: "MTN Mobile Money" }, { code: "MPS", name: "Airtel Money" }],
   ZM: [{ code: "MPS", name: "MTN Mobile Money" }, { code: "MPS", name: "Airtel Money" }],
   // CFA franc countries (XOF / XAF).
-  SN: FRANCO, CI: FRANCO, BF: FRANCO, ML: FRANCO, BJ: FRANCO, TG: FRANCO,
-  NE: FRANCO, CM: FRANCO, GA: FRANCO, CG: FRANCO, TD: FRANCO, CF: FRANCO,
+  SN: fmm("Orange Money", "Free Money"),
+  CI: fmm("Orange Money", "MTN Mobile Money", "Moov Money"),
+  BF: fmm("Orange Money", "Moov Money"),
+  ML: fmm("Orange Money", "Moov Money"),
+  BJ: fmm("MTN Mobile Money", "Moov Money"),
+  TG: fmm("Moov Money", "T-Money"),
+  NE: fmm("Airtel Money", "Moov Money"),
+  CM: fmm("MTN Mobile Money", "Orange Money"),
+  GA: fmm("Airtel Money", "Moov Money"),
+  CG: fmm("MTN Mobile Money", "Airtel Money"),
+  TD: fmm("Airtel Money", "Moov Money"),
+  CF: fmm("Orange Money", "Telecel Money"),
 };
 
 /** The currency of [country] (nata.countries), or null. */
