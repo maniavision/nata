@@ -1089,7 +1089,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveChanges => 'Guardar cambios';
 
   @override
-  String get tripSubmitted => 'Viaje enviado a revisión';
+  String get tripPublishedToast => 'Viaje publicado';
 
   @override
   String get tripUpdated => 'Viaje actualizado';
@@ -2810,6 +2810,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get idPhotoOnlyNote =>
       'Solo se muestra la foto. El resto del documento sigue siendo privado.';
+
+  @override
+  String get idPhotoUnavailable =>
+      'No hay foto que mostrar para este documento. Nata verificó la identidad del viajero.';
 
   @override
   String get iCheckedId => 'He verificado este documento';

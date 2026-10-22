@@ -337,21 +337,18 @@ class RequestPricing {
 /// The photo on a traveler's ID, as the traveler-id-photo edge function
 /// gives it.
 class TravelerIdPhoto {
-  /// A short-lived link to the face crop.
-  final String url;
+  /// A short-lived link to the face crop; null when there is no photo to
+  /// show (the ID details are still given).
+  final String? url;
 
   /// passport, drivers_license or national_id.
   final String? idDocumentType;
   final DateTime? verifiedAt;
 
-  const TravelerIdPhoto({
-    required this.url,
-    this.idDocumentType,
-    this.verifiedAt,
-  });
+  const TravelerIdPhoto({this.url, this.idDocumentType, this.verifiedAt});
 
   factory TravelerIdPhoto.fromJson(Map<String, dynamic> j) => TravelerIdPhoto(
-    url: j['url'] as String,
+    url: j['url'] as String?,
     idDocumentType: j['idDocumentType'] as String?,
     verifiedAt: j['verifiedAt'] == null
         ? null
@@ -1078,7 +1075,7 @@ class RequestService {
 
   /// The face photo on the traveler's ID (never the whole document), for
   /// the sender of [requestId] once the traveler accepted. Null when the
-  /// traveler isn't verified or no photo could be made.
+  /// traveler isn't verified; the url is null when no photo could be made.
   Future<TravelerIdPhoto?> travelerIdPhoto(String requestId) async {
     try {
       final response = await _client.functions.invoke(

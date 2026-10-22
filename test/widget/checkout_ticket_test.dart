@@ -636,10 +636,10 @@ void main() {
       expect(payButton(tester).onPressed, isNull);
     });
 
-    testWidgets('no photo available: it says so and can be retried', (
+    testWidgets('no photo given: it says so and can be retried', (
       tester,
     ) async {
-      service.idPhoto = null; // the server found none
+      service.idPhoto = null; // the server says the traveler isn't verified
       await pump(tester, accepted());
 
       expect(find.byKey(const ValueKey('id-photo-error')), findsOneWidget);
@@ -656,6 +656,30 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const ValueKey('id-photo')), findsOneWidget);
+    });
+
+    testWidgets('verified but no photo: the details can still be confirmed', (
+      tester,
+    ) async {
+      service.idPhoto = TravelerIdPhoto(
+        idDocumentType: 'passport',
+        verifiedAt: DateTime(2030, 5, 2),
+      );
+      await pump(tester, accepted());
+
+      expect(find.byKey(const ValueKey('id-photo-error')), findsNothing);
+      expect(find.byKey(const ValueKey('id-photo-none')), findsOneWidget);
+      expect(
+        find.text(
+          "No photo to show for this ID. Nata checked the traveler's identity.",
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Passport'), findsOneWidget);
+      final confirm = tester.widget<OutlinedButton>(
+        find.byKey(const ValueKey('id-confirm')),
+      );
+      expect(confirm.onPressed, isNotNull);
     });
 
     testWidgets('a failure to load is explained, not a crash', (tester) async {

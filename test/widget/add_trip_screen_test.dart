@@ -795,8 +795,8 @@ void main() {
       expect(d.maxWeightKg, 5.0);
       expect(d.maxSize, 'Backpack size');
       expect(d.ticketReceiptPath, FakeTripService.uploadedPath);
-      // And it is always submitted for review.
-      expect(d.toInsertJson('u')['status'], 'pending_review');
+      // And it is published straight away.
+      expect(d.toInsertJson('u')['status'], 'live');
     });
 
     testWidgets('uses the user\'s preferred currency', (tester) async {
@@ -817,7 +817,7 @@ void main() {
 
       expect(popped, isTrue);
       expect(popResult, isTrue);
-      expect(find.text('Trip submitted for review'), findsOneWidget);
+      expect(find.text('Trip published'), findsOneWidget);
     });
 
     testWidgets('shows a busy state and ignores a second tap', (tester) async {

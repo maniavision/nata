@@ -239,7 +239,7 @@ void main() {
       ticketReceiptPath: 'user-1/1.pdf',
     );
 
-    test('insert payload has the traveler and always starts in review', () {
+    test('insert payload has the traveler and is published straight away', () {
       expect(draft.toInsertJson('user-1'), {
         'traveler_id': 'user-1',
         'departure_city_id': 1,
@@ -253,7 +253,7 @@ void main() {
         'ticket_receipt_path': 'user-1/1.pdf',
         'ticket_shared_path': null,
         'booking_reference': null,
-        'status': 'pending_review',
+        'status': 'live',
       });
     });
 
@@ -526,7 +526,7 @@ void main() {
             verify(() => trips.insert(captureAny())).captured.single
                 as Map<String, dynamic>;
         expect(sent['traveler_id'], 'user-1');
-        expect(sent['status'], 'pending_review');
+        expect(sent['status'], 'live');
         expect(sent['departure_city_id'], 1);
         expect(sent['departure_date'], '2030-06-05');
       });

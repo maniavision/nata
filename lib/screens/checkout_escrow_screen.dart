@@ -1682,15 +1682,22 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 width: 132,
                 height: 160,
                 color: AppColors.secondary,
-                child: Image.network(
-                  _idPhoto!.url,
-                  fit: BoxFit.cover,
-                  errorBuilder: (c, e, s) => const Icon(
-                    Icons.person,
-                    size: 48,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
+                child: _idPhoto!.url == null
+                    ? const Icon(
+                        Icons.person,
+                        key: ValueKey('id-photo-none'),
+                        size: 48,
+                        color: AppColors.mutedForeground,
+                      )
+                    : Image.network(
+                        _idPhoto!.url!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => const Icon(
+                          Icons.person,
+                          size: 48,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
               ),
             ),
             Positioned(
@@ -1817,7 +1824,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               ),
             const SizedBox(height: 8),
             Text(
-              l.idPhotoOnlyNote,
+              _idPhoto?.url == null && _idPhoto != null
+                  ? l.idPhotoUnavailable
+                  : l.idPhotoOnlyNote,
               style: GoogleFonts.dmSans(
                 fontSize: 10,
                 fontStyle: FontStyle.italic,

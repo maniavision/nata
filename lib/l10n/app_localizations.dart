@@ -2116,11 +2116,11 @@ abstract class AppLocalizations {
   /// **'Save changes'**
   String get saveChanges;
 
-  /// No description provided for @tripSubmitted.
+  /// No description provided for @tripPublishedToast.
   ///
   /// In en, this message translates to:
-  /// **'Trip submitted for review'**
-  String get tripSubmitted;
+  /// **'Trip published'**
+  String get tripPublishedToast;
 
   /// No description provided for @tripUpdated.
   ///
@@ -4927,6 +4927,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only the photo is shown. The rest of the ID stays private.'**
   String get idPhotoOnlyNote;
+
+  /// No description provided for @idPhotoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo to show for this ID. Nata checked the traveler\'s identity.'**
+  String get idPhotoUnavailable;
 
   /// No description provided for @iCheckedId.
   ///

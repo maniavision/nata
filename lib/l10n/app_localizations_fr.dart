@@ -1094,7 +1094,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get saveChanges => 'Enregistrer';
 
   @override
-  String get tripSubmitted => 'Trajet envoyé pour examen';
+  String get tripPublishedToast => 'Trajet publié';
 
   @override
   String get tripUpdated => 'Trajet mis à jour';
@@ -2827,6 +2827,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get idPhotoOnlyNote =>
       'Seule la photo est affichée. Le reste de la pièce d\'identité reste privé.';
+
+  @override
+  String get idPhotoUnavailable =>
+      'Aucune photo à afficher pour cette pièce. Nata a vérifié l\'identité du voyageur.';
 
   @override
   String get iCheckedId => 'J\'ai vérifié cette pièce d\'identité';

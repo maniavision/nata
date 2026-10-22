@@ -1080,7 +1080,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveChanges => 'Save changes';
 
   @override
-  String get tripSubmitted => 'Trip submitted for review';
+  String get tripPublishedToast => 'Trip published';
 
   @override
   String get tripUpdated => 'Trip updated';
@@ -2770,6 +2770,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get idPhotoOnlyNote =>
       'Only the photo is shown. The rest of the ID stays private.';
+
+  @override
+  String get idPhotoUnavailable =>
+      'No photo to show for this ID. Nata checked the traveler\'s identity.';
 
   @override
   String get iCheckedId => 'I\'ve checked this ID';

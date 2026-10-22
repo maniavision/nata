@@ -448,7 +448,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
       final l = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
         nataToast(
-          _editing ? l.tripUpdated : l.tripSubmitted,
+          _editing ? l.tripUpdated : l.tripPublishedToast,
           tone: ToastTone.success,
         ),
       );

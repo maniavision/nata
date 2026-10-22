@@ -10,11 +10,15 @@
  *
  * Called by the app (with the sender's JWT) with { request_id }. Allowed only
  * for the sender of that request, once the traveler accepted it (accepted,
- * paid, handed off or delivered), and only if the traveler is verified.
+ * paid, handed off or delivered), and only if the traveler is verified
+ * (profiles.verification_status, as everywhere else: a traveler verified by
+ * the team has no automatic check behind it).
  *
  * Responds 200 with { url, idDocumentType, verifiedAt }: url is a link to the
- * crop valid for 5 minutes. Errors: 401 unauthorized, 403 not_allowed,
- * 404 not_verified / no_photo, 502 face_detection_unavailable.
+ * crop valid for 5 minutes, or null when no photo can be shown (no ID image
+ * on file, no face found, or face detection unavailable); the sender can
+ * still confirm with the ID details. Errors: 401 unauthorized,
+ * 403 not_allowed, 404 not_verified.
  *
  * Secrets: the same AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_REGION as
  * verify-identity. SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by
@@ -130,18 +134,24 @@ Deno.serve(async (req: Request) => {
     return json({ error: "not_allowed" }, 403);
   }
 
-  const { data: check } = await db
-    .from("identity_verifications")
-    .select("status, id_document_type, verified_at")
-    .eq("user_id", travelerId)
+  const { data: profile } = await db
+    .from("profiles")
+    .select("verification_status")
+    .eq("id", travelerId)
     .maybeSingle();
-  if (!check || check.status !== "verified") {
+  if (profile?.verification_status !== "verified") {
     return json({ error: "not_verified" }, 404);
   }
+  const { data: check } = await db
+    .from("identity_verifications")
+    .select("id_document_type, verified_at")
+    .eq("user_id", travelerId)
+    .maybeSingle();
   const details = {
-    idDocumentType: check.id_document_type ?? null,
-    verifiedAt: check.verified_at ?? null,
+    idDocumentType: check?.id_document_type ?? null,
+    verifiedAt: check?.verified_at ?? null,
   };
+  const noPhoto = () => json({ url: null, ...details });
 
   // Made once, then reused.
   const photoPath = `${travelerId}/id_photo.jpg`;
@@ -149,16 +159,16 @@ Deno.serve(async (req: Request) => {
   if (existing) return json({ url: existing, ...details });
 
   const idImage = await download(`${travelerId}/id_face.jpg`);
-  if (!idImage) return json({ error: "no_photo" }, 404);
+  if (!idImage) return noPhoto();
 
   let crop: Uint8Array | null;
   try {
     crop = await cropFace(idImage);
   } catch (e) {
     console.error("[traveler-id-photo] crop:", (e as Error).message);
-    return json({ error: "face_detection_unavailable" }, 502);
+    return noPhoto();
   }
-  if (!crop) return json({ error: "no_photo" }, 404);
+  if (!crop) return noPhoto();
 
   const { error: uploadError } = await admin.storage
     .from(BUCKET)
