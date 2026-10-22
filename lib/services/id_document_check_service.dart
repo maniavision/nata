@@ -42,7 +42,7 @@ enum IdCheckResult {
 /// - the user's nata.profiles first_name / last_name appear in it,
 /// - it shows a human face.
 ///
-/// Text: pdfrx for PDFs, native OCR for images. Faces: native detection
+/// Text: native OCR (PDF pages rendered to images first with pdfrx). Faces: native detection
 /// (Apple Vision on iOS, ML Kit on Android), on the first page for PDFs.
 class IdDocumentCheckService {
   IdDocumentCheckService({
@@ -367,42 +367,27 @@ class IdDocumentCheckService {
     return buf.toString();
   }
 
-  /// PDFs are read with pdfrx, images with native OCR. Also used for flight
-  /// tickets (TicketCheckService).
+  /// Reads the text of an ID or a flight ticket with native OCR. A PDF is
+  /// first turned into images, page by page, and read the same way as a
+  /// photo: a PDF's own text layer is often garbled or glued together
+  /// (custom font encodings, letters placed one by one), which hid names
+  /// that are plainly visible on the page. Also used for flight tickets
+  /// (TicketCheckService).
   static Future<String?> readDocumentText(Uint8List bytes, String fileName) =>
       fileName.toLowerCase().endsWith('.pdf')
-      ? _extractPdfText(bytes, fileName)
+      ? _ocrPdf(bytes, fileName)
       : _recognizeText(bytes, fileName);
 
-  /// Reads the PDF's embedded text layer. A scanned PDF (just images) has
-  /// none, so its pages are rendered and read with native OCR instead.
-  static Future<String?> _extractPdfText(
-    Uint8List bytes,
-    String fileName,
-  ) async {
-    PdfDocument? doc;
-    try {
-      await pdfrxFlutterInitialize();
-      doc = await PdfDocument.openData(bytes, sourceName: fileName);
-      final buf = StringBuffer();
-      for (final page in doc.pages) {
-        final text = await page.loadText();
-        if (text != null) buf.writeln(text.fullText);
-      }
-      if (buf.toString().trim().isNotEmpty) return buf.toString();
-    } catch (e) {
-      debugPrint('[IdDocumentCheckService] PDF text error: $e');
-    } finally {
-      await doc?.dispose();
-    }
-
+  /// Renders the PDF's first pages to images and reads each with OCR.
+  static Future<String?> _ocrPdf(Uint8List bytes, String fileName) async {
     final pages = await _renderPdfPages(bytes, fileName);
-    final ocr = StringBuffer();
+    if (pages.isEmpty) return null;
+    final text = StringBuffer();
     for (var i = 0; i < pages.length; i++) {
-      final text = await _recognizeText(pages[i], 'id_page${i + 1}.png');
-      if (text != null) ocr.writeln(text);
+      final pageText = await _recognizeText(pages[i], 'page${i + 1}.png');
+      if (pageText != null) text.writeln(pageText);
     }
-    return ocr.toString();
+    return text.toString();
   }
 
   /// Native OCR and face detection: Apple Vision on iOS, ML Kit on Android
@@ -505,8 +490,9 @@ class IdDocumentCheckService {
   static const _maxPdfPages = 3;
 
   /// Renders the first pages of a PDF to PNG for OCR and face detection.
-  /// ID cards are tiny in points (~250x160), so pages are scaled to at least
-  /// 1600 px on their long side for the OCR to read the small print.
+  /// Pages are drawn at least 3 times their size and at least 2400 px on the
+  /// long side (ID cards are tiny in points, ~250x160; tickets use small
+  /// print), but never more than 4000 px, to keep memory in check.
   static Future<List<Uint8List>> _renderPdfPages(
     Uint8List bytes,
     String fileName,
@@ -518,7 +504,7 @@ class IdDocumentCheckService {
       doc = await PdfDocument.openData(bytes, sourceName: fileName);
       for (final page in doc.pages.take(_maxPdfPages)) {
         final longSide = math.max(page.width, page.height);
-        final scale = math.max(2.0, 1600 / longSide);
+        final scale = math.min(math.max(3.0, 2400 / longSide), 4000 / longSide);
         final pdfImage = await page.render(
           fullWidth: page.width * scale,
           fullHeight: page.height * scale,
