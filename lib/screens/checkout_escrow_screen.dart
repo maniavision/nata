@@ -152,13 +152,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   late bool _ticketChecked = _r.ticketCheckedAt != null;
   bool _confirming = false;
 
-  /// The photo on the traveler's ID; null while loading or unavailable.
-  TravelerIdPhoto? _idPhoto;
-  bool _idPhotoLoading = false;
-  bool _idPhotoFailed = false;
-  late bool _idChecked = _r.idCheckedAt != null;
-  bool _confirmingId = false;
-
   bool get _hasTicket => _r.hasTicket;
 
   /// The copy of the ticket with the booking reference blurred; a ticket
@@ -183,7 +176,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       });
     }
     if (_hasTicketImage) _loadTicket();
-    if (_r.travelerVerified) _loadIdPhoto();
     _loadPayerEmail();
   }
 
@@ -333,52 +325,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     setState(() => _payment = null);
   }
 
-  Future<void> _loadIdPhoto() async {
-    setState(() {
-      _idPhotoLoading = true;
-      _idPhotoFailed = false;
-    });
-    try {
-      final photo = await _service.travelerIdPhoto(_r.id);
-      if (!mounted) return;
-      setState(() {
-        _idPhoto = photo;
-        _idPhotoFailed = photo == null;
-      });
-    } catch (e) {
-      debugPrint('[Checkout] ID photo: $e');
-      if (mounted) setState(() => _idPhotoFailed = true);
-    } finally {
-      if (mounted) setState(() => _idPhotoLoading = false);
-    }
-  }
-
-  Future<void> _confirmId() async {
-    if (_confirmingId || _idChecked) return;
-    setState(() => _confirmingId = true);
-    final l = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await _service.confirmIdChecked(_r.id);
-      if (mounted) setState(() => _idChecked = true);
-    } on RequestException catch (e) {
-      messenger.showSnackBar(
-        nataToast(
-          e.reason == RequestFailure.notPayable
-              ? l.errRequestNotPayable
-              : l.errRequestFailed,
-          tone: ToastTone.error,
-        ),
-      );
-    } catch (_) {
-      messenger.showSnackBar(
-        nataToast(l.errRequestFailed, tone: ToastTone.error),
-      );
-    } finally {
-      if (mounted) setState(() => _confirmingId = false);
-    }
-  }
-
   @override
   void dispose() {
     _timer?.cancel();
@@ -494,7 +440,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   const SizedBox(height: 16),
                   _buildTicketCard(),
                   const SizedBox(height: 16),
-                  _buildIdCard(),
+                  _buildIdTip(),
                   const SizedBox(height: 16),
                   _buildPaymentMethodCard(),
                   const SizedBox(height: 16),
@@ -932,7 +878,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.step3PaymentMethod,
+            context.l10n.step2PaymentMethod,
             style: GoogleFonts.dmSans(
               fontWeight: FontWeight.w700,
               fontSize: 11,
@@ -1415,7 +1361,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   // ── Pay button ─────────────────────────────────────────────────────────────
   Widget _buildPayButton(BuildContext context) {
     final l = context.l10n;
-    final checked = _ticketChecked && _idChecked && !_expired;
+    final checked = _ticketChecked && !_expired;
     final countryChosen = !_payingByMobile || _mobileChoice != null;
     final bankReady = !_payingByBank || _bankQuote != null;
     final emailGiven = !_needsEmail || _emailValid;
@@ -1466,7 +1412,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               unlocked
                   ? l.payAmountIntoEscrow(amount)
                   : !checked
-                  ? l.validateTicketAndId
+                  ? l.validateToUnlock
                   : !countryChosen
                   ? l.chooseCountry
                   : !bankReady
@@ -1596,271 +1542,44 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     );
   }
 
-  // ── Step 2: the photo on the traveler's ID ─────────────────────────────────
-  String _idTypeName(String? type) {
+  // ── Tip: check the traveler's ID at the handover ───────────────────────────
+  Widget _buildIdTip() {
     final l = context.l10n;
-    final name = switch (type) {
-      'passport' => l.idTypePassport,
-      'drivers_license' => l.idTypeDriversLicense,
-      'national_id' => l.idTypeNationalId,
-      _ => null,
-    };
-    if (name == null || name.isEmpty) return '—';
-    return name[0].toUpperCase() + name.substring(1);
-  }
-
-  Widget _buildIdCard() {
-    final l = context.l10n;
-    final locale = Localizations.localeOf(context).toString();
-    Widget detail(String label, String value) => Padding(
-      padding: const EdgeInsets.only(top: 8),
+    return Container(
+      key: const ValueKey('id-meeting-tip'),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.all(14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.dmSans(
-              fontSize: 12,
-              color: AppColors.mutedForeground,
-            ),
-          ),
-          const SizedBox(width: 12),
+          const Icon(Icons.badge_rounded, size: 16, color: AppColors.accent),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-                color: AppColors.foreground,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    Widget photo;
-    if (_idPhotoFailed) {
-      photo = Row(
-        children: [
-          Expanded(
-            child: Text(
-              l.errIdPhotoLoad,
-              key: const ValueKey('id-photo-error'),
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.destructive,
-              ),
-            ),
-          ),
-          TextButton(
-            key: const ValueKey('id-photo-retry'),
-            onPressed: _loadIdPhoto,
-            child: Text(l.retry),
-          ),
-        ],
-      );
-    } else if (_idPhotoLoading || _idPhoto == null) {
-      photo = const SizedBox(
-        height: 144,
-        child: Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.accent,
-          ),
-        ),
-      );
-    } else {
-      photo = Center(
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                key: const ValueKey('id-photo'),
-                width: 132,
-                height: 160,
-                color: AppColors.secondary,
-                child: _idPhoto!.url == null
-                    ? const Icon(
-                        Icons.person,
-                        key: ValueKey('id-photo-none'),
-                        size: 48,
-                        color: AppColors.mutedForeground,
-                      )
-                    : Image.network(
-                        _idPhoto!.url!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => const Icon(
-                          Icons.person,
-                          size: 48,
-                          color: AppColors.mutedForeground,
-                        ),
-                      ),
-              ),
-            ),
-            Positioned(
-              top: 6,
-              left: 6,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE4F4EE),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: const Color(0xFF168A68).withValues(alpha: 0.3),
-                  ),
+            child: Text.rich(
+              TextSpan(
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                  height: 1.5,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.verified_rounded,
-                      size: 11,
-                      color: Color(0xFF168A68),
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      l.identityVerifiedBadge,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 9,
-                        color: const Color(0xFF168A68),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      key: const ValueKey('id-card'),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l.step2VerifyId,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                    letterSpacing: 1.2,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                key: const ValueKey('id-status'),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _idChecked
-                      ? const Color(0xFFE4F4EE)
-                      : const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  _idChecked ? l.ticketValidated : l.ticketNotValidated,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 10,
-                    color: _idChecked
-                        ? const Color(0xFF168A68)
-                        : const Color(0xFF92400E),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (!_r.travelerVerified)
-            Text(
-              l.travelerNotVerified,
-              key: const ValueKey('id-not-verified'),
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.mutedForeground,
-              ),
-            )
-          else ...[
-            Text(
-              l.idIntro(_r.trip.firstName),
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                height: 1.4,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-            const SizedBox(height: 10),
-            photo,
-            const SizedBox(height: 4),
-            // The profile name was checked against the ID when it was
-            // uploaded, so it is the name on the ID.
-            detail(l.nameOnId, _r.trip.fullName),
-            if (_idPhoto?.idDocumentType != null)
-              detail(l.idDocument, _idTypeName(_idPhoto!.idDocumentType)),
-            if (_idPhoto?.verifiedAt != null)
-              detail(
-                l.idVerifiedOn,
-                DateFormat.yMMMd(
-                  locale,
-                ).format(_idPhoto!.verifiedAt!.toLocal()),
-              ),
-            const SizedBox(height: 8),
-            Text(
-              _idPhoto?.url == null && _idPhoto != null
-                  ? l.idPhotoUnavailable
-                  : l.idPhotoOnlyNote,
-              style: GoogleFonts.dmSans(
-                fontSize: 10,
-                fontStyle: FontStyle.italic,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-            if (!_idChecked) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  key: const ValueKey('id-confirm'),
-                  onPressed: _confirmingId || _expired || _idPhoto == null
-                      ? null
-                      : _confirmId,
-                  icon: const Icon(Icons.check_circle_rounded, size: 16),
-                  label: Text(
-                    l.iCheckedId,
+                children: [
+                  TextSpan(
+                    text: l.idMeetingTipTitle,
                     style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: AppColors.foreground,
                     ),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.accent,
-                    backgroundColor: AppColors.accent.withValues(alpha: 0.1),
-                    side: const BorderSide(color: AppColors.accent),
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
+                  TextSpan(text: ' ${l.idMeetingTipBody(_r.trip.fullName)}'),
+                ],
               ),
-            ],
-          ],
+            ),
+          ),
         ],
       ),
     );

@@ -1250,6 +1250,8 @@
   "errRequestNotPayable": "Cette demande ne peut plus être payée.",
   "step1ValidateTicket": "ÉTAPE 1 · VÉRIFIER LE BILLET D'AVION",
   "step2PaymentMethod": "ÉTAPE 2 · CHOISIR LE MOYEN DE PAIEMENT",
+  "idMeetingTipTitle": "Vérifiez sa pièce d'identité à la rencontre.",
+  "idMeetingTipBody": "Quand vous remettez l'article, demandez à {name} de montrer sa pièce d'identité et vérifiez que le nom correspond au billet.",
   "ticketNotValidated": "Non vérifié",
   "ticketValidated": "Vérifié",
   "ticketIntro": "{name} a importé son billet d'avion pour ce trajet. Vérifiez qu'il correspond au trajet et à la date avant de payer.",
@@ -1291,26 +1293,6 @@
     }
   },
 
-  "step2VerifyId": "ÉTAPE 2 · VÉRIFIER L'IDENTITÉ DU VOYAGEUR",
-  "step3PaymentMethod": "ÉTAPE 3 · CHOISIR LE MOYEN DE PAIEMENT",
-  "idIntro": "La pièce d'identité de {name} a été vérifiée. Vérifiez que la photo semble authentique et que le nom correspond au billet avant de payer.",
-  "@idIntro": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "identityVerifiedBadge": "Identité vérifiée",
-  "nameOnId": "Nom sur la pièce d'identité",
-  "idDocument": "Pièce d'identité",
-  "idVerifiedOn": "Vérifiée le",
-  "idPhotoOnlyNote": "Seule la photo est affichée. Le reste de la pièce d'identité reste privé.",
-  "idPhotoUnavailable": "Aucune photo à afficher pour cette pièce. Nata a vérifié l'identité du voyageur.",
-  "iCheckedId": "J'ai vérifié cette pièce d'identité",
-  "errIdPhotoLoad": "Impossible de charger la photo d'identité.",
-  "travelerNotVerified": "L'identité de ce voyageur n'est pas vérifiée, le paiement reste donc bloqué.",
-  "validateTicketAndId": "Vérifiez le billet et la pièce d'identité pour débloquer le paiement",
   "idSharedWithSendersNote": "Lorsque vous acceptez une demande, l'expéditeur verra la photo de votre pièce d'identité et votre nom vérifié, pour vérifier que vous correspondez à votre billet. Le reste de votre pièce d'identité reste privé.",
 
   "errTicketNameMismatch": "Le nom sur ce billet ne correspond pas au nom de votre profil. Importez un billet à votre nom ou modifiez le nom de votre profil.",
@@ -1486,7 +1468,7 @@
   "howStep1Title": "Cherchez",
   "howStep1Body": "un voyageur qui va vers votre destination.",
   "howStep2Title": "Payez en séquestre",
-  "howStep2Body": "après avoir vérifié son billet et sa pièce d’identité.",
+  "howStep2Body": "après avoir vérifié son billet.",
   "howStep3Title": "Le voyageur est payé",
   "howStep3Body": "une fois que votre destinataire confirme la livraison.",
 

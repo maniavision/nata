@@ -1250,6 +1250,8 @@
   "errRequestNotPayable": "Esta solicitud ya no se puede pagar.",
   "step1ValidateTicket": "PASO 1 · VERIFICAR EL BILLETE DE AVIÓN",
   "step2PaymentMethod": "PASO 2 · ELEGIR EL MÉTODO DE PAGO",
+  "idMeetingTipTitle": "Revisa su documento al encontrarse.",
+  "idMeetingTipBody": "Cuando entregues el artículo, pide a {name} que muestre su documento de identidad y comprueba que el nombre coincide con el billete.",
   "ticketNotValidated": "No verificado",
   "ticketValidated": "Verificado",
   "ticketIntro": "{name} subió su billete de avión para este viaje. Comprueba que coincide con la ruta y la fecha antes de pagar.",
@@ -1291,26 +1293,6 @@
     }
   },
 
-  "step2VerifyId": "PASO 2 · VERIFICAR LA IDENTIDAD DEL VIAJERO",
-  "step3PaymentMethod": "PASO 3 · ELEGIR EL MÉTODO DE PAGO",
-  "idIntro": "El documento de identidad de {name} fue verificado. Comprueba que la foto parece real y que el nombre coincide con el billete antes de pagar.",
-  "@idIntro": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "identityVerifiedBadge": "Identidad verificada",
-  "nameOnId": "Nombre en el documento",
-  "idDocument": "Documento",
-  "idVerifiedOn": "Verificada el",
-  "idPhotoOnlyNote": "Solo se muestra la foto. El resto del documento sigue siendo privado.",
-  "idPhotoUnavailable": "No hay foto que mostrar para este documento. Nata verificó la identidad del viajero.",
-  "iCheckedId": "He verificado este documento",
-  "errIdPhotoLoad": "No se pudo cargar la foto del documento.",
-  "travelerNotVerified": "La identidad de este viajero no está verificada, así que el pago sigue bloqueado.",
-  "validateTicketAndId": "Verifica el billete y el documento para desbloquear el pago",
   "idSharedWithSendersNote": "Cuando aceptes una solicitud, ese remitente verá la foto de tu documento y tu nombre verificado, para comprobar que coincides con tu billete. El resto de tu documento sigue siendo privado.",
 
   "errTicketNameMismatch": "El nombre de este billete no coincide con el de tu perfil. Sube un billete a tu nombre o actualiza el nombre de tu perfil.",
@@ -1486,7 +1468,7 @@
   "howStep1Title": "Busca",
   "howStep1Body": "un viajero que vaya a tu destino.",
   "howStep2Title": "Paga en depósito",
-  "howStep2Body": "después de comprobar su billete y su documento de identidad.",
+  "howStep2Body": "después de comprobar su billete.",
   "howStep3Title": "El viajero cobra",
   "howStep3Body": "cuando tu destinatario confirma la entrega.",
 

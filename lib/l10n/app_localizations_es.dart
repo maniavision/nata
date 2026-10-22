@@ -2729,6 +2729,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get step2PaymentMethod => 'PASO 2 · ELEGIR EL MÉTODO DE PAGO';
 
   @override
+  String get idMeetingTipTitle => 'Revisa su documento al encontrarse.';
+
+  @override
+  String idMeetingTipBody(String name) {
+    return 'Cuando entregues el artículo, pide a $name que muestre su documento de identidad y comprueba que el nombre coincide con el billete.';
+  }
+
+  @override
   String get ticketNotValidated => 'No verificado';
 
   @override
@@ -2783,51 +2791,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String hoursMinutes(int hours, int minutes) {
     return '$hours h $minutes min';
   }
-
-  @override
-  String get step2VerifyId => 'PASO 2 · VERIFICAR LA IDENTIDAD DEL VIAJERO';
-
-  @override
-  String get step3PaymentMethod => 'PASO 3 · ELEGIR EL MÉTODO DE PAGO';
-
-  @override
-  String idIntro(String name) {
-    return 'El documento de identidad de $name fue verificado. Comprueba que la foto parece real y que el nombre coincide con el billete antes de pagar.';
-  }
-
-  @override
-  String get identityVerifiedBadge => 'Identidad verificada';
-
-  @override
-  String get nameOnId => 'Nombre en el documento';
-
-  @override
-  String get idDocument => 'Documento';
-
-  @override
-  String get idVerifiedOn => 'Verificada el';
-
-  @override
-  String get idPhotoOnlyNote =>
-      'Solo se muestra la foto. El resto del documento sigue siendo privado.';
-
-  @override
-  String get idPhotoUnavailable =>
-      'No hay foto que mostrar para este documento. Nata verificó la identidad del viajero.';
-
-  @override
-  String get iCheckedId => 'He verificado este documento';
-
-  @override
-  String get errIdPhotoLoad => 'No se pudo cargar la foto del documento.';
-
-  @override
-  String get travelerNotVerified =>
-      'La identidad de este viajero no está verificada, así que el pago sigue bloqueado.';
-
-  @override
-  String get validateTicketAndId =>
-      'Verifica el billete y el documento para desbloquear el pago';
 
   @override
   String get idSharedWithSendersNote =>
@@ -3230,8 +3193,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get howStep2Title => 'Paga en depósito';
 
   @override
-  String get howStep2Body =>
-      'después de comprobar su billete y su documento de identidad.';
+  String get howStep2Body => 'después de comprobar su billete.';
 
   @override
   String get howStep3Title => 'El viajero cobra';

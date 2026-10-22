@@ -2689,6 +2689,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get step2PaymentMethod => 'STEP 2 · SELECT PAYMENT METHOD';
 
   @override
+  String get idMeetingTipTitle => 'Check their ID when you meet.';
+
+  @override
+  String idMeetingTipBody(String name) {
+    return 'When you hand over the item, ask $name to show their ID and make sure the name matches the ticket.';
+  }
+
+  @override
   String get ticketNotValidated => 'Not validated';
 
   @override
@@ -2743,50 +2751,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String hoursMinutes(int hours, int minutes) {
     return '${hours}h ${minutes}m';
   }
-
-  @override
-  String get step2VerifyId => 'STEP 2 · VERIFY TRAVELER ID';
-
-  @override
-  String get step3PaymentMethod => 'STEP 3 · SELECT PAYMENT METHOD';
-
-  @override
-  String idIntro(String name) {
-    return '$name\'s government ID was verified. Check the photo looks real and the name matches the flight ticket before you pay.';
-  }
-
-  @override
-  String get identityVerifiedBadge => 'Identity verified';
-
-  @override
-  String get nameOnId => 'Name on ID';
-
-  @override
-  String get idDocument => 'ID document';
-
-  @override
-  String get idVerifiedOn => 'Verified on';
-
-  @override
-  String get idPhotoOnlyNote =>
-      'Only the photo is shown. The rest of the ID stays private.';
-
-  @override
-  String get idPhotoUnavailable =>
-      'No photo to show for this ID. Nata checked the traveler\'s identity.';
-
-  @override
-  String get iCheckedId => 'I\'ve checked this ID';
-
-  @override
-  String get errIdPhotoLoad => 'Could not load the ID photo.';
-
-  @override
-  String get travelerNotVerified =>
-      'This traveler\'s identity isn\'t verified, so payment stays locked.';
-
-  @override
-  String get validateTicketAndId => 'Validate ticket and ID to unlock payment';
 
   @override
   String get idSharedWithSendersNote =>
@@ -3185,7 +3149,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get howStep2Title => 'Pay into escrow';
 
   @override
-  String get howStep2Body => 'once you have checked their ticket and ID.';
+  String get howStep2Body => 'once you have checked their ticket.';
 
   @override
   String get howStep3Title => 'Traveler is paid';

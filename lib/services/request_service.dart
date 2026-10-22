@@ -334,28 +334,6 @@ class RequestPricing {
   String get shownTotalText => isEstimate ? '≈ $totalText' : totalText;
 }
 
-/// The photo on a traveler's ID, as the traveler-id-photo edge function
-/// gives it.
-class TravelerIdPhoto {
-  /// A short-lived link to the face crop; null when there is no photo to
-  /// show (the ID details are still given).
-  final String? url;
-
-  /// passport, drivers_license or national_id.
-  final String? idDocumentType;
-  final DateTime? verifiedAt;
-
-  const TravelerIdPhoto({this.url, this.idDocumentType, this.verifiedAt});
-
-  factory TravelerIdPhoto.fromJson(Map<String, dynamic> j) => TravelerIdPhoto(
-    url: j['url'] as String?,
-    idDocumentType: j['idDocumentType'] as String?,
-    verifiedAt: j['verifiedAt'] == null
-        ? null
-        : DateTime.parse(j['verifiedAt'] as String),
-  );
-}
-
 /// Shows dollar amounts (what is stored) in the user's currency: converted
 /// with [rate] and rounded up to a whole amount, like [RequestPricing].
 class PriceFormatter {
@@ -519,9 +497,6 @@ class SentRequest {
   /// When the sender confirmed they checked the traveler's ticket.
   final DateTime? ticketCheckedAt;
 
-  /// When the sender confirmed they checked the traveler's ID photo.
-  final DateTime? idCheckedAt;
-
   /// The traveler's identity is verified (ID checked, face matched).
   final bool travelerVerified;
 
@@ -567,7 +542,6 @@ class SentRequest {
     this.displayFee,
     this.expiresAt,
     this.ticketCheckedAt,
-    this.idCheckedAt,
     this.travelerVerified = false,
     this.receiptConfirmedAt,
     this.reviewed = false,
@@ -660,7 +634,6 @@ class SentRequest {
     displayFee: (j['display_fee'] as num?)?.toDouble(),
     expiresAt: _time(j['expires_at']),
     ticketCheckedAt: _time(j['ticket_checked_at']),
-    idCheckedAt: _time(j['id_checked_at']),
     travelerVerified: j['traveler_verified'] == true,
     receiptConfirmedAt: _time(j['receipt_confirmed_at']),
     reviewed: j['reviewed'] == true,
@@ -1054,40 +1027,6 @@ class RequestService {
       throw RequestException(reasonFor(e.message), e);
     } catch (e) {
       throw RequestException(RequestFailure.other, e);
-    }
-  }
-
-  /// The sender confirms they checked the traveler's ID photo before paying.
-  Future<DateTime> confirmIdChecked(String requestId) async {
-    _userId;
-    try {
-      final at = await _client.rpc(
-        'confirm_id_checked',
-        params: {'p_id': requestId},
-      );
-      return at is String ? DateTime.parse(at) : DateTime.now();
-    } on PostgrestException catch (e) {
-      throw RequestException(reasonFor(e.message), e);
-    } catch (e) {
-      throw RequestException(RequestFailure.other, e);
-    }
-  }
-
-  /// The face photo on the traveler's ID (never the whole document), for
-  /// the sender of [requestId] once the traveler accepted. Null when the
-  /// traveler isn't verified; the url is null when no photo could be made.
-  Future<TravelerIdPhoto?> travelerIdPhoto(String requestId) async {
-    try {
-      final response = await _client.functions.invoke(
-        'traveler-id-photo',
-        body: {'request_id': requestId},
-      );
-      return TravelerIdPhoto.fromJson(
-        Map<String, dynamic>.from(response.data as Map),
-      );
-    } on FunctionException catch (e) {
-      if (e.status == 404) return null;
-      rethrow;
     }
   }
 

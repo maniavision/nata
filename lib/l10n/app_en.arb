@@ -1265,6 +1265,13 @@
   "errRequestNotPayable": "This request can no longer be paid.",
   "step1ValidateTicket": "STEP 1 · VALIDATE FLIGHT TICKET",
   "step2PaymentMethod": "STEP 2 · SELECT PAYMENT METHOD",
+  "idMeetingTipTitle": "Check their ID when you meet.",
+  "idMeetingTipBody": "When you hand over the item, ask {name} to show their ID and make sure the name matches the ticket.",
+  "@idMeetingTipBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "ticketNotValidated": "Not validated",
   "ticketValidated": "Checked",
   "ticketIntro": "{name} uploaded their flight ticket for this trip. Check it matches the route and date before you pay.",
@@ -1306,26 +1313,6 @@
     }
   },
 
-  "step2VerifyId": "STEP 2 · VERIFY TRAVELER ID",
-  "step3PaymentMethod": "STEP 3 · SELECT PAYMENT METHOD",
-  "idIntro": "{name}'s government ID was verified. Check the photo looks real and the name matches the flight ticket before you pay.",
-  "@idIntro": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "identityVerifiedBadge": "Identity verified",
-  "nameOnId": "Name on ID",
-  "idDocument": "ID document",
-  "idVerifiedOn": "Verified on",
-  "idPhotoOnlyNote": "Only the photo is shown. The rest of the ID stays private.",
-  "idPhotoUnavailable": "No photo to show for this ID. Nata checked the traveler's identity.",
-  "iCheckedId": "I've checked this ID",
-  "errIdPhotoLoad": "Could not load the ID photo.",
-  "travelerNotVerified": "This traveler's identity isn't verified, so payment stays locked.",
-  "validateTicketAndId": "Validate ticket and ID to unlock payment",
   "idSharedWithSendersNote": "When you accept a request, that sender will see the photo on your ID and your verified name, so they can check you match your ticket. The rest of your ID stays private.",
 
   "errTicketNameMismatch": "The name on this ticket doesn't match your profile name. Upload a ticket in your name, or update your profile name.",
@@ -1512,7 +1499,7 @@
   "howStep1Title": "Search",
   "howStep1Body": "for a traveler going to your destination.",
   "howStep2Title": "Pay into escrow",
-  "howStep2Body": "once you have checked their ticket and ID.",
+  "howStep2Body": "once you have checked their ticket.",
   "howStep3Title": "Traveler is paid",
   "howStep3Body": "after your recipient confirms delivery.",
 

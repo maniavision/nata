@@ -12,7 +12,8 @@
  * (nata.local_charge).
  *
  * Allowed only for the request's sender, while it is accepted and before its
- * payment deadline, once the sender checked the ticket and the traveler's ID.
+ * payment deadline, once the sender checked the ticket. (The traveler's ID is
+ * checked in person, at the handover.)
  *
  * Flutterwave needs the payer's email. It is the account's; for an account
  * made with a phone number, the [email] the sender gave at checkout, kept in
@@ -199,7 +200,7 @@ Deno.serve(async (req: Request) => {
   const { data: request } = await db
     .from("delivery_requests")
     .select(
-      "id, sender_id, status, expires_at, display_total, display_fee, display_currency, ticket_checked_at, id_checked_at",
+      "id, sender_id, status, expires_at, display_total, display_fee, display_currency, ticket_checked_at",
     )
     .eq("id", requestId)
     .maybeSingle();
@@ -212,7 +213,7 @@ Deno.serve(async (req: Request) => {
   if (request.expires_at && new Date(request.expires_at) <= new Date()) {
     return json({ error: "expired" }, 409);
   }
-  if (!request.ticket_checked_at || !request.id_checked_at) {
+  if (!request.ticket_checked_at) {
     return json({ error: "checks_missing" }, 409);
   }
 
