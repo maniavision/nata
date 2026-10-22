@@ -847,4 +847,51 @@ void main() {
       expect(find.textContaining('REQUESTS-TAB'), findsNothing);
     });
   });
+  group('deleting', () {
+    Future<void> swipeLeft(WidgetTester tester, String id) async {
+      await tester.drag(
+        find.byKey(ValueKey('notif-$id')),
+        const Offset(-600, 0),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('swiping a card left deletes it', (tester) async {
+      await pump(tester);
+
+      await swipeLeft(tester, 'n-req');
+
+      expect(find.byKey(const ValueKey('notif-n-req')), findsNothing);
+      expect(service.deleted, ['n-req']);
+      expect(find.byKey(const ValueKey('notif-n-trip')), findsOneWidget);
+    });
+
+    testWidgets('swiping right does nothing', (tester) async {
+      await pump(tester);
+
+      await tester.drag(
+        find.byKey(const ValueKey('notif-n-req')),
+        const Offset(600, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('notif-n-req')), findsOneWidget);
+      expect(service.deleted, isEmpty);
+    });
+
+    testWidgets('a failed delete brings the card back and says so', (
+      tester,
+    ) async {
+      service.failDelete = true;
+      await pump(tester);
+
+      await swipeLeft(tester, 'n-req');
+
+      expect(find.byKey(const ValueKey('notif-n-req')), findsOneWidget);
+      expect(
+        find.text('Could not delete the notification. Please try again.'),
+        findsOneWidget,
+      );
+    });
+  });
 }

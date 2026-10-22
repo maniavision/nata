@@ -435,6 +435,8 @@
   "noNotifications": "Aún no hay notificaciones",
   "noNotificationsSub": "Te avisaremos aquí cuando pase algo con tus viajes, solicitudes y pagos.",
   "couldNotLoadNotifications": "No se pudieron cargar tus notificaciones.",
+  "notifDelete": "Eliminar",
+  "errNotifDelete": "No se pudo eliminar la notificación. Inténtalo de nuevo.",
   "justNow": "Ahora mismo",
   "yesterdayLabel": "Ayer",
   "minutesAgo": "hace {count} min",

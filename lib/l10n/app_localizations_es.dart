@@ -1199,6 +1199,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudieron cargar tus notificaciones.';
 
   @override
+  String get notifDelete => 'Eliminar';
+
+  @override
+  String get errNotifDelete =>
+      'No se pudo eliminar la notificación. Inténtalo de nuevo.';
+
+  @override
   String get justNow => 'Ahora mismo';
 
   @override

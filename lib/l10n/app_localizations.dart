@@ -2302,6 +2302,18 @@ abstract class AppLocalizations {
   /// **'Could not load your notifications.'**
   String get couldNotLoadNotifications;
 
+  /// No description provided for @notifDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get notifDelete;
+
+  /// No description provided for @errNotifDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the notification. Please try again.'**
+  String get errNotifDelete;
+
   /// No description provided for @justNow.
   ///
   /// In en, this message translates to:
