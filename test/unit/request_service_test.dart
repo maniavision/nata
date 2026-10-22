@@ -895,7 +895,6 @@ void main() {
         'expires_at': '2030-06-22T09:00:00Z',
       });
       expect(r.ticketCheckedAt, DateTime.utc(2030, 6, 21, 9));
-      expect(r.idCheckedAt, DateTime.utc(2030, 6, 21, 9, 5));
       expect(r.travelerVerified, isTrue);
       expect(r.ticketReceiptPath, 'tr1/ticket-shared.jpg');
       expect(r.hasTicket, isTrue);
@@ -913,7 +912,6 @@ void main() {
       final noCopy = SentRequest.fromJson({...row, 'ticket_on_file': true});
       expect(noCopy.hasTicket, isTrue);
       expect(noCopy.ticketReceiptPath, isNull);
-      expect(bare.idCheckedAt, isNull);
     });
 
     test('reads the price fixed when the traveler accepted', () {

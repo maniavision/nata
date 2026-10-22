@@ -1089,33 +1089,6 @@ class FakeRequestService extends Fake implements RequestService {
   /// When set, loading the ticket link fails.
   bool failTicketUrl = false;
 
-  /// ID checks confirmed (request ids); [failId] makes them fail.
-  final List<String> idChecks = [];
-  RequestException? failId;
-
-  /// What travelerIdPhoto returns; [failIdPhoto] makes it throw.
-  TravelerIdPhoto? idPhoto = TravelerIdPhoto(
-    url: 'https://example.test/signed/id_photo.jpg',
-    idDocumentType: 'passport',
-    verifiedAt: DateTime.utc(2030, 5, 2, 9),
-  );
-  bool failIdPhoto = false;
-  final List<String> idPhotoCalls = [];
-
-  @override
-  Future<DateTime> confirmIdChecked(String requestId) async {
-    if (failId != null) throw failId!;
-    idChecks.add(requestId);
-    return DateTime(2030, 6, 21, 12);
-  }
-
-  @override
-  Future<TravelerIdPhoto?> travelerIdPhoto(String requestId) async {
-    idPhotoCalls.add(requestId);
-    if (failIdPhoto) throw StateError('no photo');
-    return idPhoto;
-  }
-
   @override
   Future<DateTime> confirmTicketChecked(String requestId) async {
     if (failTicket != null) throw failTicket!;
@@ -1229,7 +1202,6 @@ SentRequest sampleSentRequest({
   double? displayFee,
   DateTime? expiresAt,
   DateTime? ticketCheckedAt,
-  DateTime? idCheckedAt,
   bool travelerVerified = false,
   String? ticketReceiptPath,
   bool? hasTicket,
@@ -1250,7 +1222,6 @@ SentRequest sampleSentRequest({
   displayFee: displayFee,
   expiresAt: expiresAt,
   ticketCheckedAt: ticketCheckedAt,
-  idCheckedAt: idCheckedAt,
   travelerVerified: travelerVerified,
   ticketReceiptPath: ticketReceiptPath,
   hasTicket: hasTicket,

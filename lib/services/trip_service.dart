@@ -264,7 +264,7 @@ class TripDraft {
   Map<String, dynamic> toInsertJson(String travelerId) => {
     'traveler_id': travelerId,
     ..._fields(),
-    'status': TripStatus.pendingReview,
+    'status': TripStatus.live,
   };
 
   /// Edits never touch the traveler or the status.

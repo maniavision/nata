@@ -2116,11 +2116,11 @@ abstract class AppLocalizations {
   /// **'Save changes'**
   String get saveChanges;
 
-  /// No description provided for @tripSubmitted.
+  /// No description provided for @tripPublishedToast.
   ///
   /// In en, this message translates to:
-  /// **'Trip submitted for review'**
-  String get tripSubmitted;
+  /// **'Trip published'**
+  String get tripPublishedToast;
 
   /// No description provided for @tripUpdated.
   ///
@@ -4784,6 +4784,18 @@ abstract class AppLocalizations {
   /// **'STEP 2 · SELECT PAYMENT METHOD'**
   String get step2PaymentMethod;
 
+  /// No description provided for @idMeetingTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check their ID when you meet.'**
+  String get idMeetingTipTitle;
+
+  /// No description provided for @idMeetingTipBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When you hand over the item, ask {name} to show their ID and make sure the name matches the ticket.'**
+  String idMeetingTipBody(String name);
+
   /// No description provided for @ticketNotValidated.
   ///
   /// In en, this message translates to:
@@ -4879,78 +4891,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{hours}h {minutes}m'**
   String hoursMinutes(int hours, int minutes);
-
-  /// No description provided for @step2VerifyId.
-  ///
-  /// In en, this message translates to:
-  /// **'STEP 2 · VERIFY TRAVELER ID'**
-  String get step2VerifyId;
-
-  /// No description provided for @step3PaymentMethod.
-  ///
-  /// In en, this message translates to:
-  /// **'STEP 3 · SELECT PAYMENT METHOD'**
-  String get step3PaymentMethod;
-
-  /// No description provided for @idIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'{name}\'s government ID was verified. Check the photo looks real and the name matches the flight ticket before you pay.'**
-  String idIntro(String name);
-
-  /// No description provided for @identityVerifiedBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity verified'**
-  String get identityVerifiedBadge;
-
-  /// No description provided for @nameOnId.
-  ///
-  /// In en, this message translates to:
-  /// **'Name on ID'**
-  String get nameOnId;
-
-  /// No description provided for @idDocument.
-  ///
-  /// In en, this message translates to:
-  /// **'ID document'**
-  String get idDocument;
-
-  /// No description provided for @idVerifiedOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Verified on'**
-  String get idVerifiedOn;
-
-  /// No description provided for @idPhotoOnlyNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Only the photo is shown. The rest of the ID stays private.'**
-  String get idPhotoOnlyNote;
-
-  /// No description provided for @iCheckedId.
-  ///
-  /// In en, this message translates to:
-  /// **'I\'ve checked this ID'**
-  String get iCheckedId;
-
-  /// No description provided for @errIdPhotoLoad.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load the ID photo.'**
-  String get errIdPhotoLoad;
-
-  /// No description provided for @travelerNotVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'This traveler\'s identity isn\'t verified, so payment stays locked.'**
-  String get travelerNotVerified;
-
-  /// No description provided for @validateTicketAndId.
-  ///
-  /// In en, this message translates to:
-  /// **'Validate ticket and ID to unlock payment'**
-  String get validateTicketAndId;
 
   /// No description provided for @idSharedWithSendersNote.
   ///
@@ -5633,7 +5573,7 @@ abstract class AppLocalizations {
   /// No description provided for @howStep2Body.
   ///
   /// In en, this message translates to:
-  /// **'once you have checked their ticket and ID.'**
+  /// **'once you have checked their ticket.'**
   String get howStep2Body;
 
   /// No description provided for @howStep3Title.

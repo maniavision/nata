@@ -1094,7 +1094,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get saveChanges => 'Enregistrer';
 
   @override
-  String get tripSubmitted => 'Trajet envoyé pour examen';
+  String get tripPublishedToast => 'Trajet publié';
 
   @override
   String get tripUpdated => 'Trajet mis à jour';
@@ -2745,6 +2745,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get step2PaymentMethod => 'ÉTAPE 2 · CHOISIR LE MOYEN DE PAIEMENT';
 
   @override
+  String get idMeetingTipTitle =>
+      'Vérifiez sa pièce d\'identité à la rencontre.';
+
+  @override
+  String idMeetingTipBody(String name) {
+    return 'Quand vous remettez l\'article, demandez à $name de montrer sa pièce d\'identité et vérifiez que le nom correspond au billet.';
+  }
+
+  @override
   String get ticketNotValidated => 'Non vérifié';
 
   @override
@@ -2800,47 +2809,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String hoursMinutes(int hours, int minutes) {
     return '$hours h $minutes min';
   }
-
-  @override
-  String get step2VerifyId => 'ÉTAPE 2 · VÉRIFIER L\'IDENTITÉ DU VOYAGEUR';
-
-  @override
-  String get step3PaymentMethod => 'ÉTAPE 3 · CHOISIR LE MOYEN DE PAIEMENT';
-
-  @override
-  String idIntro(String name) {
-    return 'La pièce d\'identité de $name a été vérifiée. Vérifiez que la photo semble authentique et que le nom correspond au billet avant de payer.';
-  }
-
-  @override
-  String get identityVerifiedBadge => 'Identité vérifiée';
-
-  @override
-  String get nameOnId => 'Nom sur la pièce d\'identité';
-
-  @override
-  String get idDocument => 'Pièce d\'identité';
-
-  @override
-  String get idVerifiedOn => 'Vérifiée le';
-
-  @override
-  String get idPhotoOnlyNote =>
-      'Seule la photo est affichée. Le reste de la pièce d\'identité reste privé.';
-
-  @override
-  String get iCheckedId => 'J\'ai vérifié cette pièce d\'identité';
-
-  @override
-  String get errIdPhotoLoad => 'Impossible de charger la photo d\'identité.';
-
-  @override
-  String get travelerNotVerified =>
-      'L\'identité de ce voyageur n\'est pas vérifiée, le paiement reste donc bloqué.';
-
-  @override
-  String get validateTicketAndId =>
-      'Vérifiez le billet et la pièce d\'identité pour débloquer le paiement';
 
   @override
   String get idSharedWithSendersNote =>
@@ -3247,8 +3215,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get howStep2Title => 'Payez en séquestre';
 
   @override
-  String get howStep2Body =>
-      'après avoir vérifié son billet et sa pièce d’identité.';
+  String get howStep2Body => 'après avoir vérifié son billet.';
 
   @override
   String get howStep3Title => 'Le voyageur est payé';

@@ -20,7 +20,6 @@ void main() {
   SentRequest accepted({
     String? ticket = 'traveler-1/ticket.pdf',
     DateTime? checkedAt,
-    DateTime? idCheckedAt,
     bool verified = true,
     bool? onFile,
     DateTime? expiresAt,
@@ -32,7 +31,6 @@ void main() {
     displayTotal: 65566,
     expiresAt: expiresAt ?? now.add(const Duration(hours: 23, minutes: 48)),
     ticketCheckedAt: checkedAt,
-    idCheckedAt: idCheckedAt,
     travelerVerified: verified,
     ticketReceiptPath: ticket,
     hasTicket: onFile,
@@ -58,11 +56,6 @@ void main() {
 
   Finder ticketStatus(String text) => find.descendant(
     of: find.byKey(const ValueKey('ticket-status')),
-    matching: find.text(text),
-  );
-
-  Finder idStatus(String text) => find.descendant(
-    of: find.byKey(const ValueKey('id-status')),
     matching: find.text(text),
   );
 
@@ -111,16 +104,13 @@ void main() {
     );
   });
 
-  testWidgets('payment stays locked until the ticket and the ID are checked', (
+  testWidgets('payment stays locked until the ticket is checked', (
     tester,
   ) async {
     await pump(tester, accepted());
 
     expect(payButton(tester).onPressed, isNull);
-    expect(
-      find.text('Validate ticket and ID to unlock payment'),
-      findsOneWidget,
-    );
+    expect(find.text('Validate ticket to unlock payment'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('ticket-confirm')));
     await tester.pump();
@@ -129,15 +119,6 @@ void main() {
     expect(service.ticketChecks, ['req-1']);
     expect(ticketStatus('Checked'), findsOneWidget);
     expect(find.byKey(const ValueKey('ticket-confirm')), findsNothing);
-    // The ID is still to be checked.
-    expect(payButton(tester).onPressed, isNull);
-
-    await tester.tap(find.byKey(const ValueKey('id-confirm')));
-    await tester.pump();
-    await tester.pump();
-
-    expect(service.idChecks, ['req-1']);
-    expect(idStatus('Checked'), findsOneWidget);
     expect(payButton(tester).onPressed, isNotNull);
     expect(find.text('Pay XOF 65,566 into Escrow'), findsOneWidget);
   });
@@ -145,16 +126,9 @@ void main() {
   testWidgets('a ticket checked on an earlier visit stays checked', (
     tester,
   ) async {
-    await pump(
-      tester,
-      accepted(
-        checkedAt: DateTime(2030, 6, 21, 9),
-        idCheckedAt: DateTime(2030, 6, 21, 9),
-      ),
-    );
+    await pump(tester, accepted(checkedAt: DateTime(2030, 6, 21, 9)));
 
     expect(ticketStatus('Checked'), findsOneWidget);
-    expect(idStatus('Checked'), findsOneWidget);
     expect(payButton(tester).onPressed, isNotNull);
   });
 
@@ -181,10 +155,7 @@ void main() {
                   popped = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
                       builder: (_) => CheckoutEscrowScreen(
-                        request: accepted(
-                          checkedAt: DateTime(2030, 6, 21, 9),
-                          idCheckedAt: DateTime(2030, 6, 21, 9),
-                        ),
+                        request: accepted(checkedAt: DateTime(2030, 6, 21, 9)),
                         service: service,
                         now: () => now,
                         openPaymentPage: (link) async {
@@ -533,7 +504,6 @@ void main() {
       tester,
       accepted(
         checkedAt: DateTime(2030, 6, 21, 9),
-        idCheckedAt: DateTime(2030, 6, 21, 9),
         expiresAt: now.subtract(const Duration(minutes: 1)),
       ),
     );
@@ -601,82 +571,22 @@ void main() {
     expect(service.listCalls, listsBefore + 1);
   });
 
-  group('Step 2 · traveler ID', () {
-    testWidgets('shows the ID photo and verified name, not the document', (
-      tester,
-    ) async {
-      await pump(tester, accepted());
+  testWidgets('no ID step: a tip to check the ID at the handover', (
+    tester,
+  ) async {
+    await pump(tester, accepted());
 
-      expect(find.text('STEP 2 · VERIFY TRAVELER ID'), findsOneWidget);
-      expect(idStatus('Not validated'), findsOneWidget);
-      expect(service.idPhotoCalls, ['req-1']);
-      expect(find.byKey(const ValueKey('id-photo')), findsOneWidget);
-      expect(find.text('Identity verified'), findsOneWidget);
-      expect(find.text('Name on ID'), findsOneWidget);
-      expect(find.text('Passport'), findsOneWidget);
-      expect(find.text('May 2, 2030'), findsOneWidget);
-      expect(
-        find.text('Only the photo is shown. The rest of the ID stays private.'),
-        findsOneWidget,
-      );
-      expect(find.text('STEP 3 · SELECT PAYMENT METHOD'), findsOneWidget);
-    });
-
-    testWidgets('an unverified traveler: no photo asked for, payment locked', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        accepted(verified: false, checkedAt: DateTime(2030, 6, 21, 9)),
-      );
-
-      expect(find.byKey(const ValueKey('id-not-verified')), findsOneWidget);
-      expect(service.idPhotoCalls, isEmpty);
-      expect(find.byKey(const ValueKey('id-confirm')), findsNothing);
-      expect(payButton(tester).onPressed, isNull);
-    });
-
-    testWidgets('no photo available: it says so and can be retried', (
-      tester,
-    ) async {
-      service.idPhoto = null; // the server found none
-      await pump(tester, accepted());
-
-      expect(find.byKey(const ValueKey('id-photo-error')), findsOneWidget);
-      final confirm = tester.widget<OutlinedButton>(
-        find.byKey(const ValueKey('id-confirm')),
-      );
-      expect(confirm.onPressed, isNull);
-
-      service.idPhoto = TravelerIdPhoto(
-        url: 'https://example.test/signed/id_photo.jpg',
-      );
-      await tester.tap(find.byKey(const ValueKey('id-photo-retry')));
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.byKey(const ValueKey('id-photo')), findsOneWidget);
-    });
-
-    testWidgets('a failure to load is explained, not a crash', (tester) async {
-      service.failIdPhoto = true;
-      await pump(tester, accepted());
-
-      expect(find.byKey(const ValueKey('id-photo-error')), findsOneWidget);
-    });
-
-    testWidgets('an ID check refused by the database is explained', (
-      tester,
-    ) async {
-      service.failId = const RequestException(RequestFailure.notPayable);
-      await pump(tester, accepted());
-
-      await tester.tap(find.byKey(const ValueKey('id-confirm')));
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.text('This request can no longer be paid.'), findsOneWidget);
-      expect(idStatus('Not validated'), findsOneWidget);
-    });
+    expect(find.text('STEP 2 · VERIFY TRAVELER ID'), findsNothing);
+    expect(find.byKey(const ValueKey('id-confirm')), findsNothing);
+    expect(find.text('STEP 2 · SELECT PAYMENT METHOD'), findsOneWidget);
+    expect(find.byKey(const ValueKey('id-meeting-tip')), findsOneWidget);
+    expect(
+      find.textContaining('Check their ID when you meet.', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('ask Amara', findRichText: true),
+      findsOneWidget,
+    );
   });
 }
