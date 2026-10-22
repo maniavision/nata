@@ -3824,6 +3824,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeRoutesAction => 'Añadir una ruta';
 
   @override
+  String get homeFaceIdTitle => 'Inicia sesión con Face ID';
+
+  @override
+  String get homeFaceIdBody =>
+      'La próxima vez, tu cara inicia sesión. Sin código.';
+
+  @override
+  String get homeFaceIdAction => 'Activar Face ID';
+
+  @override
+  String get faceIdEnableReason => 'Confirma que eres tú para activar Face ID';
+
+  @override
+  String get faceIdTurnedOn =>
+      'Face ID está activado. La próxima vez, tu cara inicia sesión.';
+
+  @override
+  String get faceIdEnableFailed =>
+      'Face ID no te reconoció. Inténtalo de nuevo.';
+
+  @override
   String get nameEditTooltip => 'Editar nombre';
 
   @override

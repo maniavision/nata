@@ -3847,6 +3847,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeRoutesAction => 'Ajouter un trajet';
 
   @override
+  String get homeFaceIdTitle => 'Connexion avec Face ID';
+
+  @override
+  String get homeFaceIdBody =>
+      'La prochaine fois, votre visage vous connecte. Pas besoin de code.';
+
+  @override
+  String get homeFaceIdAction => 'Activer Face ID';
+
+  @override
+  String get faceIdEnableReason =>
+      'Confirmez que c\'est vous pour activer Face ID';
+
+  @override
+  String get faceIdTurnedOn =>
+      'Face ID est activé. La prochaine fois, votre visage vous connecte.';
+
+  @override
+  String get faceIdEnableFailed => 'Face ID ne vous a pas reconnu. Réessayez.';
+
+  @override
   String get nameEditTooltip => 'Modifier le nom';
 
   @override
