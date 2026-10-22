@@ -111,6 +111,18 @@ class NotificationService {
         .toList();
   }
 
+  /// How many of the member's notifications are unread (the app icon badge).
+  Future<int> unreadCount() async {
+    final res = await _client
+        .schema('nata')
+        .from('notifications')
+        .select('id')
+        .eq('user_id', _userId)
+        .eq('is_read', false)
+        .count(CountOption.exact);
+    return res.count;
+  }
+
   Future<void> markRead(String id) async {
     try {
       await _client

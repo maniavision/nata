@@ -453,13 +453,18 @@ class FakeNotificationService extends Fake implements NotificationService {
   Future<void> markRead(String id) async {
     if (failMarkRead) throw Exception('mark failed');
     markedRead.add(id);
+    items = [for (final n in items) n.id == id ? n.copyWith(isRead: true) : n];
   }
 
   @override
   Future<void> markAllRead() async {
     if (failMarkAll) throw Exception('mark all failed');
     markAllCalls++;
+    items = [for (final n in items) n.copyWith(isRead: true)];
   }
+
+  @override
+  Future<int> unreadCount() async => items.where((n) => !n.isRead).length;
 }
 
 // ── Face ID ───────────────────────────────────────────────────────────────────

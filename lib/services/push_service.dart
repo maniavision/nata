@@ -12,6 +12,7 @@ import '../screens/notifications_screen.dart';
 import '../screens/requests_screen.dart';
 import '../screens/chat_thread_screen.dart';
 import '../screens/traveler_results_screen.dart';
+import 'app_badge.dart';
 
 /// Push notifications (20240155_push_notifications.sql, send-push).
 ///
@@ -49,6 +50,8 @@ class PushService {
       sound: true,
     );
     FirebaseMessaging.onMessageOpenedApp.listen(_open);
+    // A push while the app is open: the badge follows the new count.
+    FirebaseMessaging.onMessage.listen((_) => AppBadge.refresh());
     final initial = await messaging.getInitialMessage();
     if (initial != null) {
       // Let the first screen settle before opening another on top.
@@ -75,6 +78,7 @@ class PushService {
       }
       final token = await messaging.getToken();
       if (token != null) await _register(token);
+      await AppBadge.refresh();
     } catch (e) {
       debugPrint('[Push] enable: $e');
     }
@@ -97,6 +101,7 @@ class PushService {
 
   /// Call before signing out, while the session can still remove it.
   Future<void> signingOut() async {
+    await AppBadge.clear();
     if (!_ready) return;
     try {
       final token = await FirebaseMessaging.instance.getToken();
