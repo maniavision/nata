@@ -251,6 +251,15 @@ void main() {
       }
     });
 
+    test('chat is open only while the delivery is under way', () {
+      for (final s in ['paid', 'handed_off']) {
+        expect(of(status: s).chatUnlocked, isTrue, reason: s);
+      }
+      for (final s in ['pending', 'accepted', 'delivered', 'cancelled']) {
+        expect(of(status: s).chatUnlocked, isFalse, reason: s);
+      }
+    });
+
     test('completed is "delivered"', () {
       expect(of(status: 'delivered').isCompleted, isTrue);
       expect(of(status: 'delivered').isActive, isFalse);

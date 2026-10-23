@@ -2721,6 +2721,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le chat se débloque une fois la livraison payée. Votre paiement reste en séquestre jusqu\'à la confirmation de la livraison.';
 
   @override
+  String get chatMeetInPublicTitle => 'Retrouvez-vous dans un lieu public';
+
+  @override
+  String get chatMeetInPublicBody =>
+      'Pour la récupération et la remise, retrouvez-vous toujours dans un lieu public et fréquenté, comme un aéroport, une gare ou un café. N\'allez jamais à une adresse privée.';
+
+  @override
+  String get chatClosedAfterDelivery =>
+      'Livraison terminée. Cette discussion est fermée, mais vous pouvez toujours la lire.';
+
+  @override
+  String get hide => 'Masquer';
+
+  @override
   String get messageLocked => 'Message';
 
   @override

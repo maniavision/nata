@@ -57,6 +57,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     with WidgetsBindingObserver {
   static const _green = Color(0xFF168A68);
   static const _maxPhotoBytes = 10 * 1024 * 1024;
+  static const _amber = Color(0xFFA86B12);
+  static const _amberBg = Color(0xFFFBF0DC);
+
+  /// The "meet in a public place" advice, hidden with its ✕ until the chat
+  /// is opened again.
+  bool _safetyHidden = false;
 
   final _inputCtrl = TextEditingController();
 
@@ -325,6 +331,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
         children: [
           _buildHeader(),
           _buildDeliveryCard(),
+          if (_c.chatUnlocked && !_safetyHidden) _buildSafetyNote(),
           Expanded(child: _buildBody()),
           _buildFooter(),
         ],
@@ -836,13 +843,79 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     return Text(text, style: GoogleFonts.dmSans(fontSize: 10, color: color));
   }
 
+  /// While pickup and handover are being arranged: always meet in public.
+  Widget _buildSafetyNote() {
+    final l = context.l10n;
+    return Container(
+      key: const ValueKey('chat-safety-note'),
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+      decoration: BoxDecoration(
+        color: _amberBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _amber.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: _amber.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.place_rounded, size: 16, color: _amber),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.chatMeetInPublicTitle,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l.chatMeetInPublicBody,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: AppColors.foreground.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            key: const ValueKey('chat-safety-hide'),
+            tooltip: l.hide,
+            visualDensity: VisualDensity.compact,
+            onPressed: () => setState(() => _safetyHidden = true),
+            icon: const Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Input bar ──────────────────────────────────────────────────────────────
-  /// Before payment: no input, just why.
+  /// Before payment, or once delivered: no input, just why.
   Widget _buildLockedFooter() {
+    final closed = _c.isCompleted;
     return SafeArea(
       top: false,
       child: Container(
-        key: const ValueKey('chat-locked'),
+        key: ValueKey(closed ? 'chat-closed' : 'chat-locked'),
         width: double.infinity,
         decoration: BoxDecoration(
           color: AppColors.secondary.withValues(alpha: 0.6),
@@ -851,15 +924,17 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Row(
           children: [
-            const Icon(
-              Icons.lock_rounded,
+            Icon(
+              closed ? Icons.check_circle_rounded : Icons.lock_rounded,
               size: 16,
-              color: AppColors.mutedForeground,
+              color: closed ? _green : AppColors.mutedForeground,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                context.l10n.chatLockedUntilPayment,
+                closed
+                    ? context.l10n.chatClosedAfterDelivery
+                    : context.l10n.chatLockedUntilPayment,
                 style: GoogleFonts.dmSans(
                   fontSize: 12,
                   color: AppColors.mutedForeground,

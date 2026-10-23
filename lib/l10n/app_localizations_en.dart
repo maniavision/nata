@@ -2666,6 +2666,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.';
 
   @override
+  String get chatMeetInPublicTitle => 'Meet in a public place';
+
+  @override
+  String get chatMeetInPublicBody =>
+      'For pickup and handover, always meet somewhere busy and public, like an airport, a station or a café. Never go to a private address.';
+
+  @override
+  String get chatClosedAfterDelivery =>
+      'Delivery complete. This chat is closed, but you can still read it.';
+
+  @override
+  String get hide => 'Hide';
+
+  @override
   String get messageLocked => 'Message';
 
   @override

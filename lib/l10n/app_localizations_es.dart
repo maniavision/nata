@@ -2705,6 +2705,20 @@ class AppLocalizationsEs extends AppLocalizations {
       'El chat se desbloquea cuando se paga la entrega. Tu pago queda en depósito hasta que se confirme la entrega.';
 
   @override
+  String get chatMeetInPublicTitle => 'Encuéntrense en un lugar público';
+
+  @override
+  String get chatMeetInPublicBody =>
+      'Para la recogida y la entrega, encuéntrense siempre en un lugar público y concurrido, como un aeropuerto, una estación o un café. Nunca vayas a una dirección privada.';
+
+  @override
+  String get chatClosedAfterDelivery =>
+      'Entrega completada. Este chat está cerrado, pero aún puedes leerlo.';
+
+  @override
+  String get hide => 'Ocultar';
+
+  @override
   String get messageLocked => 'Mensaje';
 
   @override

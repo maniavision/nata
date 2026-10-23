@@ -4742,6 +4742,30 @@ abstract class AppLocalizations {
   /// **'Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.'**
   String get chatLockedUntilPayment;
 
+  /// No description provided for @chatMeetInPublicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet in a public place'**
+  String get chatMeetInPublicTitle;
+
+  /// No description provided for @chatMeetInPublicBody.
+  ///
+  /// In en, this message translates to:
+  /// **'For pickup and handover, always meet somewhere busy and public, like an airport, a station or a café. Never go to a private address.'**
+  String get chatMeetInPublicBody;
+
+  /// No description provided for @chatClosedAfterDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery complete. This chat is closed, but you can still read it.'**
+  String get chatClosedAfterDelivery;
+
+  /// No description provided for @hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hide;
+
   /// No description provided for @messageLocked.
   ///
   /// In en, this message translates to:

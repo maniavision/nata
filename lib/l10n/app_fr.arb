@@ -1235,6 +1235,10 @@
   "errRequestNotPending": "Cette demande a déjà reçu une réponse.",
 
   "chatLockedUntilPayment": "Le chat se débloque une fois la livraison payée. Votre paiement reste en séquestre jusqu'à la confirmation de la livraison.",
+  "chatMeetInPublicTitle": "Retrouvez-vous dans un lieu public",
+  "chatMeetInPublicBody": "Pour la récupération et la remise, retrouvez-vous toujours dans un lieu public et fréquenté, comme un aéroport, une gare ou un café. N'allez jamais à une adresse privée.",
+  "chatClosedAfterDelivery": "Livraison terminée. Cette discussion est fermée, mais vous pouvez toujours la lire.",
+  "hide": "Masquer",
   "messageLocked": "Message",
   "messageUnlocksAfterPayment": "La messagerie se débloque après le paiement.",
   "escrowFunded": "Séquestre financé",
