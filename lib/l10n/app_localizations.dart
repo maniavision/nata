@@ -5324,6 +5324,54 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load the mobile money countries.'**
   String get errMobileMoneyOptions;
 
+  /// No description provided for @mobileMoneyNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get mobileMoneyNetwork;
+
+  /// No description provided for @mobileMoneyNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile money number'**
+  String get mobileMoneyNumber;
+
+  /// No description provided for @mobileMoneyNumberNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll approve the payment on this phone, with no payment page.'**
+  String get mobileMoneyNumberNote;
+
+  /// No description provided for @enterMobileNumberToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your mobile money number'**
+  String get enterMobileNumberToPay;
+
+  /// No description provided for @approveOnPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve the payment on your phone'**
+  String get approveOnPhone;
+
+  /// No description provided for @approveOnPhoneSub.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a request for {amount} to {phone}. Enter your PIN in the prompt to approve it. This page updates by itself.'**
+  String approveOnPhoneSub(String amount, String phone);
+
+  /// No description provided for @iApprovedCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve approved, check now'**
+  String get iApprovedCheckNow;
+
+  /// No description provided for @errPhoneRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'This number can\'t be charged. Check the number and network, or choose another way to pay.'**
+  String get errPhoneRejected;
+
   /// No description provided for @bankTransfer.
   ///
   /// In en, this message translates to:
@@ -5737,12 +5785,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account number'**
   String get accountNumber;
-
-  /// No description provided for @mobileMoneyNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Mobile money number'**
-  String get mobileMoneyNumber;
 
   /// No description provided for @accountHolderName.
   ///

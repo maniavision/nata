@@ -19,9 +19,20 @@
  * made with a phone number, the [email] the sender gave at checkout, kept in
  * nata.payer_emails (20240148) for next time.
  *
- * Responds 200 with { link, tx_ref }. Errors: 401 unauthorized,
+ * Mobile money in a country listed in DIRECT, sent with the wallet's [phone]
+ * (international, +<code><number>) and [network], is charged directly
+ * (Flutterwave's charges API): the payer approves a prompt on their phone,
+ * with no payment page. Elsewhere (Ghana, Uganda, Rwanda, Zambia, Senegal,
+ * Burkina Faso... whose charges need a page, an OTP or a code) it goes
+ * through Flutterwave's page as before.
+ *
+ * Responds 200 with { link, tx_ref }, or { tx_ref, direct: true } for a
+ * direct charge waiting for the payer's approval (verify-payment and the
+ * webhook settle it as any other). A direct charge that Flutterwave still
+ * sends to a page answers with that page's link. Errors: 401 unauthorized,
  * 403 not_allowed, 409 not_payable / expired / checks_missing /
  * email_required / mobile_money_unavailable / rate_unavailable,
+ * 422 phone_rejected (Flutterwave refused the number or network),
  * 503 payments_unavailable (no FLW_SECRET_KEY), 502 provider_error.
  */
 
@@ -168,6 +179,48 @@ const MOBILE_MONEY: Record<string, string> = {
   XAF: "mobilemoneyfranco",
 };
 
+/**
+ * Where mobile money can be charged directly: Flutterwave's charge type, the
+ * country's calling code, and the networks it takes (none to send for M-Pesa
+ * and Tanzania, where the number settles it). These charges answer with a
+ * pending payment and a prompt on the payer's phone; the other countries'
+ * charges need a page, so they keep using Flutterwave's. Keep in step with
+ * DirectMobileMoney in lib/services/request_service.dart.
+ */
+const DIRECT: Record<
+  string,
+  { type: string; dialCode: string; networks: string[] }
+> = {
+  KE: { type: "mpesa", dialCode: "254", networks: [] },
+  TZ: { type: "mobile_money_tanzania", dialCode: "255", networks: [] },
+  CM: { type: "mobile_money_franco", dialCode: "237", networks: ["MTN", "ORANGEMONEY"] },
+  CI: {
+    type: "mobile_money_franco",
+    dialCode: "225",
+    networks: ["MTN", "ORANGEMONEY", "MOOV"],
+  },
+};
+
+/**
+ * The wallet to charge directly, or null to use Flutterwave's page: the
+ * country takes direct charges, and the number (digits, with the country's
+ * code) and network fit it.
+ */
+function directWallet(
+  country: string,
+  phone: string,
+  network: string,
+): { type: string; phone: string; network: string } | null {
+  const direct = DIRECT[country];
+  if (!direct) return null;
+  const digits = phone.replace(/\D/g, "");
+  if (!digits.startsWith(direct.dialCode) || digits.length < 10 || digits.length > 15) {
+    return null;
+  }
+  if (direct.networks.length > 0 && !direct.networks.includes(network)) return null;
+  return { type: direct.type, phone: digits, network };
+}
+
 /** The same check as nata.payer_emails. */
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -182,18 +235,29 @@ Deno.serve(async (req: Request) => {
   let method = "card";
   let country = "";
   let givenEmail = "";
+  let phone = "";
+  let network = "";
   try {
     const body = await req.json();
     requestId = String(body.request_id ?? "");
     method = String(body.method ?? "card");
     country = String(body.country ?? "").trim().toUpperCase();
     givenEmail = String(body.email ?? "").trim().toLowerCase();
+    phone = String(body.phone ?? "").trim();
+    network = String(body.network ?? "").trim().toUpperCase();
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
   if (!requestId || !(method in OPTIONS)) return json({ error: "bad_request" }, 400);
   if (method === "mobile_money" && !/^[A-Z]{2}$/.test(country)) {
     return json({ error: "bad_request" }, 400);
+  }
+  // A number given for a country that takes direct charges must fit it.
+  const wallet = method === "mobile_money" && phone
+    ? directWallet(country, phone, network)
+    : null;
+  if (method === "mobile_money" && phone && DIRECT[country] && !wallet) {
+    return json({ error: "phone_rejected" }, 422);
   }
 
   const db = admin.schema("nata");
@@ -305,6 +369,38 @@ Deno.serve(async (req: Request) => {
   if (insertError) {
     console.error("[create-payment] insert", insertError);
     return json({ error: "provider_error" }, 502);
+  }
+
+  if (wallet) {
+    const res = await flutterwave(`/charges?type=${wallet.type}`, {
+      method: "POST",
+      body: {
+        tx_ref: txRef,
+        amount,
+        currency,
+        email,
+        phone_number: wallet.phone,
+        fullname: name || undefined,
+        country: wallet.type === "mobile_money_franco" ? country : undefined,
+        network: wallet.network || undefined,
+        meta: { request_id: requestId },
+      },
+    });
+    if (!res.ok) {
+      console.error("[create-payment] charge", res.status, res.body.message);
+      await db.rpc("fail_payment", { p_tx_ref: txRef, p_transaction_id: null });
+      // Flutterwave answers 400 for a number or network it won't charge.
+      return res.status === 400
+        ? json({ error: "phone_rejected" }, 422)
+        : json({ error: "provider_error" }, 502);
+    }
+    // Some wallets (Orange in Côte d'Ivoire, for one) still send the payer
+    // to a page to approve: open it like Flutterwave's.
+    const auth = (res.body.meta as { authorization?: Record<string, unknown> } | undefined)
+      ?.authorization;
+    const page = String(auth?.redirect ?? auth?.redirect_url ?? "");
+    if (/^https:\/\//.test(page)) return json({ link: page, tx_ref: txRef });
+    return json({ tx_ref: txRef, direct: true });
   }
 
   const res = await flutterwave("/payments", {

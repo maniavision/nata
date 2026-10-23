@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/phone_number.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
@@ -15,7 +16,9 @@ import '../widgets/nata_toast.dart';
 /// Pays for an accepted request. Step 1: the sender checks the traveler's
 /// flight ticket; step 2: the photo on the traveler's ID and their verified
 /// name; step 3: they pay into escrow on Flutterwave's page, which this
-/// screen watches until the payment goes through.
+/// screen watches until the payment goes through. Mobile money in the
+/// countries of [DirectMobileMoney] is charged with no page: the sender gives
+/// their number and network and approves the prompt on their phone.
 class CheckoutEscrowScreen extends StatefulWidget {
   final SentRequest request;
 
@@ -74,6 +77,42 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   bool _mobileFailed = false;
   MobileMoneyOption? _mobileChoice;
   bool get _payingByMobile => _paymentMethod == 2;
+
+  /// Mobile money charged directly (no page): the wallet's network and
+  /// number, asked for where the chosen country allows it.
+  DirectMobileMoney? get _direct =>
+      _payingByMobile ? DirectMobileMoney.of(_mobileChoice?.countryCode) : null;
+  String? _mobileNetwork;
+  final _mobilePhoneCtrl = TextEditingController();
+
+  /// The number in international form (+ code and number), or null while it
+  /// isn't a whole one.
+  String? get _mobilePhone {
+    final direct = _direct;
+    if (direct == null) return null;
+    final phone = internationalPhoneNumber(
+      dialCode: direct.dialCode,
+      input: _mobilePhoneCtrl.text,
+      isoCode: _mobileChoice?.countryCode,
+    );
+    final digits = (phone ?? '').replaceAll(RegExp(r'\D'), '');
+    final code = direct.dialCode.replaceAll(RegExp(r'\D'), '');
+    if (!digits.startsWith(code) || digits.length < 10 || digits.length > 15) {
+      return null;
+    }
+    return phone;
+  }
+
+  bool get _directReady {
+    final direct = _direct;
+    if (direct == null) return true;
+    return _mobilePhone != null &&
+        (direct.networks.isEmpty || _mobileNetwork != null);
+  }
+
+  /// What the phone prompt is for, shown while it waits for approval.
+  String _directAmount = '';
+  String _directTo = '';
 
   /// Bank transfer is paid in naira: the amount, loaded when it is chosen.
   bool get _payingByBank => _paymentMethod == 3;
@@ -186,16 +225,34 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     try {
+      final direct = _direct;
+      final phone = direct == null ? null : _mobilePhone;
+      final network = direct == null || direct.networks.isEmpty
+          ? null
+          : _mobileNetwork;
       final payment = await _service.startPayment(
         _r.id,
         _payMethods[_paymentMethod],
         country: _payingByMobile ? _mobileChoice?.countryCode : null,
         email: _needsEmail ? _emailCtrl.text.trim() : null,
+        phone: phone,
+        network: network,
       );
       if (!mounted) return;
-      setState(() => _payment = payment);
+      setState(() {
+        _payment = payment;
+        _directAmount = _mobileChoice?.amountText ?? _totalText;
+        final networkName = direct?.networks
+            .where((n) => n.code == network)
+            .firstOrNull
+            ?.name;
+        _directTo = networkName == null
+            ? (phone ?? '')
+            : '${phone ?? ''} ($networkName)';
+      });
       _startPolling();
-      await _openPaymentPage();
+      // Charged directly: the prompt is on the sender's phone, no page.
+      if (!payment.direct) await _openPaymentPage();
     } on RequestException catch (e) {
       if (e.reason == RequestFailure.emailRequired && mounted) {
         setState(() => _needsEmail = true);
@@ -206,6 +263,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           RequestFailure.paymentsUnavailable => l.errPaymentsUnavailable,
           RequestFailure.emailRequired => l.errEmailRequired,
           RequestFailure.mobileMoneyUnavailable => l.errMobileMoneyUnavailable,
+          RequestFailure.phoneRejected => l.errPhoneRejected,
           RequestFailure.rateUnavailable => l.errRateUnavailable,
           RequestFailure.notSignedIn => l.errSessionExpired,
           _ => l.errPaymentStart,
@@ -222,13 +280,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   }
 
   Future<void> _openPaymentPage() async {
-    final payment = _payment;
-    if (payment == null) return;
+    final link = _payment?.link;
+    if (link == null) return;
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     var opened = false;
     try {
-      opened = await (widget.openPaymentPage ?? _openInApp)(payment.link);
+      opened = await (widget.openPaymentPage ?? _openInApp)(link);
     } catch (e) {
       debugPrint('[Checkout] open payment page: $e');
     }
@@ -280,7 +338,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       switch (status) {
         case PaymentStatus.successful:
           _poll?.cancel();
-          await (widget.closePaymentPage ?? _closeInApp)();
+          if (!payment.direct) await (widget.closePaymentPage ?? _closeInApp)();
           // Text the delivery code to the recipient straight away; the
           // sender can also do it, or resend it, from the request card.
           unawaited(
@@ -294,7 +352,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           navigator.pop(true);
         case PaymentStatus.failed:
           _poll?.cancel();
-          await (widget.closePaymentPage ?? _closeInApp)();
+          if (!payment.direct) await (widget.closePaymentPage ?? _closeInApp)();
           setState(() => _payment = null);
           messenger.showSnackBar(
             nataToast(l.errPaymentFailed, tone: ToastTone.error),
@@ -330,6 +388,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     _timer?.cancel();
     _poll?.cancel();
     _emailCtrl.dispose();
+    _mobilePhoneCtrl.dispose();
     super.dispose();
   }
 
@@ -1071,11 +1130,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   ),
                 ),
             ],
-            onChanged: (code) => setState(
-              () => _mobileChoice = options.firstWhere(
-                (o) => o.countryCode == code,
-              ),
-            ),
+            onChanged: (code) => setState(() {
+              if (code != _mobileChoice?.countryCode) {
+                _mobileNetwork = null;
+                _mobilePhoneCtrl.clear();
+              }
+              _mobileChoice = options.firstWhere((o) => o.countryCode == code);
+            }),
           ),
           if (choice != null) ...[
             const SizedBox(height: 8),
@@ -1089,10 +1150,138 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               ),
             ),
           ],
+          if (_direct != null) _buildDirectWallet(_direct!),
         ],
       );
     }
     return Padding(padding: const EdgeInsets.only(top: 12), child: body);
+  }
+
+  /// The network and number to charge directly, with no payment page.
+  Widget _buildDirectWallet(DirectMobileMoney direct) {
+    final l = context.l10n;
+    final label = GoogleFonts.dmSans(
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.6,
+      color: AppColors.mutedForeground,
+    );
+    return Column(
+      key: const ValueKey('mobile-money-direct'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (direct.networks.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Text(l.mobileMoneyNetwork.toUpperCase(), style: label),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final n in direct.networks)
+                _buildNetworkPill(n, selected: _mobileNetwork == n.code),
+            ],
+          ),
+        ],
+        const SizedBox(height: 14),
+        Text(l.mobileMoneyNumber.toUpperCase(), style: label),
+        const SizedBox(height: 8),
+        TextField(
+          key: const ValueKey('mobile-money-phone'),
+          controller: _mobilePhoneCtrl,
+          keyboardType: TextInputType.phone,
+          autofillHints: const [AutofillHints.telephoneNumberNational],
+          onChanged: (_) => setState(() {}),
+          style: GoogleFonts.dmSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground,
+          ),
+          decoration: InputDecoration(
+            prefixText: '${direct.dialCode}  ',
+            prefixStyle: GoogleFonts.dmSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.mutedForeground,
+            ),
+            isDense: true,
+            filled: true,
+            fillColor: AppColors.input,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 1),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 13,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                l.mobileMoneyNumberNote,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  height: 1.4,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNetworkPill(MobileMoneyNetwork n, {required bool selected}) {
+    return GestureDetector(
+      key: ValueKey('mobile-money-network-${n.code}'),
+      onTap: () => setState(() => _mobileNetwork = n.code),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.foreground : AppColors.card,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.foreground : AppColors.border,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              n.name,
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : AppColors.foreground,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// The amount in naira, for a bank transfer.
@@ -1365,7 +1554,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     final countryChosen = !_payingByMobile || _mobileChoice != null;
     final bankReady = !_payingByBank || _bankQuote != null;
     final emailGiven = !_needsEmail || _emailValid;
-    final unlocked = checked && countryChosen && bankReady && emailGiven;
+    final walletGiven = _directReady;
+    final unlocked =
+        checked && countryChosen && bankReady && walletGiven && emailGiven;
     // Mobile money is charged in the wallet's currency, bank transfer in
     // naira.
     final amount = _payingByMobile && _mobileChoice != null
@@ -1373,7 +1564,12 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         : _payingByBank && _bankQuote != null
         ? _bankQuote!.amountText
         : _totalText;
-    if (_payment != null) return _buildPaymentInProgress(l);
+    final payment = _payment;
+    if (payment != null) {
+      return payment.direct
+          ? _buildApproveOnPhone(l)
+          : _buildPaymentInProgress(l);
+    }
     return Column(
       children: [
         if (_expired) ...[
@@ -1417,6 +1613,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   ? l.chooseCountry
                   : !bankReady
                   ? l.bankTransfer
+                  : !walletGiven
+                  ? l.enterMobileNumberToPay
                   : l.enterEmailToPay,
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w800,
@@ -1521,6 +1719,115 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('checkout-abandon-payment'),
+            onPressed: _abandonPayment,
+            child: Text(
+              l.chooseAnotherWayToPay,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// While the sender approves a direct mobile money charge on their phone.
+  Widget _buildApproveOnPhone(AppLocalizations l) {
+    return Container(
+      key: const ValueKey('checkout-approve-on-phone'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.phone_iphone_rounded,
+                      size: 20,
+                      color: AppColors.accent,
+                    ),
+                    const Positioned.fill(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.approveOnPhone,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l.approveOnPhoneSub(_directAmount, _directTo),
+                      key: const ValueKey('checkout-approve-on-phone-sub'),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              key: const ValueKey('checkout-check-payment'),
+              onPressed: _checkingPayment
+                  ? null
+                  : () => _checkPayment(manual: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                shape: const StadiumBorder(),
+              ),
+              child: Text(
+                l.iApprovedCheckNow,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
                 ),
               ),
             ),

@@ -1,6 +1,7 @@
 /**
  * verify-payment — where a payment the sender started stands. The app asks
- * while the sender is on Flutterwave's page, so it doesn't depend on the
+ * while the sender is on Flutterwave's page (or approving a mobile money
+ * prompt on their phone), so it doesn't depend on the
  * webhook arriving first.
  *
  * Called by the app (with the sender's JWT) with { tx_ref }. A pending

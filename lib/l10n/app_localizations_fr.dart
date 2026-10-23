@@ -3073,6 +3073,34 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de charger les pays du mobile money.';
 
   @override
+  String get mobileMoneyNetwork => 'Réseau';
+
+  @override
+  String get mobileMoneyNumber => 'Numéro mobile money';
+
+  @override
+  String get mobileMoneyNumberNote =>
+      'Vous validerez le paiement sur ce téléphone, sans page de paiement.';
+
+  @override
+  String get enterMobileNumberToPay => 'Saisissez votre numéro mobile money';
+
+  @override
+  String get approveOnPhone => 'Validez le paiement sur votre téléphone';
+
+  @override
+  String approveOnPhoneSub(String amount, String phone) {
+    return 'Nous avons envoyé une demande de $amount au $phone. Saisissez votre code PIN dans la notification pour la valider. Cette page se met à jour toute seule.';
+  }
+
+  @override
+  String get iApprovedCheckNow => 'J\'ai validé, vérifier';
+
+  @override
+  String get errPhoneRejected =>
+      'Ce numéro ne peut pas être débité. Vérifiez le numéro et le réseau, ou choisissez un autre moyen de paiement.';
+
+  @override
   String get bankTransfer => 'Virement bancaire';
 
   @override
@@ -3324,9 +3352,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get accountNumber => 'Numéro de compte';
-
-  @override
-  String get mobileMoneyNumber => 'Numéro mobile money';
 
   @override
   String get accountHolderName => 'Nom du titulaire';

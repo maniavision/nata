@@ -886,7 +886,16 @@ class FakeRequestService extends Fake implements RequestService {
   /// Payments started (request id and method); [failStartPayment] makes
   /// starting fail. [paymentStatuses] are answered in order, the last one
   /// repeating.
-  final List<({String id, PayMethod method, String? country, String? email})>
+  final List<
+    ({
+      String id,
+      PayMethod method,
+      String? country,
+      String? email,
+      String? phone,
+      String? network,
+    })
+  >
   paymentsStarted = [];
 
   /// The email the user pays with; null asks for one at checkout.
@@ -913,6 +922,8 @@ class FakeRequestService extends Fake implements RequestService {
     PayMethod method, {
     String? country,
     String? email,
+    String? phone,
+    String? network,
   }) async {
     if (failStartPayment != null) throw failStartPayment!;
     paymentsStarted.add((
@@ -920,6 +931,8 @@ class FakeRequestService extends Fake implements RequestService {
       method: method,
       country: country,
       email: email,
+      phone: phone,
+      network: network,
     ));
     return nextPayment;
   }

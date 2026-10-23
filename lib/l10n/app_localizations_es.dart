@@ -3054,6 +3054,34 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudieron cargar los países de dinero móvil.';
 
   @override
+  String get mobileMoneyNetwork => 'Red';
+
+  @override
+  String get mobileMoneyNumber => 'Número de dinero móvil';
+
+  @override
+  String get mobileMoneyNumberNote =>
+      'Aprobarás el pago en este teléfono, sin página de pago.';
+
+  @override
+  String get enterMobileNumberToPay => 'Ingresa tu número de dinero móvil';
+
+  @override
+  String get approveOnPhone => 'Aprueba el pago en tu teléfono';
+
+  @override
+  String approveOnPhoneSub(String amount, String phone) {
+    return 'Enviamos una solicitud de $amount al $phone. Ingresa tu PIN en el aviso para aprobarla. Esta página se actualiza sola.';
+  }
+
+  @override
+  String get iApprovedCheckNow => 'Ya aprobé, comprobar';
+
+  @override
+  String get errPhoneRejected =>
+      'No se puede cobrar a este número. Revisa el número y la red, o elige otra forma de pago.';
+
+  @override
   String get bankTransfer => 'Transferencia bancaria';
 
   @override
@@ -3300,9 +3328,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get accountNumber => 'Número de cuenta';
-
-  @override
-  String get mobileMoneyNumber => 'Número de dinero móvil';
 
   @override
   String get accountHolderName => 'Nombre del titular';
