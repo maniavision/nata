@@ -973,7 +973,7 @@ abstract class AppLocalizations {
   /// No description provided for @mobileMoneyPhoneSub.
   ///
   /// In en, this message translates to:
-  /// **'M-Pesa, MTN MoMo, Orange, Wave'**
+  /// **'MTN MoMo, Airtel, Orange, M-Pesa'**
   String get mobileMoneyPhoneSub;
 
   /// No description provided for @paymentBreakdown.
@@ -5407,6 +5407,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This number can\'t be charged. Check the number and network, or choose another way to pay.'**
   String get errPhoneRejected;
+
+  /// No description provided for @errMobileAmountOutOfBounds.
+  ///
+  /// In en, this message translates to:
+  /// **'This amount is more or less than your mobile money network allows. Please choose another way to pay.'**
+  String get errMobileAmountOutOfBounds;
+
+  /// No description provided for @errMobileNetworkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mobile money network isn\'t answering right now. Please try again in a few minutes.'**
+  String get errMobileNetworkUnavailable;
 
   /// No description provided for @bankTransfer.
   ///

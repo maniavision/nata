@@ -1,39 +1,39 @@
 /**
- * create-payment — a Flutterwave payment link for the sender of an accepted
- * request, to pay its fixed price into escrow.
+ * create-payment — starts paying an accepted request into escrow, for its
+ * sender.
  *
  * Called by the app (with the sender's JWT) with { request_id, method,
- * country, email }, where method is card, mobile_money, bank_transfer or
- * apple_pay. The amount and currency are the ones fixed when the traveler
- * accepted (display_total / display_currency), never taken from the app.
- * Mobile money is charged in the currency of the wallet's [country] instead,
- * converted at the latest rate (nata.mobile_money_charge); the fixed price
- * is kept as base_amount. Bank transfer is charged in naira the same way
- * (nata.local_charge).
+ * country, email, phone, network }, where method is card, mobile_money,
+ * bank_transfer or apple_pay. The amount and currency are the ones fixed when
+ * the traveler accepted (display_total / display_currency), never taken from
+ * the app. Mobile money is charged in the currency of the wallet's [country]
+ * instead, converted at the latest rate (nata.mobile_money_charge); the fixed
+ * price is kept as base_amount. Bank transfer is charged in naira the same
+ * way (nata.local_charge).
  *
  * Allowed only for the request's sender, while it is accepted and before its
  * payment deadline, once the sender checked the ticket. (The traveler's ID is
  * checked in person, at the handover.)
  *
- * Flutterwave needs the payer's email. It is the account's; for an account
- * made with a phone number, the [email] the sender gave at checkout, kept in
+ * Mobile money is a pawaPay deposit (20240165): the wallet's [phone]
+ * (international, +<code><number>) on its [network] (pawaPay's provider code,
+ * one of nata.mobile_money_networks for that country) gets a prompt to
+ * approve, with no payment page. The payment's tx_ref is the deposit id;
+ * verify-payment and pawapay-callback settle it.
+ *
+ * Cards, Apple Pay and bank transfer use Flutterwave's payment page, which
+ * needs the payer's email: the account's, or for an account made with a
+ * phone number the [email] the sender gave at checkout, kept in
  * nata.payer_emails (20240148) for next time.
  *
- * Mobile money in a country listed in DIRECT, sent with the wallet's [phone]
- * (international, +<code><number>) and [network], is charged directly
- * (Flutterwave's charges API): the payer approves a prompt on their phone,
- * with no payment page. Elsewhere (Ghana, Uganda, Rwanda, Zambia, Senegal,
- * Burkina Faso... whose charges need a page, an OTP or a code) it goes
- * through Flutterwave's page as before.
- *
- * Responds 200 with { link, tx_ref }, or { tx_ref, direct: true } for a
- * direct charge waiting for the payer's approval (verify-payment and the
- * webhook settle it as any other). A direct charge that Flutterwave still
- * sends to a page answers with that page's link. Errors: 401 unauthorized,
- * 403 not_allowed, 409 not_payable / expired / checks_missing /
- * email_required / mobile_money_unavailable / rate_unavailable,
- * 422 phone_rejected (Flutterwave refused the number or network),
- * 503 payments_unavailable (no FLW_SECRET_KEY), 502 provider_error.
+ * Responds 200 with { link, tx_ref } (Flutterwave's page), or
+ * { tx_ref, direct: true } (mobile money, waiting for the payer's approval).
+ * Errors: 401 unauthorized, 403 not_allowed, 409 not_payable / expired /
+ * checks_missing / email_required / mobile_money_unavailable /
+ * rate_unavailable / amount_out_of_bounds, 422 phone_rejected (the number or
+ * network doesn't fit, or pawaPay refused it), 503 payments_unavailable (no
+ * key for the provider) / network_unavailable (the network is down),
+ * 502 provider_error.
  */
 
 // ── Flutterwave and Supabase helpers (the same in each payment function, so
@@ -42,6 +42,10 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const FLW_API = "https://api.flutterwave.com/v3";
+
+/** pawaPay's API: the sandbox until PAWAPAY_API_URL names production. */
+const PAWAPAY_API = (Deno.env.get("PAWAPAY_API_URL")?.trim() ||
+  "https://api.sandbox.pawapay.io").replace(/\/+$/, "");
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -59,6 +63,38 @@ function json(body: unknown, status = 200): Response {
 function secretKey(): string | null {
   const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
   return key ? key : null;
+}
+
+function pawapayToken(): string | null {
+  const token = Deno.env.get("PAWAPAY_API_TOKEN")?.trim();
+  return token ? token : null;
+}
+
+/** Calls pawaPay; [status] 0 when it couldn't be reached. */
+async function pawapay(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  let res: Response;
+  try {
+    res = await fetch(`${PAWAPAY_API}${path}`, {
+      method: init.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${pawapayToken()}`,
+        "Content-Type": "application/json",
+      },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+  } catch (_) {
+    return { status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { status: res.status, body };
 }
 
 /** The signed-in user calling the function, from their JWT. */
@@ -162,63 +198,30 @@ async function record(tx: Transaction): Promise<string> {
 const OPTIONS: Record<string, string> = {
   card: "card",
   apple_pay: "applepay, card",
-  mobile_money: "",
   // A temporary Nigerian bank account to pay into, in naira.
   bank_transfer: "banktransfer",
 };
 
-/** The mobile money Flutterwave takes in each currency. */
-const MOBILE_MONEY: Record<string, string> = {
-  KES: "mpesa",
-  GHS: "mobilemoneyghana",
-  UGX: "mobilemoneyuganda",
-  RWF: "mobilemoneyrwanda",
-  ZMW: "mobilemoneyzambia",
-  TZS: "mobilemoneytanzania",
-  XOF: "mobilemoneyfranco",
-  XAF: "mobilemoneyfranco",
-};
+const METHODS = ["card", "apple_pay", "mobile_money", "bank_transfer"];
+
+/** pawaPay refusals that mean the number or network doesn't fit. */
+const PHONE_REFUSALS = [
+  "INVALID_PHONE_NUMBER",
+  "INVALID_PROVIDER",
+  "PROVIDER_NOT_SUPPORTED",
+  "PAYER_NOT_FOUND",
+];
 
 /**
- * Where mobile money can be charged directly: Flutterwave's charge type, the
- * country's calling code, and the networks it takes (none to send for M-Pesa
- * and Tanzania, where the number settles it). These charges answer with a
- * pending payment and a prompt on the payer's phone; the other countries'
- * charges need a page, so they keep using Flutterwave's. Keep in step with
- * DirectMobileMoney in lib/services/request_service.dart.
+ * The wallet's number as pawaPay takes it (digits, starting with the
+ * country's calling code), or null if it isn't a whole one.
  */
-const DIRECT: Record<
-  string,
-  { type: string; dialCode: string; networks: string[] }
-> = {
-  KE: { type: "mpesa", dialCode: "254", networks: [] },
-  TZ: { type: "mobile_money_tanzania", dialCode: "255", networks: [] },
-  CM: { type: "mobile_money_franco", dialCode: "237", networks: ["MTN", "ORANGEMONEY"] },
-  CI: {
-    type: "mobile_money_franco",
-    dialCode: "225",
-    networks: ["MTN", "ORANGEMONEY", "MOOV"],
-  },
-};
-
-/**
- * The wallet to charge directly, or null to use Flutterwave's page: the
- * country takes direct charges, and the number (digits, with the country's
- * code) and network fit it.
- */
-function directWallet(
-  country: string,
-  phone: string,
-  network: string,
-): { type: string; phone: string; network: string } | null {
-  const direct = DIRECT[country];
-  if (!direct) return null;
+function msisdn(phone: string, dialCode: string): string | null {
   const digits = phone.replace(/\D/g, "");
-  if (!digits.startsWith(direct.dialCode) || digits.length < 10 || digits.length > 15) {
-    return null;
-  }
-  if (direct.networks.length > 0 && !direct.networks.includes(network)) return null;
-  return { type: direct.type, phone: digits, network };
+  const code = dialCode.replace(/\D/g, "");
+  if (!code || !digits.startsWith(code)) return null;
+  if (digits.length < code.length + 7 || digits.length > 15) return null;
+  return digits;
 }
 
 /** The same check as nata.payer_emails. */
@@ -226,7 +229,6 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!secretKey()) return json({ error: "payments_unavailable" }, 503);
 
   const user = await caller(req);
   if (!user) return json({ error: "unauthorized" }, 401);
@@ -248,16 +250,15 @@ Deno.serve(async (req: Request) => {
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
-  if (!requestId || !(method in OPTIONS)) return json({ error: "bad_request" }, 400);
-  if (method === "mobile_money" && !/^[A-Z]{2}$/.test(country)) {
+  if (!requestId || !METHODS.includes(method)) {
     return json({ error: "bad_request" }, 400);
   }
-  // A number given for a country that takes direct charges must fit it.
-  const wallet = method === "mobile_money" && phone
-    ? directWallet(country, phone, network)
-    : null;
-  if (method === "mobile_money" && phone && DIRECT[country] && !wallet) {
-    return json({ error: "phone_rejected" }, 422);
+  const mobile = method === "mobile_money";
+  if (mobile && !/^[A-Z]{2}$/.test(country)) {
+    return json({ error: "bad_request" }, 400);
+  }
+  if (mobile ? !pawapayToken() : !secretKey()) {
+    return json({ error: "payments_unavailable" }, 503);
   }
 
   const db = admin.schema("nata");
@@ -281,43 +282,56 @@ Deno.serve(async (req: Request) => {
     return json({ error: "checks_missing" }, 409);
   }
 
-  // The payer's email: the account's, else the one given at checkout (kept
-  // for next time), else the one given last time.
-  let email = String(user.email ?? "").trim();
-  if (!email && EMAIL.test(givenEmail)) {
-    email = givenEmail;
-    const { error } = await db.from("payer_emails").upsert({
-      user_id: user.id,
-      email,
-      updated_at: new Date().toISOString(),
-    });
-    if (error) console.error("[create-payment] payer email", error);
+  // Mobile money: the network must be one of the country's, and the number
+  // a whole one with the country's calling code.
+  let wallet = "";
+  if (mobile) {
+    const [{ data: net }, { data: place }] = await Promise.all([
+      db.from("mobile_money_networks")
+        .select("provider")
+        .eq("provider", network)
+        .eq("country_code", country)
+        .maybeSingle(),
+      db.from("countries")
+        .select("phone_code")
+        .eq("iso_code", country)
+        .maybeSingle(),
+    ]);
+    wallet = msisdn(phone, String(place?.phone_code ?? "")) ?? "";
+    if (!net || !wallet) return json({ error: "phone_rejected" }, 422);
   }
-  if (!email) {
-    const { data: saved } = await db
-      .from("payer_emails")
-      .select("email")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    email = String(saved?.email ?? "");
-  }
-  if (!email) return json({ error: "email_required" }, 409);
 
-  const { data: profile } = await db
-    .from("profiles")
-    .select("first_name, last_name")
-    .eq("id", user.id)
-    .maybeSingle();
-  const name = [profile?.first_name, profile?.last_name]
-    .filter((p) => p && String(p).trim())
-    .join(" ");
+  // The payer's email, for Flutterwave: the account's, else the one given
+  // at checkout (kept for next time), else the one given last time.
+  let email = "";
+  if (!mobile) {
+    email = String(user.email ?? "").trim();
+    if (!email && EMAIL.test(givenEmail)) {
+      email = givenEmail;
+      const { error } = await db.from("payer_emails").upsert({
+        user_id: user.id,
+        email,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) console.error("[create-payment] payer email", error);
+    }
+    if (!email) {
+      const { data: saved } = await db
+        .from("payer_emails")
+        .select("email")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      email = String(saved?.email ?? "");
+    }
+    if (!email) return json({ error: "email_required" }, 409);
+  }
 
   const baseAmount = Number(request.display_total);
   const baseCurrency = String(request.display_currency ?? "USD").trim().toUpperCase();
   let amount = baseAmount;
   let currency = baseCurrency;
-  let paymentOptions = OPTIONS[method];
-  if (method === "mobile_money") {
+  const paymentOptions = OPTIONS[method] ?? "";
+  if (mobile) {
     const { data: charge, error } = await db
       .rpc("mobile_money_charge", { p_request_id: requestId, p_country: country })
       .maybeSingle();
@@ -329,8 +343,6 @@ Deno.serve(async (req: Request) => {
     const c = charge as { amount: number; currency: string };
     amount = Number(c.amount);
     currency = String(c.currency).trim().toUpperCase();
-    paymentOptions = MOBILE_MONEY[currency] ?? "";
-    if (!paymentOptions) return json({ error: "mobile_money_unavailable" }, 409);
   } else if (method === "bank_transfer") {
     const { data: charge, error } = await db
       .rpc("local_charge", { p_request_id: requestId, p_currency: "NGN" })
@@ -346,19 +358,23 @@ Deno.serve(async (req: Request) => {
   }
   // The fee, in the currency charged.
   const fee = Number(request.display_fee ?? 0) * (amount / baseAmount);
-  const txRef = `nata-${requestId.slice(0, 8)}-${crypto.randomUUID()}`;
+  // pawaPay's deposit id is a bare UUID; Flutterwave's reference starts with
+  // nata- (its webhook ignores anything else).
+  const txRef = mobile
+    ? crypto.randomUUID()
+    : `nata-${requestId.slice(0, 8)}-${crypto.randomUUID()}`;
 
   const { error: insertError } = await db.from("payments").insert({
     request_id: requestId,
     sender_id: user.id,
-    provider: "flutterwave",
+    provider: mobile ? "pawapay" : "flutterwave",
     tx_ref: txRef,
     amount,
     service_fee: Math.round(fee * 100) / 100,
     currency,
     base_amount: baseAmount,
     base_currency: baseCurrency,
-    country_code: method === "mobile_money"
+    country_code: mobile
       ? country
       : method === "bank_transfer"
       ? "NG"
@@ -371,37 +387,55 @@ Deno.serve(async (req: Request) => {
     return json({ error: "provider_error" }, 502);
   }
 
-  if (wallet) {
-    const res = await flutterwave(`/charges?type=${wallet.type}`, {
+  if (mobile) {
+    const res = await pawapay("/v2/deposits", {
       method: "POST",
       body: {
-        tx_ref: txRef,
-        amount,
+        depositId: txRef,
+        amount: String(amount),
         currency,
-        email,
-        phone_number: wallet.phone,
-        fullname: name || undefined,
-        country: wallet.type === "mobile_money_franco" ? country : undefined,
-        network: wallet.network || undefined,
-        meta: { request_id: requestId },
+        payer: {
+          type: "MMO",
+          accountDetails: { phoneNumber: wallet, provider: network },
+        },
+        clientReferenceId: requestId,
+        customerMessage: "Nata delivery",
       },
     });
-    if (!res.ok) {
-      console.error("[create-payment] charge", res.status, res.body.message);
-      await db.rpc("fail_payment", { p_tx_ref: txRef, p_transaction_id: null });
-      // Flutterwave answers 400 for a number or network it won't charge.
-      return res.status === 400
-        ? json({ error: "phone_rejected" }, 422)
-        : json({ error: "provider_error" }, 502);
+    const status = String(res.body.status ?? "");
+    if (status === "ACCEPTED" || status === "DUPLICATE_IGNORED") {
+      return json({ tx_ref: txRef, direct: true });
     }
-    // Some wallets (Orange in Côte d'Ivoire, for one) still send the payer
-    // to a page to approve: open it like Flutterwave's.
-    const auth = (res.body.meta as { authorization?: Record<string, unknown> } | undefined)
-      ?.authorization;
-    const page = String(auth?.redirect ?? auth?.redirect_url ?? "");
-    if (/^https:\/\//.test(page)) return json({ link: page, tx_ref: txRef });
-    return json({ tx_ref: txRef, direct: true });
+    // No answer (pawaPay down, or a 500): it may still have started, so
+    // verify-payment finds out (NOT_FOUND there fails it).
+    if (res.status === 0 || res.status >= 500) {
+      console.error("[create-payment] pawapay unanswered", res.status);
+      return json({ tx_ref: txRef, direct: true });
+    }
+    const reason = res.body.failureReason as
+      | { failureCode?: string; failureMessage?: string }
+      | undefined;
+    const code = String(reason?.failureCode ?? "");
+    console.error("[create-payment] pawapay", res.status, code, reason?.failureMessage);
+    await db.rpc("fail_payment", { p_tx_ref: txRef, p_transaction_id: null });
+    if (PHONE_REFUSALS.includes(code)) return json({ error: "phone_rejected" }, 422);
+    if (code === "AMOUNT_OUT_OF_BOUNDS" || code === "INVALID_AMOUNT") {
+      return json({ error: "amount_out_of_bounds" }, 409);
+    }
+    if (code === "PROVIDER_TEMPORARILY_UNAVAILABLE") {
+      return json({ error: "network_unavailable" }, 503);
+    }
+    return json({ error: "provider_error" }, 502);
   }
+
+  const { data: profile } = await db
+    .from("profiles")
+    .select("first_name, last_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  const name = [profile?.first_name, profile?.last_name]
+    .filter((p) => p && String(p).trim())
+    .join(" ");
 
   const res = await flutterwave("/payments", {
     method: "POST",

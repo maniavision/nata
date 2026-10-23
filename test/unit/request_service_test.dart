@@ -1396,17 +1396,53 @@ void main() {
       );
     });
 
-    test('only countries whose charges need no page are direct', () {
-      expect(DirectMobileMoney.of('KE')!.networks, isEmpty);
-      expect(DirectMobileMoney.of('cm')!.dialCode, '+237');
-      expect(DirectMobileMoney.of('CI')!.networks.map((n) => n.code), [
-        'MTN',
-        'ORANGEMONEY',
-        'MOOV',
+    test('each country comes with its calling code and networks', () {
+      final option = MobileMoneyOption.fromJson({
+        'country_code': 'CG ',
+        'country_name': 'Congo',
+        'currency': 'XAF',
+        'amount': 65566,
+        'suggested': true,
+        'dial_code': '+242',
+        'networks': [
+          {'code': 'MTN_MOMO_COG', 'name': 'MTN Mobile Money'},
+          {'code': 'AIRTEL_COG', 'name': 'Airtel Money'},
+        ],
+      });
+      expect(option.countryCode, 'CG');
+      expect(option.dialCode, '+242');
+      expect(option.networks.map((n) => n.code), [
+        'MTN_MOMO_COG',
+        'AIRTEL_COG',
       ]);
-      for (final page in ['GH', 'UG', 'RW', 'ZM', 'SN', 'BF', null]) {
-        expect(DirectMobileMoney.of(page), isNull, reason: '$page');
-      }
+      expect(option.networks.last.name, 'Airtel Money');
     });
+
+    test('an older server without networks still parses', () {
+      final option = MobileMoneyOption.fromJson({
+        'country_code': 'KE',
+        'currency': 'KES',
+        'amount': 100,
+      });
+      expect(option.networks, isEmpty);
+      expect(option.dialCode, '');
+    });
+
+    for (final (code, reason) in [
+      ('amount_out_of_bounds', RequestFailure.amountOutOfBounds),
+      ('network_unavailable', RequestFailure.networkUnavailable),
+    ]) {
+      test('$code is explained', () async {
+        when(
+          () => functions.invoke('create-payment', body: any(named: 'body')),
+        ).thenThrow(FunctionException(status: 409, details: {'error': code}));
+        await expectLater(
+          service.startPayment('req-1', PayMethod.mobileMoney, country: 'CG'),
+          throwsA(
+            isA<RequestException>().having((e) => e.reason, 'reason', reason),
+          ),
+        );
+      });
+    }
   });
 }

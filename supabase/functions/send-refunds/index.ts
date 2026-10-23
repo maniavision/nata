@@ -1,5 +1,6 @@
 /**
- * send-refunds — gives senders their money back with Flutterwave refunds.
+ * send-refunds — gives senders their money back: Flutterwave refunds for
+ * cards, Apple Pay and bank transfer, pawaPay refunds for mobile money.
  *
  * Called by the app (with the sender's JWT) right after a paid request is
  * cancelled, which sends that sender's pending refunds; or with the service
@@ -8,7 +9,12 @@
  * the database (20240145_refunds.sql): a cancellation after payment keeps
  * Nata's 10% fee, a payment flagged needs_refund is refunded in full.
  *
- * Responds 200 with { sent, failed }. Errors: 401 unauthorized,
+ * A pawaPay refund finishes later: its id is kept (nata.refund_started,
+ * 20240165) and it is marked sent once pawaPay completes it, by its callback
+ * (pawapay-callback) or by this function looking again at refunds still in
+ * progress after a few minutes.
+ *
+ * Responds 200 with { sent, failed, started }. Errors: 401 unauthorized,
  * 503 payments_unavailable.
  */
 // ── Flutterwave and Supabase helpers (the same in each payment function, so
@@ -17,6 +23,10 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const FLW_API = "https://api.flutterwave.com/v3";
+
+/** pawaPay's API: the sandbox until PAWAPAY_API_URL names production. */
+const PAWAPAY_API = (Deno.env.get("PAWAPAY_API_URL")?.trim() ||
+  "https://api.sandbox.pawapay.io").replace(/\/+$/, "");
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -34,6 +44,75 @@ function json(body: unknown, status = 200): Response {
 function secretKey(): string | null {
   const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
   return key ? key : null;
+}
+
+function pawapayToken(): string | null {
+  const token = Deno.env.get("PAWAPAY_API_TOKEN")?.trim();
+  return token ? token : null;
+}
+
+/** Calls pawaPay; [status] 0 when it couldn't be reached. */
+async function pawapay(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  let res: Response;
+  try {
+    res = await fetch(`${PAWAPAY_API}${path}`, {
+      method: init.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${pawapayToken()}`,
+        "Content-Type": "application/json",
+      },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+  } catch (_) {
+    return { status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { status: res.status, body };
+}
+
+/** pawaPay failures worth trying again later (Nata's wallet was short). */
+const PAWAPAY_RETRY = ["PAWAPAY_WALLET_OUT_OF_FUNDS", "UNKNOWN_ERROR"];
+
+/**
+ * Looks a pawaPay refund up and records it: 'sent' (completed), 'failed',
+ * 'pending' (still processing), or 'not_found'.
+ */
+async function recordRefund(paymentId: string, refundId: string): Promise<string> {
+  const res = await pawapay(`/v2/refunds/${encodeURIComponent(refundId)}`);
+  if (res.status !== 200) return "pending";
+  if (res.body.status === "NOT_FOUND") return "not_found";
+  const d = res.body.data as Record<string, unknown> | undefined;
+  if (res.body.status !== "FOUND" || !d || d.refundId !== refundId) return "pending";
+  const db = admin.schema("nata");
+  if (d.status === "COMPLETED") {
+    const { error } = await db.rpc("refund_sent", {
+      p_payment_id: paymentId,
+      p_provider_id: refundId,
+    });
+    if (error) throw error;
+    return "sent";
+  }
+  if (d.status === "FAILED") {
+    const reason = d.failureReason as
+      | { failureCode?: string; failureMessage?: string }
+      | undefined;
+    const { error } = await db.rpc("refund_failed", {
+      p_payment_id: paymentId,
+      p_reason: String(reason?.failureMessage ?? reason?.failureCode ?? "Refund failed"),
+      p_retry: PAWAPAY_RETRY.includes(String(reason?.failureCode ?? "")),
+    });
+    if (error) throw error;
+    return "failed";
+  }
+  return "pending";
 }
 
 /** The signed-in user calling the function, from their JWT. */
@@ -69,7 +148,9 @@ async function flutterwave(
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!secretKey()) return json({ error: "payments_unavailable" }, 503);
+  if (!secretKey() && !pawapayToken()) {
+    return json({ error: "payments_unavailable" }, 503);
+  }
 
   // The service role sends everyone's refunds; a signed-in sender, their own.
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
@@ -91,11 +172,80 @@ Deno.serve(async (req: Request) => {
 
   let sent = 0;
   let failed = 0;
-  for (const r of (claimed ?? []) as {
+  let started = 0;
+  const refunds = (claimed ?? []) as {
     payment_id: string;
     transaction_id: string;
     amount: number;
-  }[]) {
+    currency: string;
+  }[];
+  const { data: providers } = refunds.length
+    ? await db.from("payments")
+      .select("id, provider")
+      .in("id", refunds.map((r) => r.payment_id))
+    : { data: [] };
+  const viaPawapay = new Set(
+    ((providers ?? []) as { id: string; provider: string }[])
+      .filter((p) => p.provider === "pawapay")
+      .map((p) => p.id),
+  );
+
+  for (const r of refunds) {
+    if (viaPawapay.has(r.payment_id)) {
+      if (!pawapayToken()) {
+        await db.rpc("refund_failed", {
+          p_payment_id: r.payment_id,
+          p_reason: "pawaPay isn't set up",
+          p_retry: true,
+        });
+        failed++;
+        continue;
+      }
+      // The id is kept first, so a refund pawaPay took without answering
+      // is still found later.
+      const refundId = crypto.randomUUID();
+      await db.rpc("refund_started", {
+        p_payment_id: r.payment_id,
+        p_provider_id: refundId,
+      });
+      const res = await pawapay("/v2/refunds", {
+        method: "POST",
+        body: {
+          refundId,
+          depositId: r.transaction_id,
+          amount: String(Number(r.amount)),
+          currency: r.currency,
+        },
+      });
+      const status = String(res.body.status ?? "");
+      if (status === "ACCEPTED" || status === "DUPLICATE_IGNORED") {
+        started++;
+      } else if (res.status === 0 || res.status >= 500) {
+        // Unknown: looked at again below on a later run.
+        started++;
+      } else {
+        const reason = res.body.failureReason as
+          | { failureCode?: string; failureMessage?: string }
+          | undefined;
+        const code = String(reason?.failureCode ?? "");
+        await db.rpc("refund_failed", {
+          p_payment_id: r.payment_id,
+          p_reason: String(reason?.failureMessage ?? code ?? `HTTP ${res.status}`),
+          p_retry: PAWAPAY_RETRY.includes(code),
+        });
+        failed++;
+      }
+      continue;
+    }
+    if (!secretKey()) {
+      await db.rpc("refund_failed", {
+        p_payment_id: r.payment_id,
+        p_reason: "Flutterwave isn't set up",
+        p_retry: true,
+      });
+      failed++;
+      continue;
+    }
     try {
       const res = await flutterwave(
         `/transactions/${encodeURIComponent(r.transaction_id)}/refund`,
@@ -127,5 +277,35 @@ Deno.serve(async (req: Request) => {
       failed++;
     }
   }
-  return json({ sent, failed });
+
+  // pawaPay refunds still in progress after a few minutes (a callback that
+  // never came): ask pawaPay. Only the schedule or support does this.
+  if (isService && pawapayToken()) {
+    const { data: waiting } = await db.from("payments")
+      .select("id, refund_provider_id")
+      .eq("provider", "pawapay")
+      .eq("refund_status", "processing")
+      .not("refund_provider_id", "is", null)
+      .lt("updated_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .limit(50);
+    for (const p of (waiting ?? []) as { id: string; refund_provider_id: string }[]) {
+      try {
+        const status = await recordRefund(p.id, p.refund_provider_id);
+        if (status === "sent") sent++;
+        if (status === "failed") failed++;
+        if (status === "not_found") {
+          // pawaPay never took it: queue it again.
+          await db.rpc("refund_failed", {
+            p_payment_id: p.id,
+            p_reason: "Not received by pawaPay",
+            p_retry: true,
+          });
+        }
+      } catch (e) {
+        console.error("[send-refunds] pawapay check", e);
+      }
+    }
+  }
+
+  return json({ sent, failed, started });
 });
