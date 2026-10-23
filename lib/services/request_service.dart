@@ -239,6 +239,33 @@ class MobileMoneyNetwork {
 /// Where a payment stands.
 enum PaymentStatus { pending, successful, failed }
 
+/// A delivered request the user sent or carried: when it was delivered, and
+/// whether they swiped it into the Archive (my_delivered_requests).
+class DeliveredRequest {
+  final String id;
+  final DateTime deliveredAt;
+  final bool archivedByUser;
+
+  const DeliveredRequest({
+    required this.id,
+    required this.deliveredAt,
+    this.archivedByUser = false,
+  });
+
+  /// How long a delivered request stays with the active ones.
+  static const keptActiveFor = Duration(hours: 24);
+
+  factory DeliveredRequest.fromJson(Map<String, dynamic> j) => DeliveredRequest(
+    id: j['request_id'] as String,
+    deliveredAt: DateTime.parse(j['delivered_at'] as String),
+    archivedByUser: j['archived'] == true,
+  );
+
+  /// In the Archive: swiped away, or delivered 24 hours ago or more.
+  bool archivedAt(DateTime now) =>
+      archivedByUser || !now.isBefore(deliveredAt.add(keptActiveFor));
+}
+
 /// A country whose mobile money the sender can pay with, and what it would
 /// charge: the fixed price converted into that country's currency. The
 /// payer's number and network are charged through pawaPay (a prompt on
@@ -1181,6 +1208,22 @@ class RequestService {
   /// The sender confirms they received the item.
   Future<void> confirmReceipt(String requestId) =>
       _call('confirm_receipt', {'p_id': requestId});
+
+  /// The delivered requests the user sent or carried, by id, for the
+  /// Archive (20240166_request_archive.sql).
+  Future<Map<String, DeliveredRequest>> deliveredRequests() async {
+    final rows = await _client.rpc('my_delivered_requests') as List;
+    return {
+      for (final r in rows)
+        (r as Map)['request_id'] as String: DeliveredRequest.fromJson(
+          Map<String, dynamic>.from(r),
+        ),
+    };
+  }
+
+  /// Moves a delivered request to the user's Archive straight away.
+  Future<void> archiveRequest(String requestId) =>
+      _call('archive_request', {'p_request_id': requestId});
 
   /// Sends the sender's pending refunds (send-refunds): after cancelling a
   /// paid request, everything but the 10% fee goes back to them.

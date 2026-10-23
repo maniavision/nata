@@ -178,6 +178,13 @@
   "escrowEncrypted": "Depósito cifrado de 256 bits por Nata Pay",
 
   "deliveryRequests": "Solicitudes de entrega",
+  "requestsActive": "Activas",
+  "requestsArchiveCount": "Archivo · {count}",
+  "requestsArchiveNote": "Las solicitudes entregadas pasan aquí 24 horas después de la entrega, o cuando deslizas una.",
+  "requestsArchiveEmpty": "Todavía no hay nada archivado.",
+  "archiveAction": "Archivar",
+  "requestArchived": "Movida al archivo",
+  "errArchiveRequest": "No se pudo archivar esta solicitud. Inténtalo de nuevo.",
   "incoming": "Entrantes",
   "outgoing": "Salientes",
   "incomingSection": "SOLICITUDES ENTRANTES (COMO VIAJERO)",

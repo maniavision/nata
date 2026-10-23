@@ -506,6 +506,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deliveryRequests => 'Demandes de livraison';
 
   @override
+  String get requestsActive => 'En cours';
+
+  @override
+  String requestsArchiveCount(int count) {
+    return 'Archives · $count';
+  }
+
+  @override
+  String get requestsArchiveNote =>
+      'Les demandes livrées arrivent ici 24 heures après la livraison, ou quand vous les faites glisser.';
+
+  @override
+  String get requestsArchiveEmpty => 'Rien d\'archivé pour l\'instant.';
+
+  @override
+  String get archiveAction => 'Archiver';
+
+  @override
+  String get requestArchived => 'Déplacée dans les archives';
+
+  @override
+  String get errArchiveRequest =>
+      'Impossible d\'archiver cette demande. Réessayez.';
+
+  @override
   String get incoming => 'Entrantes';
 
   @override

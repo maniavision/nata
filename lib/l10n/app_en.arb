@@ -178,6 +178,20 @@
   "escrowEncrypted": "256-Bit Encrypted Escrow by Nata Pay",
 
   "deliveryRequests": "Delivery Requests",
+  "requestsActive": "Active",
+  "requestsArchiveCount": "Archive · {count}",
+  "@requestsArchiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestsArchiveNote": "Delivered requests move here 24 hours after delivery, or when you swipe one away.",
+  "requestsArchiveEmpty": "Nothing archived yet.",
+  "archiveAction": "Archive",
+  "requestArchived": "Moved to Archive",
+  "errArchiveRequest": "Couldn't archive this request. Please try again.",
   "incoming": "Incoming",
   "outgoing": "Outgoing",
   "incomingSection": "INCOMING REQUESTS (AS TRAVELER)",

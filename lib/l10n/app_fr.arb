@@ -178,6 +178,13 @@
   "escrowEncrypted": "Séquestre chiffré 256 bits par Nata Pay",
 
   "deliveryRequests": "Demandes de livraison",
+  "requestsActive": "En cours",
+  "requestsArchiveCount": "Archives · {count}",
+  "requestsArchiveNote": "Les demandes livrées arrivent ici 24 heures après la livraison, ou quand vous les faites glisser.",
+  "requestsArchiveEmpty": "Rien d'archivé pour l'instant.",
+  "archiveAction": "Archiver",
+  "requestArchived": "Déplacée dans les archives",
+  "errArchiveRequest": "Impossible d'archiver cette demande. Réessayez.",
   "incoming": "Entrantes",
   "outgoing": "Sortantes",
   "incomingSection": "DEMANDES ENTRANTES (EN TANT QUE VOYAGEUR)",

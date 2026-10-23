@@ -243,4 +243,170 @@ void main() {
       expect(find.byType(IncomingRequestScreen), findsOneWidget);
     });
   });
+
+  group('Archive', () {
+    final now = DateTime(2030, 6, 22, 12);
+
+    Future<void> pumpAt(WidgetTester tester, {int tab = 0}) async {
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          RequestsScreen(
+            requestService: service,
+            exchangeRates: FakeExchangeRateService(),
+            initialTab: tab,
+            now: () => now,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    DeliveredRequest delivered(
+      String id,
+      Duration ago, {
+      bool swiped = false,
+    }) => DeliveredRequest(
+      id: id,
+      deliveredAt: now.subtract(ago),
+      archivedByUser: swiped,
+    );
+
+    Finder archiveTab() => find.byKey(const ValueKey('requests-archive'));
+
+    group('Incoming', () {
+      setUp(() {
+        service.incoming = [
+          sampleIncoming(id: 'fresh', status: 'delivered', firstName: 'Ada'),
+          sampleIncoming(id: 'old', status: 'delivered', firstName: 'Bola'),
+          sampleIncoming(id: 'paid', status: 'paid', firstName: 'Chidi'),
+        ];
+        service.delivered = {
+          'fresh': delivered('fresh', const Duration(hours: 3)),
+          'old': delivered('old', const Duration(hours: 25)),
+        };
+      });
+
+      testWidgets('delivered over 24 hours ago moves to the Archive', (
+        tester,
+      ) async {
+        await pumpAt(tester);
+
+        expect(find.textContaining('Ada'), findsWidgets);
+        expect(find.textContaining('Chidi'), findsWidgets);
+        expect(find.textContaining('Bola'), findsNothing);
+        expect(find.text('Archive · 1'), findsOneWidget);
+
+        await tester.tap(archiveTab());
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Bola'), findsWidgets);
+        expect(find.textContaining('Ada'), findsNothing);
+        expect(find.textContaining('24 hours after delivery'), findsOneWidget);
+      });
+
+      testWidgets('a swipe left archives a delivered one now', (tester) async {
+        await pumpAt(tester);
+
+        await tester.drag(
+          find.byKey(const ValueKey('archive-swipe-fresh')),
+          const Offset(-600, 0),
+        );
+        await tester.pumpAndSettle();
+
+        expect(service.archived, ['fresh']);
+        expect(find.textContaining('Ada'), findsNothing);
+        expect(find.text('Moved to Archive'), findsOneWidget);
+        expect(find.text('Archive · 2'), findsOneWidget);
+      });
+
+      testWidgets('only delivered ones can be swiped away', (tester) async {
+        await pumpAt(tester);
+        expect(find.byKey(const ValueKey('archive-swipe-paid')), findsNothing);
+      });
+
+      testWidgets('a failed archive keeps the request in place', (
+        tester,
+      ) async {
+        service.failArchive = true;
+        await pumpAt(tester);
+
+        await tester.drag(
+          find.byKey(const ValueKey('archive-swipe-fresh')),
+          const Offset(-600, 0),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Ada'), findsWidgets);
+        expect(find.textContaining("Couldn't archive"), findsOneWidget);
+        expect(find.text('Archive · 1'), findsOneWidget);
+      });
+
+      testWidgets('without the archive state, nothing is hidden', (
+        tester,
+      ) async {
+        service.failDelivered = true;
+        await pumpAt(tester);
+        expect(find.textContaining('Bola'), findsWidgets);
+        expect(find.text('Archive · 0'), findsOneWidget);
+      });
+    });
+
+    group('Outgoing', () {
+      setUp(() {
+        service.mine = [
+          sampleSentRequest(id: 'sent-new', status: 'delivered'),
+          sampleSentRequest(id: 'sent-old', status: 'delivered'),
+          sampleSentRequest(id: 'sent-pending'),
+        ];
+        service.delivered = {
+          'sent-new': delivered('sent-new', const Duration(hours: 2)),
+          'sent-old': delivered(
+            'sent-old',
+            const Duration(hours: 1),
+            swiped: true,
+          ),
+        };
+      });
+
+      testWidgets('swiped or old ones are in the Archive', (tester) async {
+        await pumpAt(tester, tab: 1);
+
+        expect(
+          find.byKey(const ValueKey('archive-swipe-sent-new')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('archive-swipe-sent-old')),
+          findsNothing,
+        );
+        expect(find.text('Archive · 1'), findsOneWidget);
+
+        await tester.tap(archiveTab());
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('requests-archive-list-1')),
+          findsOneWidget,
+        );
+        expect(find.byType(Dismissible), findsNothing);
+      });
+
+      testWidgets('an empty Archive says so', (tester) async {
+        service.delivered = {};
+        await pumpAt(tester, tab: 1);
+        await tester.tap(archiveTab());
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('requests-archive-empty')),
+          findsOneWidget,
+        );
+      });
+    });
+  });
+
+  testWidgets('has no filter button (it did nothing)', (tester) async {
+    await pump(tester);
+    expect(find.byIcon(Icons.filter_list_rounded), findsNothing);
+  });
 }

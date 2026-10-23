@@ -28,11 +28,15 @@ class RequestsScreen extends StatefulWidget {
   /// 0 = Incoming, 1 = Outgoing.
   final int initialTab;
 
+  /// Override for tests; defaults to [DateTime.now].
+  final DateTime Function()? now;
+
   const RequestsScreen({
     super.key,
     this.requestService,
     this.exchangeRates,
     this.initialTab = 0,
+    this.now,
   });
 
   @override
@@ -41,6 +45,14 @@ class RequestsScreen extends StatefulWidget {
 
 class _RequestsScreenState extends State<RequestsScreen> {
   late int _tab = widget.initialTab; // 0 = Incoming, 1 = Outgoing
+
+  /// Each tab shows its active requests or its Archive: delivered requests
+  /// 24 hours after delivery, or once swiped away (each side for itself).
+  final List<bool> _showArchive = [false, false];
+  Map<String, DeliveredRequest> _delivered = const {};
+
+  DateTime _now() => (widget.now ?? DateTime.now)();
+  bool _isArchived(String id) => _delivered[id]?.archivedAt(_now()) ?? false;
 
   /// The user's sent requests (Outgoing); null while loading.
   List<SentRequest>? _sent;
@@ -60,6 +72,90 @@ class _RequestsScreenState extends State<RequestsScreen> {
     _loadSent();
     _loadIncoming();
     _loadRates();
+    _loadDelivered();
+  }
+
+  /// When the user's delivered requests were delivered, and which were
+  /// swiped away; nothing is archived when it can't be had.
+  Future<void> _loadDelivered() async {
+    try {
+      final delivered = await (widget.requestService ?? RequestService())
+          .deliveredRequests();
+      if (mounted) setState(() => _delivered = delivered);
+    } catch (e) {
+      debugPrint('[Requests] delivered requests: $e');
+    }
+  }
+
+  /// Swiped away: archived on the server first, so a failure keeps it here.
+  Future<bool> _archive(String id) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await (widget.requestService ?? RequestService()).archiveRequest(id);
+      return true;
+    } catch (e) {
+      debugPrint('[Requests] archive: $e');
+      messenger.showSnackBar(
+        nataToast(l.errArchiveRequest, tone: ToastTone.error),
+      );
+      return false;
+    }
+  }
+
+  void _archived(String id) {
+    final d = _delivered[id];
+    setState(() {
+      _delivered = {
+        ..._delivered,
+        id: DeliveredRequest(
+          id: id,
+          deliveredAt: d?.deliveredAt ?? _now(),
+          archivedByUser: true,
+        ),
+      };
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      nataToast(context.l10n.requestArchived, tone: ToastTone.success),
+    );
+  }
+
+  /// A delivered card that a swipe to the left archives.
+  Widget _swipeToArchive({required String id, required Widget child}) {
+    return Dismissible(
+      key: ValueKey('archive-swipe-$id'),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) => _archive(id),
+      onDismissed: (_) => _archived(id),
+      background: Container(
+        alignment: AlignmentDirectional.centerEnd,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.archive_rounded,
+              color: AppColors.primaryForeground,
+              size: 22,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.archiveAction,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.primaryForeground,
+              ),
+            ),
+          ],
+        ),
+      ),
+      child: child,
+    );
   }
 
   Future<void> _loadRates() async {
@@ -90,6 +186,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
           .myRequests();
       if (mounted) setState(() => _sent = sent);
       _loadCodes(sent);
+      if (mounted && sent.any((r) => r.status == 'delivered')) {
+        _loadDelivered();
+      }
     } catch (e) {
       debugPrint('[Requests] sent requests: $e');
       if (mounted) {
@@ -308,6 +407,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
           _incomingFailed = false;
         });
       }
+      if (mounted && list.any((r) => r.status == 'delivered')) {
+        _loadDelivered();
+      }
     } catch (e) {
       debugPrint('[Requests] incoming requests: $e');
       if (mounted) {
@@ -319,9 +421,20 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
   }
 
-  /// Accepted and under way.
-  List<IncomingRequest> get _inProgress =>
-      (_incomingAll ?? const []).where((r) => r.isInProgress).toList();
+  /// Accepted and under way (or delivered, until archived).
+  List<IncomingRequest> get _inProgress => (_incomingAll ?? const [])
+      .where((r) => r.isInProgress && !_isArchived(r.id))
+      .toList();
+
+  /// Delivered and archived.
+  List<IncomingRequest> get _incomingArchive => (_incomingAll ?? const [])
+      .where((r) => r.status == 'delivered' && _isArchived(r.id))
+      .toList();
+
+  List<SentRequest> get _sentActive =>
+      (_sent ?? const []).where((r) => !_isArchived(r.id)).toList();
+  List<SentRequest> get _sentArchive =>
+      (_sent ?? const []).where((r) => _isArchived(r.id)).toList();
 
   /// Waiting for the traveler's answer.
   List<IncomingRequest> get _pending =>
@@ -458,10 +571,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
               children: [
                 _buildHeader(),
                 _buildTabSwitcher(),
+                _buildArchiveToggle(),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-                    child: _tab == 0
+                    child: _showArchive[_tab]
+                        ? _buildArchive()
+                        : _tab == 0
                         ? _buildIncomingSection()
                         : _buildOutgoingSection(),
                   ),
@@ -514,20 +630,6 @@ class _RequestsScreenState extends State<RequestsScreen> {
               ),
             ),
           ),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(
-              Icons.filter_list_rounded,
-              color: AppColors.primary,
-              size: 18,
-            ),
-          ),
         ],
       ),
     );
@@ -555,7 +657,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
             _tabButton(
               context.l10n.outgoing,
               1,
-              badge: '${_sent?.length ?? 0}',
+              badge: '${_sentActive.length}',
               badgeBg: AppColors.border,
             ),
           ],
@@ -632,6 +734,113 @@ class _RequestsScreenState extends State<RequestsScreen> {
     );
   }
 
+  // ── Active / Archive ───────────────────────────────────────────────────────
+  Widget _buildArchiveToggle() {
+    final l = context.l10n;
+    final archived = _tab == 0 ? _incomingArchive.length : _sentArchive.length;
+    Widget option(String label, bool archive, Key key) {
+      final active = _showArchive[_tab] == archive;
+      return Expanded(
+        child: GestureDetector(
+          key: key,
+          onTap: () => setState(() => _showArchive[_tab] = archive),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: active ? AppColors.card : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: active ? AppColors.border : Colors.transparent,
+              ),
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.dmSans(
+                fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                fontSize: 12,
+                color: active
+                    ? AppColors.foreground
+                    : AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      child: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          children: [
+            option(l.requestsActive, false, const ValueKey('requests-active')),
+            option(
+              l.requestsArchiveCount(archived),
+              true,
+              const ValueKey('requests-archive'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The tab's archived (delivered) requests.
+  Widget _buildArchive() {
+    final l = context.l10n;
+    final cards = _tab == 0
+        ? [
+            for (final r in _incomingArchive)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: _AcceptedCard(
+                  request: _acceptedView(r),
+                  onOpen: () => _openIncoming(r),
+                ),
+              ),
+          ]
+        : [
+            for (final r in _sentArchive)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _sentCard(r),
+              ),
+          ];
+    return Column(
+      key: ValueKey('requests-archive-list-$_tab'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.requestsArchiveNote,
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            height: 1.4,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(height: 14),
+        if (cards.isEmpty)
+          Text(
+            l.requestsArchiveEmpty,
+            key: const ValueKey('requests-archive-empty'),
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          )
+        else
+          ...cards,
+      ],
+    );
+  }
+
   // ── Incoming section ───────────────────────────────────────────────────────
   Widget _buildIncomingSection() {
     final l = context.l10n;
@@ -670,7 +879,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         ],
       );
     }
-    if (all.isEmpty) {
+    if (all.isEmpty || (_inProgress.isEmpty && _pending.isEmpty)) {
       return Text(
         l.noIncomingRequests,
         key: const ValueKey('incoming-empty'),
@@ -691,10 +900,18 @@ class _RequestsScreenState extends State<RequestsScreen> {
           for (final r in inProgress)
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
-              child: _AcceptedCard(
-                request: _acceptedView(r),
-                onOpen: () => _openIncoming(r),
-              ),
+              child: r.status == 'delivered'
+                  ? _swipeToArchive(
+                      id: r.id,
+                      child: _AcceptedCard(
+                        request: _acceptedView(r),
+                        onOpen: () => _openIncoming(r),
+                      ),
+                    )
+                  : _AcceptedCard(
+                      request: _acceptedView(r),
+                      onOpen: () => _openIncoming(r),
+                    ),
             ),
         ],
         if (pending.isNotEmpty) ...[
@@ -761,7 +978,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   // ── Outgoing section ───────────────────────────────────────────────────────
   Widget _buildOutgoingSection() {
     final l = context.l10n;
-    final sent = _sent;
+    final sent = _sent == null ? null : _sentActive;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -814,24 +1031,27 @@ class _RequestsScreenState extends State<RequestsScreen> {
           for (final r in sent)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _SentRequestCard(
-                request: r,
-                onTap: r.isEditable ? () => _edit(r) : null,
-                onCancel: r.isCancellable ? () => _cancel(r) : null,
-                onPay: r.awaitingPayment ? () => _pay(r) : null,
-                onConfirmReceipt:
-                    r.awaitingReceipt && !_confirming.contains(r.id)
-                    ? () => _confirmReceipt(r)
-                    : null,
-                onReview: r.canReview ? () => _review(r) : null,
-                deliveryCode: _codes[r.id],
-                onTextCode: _texting.contains(r.id) ? null : () => _textCode(r),
-                money: _money,
-              ),
+              child: r.status == 'delivered'
+                  ? _swipeToArchive(id: r.id, child: _sentCard(r))
+                  : _sentCard(r),
             ),
       ],
     );
   }
+
+  Widget _sentCard(SentRequest r) => _SentRequestCard(
+    request: r,
+    onTap: r.isEditable ? () => _edit(r) : null,
+    onCancel: r.isCancellable ? () => _cancel(r) : null,
+    onPay: r.awaitingPayment ? () => _pay(r) : null,
+    onConfirmReceipt: r.awaitingReceipt && !_confirming.contains(r.id)
+        ? () => _confirmReceipt(r)
+        : null,
+    onReview: r.canReview ? () => _review(r) : null,
+    deliveryCode: _codes[r.id],
+    onTextCode: _texting.contains(r.id) ? null : () => _textCode(r),
+    money: _money,
+  );
 
   Widget _sectionHeader(String title, String count) {
     return Row(
