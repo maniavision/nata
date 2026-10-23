@@ -3,6 +3,7 @@ import '../widgets/nata_logo.dart';
 import 'sign_up_screen.dart';
 import 'login_screen.dart';
 import '../services/verify_gate.dart';
+import '../services/app_badge.dart';
 import '../services/auth_gate.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
@@ -154,6 +155,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     AvatarImage.revision.addListener(_loadProfile);
     WidgetsBinding.instance.addObserver(this);
     _startRefreshTimer();
+    // The bell's unread count (also the app icon's).
+    unawaited(AppBadge.refresh());
   }
 
   @override
@@ -483,17 +486,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               );
             },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withValues(alpha: 0.8),
-                shape: BoxShape.circle,
+            child: ValueListenableBuilder<int>(
+              valueListenable: AppBadge.unread,
+              builder: (context, unread, bell) => Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  bell!,
+                  if (unread > 0)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: _UnreadBadge(count: unread),
+                    ),
+                ],
               ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                color: AppColors.foreground,
-                size: 20,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withValues(alpha: 0.8),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.foreground,
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -1357,6 +1375,36 @@ class _TravelerRow extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The unread count on Home's bell: a coral badge, "9+" above 9.
+class _UnreadBadge extends StatelessWidget {
+  final int count;
+  const _UnreadBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('home-notifications-unread'),
+      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.background, width: 2),
+      ),
+      child: Text(
+        count > 9 ? '9+' : '$count',
+        style: GoogleFonts.dmSans(
+          fontSize: 10,
+          height: 1.1,
+          fontWeight: FontWeight.w800,
+          color: AppColors.accentForeground,
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/screens/notifications_screen.dart';
 import 'package:carrywise_app/services/app_badge.dart';
 import 'package:carrywise_app/services/auth_gate.dart';
@@ -8,7 +9,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
 import '../helpers/fakes.dart';
 
-/// The number on the app icon follows the unread notifications.
+/// The number on the app icon, and on Home's bell, follows the unread
+/// notifications.
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
@@ -81,5 +83,74 @@ void main() {
     AppBadge.loadUnread = () async => throw Exception('offline');
     await AppBadge.refresh();
     expect(shown, isEmpty);
+  });
+
+  group("Home's bell", () {
+    Future<void> openHome(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: FakeTravelerService(),
+            notificationService: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Finder badge() => find.byKey(const ValueKey('home-notifications-unread'));
+
+    testWidgets('shows how many are unread', (tester) async {
+      await openHome(tester);
+      expect(badge(), findsOneWidget);
+      expect(
+        find.descendant(of: badge(), matching: find.text('2')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('nothing unread: no badge', (tester) async {
+      service.items = [sampleNotification(id: 'a', isRead: true)];
+      await openHome(tester);
+      expect(badge(), findsNothing);
+    });
+
+    testWidgets('more than 9 shows 9+', (tester) async {
+      service.items = [
+        for (var i = 0; i < 12; i++) sampleNotification(id: 'n$i'),
+      ];
+      await openHome(tester);
+      expect(
+        find.descendant(of: badge(), matching: find.text('9+')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('reading them all clears it back on Home', (tester) async {
+      await openHome(tester);
+      await tester.tap(find.byKey(const ValueKey('home-notifications')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('notif-mark-all')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('notif-back')));
+      await tester.pumpAndSettle();
+
+      expect(badge(), findsNothing);
+    });
+
+    testWidgets('a push while the app is open raises it', (tester) async {
+      await openHome(tester);
+      service.items = [sampleNotification(id: 'new'), ...service.items];
+      await AppBadge.refresh(); // what a push that arrives does
+      await tester.pump();
+      expect(
+        find.descendant(of: badge(), matching: find.text('3')),
+        findsOneWidget,
+      );
+    });
   });
 }
