@@ -965,25 +965,70 @@ void main() {
       });
     }
 
-    for (final status in ['paid', 'handed_off', 'delivered']) {
-      testWidgets('$status: open', (tester) async {
-        service = FakeMessageService(
-          conversations: [sampleConversation(status: status)],
-        );
-        await tester.pumpWidget(
-          appWrapper(
-            ChatThreadScreen(
-              conversation: sampleConversation(status: status),
-              service: service,
-            ),
+    Future<void> pumpStatus(WidgetTester tester, String status) async {
+      service = FakeMessageService(
+        conversations: [sampleConversation(status: status)],
+        messages: {
+          'conv-1': [sampleMessage(body: 'See you at the airport')],
+        },
+      );
+      await tester.pumpWidget(
+        appWrapper(
+          ChatThreadScreen(
+            conversation: sampleConversation(status: status),
+            service: service,
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    for (final status in ['paid', 'handed_off']) {
+      testWidgets('$status: open, with the advice to meet in public', (
+        tester,
+      ) async {
+        await pumpStatus(tester, status);
 
         expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
         expect(find.byKey(const ValueKey('chat-locked')), findsNothing);
+        expect(find.byKey(const ValueKey('chat-closed')), findsNothing);
+        expect(find.byKey(const ValueKey('chat-safety-note')), findsOneWidget);
+        expect(find.text('Meet in a public place'), findsOneWidget);
+        expect(find.textContaining('Never go to a private address'), findsOne);
       });
     }
+
+    testWidgets('the advice can be hidden', (tester) async {
+      await pumpStatus(tester, 'paid');
+
+      await tester.tap(find.byKey(const ValueKey('chat-safety-hide')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('chat-safety-note')), findsNothing);
+      expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
+    });
+
+    testWidgets('delivered: closed, but the messages stay readable', (
+      tester,
+    ) async {
+      await pumpStatus(tester, 'delivered');
+
+      expect(find.byKey(const ValueKey('chat-input')), findsNothing);
+      expect(find.byKey(const ValueKey('chat-closed')), findsOneWidget);
+      expect(
+        find.text(
+          'Delivery complete. This chat is closed, but you can still read it.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('chat-safety-note')), findsNothing);
+      expect(find.text('See you at the airport'), findsOneWidget);
+    });
+
+    testWidgets('pending and accepted show no advice yet', (tester) async {
+      await pumpStatus(tester, 'accepted');
+      expect(find.byKey(const ValueKey('chat-safety-note')), findsNothing);
+    });
   });
 
   group('delivery card', () {

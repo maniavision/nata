@@ -103,9 +103,9 @@ class ConversationSummary {
   bool get isCompleted => requestStatus == 'delivered';
 
   /// Chat opens once the sender has paid (the money is then in escrow) and
-  /// stays open until the delivery is done. The database enforces the same.
-  bool get chatUnlocked =>
-      const {'paid', 'handed_off', 'delivered'}.contains(requestStatus);
+  /// closes once the item is delivered; what was said stays readable. The
+  /// database enforces the same (nata.chat_unlocked, 20240164).
+  bool get chatUnlocked => const {'paid', 'handed_off'}.contains(requestStatus);
 
   /// Paid, and the money is held until delivery is confirmed.
   bool get escrowFunded => const {'paid', 'handed_off'}.contains(requestStatus);

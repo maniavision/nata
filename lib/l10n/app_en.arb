@@ -1250,6 +1250,10 @@
   "errRequestNotPending": "This request has already been answered.",
 
   "chatLockedUntilPayment": "Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.",
+  "chatMeetInPublicTitle": "Meet in a public place",
+  "chatMeetInPublicBody": "For pickup and handover, always meet somewhere busy and public, like an airport, a station or a café. Never go to a private address.",
+  "chatClosedAfterDelivery": "Delivery complete. This chat is closed, but you can still read it.",
+  "hide": "Hide",
   "messageLocked": "Message",
   "messageUnlocksAfterPayment": "Messaging unlocks after payment.",
   "escrowFunded": "Escrow funded",
