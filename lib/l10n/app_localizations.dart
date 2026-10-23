@@ -1042,6 +1042,48 @@ abstract class AppLocalizations {
   /// **'Delivery Requests'**
   String get deliveryRequests;
 
+  /// No description provided for @requestsActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get requestsActive;
+
+  /// No description provided for @requestsArchiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive · {count}'**
+  String requestsArchiveCount(int count);
+
+  /// No description provided for @requestsArchiveNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered requests move here 24 hours after delivery, or when you swipe one away.'**
+  String get requestsArchiveNote;
+
+  /// No description provided for @requestsArchiveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing archived yet.'**
+  String get requestsArchiveEmpty;
+
+  /// No description provided for @archiveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveAction;
+
+  /// No description provided for @requestArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to Archive'**
+  String get requestArchived;
+
+  /// No description provided for @errArchiveRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t archive this request. Please try again.'**
+  String get errArchiveRequest;
+
   /// No description provided for @incoming.
   ///
   /// In en, this message translates to:
