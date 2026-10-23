@@ -163,4 +163,45 @@ void main() {
       expect(stats, isA<Map<String, int>>());
     });
   });
+
+  group('AuthService.deliveredStats', () {
+    Map<String, dynamic> req(String sender, String trip) => {
+      'sender_id': sender,
+      'trip_id': trip,
+    };
+
+    test('counts only delivered parcels and trips that carried one', () {
+      final stats = AuthService.deliveredStats(
+        userId: 'me',
+        // trip-c has no delivered request yet: not carried.
+        myTripIds: ['trip-a', 'trip-b', 'trip-c'],
+        deliveredRequests: [
+          req('me', 'trip-x'), // I sent it, someone else carried it
+          req('me', 'trip-y'),
+          req('amara', 'trip-a'), // carried on my trip
+          req('daniel', 'trip-a'), // same trip again: counts once
+          req('maya', 'trip-b'),
+        ],
+      );
+      expect(stats, {'trips': 2, 'parcels': 2});
+    });
+
+    test('nothing delivered yet: zero, even with trips and requests', () {
+      final stats = AuthService.deliveredStats(
+        userId: 'me',
+        myTripIds: ['trip-a'],
+        deliveredRequests: const [],
+      );
+      expect(stats, {'trips': 0, 'parcels': 0});
+    });
+
+    test('a parcel sent on my own trip counts as both', () {
+      final stats = AuthService.deliveredStats(
+        userId: 'me',
+        myTripIds: ['trip-a'],
+        deliveredRequests: [req('me', 'trip-a')],
+      );
+      expect(stats, {'trips': 1, 'parcels': 1});
+    });
+  });
 }
