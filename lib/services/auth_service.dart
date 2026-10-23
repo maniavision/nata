@@ -319,34 +319,60 @@ class AuthService {
     );
   }
 
-  /// Fetches the user's trip and delivery statistics.
-  /// - Trips Carried: Count of nata.trips where traveler_id = current_user
-  /// - Parcels Sent: Count of nata.delivery_requests where sender_id = current_user
+  /// The user's delivery statistics, counting only what was delivered:
+  /// - Trips Carried: the user's trips with at least one delivered request.
+  /// - Parcels Sent: the user's requests (as sender) that were delivered.
   Future<Map<String, int>> getStats() async {
     final userId = currentUser?.id;
     if (userId == null) return {'trips': 0, 'parcels': 0};
 
     try {
-      final tripsResponse = await _client
+      final trips = await _client
           .schema('nata')
           .from('trips')
           .select('id')
           .eq('traveler_id', userId);
 
-      final parcelsResponse = await _client
+      // Delivered requests the user can see: theirs as sender, and those on
+      // their trips as traveler.
+      final delivered = await _client
           .schema('nata')
           .from('delivery_requests')
-          .select('id')
-          .eq('sender_id', userId);
+          .select('sender_id, trip_id')
+          .eq('status', 'delivered');
 
-      final tripsCount = (tripsResponse as List?)?.length ?? 0;
-      final parcelsCount = (parcelsResponse as List?)?.length ?? 0;
-
-      return {'trips': tripsCount, 'parcels': parcelsCount};
+      return deliveredStats(
+        userId: userId,
+        myTripIds: [for (final t in trips as List) '${(t as Map)['id']}'],
+        deliveredRequests: [
+          for (final r in delivered as List)
+            Map<String, dynamic>.from(r as Map),
+        ],
+      );
     } catch (e) {
       debugPrint('[AuthService] getStats error: $e');
       return {'trips': 0, 'parcels': 0};
     }
+  }
+
+  /// Trips carried and parcels sent by [userId], from the delivered requests
+  /// (each with sender_id and trip_id) and the ids of the user's own trips.
+  /// A trip counts once, however many of its requests were delivered.
+  @visibleForTesting
+  static Map<String, int> deliveredStats({
+    required String userId,
+    required List<String> myTripIds,
+    required List<Map<String, dynamic>> deliveredRequests,
+  }) {
+    final mine = myTripIds.toSet();
+    final carried = <String>{};
+    var parcels = 0;
+    for (final r in deliveredRequests) {
+      if (r['sender_id'] == userId) parcels++;
+      final trip = '${r['trip_id']}';
+      if (mine.contains(trip)) carried.add(trip);
+    }
+    return {'trips': carried.length, 'parcels': parcels};
   }
 
   /// Returns a stream of stats updates.
@@ -354,7 +380,8 @@ class AuthService {
     final userId = currentUser?.id;
     if (userId == null) return Stream.value({'trips': 0, 'parcels': 0});
 
-    // Listen to changes in trips table
+    // Refreshes when the user's trips change; delivered counts are also read
+    // each time the profile opens.
     return _resilientStream<Map<String, int>>(
       live: () => _client
           .schema('nata')
