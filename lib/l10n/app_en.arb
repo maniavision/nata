@@ -179,6 +179,7 @@
 
   "deliveryRequests": "Delivery Requests",
   "requestsActive": "Active",
+  "requestsArchive": "Archive",
   "requestsArchiveCount": "Archive · {count}",
   "@requestsArchiveCount": {
     "placeholders": {

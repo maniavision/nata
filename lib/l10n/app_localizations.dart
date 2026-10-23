@@ -1048,6 +1048,12 @@ abstract class AppLocalizations {
   /// **'Active'**
   String get requestsActive;
 
+  /// No description provided for @requestsArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get requestsArchive;
+
   /// No description provided for @requestsArchiveCount.
   ///
   /// In en, this message translates to:
