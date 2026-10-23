@@ -735,34 +735,100 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 
   // ── Active / Archive ───────────────────────────────────────────────────────
+  /// A lighter, second level under Incoming / Outgoing: text tabs with their
+  /// counts, the chosen one underlined in coral.
   Widget _buildArchiveToggle() {
     final l = context.l10n;
-    final archived = _tab == 0 ? _incomingArchive.length : _sentArchive.length;
-    Widget option(String label, bool archive, Key key) {
-      final active = _showArchive[_tab] == archive;
-      return Expanded(
+    final activeCount = _tab == 0
+        ? _inProgress.length + _pending.length
+        : _sentActive.length;
+    final archivedCount = _tab == 0
+        ? _incomingArchive.length
+        : _sentArchive.length;
+
+    Widget option({
+      required Key key,
+      required String label,
+      required String semantics,
+      required int count,
+      required bool archive,
+      IconData? icon,
+    }) {
+      final selected = _showArchive[_tab] == archive;
+      final color = selected ? AppColors.foreground : AppColors.mutedForeground;
+      return Semantics(
+        selected: selected,
+        button: true,
+        label: semantics,
+        excludeSemantics: true,
         child: GestureDetector(
           key: key,
+          behavior: HitTestBehavior.opaque,
           onTap: () => setState(() => _showArchive[_tab] = archive),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 7),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: active ? AppColors.card : Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: active ? AppColors.border : Colors.transparent,
-              ),
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.dmSans(
-                fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                fontSize: 12,
-                color: active
-                    ? AppColors.foreground
-                    : AppColors.mutedForeground,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 22),
+            child: IntrinsicWidth(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (icon != null) ...[
+                          Icon(icon, size: 15, color: color),
+                          const SizedBox(width: 5),
+                        ],
+                        Text(
+                          label,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: selected
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                            fontSize: 13,
+                            color: color,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          constraints: const BoxConstraints(minWidth: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? AppColors.accent.withValues(alpha: 0.14)
+                                : AppColors.muted,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '$count',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                              color: selected
+                                  ? AppColors.accent
+                                  : AppColors.mutedForeground,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    height: 2.5,
+                    decoration: BoxDecoration(
+                      color: selected ? AppColors.accent : Colors.transparent,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -771,20 +837,28 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-      child: Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: AppColors.secondary.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(999),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            option(l.requestsActive, false, const ValueKey('requests-active')),
             option(
-              l.requestsArchiveCount(archived),
-              true,
-              const ValueKey('requests-archive'),
+              key: const ValueKey('requests-active'),
+              label: l.requestsActive,
+              semantics: '${l.requestsActive}, $activeCount',
+              count: activeCount,
+              archive: false,
+            ),
+            option(
+              key: const ValueKey('requests-archive'),
+              label: l.requestsArchive,
+              semantics: l.requestsArchiveCount(archivedCount),
+              count: archivedCount,
+              archive: true,
+              icon: Icons.inventory_2_outlined,
             ),
           ],
         ),
@@ -817,12 +891,36 @@ class _RequestsScreenState extends State<RequestsScreen> {
       key: ValueKey('requests-archive-list-$_tab'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l.requestsArchiveNote,
-          style: GoogleFonts.dmSans(
-            fontSize: 12,
-            height: 1.4,
-            color: AppColors.mutedForeground,
+        Container(
+          padding: const EdgeInsets.fromLTRB(10, 9, 12, 9),
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: Icon(
+                  Icons.info_outline_rounded,
+                  size: 14,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l.requestsArchiveNote,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 14),

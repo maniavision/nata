@@ -509,6 +509,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestsActive => 'En cours';
 
   @override
+  String get requestsArchive => 'Archives';
+
+  @override
   String requestsArchiveCount(int count) {
     return 'Archives · $count';
   }

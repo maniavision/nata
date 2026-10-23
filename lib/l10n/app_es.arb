@@ -179,6 +179,7 @@
 
   "deliveryRequests": "Solicitudes de entrega",
   "requestsActive": "Activas",
+  "requestsArchive": "Archivo",
   "requestsArchiveCount": "Archivo · {count}",
   "requestsArchiveNote": "Las solicitudes entregadas pasan aquí 24 horas después de la entrega, o cuando deslizas una.",
   "requestsArchiveEmpty": "Todavía no hay nada archivado.",

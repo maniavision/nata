@@ -275,6 +275,8 @@ void main() {
     );
 
     Finder archiveTab() => find.byKey(const ValueKey('requests-archive'));
+    Finder archiveCount(String n) =>
+        find.descendant(of: archiveTab(), matching: find.text(n));
 
     group('Incoming', () {
       setUp(() {
@@ -297,7 +299,7 @@ void main() {
         expect(find.textContaining('Ada'), findsWidgets);
         expect(find.textContaining('Chidi'), findsWidgets);
         expect(find.textContaining('Bola'), findsNothing);
-        expect(find.text('Archive · 1'), findsOneWidget);
+        expect(archiveCount('1'), findsOneWidget);
 
         await tester.tap(archiveTab());
         await tester.pumpAndSettle();
@@ -318,7 +320,41 @@ void main() {
         expect(service.archived, ['fresh']);
         expect(find.textContaining('Ada'), findsNothing);
         expect(find.text('Moved to Archive'), findsOneWidget);
-        expect(find.text('Archive · 2'), findsOneWidget);
+        expect(archiveCount('2'), findsOneWidget);
+      });
+
+      testWidgets('each tab shows its count; the chosen one is selected', (
+        tester,
+      ) async {
+        await pumpAt(tester);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('requests-active')),
+            matching: find.text('2'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          tester.getSemantics(find.byKey(const ValueKey('requests-active'))),
+          matchesSemantics(
+            label: 'Active, 2',
+            isSelected: true,
+            isButton: true,
+            hasSelectedState: true,
+          ),
+        );
+
+        await tester.tap(archiveTab());
+        await tester.pumpAndSettle();
+        expect(
+          tester.getSemantics(archiveTab()),
+          matchesSemantics(
+            label: 'Archive · 1',
+            isSelected: true,
+            isButton: true,
+            hasSelectedState: true,
+          ),
+        );
       });
 
       testWidgets('only delivered ones can be swiped away', (tester) async {
@@ -340,7 +376,7 @@ void main() {
 
         expect(find.textContaining('Ada'), findsWidgets);
         expect(find.textContaining("Couldn't archive"), findsOneWidget);
-        expect(find.text('Archive · 1'), findsOneWidget);
+        expect(archiveCount('1'), findsOneWidget);
       });
 
       testWidgets('without the archive state, nothing is hidden', (
@@ -349,7 +385,7 @@ void main() {
         service.failDelivered = true;
         await pumpAt(tester);
         expect(find.textContaining('Bola'), findsWidgets);
-        expect(find.text('Archive · 0'), findsOneWidget);
+        expect(archiveCount('0'), findsOneWidget);
       });
     });
 
@@ -381,7 +417,7 @@ void main() {
           find.byKey(const ValueKey('archive-swipe-sent-old')),
           findsNothing,
         );
-        expect(find.text('Archive · 1'), findsOneWidget);
+        expect(archiveCount('1'), findsOneWidget);
 
         await tester.tap(archiveTab());
         await tester.pumpAndSettle();

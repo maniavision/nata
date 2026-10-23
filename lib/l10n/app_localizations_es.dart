@@ -509,6 +509,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requestsActive => 'Activas';
 
   @override
+  String get requestsArchive => 'Archivo';
+
+  @override
   String requestsArchiveCount(int count) {
     return 'Archivo · $count';
   }

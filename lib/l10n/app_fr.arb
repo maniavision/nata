@@ -179,6 +179,7 @@
 
   "deliveryRequests": "Demandes de livraison",
   "requestsActive": "En cours",
+  "requestsArchive": "Archives",
   "requestsArchiveCount": "Archives · {count}",
   "requestsArchiveNote": "Les demandes livrées arrivent ici 24 heures après la livraison, ou quand vous les faites glisser.",
   "requestsArchiveEmpty": "Rien d'archivé pour l'instant.",
