@@ -239,31 +239,38 @@ class MobileMoneyNetwork {
 /// Where a payment stands.
 enum PaymentStatus { pending, successful, failed }
 
-/// A delivered request the user sent or carried: when it was delivered, and
-/// whether they swiped it into the Archive (my_delivered_requests).
-class DeliveredRequest {
+/// A closed request the user sent or carried (delivered, cancelled or
+/// expired): when it closed, and whether they swiped it into the Archive
+/// (my_closed_requests, 20240167).
+class ClosedRequest {
   final String id;
-  final DateTime deliveredAt;
+  final String status;
+  final DateTime closedAt;
   final bool archivedByUser;
 
-  const DeliveredRequest({
+  const ClosedRequest({
     required this.id,
-    required this.deliveredAt,
+    this.status = 'delivered',
+    required this.closedAt,
     this.archivedByUser = false,
   });
 
-  /// How long a delivered request stays with the active ones.
+  /// The statuses that end up in the Archive.
+  static const statuses = {'delivered', 'cancelled', 'expired'};
+
+  /// How long a closed request stays with the active ones.
   static const keptActiveFor = Duration(hours: 24);
 
-  factory DeliveredRequest.fromJson(Map<String, dynamic> j) => DeliveredRequest(
+  factory ClosedRequest.fromJson(Map<String, dynamic> j) => ClosedRequest(
     id: j['request_id'] as String,
-    deliveredAt: DateTime.parse(j['delivered_at'] as String),
+    status: (j['status'] as String?) ?? 'delivered',
+    closedAt: DateTime.parse(j['closed_at'] as String),
     archivedByUser: j['archived'] == true,
   );
 
-  /// In the Archive: swiped away, or delivered 24 hours ago or more.
+  /// In the Archive: swiped away, or closed 24 hours ago or more.
   bool archivedAt(DateTime now) =>
-      archivedByUser || !now.isBefore(deliveredAt.add(keptActiveFor));
+      archivedByUser || !now.isBefore(closedAt.add(keptActiveFor));
 }
 
 /// A country whose mobile money the sender can pay with, and what it would
@@ -1209,19 +1216,19 @@ class RequestService {
   Future<void> confirmReceipt(String requestId) =>
       _call('confirm_receipt', {'p_id': requestId});
 
-  /// The delivered requests the user sent or carried, by id, for the
-  /// Archive (20240166_request_archive.sql).
-  Future<Map<String, DeliveredRequest>> deliveredRequests() async {
-    final rows = await _client.rpc('my_delivered_requests') as List;
+  /// The delivered, cancelled and expired requests the user sent or
+  /// carried, by id, for the Archive (20240167).
+  Future<Map<String, ClosedRequest>> closedRequests() async {
+    final rows = await _client.rpc('my_closed_requests') as List;
     return {
       for (final r in rows)
-        (r as Map)['request_id'] as String: DeliveredRequest.fromJson(
+        (r as Map)['request_id'] as String: ClosedRequest.fromJson(
           Map<String, dynamic>.from(r),
         ),
     };
   }
 
-  /// Moves a delivered request to the user's Archive straight away.
+  /// Moves a closed request to the user's Archive straight away.
   Future<void> archiveRequest(String requestId) =>
       _call('archive_request', {'p_request_id': requestId});
 

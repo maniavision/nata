@@ -518,7 +518,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestsArchiveNote =>
-      'Les demandes livrées arrivent ici 24 heures après la livraison, ou quand vous les faites glisser.';
+      'Les demandes livrées, annulées et expirées arrivent ici 24 heures après leur clôture, ou quand vous les faites glisser.';
 
   @override
   String get requestsArchiveEmpty => 'Rien d\'archivé pour l\'instant.';

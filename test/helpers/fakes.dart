@@ -855,31 +855,33 @@ class FakeRequestService extends Fake implements RequestService {
   /// Requests on the user's trips, for the Incoming tab.
   List<IncomingRequest> incoming = [];
 
-  /// Delivered requests for the Archive; [failArchive] makes archiving fail.
-  Map<String, DeliveredRequest> delivered = {};
-  bool failDelivered = false;
+  /// Closed requests for the Archive; [failArchive] makes archiving fail.
+  Map<String, ClosedRequest> closed = {};
+  bool failClosed = false;
   bool failArchive = false;
   final List<String> archived = [];
 
   @override
-  Future<Map<String, DeliveredRequest>> deliveredRequests() async {
-    if (failDelivered) throw StateError('delivered failed');
-    return {...delivered};
+  Future<Map<String, ClosedRequest>> closedRequests() async {
+    if (failClosed) throw StateError('closed failed');
+    return {...closed};
   }
 
   @override
   Future<void> archiveRequest(String requestId) async {
     if (failArchive) throw const RequestException(RequestFailure.other);
     archived.add(requestId);
-    final d = delivered[requestId];
-    if (d != null) {
-      delivered[requestId] = DeliveredRequest(
-        id: d.id,
-        deliveredAt: d.deliveredAt,
+    final c = closed[requestId];
+    if (c != null) {
+      closed[requestId] = ClosedRequest(
+        id: c.id,
+        status: c.status,
+        closedAt: c.closedAt,
         archivedByUser: true,
       );
     }
   }
+
   bool failIncoming = false;
   int incomingCalls = 0;
 

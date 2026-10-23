@@ -46,13 +46,17 @@ class RequestsScreen extends StatefulWidget {
 class _RequestsScreenState extends State<RequestsScreen> {
   late int _tab = widget.initialTab; // 0 = Incoming, 1 = Outgoing
 
-  /// Each tab shows its active requests or its Archive: delivered requests
-  /// 24 hours after delivery, or once swiped away (each side for itself).
+  /// Each tab shows its active requests or its Archive: delivered,
+  /// cancelled and expired requests 24 hours after they closed, or once
+  /// swiped away (each side for itself).
   final List<bool> _showArchive = [false, false];
-  Map<String, DeliveredRequest> _delivered = const {};
+  Map<String, ClosedRequest> _closed = const {};
 
   DateTime _now() => (widget.now ?? DateTime.now)();
-  bool _isArchived(String id) => _delivered[id]?.archivedAt(_now()) ?? false;
+  bool _isArchived(String id) => _closed[id]?.archivedAt(_now()) ?? false;
+
+  /// Closed: can be swiped into the Archive.
+  static bool _closes(String status) => ClosedRequest.statuses.contains(status);
 
   /// The user's sent requests (Outgoing); null while loading.
   List<SentRequest>? _sent;
@@ -72,18 +76,18 @@ class _RequestsScreenState extends State<RequestsScreen> {
     _loadSent();
     _loadIncoming();
     _loadRates();
-    _loadDelivered();
+    _loadClosed();
   }
 
-  /// When the user's delivered requests were delivered, and which were
-  /// swiped away; nothing is archived when it can't be had.
-  Future<void> _loadDelivered() async {
+  /// When the user's closed requests closed, and which were swiped away;
+  /// nothing is archived when it can't be had.
+  Future<void> _loadClosed() async {
     try {
-      final delivered = await (widget.requestService ?? RequestService())
-          .deliveredRequests();
-      if (mounted) setState(() => _delivered = delivered);
+      final closed = await (widget.requestService ?? RequestService())
+          .closedRequests();
+      if (mounted) setState(() => _closed = closed);
     } catch (e) {
-      debugPrint('[Requests] delivered requests: $e');
+      debugPrint('[Requests] closed requests: $e');
     }
   }
 
@@ -103,14 +107,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
   }
 
-  void _archived(String id) {
-    final d = _delivered[id];
+  void _archived(String id, String status) {
+    final c = _closed[id];
     setState(() {
-      _delivered = {
-        ..._delivered,
-        id: DeliveredRequest(
+      _closed = {
+        ..._closed,
+        id: ClosedRequest(
           id: id,
-          deliveredAt: d?.deliveredAt ?? _now(),
+          status: status,
+          closedAt: c?.closedAt ?? _now(),
           archivedByUser: true,
         ),
       };
@@ -120,13 +125,18 @@ class _RequestsScreenState extends State<RequestsScreen> {
     );
   }
 
-  /// A delivered card that a swipe to the left archives.
-  Widget _swipeToArchive({required String id, required Widget child}) {
+  /// A closed card (delivered, cancelled, expired) that a swipe to the left
+  /// archives.
+  Widget _swipeToArchive({
+    required String id,
+    required String status,
+    required Widget child,
+  }) {
     return Dismissible(
       key: ValueKey('archive-swipe-$id'),
       direction: DismissDirection.endToStart,
       confirmDismiss: (_) => _archive(id),
-      onDismissed: (_) => _archived(id),
+      onDismissed: (_) => _archived(id, status),
       background: Container(
         alignment: AlignmentDirectional.centerEnd,
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -186,8 +196,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
           .myRequests();
       if (mounted) setState(() => _sent = sent);
       _loadCodes(sent);
-      if (mounted && sent.any((r) => r.status == 'delivered')) {
-        _loadDelivered();
+      if (mounted && sent.any((r) => _closes(r.status))) {
+        _loadClosed();
       }
     } catch (e) {
       debugPrint('[Requests] sent requests: $e');
@@ -407,8 +417,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
           _incomingFailed = false;
         });
       }
-      if (mounted && list.any((r) => r.status == 'delivered')) {
-        _loadDelivered();
+      if (mounted && list.any((r) => _closes(r.status))) {
+        _loadClosed();
       }
     } catch (e) {
       debugPrint('[Requests] incoming requests: $e');
@@ -426,9 +436,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
       .where((r) => r.isInProgress && !_isArchived(r.id))
       .toList();
 
-  /// Delivered and archived.
+  /// Delivered and archived; cancelled and expired ones (never among the
+  /// active ones on this side) go straight here.
   List<IncomingRequest> get _incomingArchive => (_incomingAll ?? const [])
-      .where((r) => r.status == 'delivered' && _isArchived(r.id))
+      .where(
+        (r) =>
+            (r.status == 'delivered' && _isArchived(r.id)) ||
+            r.status == 'cancelled' ||
+            r.status == 'expired',
+      )
       .toList();
 
   List<SentRequest> get _sentActive =>
@@ -1001,6 +1017,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
               child: r.status == 'delivered'
                   ? _swipeToArchive(
                       id: r.id,
+                      status: r.status,
                       child: _AcceptedCard(
                         request: _acceptedView(r),
                         onOpen: () => _openIncoming(r),
@@ -1129,8 +1146,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
           for (final r in sent)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: r.status == 'delivered'
-                  ? _swipeToArchive(id: r.id, child: _sentCard(r))
+              child: _closes(r.status)
+                  ? _swipeToArchive(
+                      id: r.id,
+                      status: r.status,
+                      child: _sentCard(r),
+                    )
                   : _sentCard(r),
             ),
       ],

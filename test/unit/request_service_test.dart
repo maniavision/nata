@@ -1445,4 +1445,35 @@ void main() {
       });
     }
   });
+
+  group('ClosedRequest', () {
+    test('reads a closed request', () {
+      final c = ClosedRequest.fromJson({
+        'request_id': 'r1',
+        'status': 'cancelled',
+        'closed_at': '2030-06-20T10:00:00Z',
+        'archived': false,
+      });
+      expect(c.status, 'cancelled');
+      expect(c.closedAt, DateTime.utc(2030, 6, 20, 10));
+      expect(c.archivedByUser, isFalse);
+    });
+
+    test('archived 24 hours after closing, or once swiped', () {
+      final closedAt = DateTime(2030, 6, 20, 10);
+      final c = ClosedRequest(id: 'r1', status: 'expired', closedAt: closedAt);
+      expect(c.archivedAt(closedAt.add(const Duration(hours: 23))), isFalse);
+      expect(c.archivedAt(closedAt.add(const Duration(hours: 24))), isTrue);
+      final swiped = ClosedRequest(
+        id: 'r1',
+        closedAt: closedAt,
+        archivedByUser: true,
+      );
+      expect(swiped.archivedAt(closedAt), isTrue);
+    });
+
+    test('delivered, cancelled and expired are the closed statuses', () {
+      expect(ClosedRequest.statuses, {'delivered', 'cancelled', 'expired'});
+    });
+  });
 }

@@ -518,7 +518,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get requestsArchiveNote =>
-      'Las solicitudes entregadas pasan aquí 24 horas después de la entrega, o cuando deslizas una.';
+      'Las solicitudes entregadas, canceladas y vencidas pasan aquí 24 horas después de cerrarse, o cuando deslizas una.';
 
   @override
   String get requestsArchiveEmpty => 'Todavía no hay nada archivado.';
