@@ -1,5 +1,6 @@
 import 'package:carrywise_app/screens/incoming_request_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
+import 'package:carrywise_app/services/screen_cache.dart';
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -144,6 +145,8 @@ void main() {
       expect(find.byKey(const ValueKey('incoming-empty')), findsOneWidget);
 
       service.failIncoming = true;
+      // A first visit (nothing kept from the one above).
+      ScreenCache.clear();
       await tester.pumpWidget(const SizedBox.shrink());
       await pump(tester);
       expect(find.byKey(const ValueKey('incoming-error')), findsOneWidget);

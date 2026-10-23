@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/message_service.dart';
+import '../services/screen_cache.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'chat_thread_screen.dart';
@@ -25,6 +26,16 @@ class MessagesScreen extends StatefulWidget {
     this.now,
     this.refreshEvery = const Duration(seconds: 15),
   });
+
+  /// Where the conversations are kept between visits (ScreenCache).
+  static const cacheKey = 'conversations';
+
+  /// Loads the conversations ahead of a first visit (from Home).
+  static Future<void> preload([MessageService? service]) async {
+    if (ScreenCache.read<List<ConversationSummary>>(cacheKey) != null) return;
+    final items = await (service ?? MessageService()).conversations();
+    ScreenCache.write(cacheKey, items);
+  }
 
   @override
   State<MessagesScreen> createState() => _MessagesScreenState();
@@ -50,7 +61,15 @@ class _MessagesScreenState extends State<MessagesScreen>
   @override
   void initState() {
     super.initState();
-    _load();
+    // What this page showed last time, straight away; then the latest.
+    final cached = ScreenCache.read<List<ConversationSummary>>(
+      MessagesScreen.cacheKey,
+    );
+    if (cached != null) {
+      _items = cached;
+      _loading = false;
+    }
+    _load(quiet: cached != null);
     WidgetsBinding.instance.addObserver(this);
     _startTimer();
     _searchCtrl.addListener(() {
@@ -94,6 +113,7 @@ class _MessagesScreenState extends State<MessagesScreen>
     _refreshing = true;
     try {
       final items = await _service.conversations();
+      ScreenCache.write(MessagesScreen.cacheKey, items);
       if (!mounted) return;
       setState(() {
         _items = items;

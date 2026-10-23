@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/screen_cache.dart';
 import '../services/verify_gate.dart';
 import '../services/trip_service.dart';
 import '../widgets/app_bottom_nav.dart';
@@ -15,6 +16,16 @@ class TripsScreen extends StatefulWidget {
   final TripService? service;
 
   const TripsScreen({super.key, this.service});
+
+  /// Where the trips are kept between visits (ScreenCache).
+  static const cacheKey = 'trips';
+
+  /// Loads the trips ahead of a first visit (from Home).
+  static Future<void> preload([TripService? service]) async {
+    if (ScreenCache.read<List<Trip>>(cacheKey) != null) return;
+    final trips = await (service ?? TripService()).myTrips();
+    ScreenCache.write(cacheKey, trips);
+  }
 
   @override
   State<TripsScreen> createState() => _TripsScreenState();
@@ -32,12 +43,20 @@ class _TripsScreenState extends State<TripsScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    // What this page showed last time, straight away; then the latest.
+    final cached = ScreenCache.read<List<Trip>>(TripsScreen.cacheKey);
+    if (cached != null) {
+      _trips = cached;
+      _loading = false;
+    }
+    _load(quiet: cached != null);
   }
 
-  Future<void> _load() async {
+  /// [quiet] refreshes keep what is on screen if they fail.
+  Future<void> _load({bool quiet = false}) async {
     try {
       final trips = await (widget.service ?? TripService()).myTrips();
+      ScreenCache.write(TripsScreen.cacheKey, trips);
       if (!mounted) return;
       setState(() {
         _trips = trips;
@@ -45,7 +64,7 @@ class _TripsScreenState extends State<TripsScreen> {
         _failed = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || quiet) return;
       setState(() {
         _loading = false;
         _failed = true;

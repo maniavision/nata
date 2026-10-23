@@ -14,6 +14,7 @@ import '../main.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../l10n/l10n_ext.dart';
 import '../services/home_search_memory.dart';
+import '../services/screen_cache.dart';
 import '../services/auth_service.dart';
 import '../services/city_service.dart';
 import '../services/country_service.dart';
@@ -30,6 +31,10 @@ import 'add_trip_screen.dart';
 import 'notifications_screen.dart';
 import 'traveler_profile_screen.dart';
 import 'traveler_results_screen.dart';
+import 'messages_screen.dart';
+import 'profile_screen.dart';
+import 'requests_screen.dart';
+import 'trips_screen.dart';
 
 /// The capital of a country (by ISO code) as a departure, or null.
 typedef CapitalLookup = Future<LocationSelection?> Function(String countryCode);
@@ -61,6 +66,15 @@ class HomeScreen extends StatefulWidget {
 
   /// The capital in nata.cities (is_capital), named like the location sheet
   /// names its picks ("Abuja, Nigeria").
+  /// What Home loads in the background for the other tabs (each fills
+  /// [ScreenCache]). Replaced in tests.
+  static List<Future<void> Function()> tabPreloads = [
+    RequestsScreen.preload,
+    TripsScreen.preload,
+    MessagesScreen.preload,
+    ProfileScreen.preload,
+  ];
+
   static Future<LocationSelection?> defaultCapitalLookup(
     String countryCode,
   ) async {
@@ -127,6 +141,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ? _selectedDate!.add(const Duration(days: 3))
             : _selectedDate);
 
+  /// Where Home keeps its header and last travelers between visits.
+  static const _kHeader = 'home.header';
+  static const _kTravelers = 'home.travelers';
+
+  /// The route the travelers were searched for.
+  String get _routeKey => [
+    _departure?.countryCode,
+    _departure?.city,
+    _destination?.countryCode,
+    _destination?.city,
+  ].join('|');
+
+  /// The other tabs load in the background once Home is up, so opening
+  /// them shows their content straight away (see [ScreenCache]).
+  void _preloadTabs() {
+    if (!AuthGate.isSignedIn()) return;
+    for (final preload in HomeScreen.tabPreloads) {
+      Future(preload).catchError((Object e) {
+        debugPrint('[Home] preload: $e');
+      });
+    }
+  }
+
   /// Puts the search back as the user left it (see [HomeSearchMemory]).
   void _restoreSearch() {
     _departure = HomeSearchMemory.departure;
@@ -146,6 +183,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     _restoreSearch();
+    // What Home showed last time, straight away; then the latest.
+    final header = ScreenCache.read<Map<String, Object?>>(_kHeader);
+    if (header != null) {
+      _avatarPath = header['avatarPath'] as String?;
+      _displayName = header['displayName'] as String? ?? _displayName;
+      _verificationStatus = header['verificationStatus'] as String?;
+      _userId = header['userId'] as String?;
+    }
+    final travelers = ScreenCache.read<(String, List<TravelerTrip>)>(
+      _kTravelers,
+    );
+    if (travelers != null && travelers.$1 == _routeKey) {
+      _lastResults = travelers.$2;
+      _travelers = pickTopTravelers(travelers.$2, _random);
+      _flightCounts = _countByDay(travelers.$2);
+      _loadingTravelers = false;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _preloadTabs());
     _loadProfile();
     // Travelers are searched from the default departure, so find it first.
     _loadDefaultDeparture().whenComplete(() {
@@ -230,7 +285,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-  void _applyTravelerResults(List<TravelerTrip> results) {
+  /// Travelers per arrival day, for the calendar.
+  static Map<DateTime, int> _countByDay(List<TravelerTrip> results) {
     final counts = <DateTime, int>{};
     for (final t in results) {
       final day = DateTime(
@@ -240,6 +296,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
       counts[day] = (counts[day] ?? 0) + 1;
     }
+    return counts;
+  }
+
+  void _applyTravelerResults(List<TravelerTrip> results) {
+    final counts = _countByDay(results);
+    ScreenCache.write(_kTravelers, (_routeKey, results));
     setState(() {
       _lastResults = results;
       _travelers = pickTopTravelers(results, _random);
@@ -287,6 +349,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           _displayName = '$first $last'.trim();
         }
       });
+      ScreenCache.write(_kHeader, {
+        'avatarPath': _avatarPath,
+        'displayName': _displayName,
+        'verificationStatus': _verificationStatus,
+        'userId': _userId,
+      });
     }
   }
 
@@ -302,6 +370,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _applyTravelerResults(results);
     } catch (_) {
       if (!mounted || request != _travelersRequest) return;
+      // Travelers already on screen (from last time) stay.
+      if (_lastResults.isNotEmpty && !_loadingTravelers) return;
       setState(() {
         _travelers = const [];
         _lastResults = const [];

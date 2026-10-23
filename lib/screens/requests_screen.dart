@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
 import '../services/request_service.dart';
+import '../services/screen_cache.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'checkout_escrow_screen.dart';
@@ -38,6 +39,42 @@ class RequestsScreen extends StatefulWidget {
     this.initialTab = 0,
     this.now,
   });
+
+  /// Where this page keeps what it showed between visits (ScreenCache).
+  static const _kSent = 'requests.sent';
+  static const _kIncoming = 'requests.incoming';
+  static const _kClosed = 'requests.closed';
+  static const _kCodes = 'requests.codes';
+  static String _kMoney(String currency) => 'requests.money.$currency';
+
+  /// Loads the requests ahead of a first visit (from Home).
+  static Future<void> preload([
+    RequestService? requests,
+    ExchangeRateService? exchangeRates,
+  ]) async {
+    if (ScreenCache.read<List<SentRequest>>(_kSent) != null) return;
+    final service = requests ?? RequestService();
+    final results = await Future.wait([
+      service.myRequests(),
+      service.incomingRequests(),
+      service.closedRequests().catchError(
+        (Object _) => <String, ClosedRequest>{},
+      ),
+    ]);
+    ScreenCache.write(_kSent, results[0]);
+    ScreenCache.write(_kIncoming, results[1]);
+    ScreenCache.write(_kClosed, results[2]);
+    final currency = PreferencesService().currency.code;
+    if (currency != 'USD') {
+      final rates = await (exchangeRates ?? ExchangeRateService()).rates();
+      if (rates?.rateFor(currency) != null) {
+        ScreenCache.write(
+          _kMoney(currency),
+          PriceFormatter.forCurrency(currency, rates?.rateFor(currency)),
+        );
+      }
+    }
+  }
 
   @override
   State<RequestsScreen> createState() => _RequestsScreenState();
@@ -73,8 +110,25 @@ class _RequestsScreenState extends State<RequestsScreen> {
   @override
   void initState() {
     super.initState();
+    // What this page showed last time, straight away; then the latest,
+    // quietly.
+    _sent = ScreenCache.read<List<SentRequest>>(RequestsScreen._kSent);
+    _incomingAll = ScreenCache.read<List<IncomingRequest>>(
+      RequestsScreen._kIncoming,
+    );
+    _closed =
+        ScreenCache.read<Map<String, ClosedRequest>>(RequestsScreen._kClosed) ??
+        const {};
+    _codes =
+        ScreenCache.read<Map<String, DeliveryCode>>(RequestsScreen._kCodes) ??
+        const {};
+    _money =
+        ScreenCache.read<PriceFormatter>(
+          RequestsScreen._kMoney(PreferencesService().currency.code),
+        ) ??
+        PriceFormatter.usd;
     _loadSent();
-    _loadIncoming();
+    _loadIncoming(quiet: _incomingAll != null);
     _loadRates();
     _loadClosed();
   }
@@ -85,6 +139,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     try {
       final closed = await (widget.requestService ?? RequestService())
           .closedRequests();
+      ScreenCache.write(RequestsScreen._kClosed, closed);
       if (mounted) setState(() => _closed = closed);
     } catch (e) {
       debugPrint('[Requests] closed requests: $e');
@@ -120,6 +175,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         ),
       };
     });
+    ScreenCache.write(RequestsScreen._kClosed, _closed);
     ScaffoldMessenger.of(context).showSnackBar(
       nataToast(context.l10n.requestArchived, tone: ToastTone.success),
     );
@@ -174,26 +230,34 @@ class _RequestsScreenState extends State<RequestsScreen> {
     try {
       final rates = await (widget.exchangeRates ?? ExchangeRateService())
           .rates();
-      if (!mounted) return;
-      setState(
-        () => _money = PriceFormatter.forCurrency(
-          currency,
-          rates?.rateFor(currency),
-        ),
+      final money = PriceFormatter.forCurrency(
+        currency,
+        rates?.rateFor(currency),
       );
+      if (rates?.rateFor(currency) != null) {
+        ScreenCache.write(RequestsScreen._kMoney(currency), money);
+      }
+      if (!mounted) return;
+      setState(() => _money = money);
     } catch (e) {
       debugPrint('[Requests] exchange rates: $e');
     }
   }
 
+  /// Refreshes the sent requests; what is on screen stays meanwhile, and a
+  /// spinner only shows when there is nothing yet (or after a failure).
   Future<void> _loadSent() async {
-    setState(() {
-      _sentFailed = false;
-      _sent = null;
-    });
+    final quiet = _sent != null && !_sentFailed;
+    if (!quiet) {
+      setState(() {
+        _sentFailed = false;
+        _sent = null;
+      });
+    }
     try {
       final sent = await (widget.requestService ?? RequestService())
           .myRequests();
+      ScreenCache.write(RequestsScreen._kSent, sent);
       if (mounted) setState(() => _sent = sent);
       _loadCodes(sent);
       if (mounted && sent.any((r) => _closes(r.status))) {
@@ -201,7 +265,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       }
     } catch (e) {
       debugPrint('[Requests] sent requests: $e');
-      if (mounted) {
+      if (mounted && !quiet) {
         setState(() {
           _sent = const [];
           _sentFailed = true;
@@ -221,6 +285,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         debugPrint('[Requests] delivery code: $e');
       }
     }
+    ScreenCache.write(RequestsScreen._kCodes, codes);
     if (mounted) setState(() => _codes = codes);
   }
 
@@ -407,10 +472,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
   /// Requests acted on just now (accept / decline in flight).
   final Set<String> _busy = {};
 
-  Future<void> _loadIncoming() async {
+  /// [quiet] refreshes keep what is on screen if they fail.
+  Future<void> _loadIncoming({bool quiet = false}) async {
     try {
       final list = await (widget.requestService ?? RequestService())
           .incomingRequests();
+      ScreenCache.write(RequestsScreen._kIncoming, list);
       if (mounted) {
         setState(() {
           _incomingAll = list;
@@ -422,7 +489,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       }
     } catch (e) {
       debugPrint('[Requests] incoming requests: $e');
-      if (mounted) {
+      if (mounted && !quiet) {
         setState(() {
           _incomingAll = const [];
           _incomingFailed = true;

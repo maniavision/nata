@@ -11,6 +11,7 @@ import '../main.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
+import '../services/screen_cache.dart';
 import '../widgets/avatar_image.dart';
 import '../services/emergency_contact_service.dart';
 import '../services/traveler_service.dart';
@@ -43,6 +44,39 @@ class ProfileScreen extends StatefulWidget {
     this.emergencyService,
     this.travelerService,
   });
+
+  /// Where the page keeps what it showed between visits (ScreenCache).
+  static const cacheKey = 'profile';
+
+  /// Loads the profile figures ahead of a first visit (from Home).
+  static Future<void> preload([AuthService? authService]) async {
+    if (ScreenCache.read<Map<String, Object?>>(cacheKey) != null) return;
+    final auth = authService ?? AuthService();
+    final (profile, balances, stats) = await (
+      auth.getProfile(),
+      auth.getWalletBalances(),
+      auth.getStats(),
+    ).wait;
+    if (profile == null) return;
+    final first = (profile['first_name'] ?? '') as String;
+    final last = (profile['last_name'] ?? '') as String;
+    final createdAt = profile['created_at'] as String?;
+    ScreenCache.write(cacheKey, <String, Object?>{
+      'avatarPath': profile['avatar_path'],
+      'firstName': first,
+      'lastName': last,
+      if (first.isNotEmpty || last.isNotEmpty)
+        'displayName': '$first $last'.trim(),
+      if (createdAt != null)
+        'memberSince': DateFormat('MMM yyyy').format(DateTime.parse(createdAt)),
+      'verificationStatus': profile['verification_status'] ?? 'unverified',
+      'avgRating': (profile['avg_rating'] as num?)?.toDouble(),
+      'available': balances['available'] ?? 0.0,
+      'escrow': balances['escrow'] ?? 0.0,
+      'trips': stats['trips'] ?? 0,
+      'parcels': stats['parcels'] ?? 0,
+    });
+  }
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -98,10 +132,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) setState(() {});
   }
 
+  /// Everything this page shows, kept between visits.
+  void _saveSnapshot() => ScreenCache.write(ProfileScreen.cacheKey, {
+    'avatarPath': _avatarPath,
+    'firstName': _firstName,
+    'lastName': _lastName,
+    'displayName': _displayName,
+    'memberSince': _memberSinceDate,
+    'verificationStatus': _verificationStatus,
+    'avgRating': _avgRating,
+    'reviewCount': _reviewCount,
+    'available': _availableBalance,
+    'escrow': _escrowBalance,
+    'trips': _tripsCount,
+    'parcels': _parcelsCount,
+    'emergencyContact': _emergencyContact,
+    'isAdmin': _isAdmin,
+  });
+
+  void _restoreSnapshot(Map<String, Object?> s) {
+    _avatarPath = s['avatarPath'] as String?;
+    _firstName = s['firstName'] as String? ?? '';
+    _lastName = s['lastName'] as String? ?? '';
+    _displayName = s['displayName'] as String? ?? _displayName;
+    _memberSinceDate = s['memberSince'] as String? ?? _memberSinceDate;
+    _verificationStatus = s['verificationStatus'] as String? ?? 'unverified';
+    _avgRating = s['avgRating'] as double?;
+    _reviewCount = s['reviewCount'] as int?;
+    _availableBalance = s['available'] as double? ?? 0.0;
+    _escrowBalance = s['escrow'] as double? ?? 0.0;
+    _tripsCount = s['trips'] as int? ?? 0;
+    _parcelsCount = s['parcels'] as int? ?? 0;
+    _emergencyContact = s['emergencyContact'] as EmergencyContact?;
+    _isAdmin = s['isAdmin'] as bool? ?? false;
+    _isLoading = false;
+  }
+
   @override
   void initState() {
     super.initState();
     PreferencesService().addListener(_onPrefsChanged);
+    // What this page showed last time, straight away; then the latest.
+    final cached = ScreenCache.read<Map<String, Object?>>(
+      ProfileScreen.cacheKey,
+    );
+    if (cached != null) _restoreSnapshot(cached);
     _loadProfile();
     _setupStreams();
     _loadEmergencyContact();
@@ -111,7 +186,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadAdmin() async {
     try {
       final admin = await SupportAccess.isAdmin();
-      if (mounted && admin != _isAdmin) setState(() => _isAdmin = admin);
+      if (mounted && admin != _isAdmin) {
+        setState(() => _isAdmin = admin);
+        _saveSnapshot();
+      }
     } catch (e) {
       debugPrint('[Profile] admin check: $e');
     }
@@ -121,7 +199,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final contact =
           await (widget.emergencyService ?? EmergencyContactService()).get();
-      if (mounted) setState(() => _emergencyContact = contact);
+      if (mounted) {
+        setState(() => _emergencyContact = contact);
+        _saveSnapshot();
+      }
     } catch (e) {
       debugPrint('[Profile] emergency contact error: $e');
     }
@@ -132,7 +213,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final reviews = await (widget.travelerService ?? TravelerService())
           .reviews(userId, limit: 1);
-      if (mounted) setState(() => _reviewCount = reviews.total);
+      if (mounted) {
+        setState(() => _reviewCount = reviews.total);
+        _saveSnapshot();
+      }
     } catch (e) {
       debugPrint('[Profile] review count error: $e');
     }
@@ -161,6 +245,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _verificationStatus = profile['verification_status'] ?? 'unverified';
           _avgRating = (profile['avg_rating'] as num?)?.toDouble();
         });
+        _saveSnapshot();
       }
     }, onError: (Object e) => debugPrint('[Profile] profile stream error: $e'));
 
@@ -170,6 +255,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _availableBalance = balances['available'] ?? 0.0;
           _escrowBalance = balances['escrow'] ?? 0.0;
         });
+        _saveSnapshot();
       }
     }, onError: (Object e) => debugPrint('[Profile] wallet stream error: $e'));
 
@@ -179,6 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _tripsCount = stats['trips'] ?? 0;
           _parcelsCount = stats['parcels'] ?? 0;
         });
+        _saveSnapshot();
       }
     }, onError: (Object e) => debugPrint('[Profile] stats stream error: $e'));
   }
@@ -219,6 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           _isLoading = false;
         });
+        _saveSnapshot();
         final id = profile['id'] as String?;
         if (id != null && _avgRating != null) _loadReviewCount(id);
       }
