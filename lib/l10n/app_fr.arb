@@ -435,6 +435,8 @@
   "noNotifications": "Aucune notification pour le moment",
   "noNotificationsSub": "Nous vous préviendrons ici dès qu'il se passe quelque chose avec vos trajets, demandes et paiements.",
   "couldNotLoadNotifications": "Impossible de charger vos notifications.",
+  "notifDelete": "Supprimer",
+  "errNotifDelete": "Impossible de supprimer la notification. Réessayez.",
   "justNow": "À l'instant",
   "yesterdayLabel": "Hier",
   "minutesAgo": "il y a {count} min",

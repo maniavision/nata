@@ -9,6 +9,7 @@ import '../main.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/nata_toast.dart';
 import 'requests_screen.dart';
 import 'chat_thread_screen.dart';
 import 'traveler_results_screen.dart';
@@ -66,6 +67,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   List<AppNotification> _items = const [];
   bool _loading = true;
   bool _failed = false;
+
+  /// Bumped when a delete fails, so the card comes back as a new swipeable.
+  int _restores = 0;
 
   /// 0 = All, 1 = Requests, 2 = Trips, 3 = Payments
   int _filter = 0;
@@ -178,6 +182,30 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await _service.markAllRead();
     } catch (_) {
       if (mounted) setState(() => _items = before);
+    }
+    unawaited(AppBadge.refresh());
+  }
+
+  // Optimistic: the card goes at once; if deleting fails it comes back.
+  Future<void> _delete(AppNotification n) async {
+    final before = _items;
+    setState(
+      () => _items = [
+        for (final x in _items)
+          if (x.id != n.id) x,
+      ],
+    );
+    try {
+      await _service.delete(n.id);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _items = before;
+        _restores++;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        nataToast(context.l10n.errNotifDelete, tone: ToastTone.error),
+      );
     }
     unawaited(AppBadge.refresh());
   }
@@ -483,85 +511,121 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final (title, body) = notificationText(l, n);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        key: ValueKey('notif-${n.id}'),
-        onTap: () => _open(n),
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
-              BoxShadow(color: Color(0x0D000000), offset: Offset(0, 1)),
-            ],
+      child: Dismissible(
+        key: ValueKey('notif-swipe-${n.id}-$_restores'),
+        direction: DismissDirection.endToStart,
+        onDismissed: (_) => _delete(n),
+        background: _deleteBackground(),
+        child: _cardBody(n, now, title, body),
+      ),
+    );
+  }
+
+  /// Behind a card being swiped left: the delete action.
+  Widget _deleteBackground() => Container(
+    alignment: AlignmentDirectional.centerEnd,
+    padding: const EdgeInsets.symmetric(horizontal: 20),
+    decoration: BoxDecoration(
+      color: AppColors.destructive,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
+        const SizedBox(width: 6),
+        Text(
+          context.l10n.notifDelete,
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            color: Colors.white,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _leading(n),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: AppColors.foreground,
-                            ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _cardBody(AppNotification n, DateTime now, String title, String body) {
+    final l = context.l10n;
+    return GestureDetector(
+      key: ValueKey('notif-${n.id}'),
+      onTap: () => _open(n),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(color: Color(0x0D000000), offset: Offset(0, 1)),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _leading(n),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: AppColors.foreground,
                           ),
-                        ),
-                        if (!n.isRead) ...[
-                          const SizedBox(width: 8),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Container(
-                              key: ValueKey('notif-unread-${n.id}'),
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.accent,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (body.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        body,
-                        maxLines: n.type == 'message' ? 1 : 4,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 12,
-                          color: AppColors.mutedForeground,
-                          height: 1.4,
                         ),
                       ),
+                      if (!n.isRead) ...[
+                        const SizedBox(width: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Container(
+                            key: ValueKey('notif-unread-${n.id}'),
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.accent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                    const SizedBox(height: 6),
+                  ),
+                  if (body.isNotEmpty) ...[
+                    const SizedBox(height: 2),
                     Text(
-                      notificationTimeLabel(l, now, n.createdAt),
+                      body,
+                      maxLines: n.type == 'message' ? 1 : 4,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.dmSans(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: AppColors.mutedForeground,
+                        height: 1.4,
                       ),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    notificationTimeLabel(l, now, n.createdAt),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

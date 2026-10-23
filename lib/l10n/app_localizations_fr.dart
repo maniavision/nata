@@ -1204,6 +1204,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de charger vos notifications.';
 
   @override
+  String get notifDelete => 'Supprimer';
+
+  @override
+  String get errNotifDelete =>
+      'Impossible de supprimer la notification. Réessayez.';
+
+  @override
   String get justNow => 'À l\'instant';
 
   @override

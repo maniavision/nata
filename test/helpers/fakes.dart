@@ -437,6 +437,8 @@ class FakeNotificationService extends Fake implements NotificationService {
   bool failList = false;
   bool failMarkRead = false;
   bool failMarkAll = false;
+  bool failDelete = false;
+  final List<String> deleted = [];
 
   int listCalls = 0;
   final List<String> markedRead = [];
@@ -461,6 +463,13 @@ class FakeNotificationService extends Fake implements NotificationService {
     if (failMarkAll) throw Exception('mark all failed');
     markAllCalls++;
     items = [for (final n in items) n.copyWith(isRead: true)];
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    if (failDelete) throw Exception('delete failed');
+    deleted.add(id);
+    items = [for (final n in items) if (n.id != id) n];
   }
 
   @override

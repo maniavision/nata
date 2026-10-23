@@ -437,6 +437,8 @@
   "noNotifications": "No notifications yet",
   "noNotificationsSub": "We'll let you know here when something happens with your trips, requests and payments.",
   "couldNotLoadNotifications": "Could not load your notifications.",
+  "notifDelete": "Delete",
+  "errNotifDelete": "Could not delete the notification. Please try again.",
   "justNow": "Just now",
   "yesterdayLabel": "Yesterday",
   "minutesAgo": "{count} min ago",

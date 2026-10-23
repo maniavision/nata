@@ -137,6 +137,21 @@ class NotificationService {
     }
   }
 
+  /// Deletes one of the member's notifications (swiped away).
+  Future<void> delete(String id) async {
+    try {
+      await _client
+          .schema('nata')
+          .from('notifications')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', _userId);
+    } catch (e) {
+      debugPrint('[NotificationService] delete error: $e');
+      rethrow;
+    }
+  }
+
   Future<void> markAllRead() async {
     try {
       await _client

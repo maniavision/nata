@@ -1186,6 +1186,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotLoadNotifications => 'Could not load your notifications.';
 
   @override
+  String get notifDelete => 'Delete';
+
+  @override
+  String get errNotifDelete =>
+      'Could not delete the notification. Please try again.';
+
+  @override
   String get justNow => 'Just now';
 
   @override
