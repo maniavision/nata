@@ -324,6 +324,7 @@ void main() {
     testWidgets('mobile money: charged in the wallet country\'s currency', (
       tester,
     ) async {
+      service.nextPayment = const PaymentLink(null, 'nata-req-1-tx');
       await pumpPayable(tester);
       await tester.tap(find.text('Mobile Money'));
       await tester.pump();
@@ -332,11 +333,234 @@ void main() {
       // The phone's country is suggested, with the converted amount.
       expect(find.text('Kenya · KES'), findsOneWidget);
       expect(find.textContaining('KES 14,230'), findsWidgets);
+
+      // M-Pesa is charged directly: the number is asked for, no network.
+      expect(find.byKey(const ValueKey('mobile-money-phone')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('mobile-money-network-MTN')),
+        findsNothing,
+      );
+      expect(payButton(tester).onPressed, isNull);
+      expect(find.text('Enter your mobile money number'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('mobile-money-phone')),
+        '0712 345 678',
+      );
+      await tester.pump();
       expect(find.text('Pay KES 14,230 into Escrow'), findsOneWidget);
 
       await pay(tester);
-      expect(service.paymentsStarted.single.method, PayMethod.mobileMoney);
-      expect(service.paymentsStarted.single.country, 'KE');
+      final started = service.paymentsStarted.single;
+      expect(started.method, PayMethod.mobileMoney);
+      expect(started.country, 'KE');
+      expect(started.phone, '+254712345678');
+      expect(started.network, isNull);
+    });
+
+    group('mobile money charged directly', () {
+      setUp(() {
+        service.mobileOptions = const [
+          MobileMoneyOption(
+            countryCode: 'CM',
+            countryName: 'Cameroon',
+            currency: 'XAF',
+            amount: 65566,
+            suggested: true,
+          ),
+          MobileMoneyOption(
+            countryCode: 'GH',
+            countryName: 'Ghana',
+            currency: 'GHS',
+            amount: 1210,
+          ),
+        ];
+        service.nextPayment = const PaymentLink(null, 'nata-req-1-tx');
+      });
+
+      Future<void> chooseMobileMoney(WidgetTester tester) async {
+        await pumpPayable(tester);
+        await tester.tap(find.text('Mobile Money'));
+        await tester.pump();
+        await tester.pump();
+      }
+
+      Future<void> enterWallet(WidgetTester tester) async {
+        await tester.tap(
+          find.byKey(const ValueKey('mobile-money-network-MTN')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('mobile-money-phone')),
+          '6 77 12 34 56',
+        );
+        await tester.pump();
+      }
+
+      testWidgets('asks for the network and number before paying', (
+        tester,
+      ) async {
+        await chooseMobileMoney(tester);
+
+        expect(find.text('MTN Mobile Money'), findsOneWidget);
+        expect(find.text('Orange Money'), findsOneWidget);
+        expect(find.text('+237  '), findsOneWidget);
+        expect(payButton(tester).onPressed, isNull);
+
+        // A number alone isn't enough: the network too.
+        await tester.enterText(
+          find.byKey(const ValueKey('mobile-money-phone')),
+          '6 77 12 34 56',
+        );
+        await tester.pump();
+        expect(payButton(tester).onPressed, isNull);
+
+        await tester.tap(
+          find.byKey(const ValueKey('mobile-money-network-MTN')),
+        );
+        await tester.pump();
+        expect(payButton(tester).onPressed, isNotNull);
+      });
+
+      testWidgets('a number too short keeps payment locked', (tester) async {
+        await chooseMobileMoney(tester);
+        await tester.tap(
+          find.byKey(const ValueKey('mobile-money-network-MTN')),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('mobile-money-phone')),
+          '677',
+        );
+        await tester.pump();
+        expect(payButton(tester).onPressed, isNull);
+      });
+
+      testWidgets('charges the phone and waits for approval, no page', (
+        tester,
+      ) async {
+        service.paymentStatuses = [
+          PaymentStatus.pending,
+          PaymentStatus.successful,
+        ];
+        await chooseMobileMoney(tester);
+        await enterWallet(tester);
+        await pay(tester);
+
+        final started = service.paymentsStarted.single;
+        expect(started.country, 'CM');
+        expect(started.phone, '+237677123456');
+        expect(started.network, 'MTN');
+        expect(opened, isEmpty);
+        expect(
+          find.byKey(const ValueKey('checkout-approve-on-phone')),
+          findsOneWidget,
+        );
+        expect(find.text('Approve the payment on your phone'), findsOneWidget);
+        expect(
+          find.textContaining('+237677123456 (MTN Mobile Money)'),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('checkout-open-payment')),
+          findsNothing,
+        );
+
+        await tester.pump(const Duration(seconds: 3)); // pending
+        expect(popped, isNull);
+        await tester.pump(const Duration(seconds: 3)); // successful
+        await tester.pumpAndSettle();
+
+        expect(service.paymentChecks, hasLength(2));
+        expect(closed, 0); // No page to close.
+        expect(popped, isTrue);
+      });
+
+      testWidgets('"I\'ve approved" checks now; another way can be chosen', (
+        tester,
+      ) async {
+        await chooseMobileMoney(tester);
+        await enterWallet(tester);
+        await pay(tester);
+
+        await tester.tap(find.text("I've approved, check now"));
+        await tester.pump();
+        await tester.pump();
+        expect(service.paymentChecks, hasLength(1));
+        expect(
+          find.textContaining("haven't received the payment yet"),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const ValueKey('checkout-abandon-payment')),
+        );
+        await tester.pump();
+        expect(find.byKey(const ValueKey('checkout-pay')), findsOneWidget);
+      });
+
+      testWidgets('a declined prompt can be tried again', (tester) async {
+        service.paymentStatuses = [PaymentStatus.failed];
+        await chooseMobileMoney(tester);
+        await enterWallet(tester);
+        await pay(tester);
+
+        await tester.pump(const Duration(seconds: 3));
+        await tester.pump();
+
+        expect(closed, 0);
+        expect(find.textContaining("didn't go through"), findsOneWidget);
+        expect(find.byKey(const ValueKey('checkout-pay')), findsOneWidget);
+      });
+
+      testWidgets('a number the provider refuses is explained', (tester) async {
+        service.failStartPayment = const RequestException(
+          RequestFailure.phoneRejected,
+        );
+        await chooseMobileMoney(tester);
+        await enterWallet(tester);
+        await pay(tester);
+        await tester.pump();
+
+        expect(find.textContaining("can't be charged"), findsOneWidget);
+        expect(find.byKey(const ValueKey('checkout-pay')), findsOneWidget);
+      });
+
+      testWidgets('a wallet that still needs a page opens it', (tester) async {
+        service.nextPayment = PaymentLink(
+          Uri.parse('https://orange.test/approve/1'),
+          'nata-req-1-tx',
+        );
+        await chooseMobileMoney(tester);
+        await enterWallet(tester);
+        await pay(tester);
+
+        expect(opened, [Uri.parse('https://orange.test/approve/1')]);
+        expect(
+          find.byKey(const ValueKey('checkout-payment-in-progress')),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('countries that need Flutterwave\'s page ask no number', (
+        tester,
+      ) async {
+        service.nextPayment = PaymentLink(
+          Uri.parse('https://checkout.flutterwave.test/pay/gh'),
+          'nata-req-1-tx',
+        );
+        await chooseMobileMoney(tester);
+        await tester.tap(find.byKey(const ValueKey('mobile-money-country')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Ghana · GHS').last);
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const ValueKey('mobile-money-direct')), findsNothing);
+        expect(payButton(tester).onPressed, isNotNull);
+
+        await pay(tester);
+        expect(service.paymentsStarted.single.phone, isNull);
+        expect(service.paymentsStarted.single.network, isNull);
+        expect(opened, hasLength(1));
+      });
     });
 
     testWidgets('bank transfer: charged in naira at today\'s rate', (
@@ -422,7 +646,8 @@ void main() {
       await tester.tap(find.text('Retry'));
       await tester.pump();
       await tester.pump();
-      expect(find.text('Pay KES 14,230 into Escrow'), findsOneWidget);
+      expect(find.text('Kenya · KES'), findsOneWidget);
+      expect(find.byKey(const ValueKey('mobile-money-error')), findsNothing);
     });
 
     testWidgets('payments not set up yet: said plainly', (tester) async {

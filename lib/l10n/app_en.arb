@@ -1443,6 +1443,24 @@
   },
   "errMobileMoneyUnavailable": "Mobile money isn't available for this country. Please choose another country or pay by card.",
   "errMobileMoneyOptions": "Couldn't load the mobile money countries.",
+  "mobileMoneyNetwork": "Network",
+  "mobileMoneyNumber": "Mobile money number",
+  "mobileMoneyNumberNote": "You'll approve the payment on this phone, with no payment page.",
+  "enterMobileNumberToPay": "Enter your mobile money number",
+  "approveOnPhone": "Approve the payment on your phone",
+  "approveOnPhoneSub": "We sent a request for {amount} to {phone}. Enter your PIN in the prompt to approve it. This page updates by itself.",
+  "@approveOnPhoneSub": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "iApprovedCheckNow": "I've approved, check now",
+  "errPhoneRejected": "This number can't be charged. Check the number and network, or choose another way to pay.",
   "bankTransfer": "Bank Transfer",
   "bankTransferSub": "Pay into a Nigerian bank account (NGN)",
   "bankTransferChargedAs": "You'll pay {local} by bank transfer, at today's rate. The delivery price stays {price}. Flutterwave gives you the account to pay into.",

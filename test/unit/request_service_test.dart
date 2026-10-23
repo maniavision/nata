@@ -19,6 +19,8 @@ class MockStorage extends Mock implements SupabaseStorageClient {}
 
 class MockFileApi extends Mock implements StorageFileApi {}
 
+class MockFunctions extends Mock implements FunctionsClient {}
+
 class FakeFileOptions extends Fake implements FileOptions {}
 
 class FakeRpc extends Fake implements PostgrestFilterBuilder<dynamic> {
@@ -1314,5 +1316,97 @@ void main() {
       RequestService.reasonFor('nata:request_not_found'),
       RequestFailure.requestNotFound,
     );
+  });
+
+  group('mobile money charged directly', () {
+    late MockSupabaseClient client;
+    late MockFunctions functions;
+    late RequestService service;
+    Map<String, dynamic>? sent;
+
+    setUp(() {
+      client = MockSupabaseClient();
+      functions = MockFunctions();
+      sent = null;
+      when(() => client.functions).thenReturn(functions);
+      service = RequestService(client: client);
+    });
+
+    void answer(Map<String, dynamic> data) =>
+        when(
+          () => functions.invoke('create-payment', body: any(named: 'body')),
+        ).thenAnswer((inv) async {
+          sent = Map<String, dynamic>.from(
+            inv.namedArguments[#body] as Map<dynamic, dynamic>,
+          );
+          return FunctionResponse(data: data, status: 200);
+        });
+
+    test('sends the number and network, and gets no page back', () async {
+      answer({'tx_ref': 'nata-1', 'direct': true});
+      final payment = await service.startPayment(
+        'req-1',
+        PayMethod.mobileMoney,
+        country: 'CM',
+        phone: '+237677123456',
+        network: 'MTN',
+      );
+      expect(sent, {
+        'request_id': 'req-1',
+        'method': 'mobile_money',
+        'country': 'CM',
+        'phone': '+237677123456',
+        'network': 'MTN',
+      });
+      expect(payment.direct, isTrue);
+      expect(payment.link, isNull);
+      expect(payment.txRef, 'nata-1');
+    });
+
+    test('a page in the answer is opened instead', () async {
+      answer({'tx_ref': 'nata-1', 'link': 'https://pay.test/1'});
+      final payment = await service.startPayment(
+        'req-1',
+        PayMethod.mobileMoney,
+        country: 'GH',
+      );
+      expect(sent!.containsKey('phone'), isFalse);
+      expect(payment.direct, isFalse);
+      expect(payment.link, Uri.parse('https://pay.test/1'));
+    });
+
+    test('a refused number is phoneRejected', () async {
+      when(
+        () => functions.invoke('create-payment', body: any(named: 'body')),
+      ).thenThrow(
+        const FunctionException(
+          status: 422,
+          details: {'error': 'phone_rejected'},
+        ),
+      );
+      await expectLater(
+        service.startPayment('req-1', PayMethod.mobileMoney, country: 'KE'),
+        throwsA(
+          isA<RequestException>().having(
+            (e) => e.reason,
+            'reason',
+            RequestFailure.phoneRejected,
+          ),
+        ),
+      );
+    });
+
+    test('only countries whose charges need no page are direct', () {
+      expect(DirectMobileMoney.of('KE')!.networks, isEmpty);
+      expect(DirectMobileMoney.of('cm')!.dialCode, '+237');
+      expect(DirectMobileMoney.of('CI')!.networks.map((n) => n.code), [
+        'MTN',
+        'ORANGEMONEY',
+        'MOOV',
+      ]);
+      for (final page in ['GH', 'UG', 'RW', 'ZM', 'SN', 'BF', null]) {
+        expect(DirectMobileMoney.of(page), isNull, reason: '$page');
+      }
+    });
   });
 }

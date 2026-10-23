@@ -155,6 +155,9 @@ enum RequestFailure {
   /// Mobile money isn't available in that country.
   mobileMoneyUnavailable,
 
+  /// The payment provider refused the mobile money number or network.
+  phoneRejected,
+
   /// The item isn't marked delivered yet.
   notDelivered,
 
@@ -201,11 +204,53 @@ enum PayMethod {
   final String wire;
 }
 
-/// Flutterwave's payment page for one payment, and our reference for it.
+/// A payment started with Flutterwave, and our reference for it: its
+/// payment page, or no page for mobile money charged directly, which the
+/// payer approves on their phone.
 class PaymentLink {
-  final Uri link;
+  final Uri? link;
   final String txRef;
   const PaymentLink(this.link, this.txRef);
+
+  /// Charged directly: waiting for the payer to approve it on their phone.
+  bool get direct => link == null;
+}
+
+/// A mobile money network the payer picks, with Flutterwave's code for it.
+class MobileMoneyNetwork {
+  final String code;
+  final String name;
+  const MobileMoneyNetwork(this.code, this.name);
+}
+
+/// The countries whose mobile money is charged directly, with no payment
+/// page: the payer approves a prompt on their phone. Elsewhere (Ghana,
+/// Uganda, Rwanda, Zambia, Senegal...) Flutterwave needs its page, so
+/// checkout opens it. Keep in step with DIRECT in create-payment.
+class DirectMobileMoney {
+  final String dialCode;
+
+  /// Empty where the number settles the network (M-Pesa, Tanzania).
+  final List<MobileMoneyNetwork> networks;
+
+  const DirectMobileMoney(this.dialCode, this.networks);
+
+  static const byCountry = <String, DirectMobileMoney>{
+    'KE': DirectMobileMoney('+254', []),
+    'TZ': DirectMobileMoney('+255', []),
+    'CM': DirectMobileMoney('+237', [
+      MobileMoneyNetwork('MTN', 'MTN Mobile Money'),
+      MobileMoneyNetwork('ORANGEMONEY', 'Orange Money'),
+    ]),
+    'CI': DirectMobileMoney('+225', [
+      MobileMoneyNetwork('MTN', 'MTN Mobile Money'),
+      MobileMoneyNetwork('ORANGEMONEY', 'Orange Money'),
+      MobileMoneyNetwork('MOOV', 'Moov Money'),
+    ]),
+  };
+
+  static DirectMobileMoney? of(String? country) =>
+      byCountry[(country ?? '').toUpperCase()];
 }
 
 /// Where a payment stands.
@@ -1042,11 +1087,16 @@ class RequestService {
   /// Starts paying [requestId] into escrow: a Flutterwave payment page for
   /// the price fixed when the traveler accepted (create-payment). [email] is
   /// the payer's, for an account without one; it is kept for next time.
+  /// Mobile money with a [phone] (international) and [network] in a country
+  /// of [DirectMobileMoney] is charged directly: no page, a prompt on the
+  /// phone.
   Future<PaymentLink> startPayment(
     String requestId,
     PayMethod method, {
     String? country,
     String? email,
+    String? phone,
+    String? network,
   }) async {
     try {
       final response = await _client.functions.invoke(
@@ -1056,11 +1106,14 @@ class RequestService {
           'method': method.wire,
           if (country != null) 'country': country,
           if (email != null) 'email': email,
+          if (phone != null) 'phone': phone,
+          if (network != null) 'network': network,
         },
       );
       final data = Map<String, dynamic>.from(response.data as Map);
+      final link = data['link'] as String?;
       return PaymentLink(
-        Uri.parse(data['link'] as String),
+        link == null ? null : Uri.parse(link),
         data['tx_ref'] as String,
       );
     } on FunctionException catch (e) {
@@ -1074,6 +1127,7 @@ class RequestService {
         'payments_unavailable' => RequestFailure.paymentsUnavailable,
         'email_required' => RequestFailure.emailRequired,
         'mobile_money_unavailable' => RequestFailure.mobileMoneyUnavailable,
+        'phone_rejected' => RequestFailure.phoneRejected,
         'rate_unavailable' => RequestFailure.rateUnavailable,
         'unauthorized' => RequestFailure.notSignedIn,
         _ => RequestFailure.other,

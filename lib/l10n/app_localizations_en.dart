@@ -3011,6 +3011,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t load the mobile money countries.';
 
   @override
+  String get mobileMoneyNetwork => 'Network';
+
+  @override
+  String get mobileMoneyNumber => 'Mobile money number';
+
+  @override
+  String get mobileMoneyNumberNote =>
+      'You\'ll approve the payment on this phone, with no payment page.';
+
+  @override
+  String get enterMobileNumberToPay => 'Enter your mobile money number';
+
+  @override
+  String get approveOnPhone => 'Approve the payment on your phone';
+
+  @override
+  String approveOnPhoneSub(String amount, String phone) {
+    return 'We sent a request for $amount to $phone. Enter your PIN in the prompt to approve it. This page updates by itself.';
+  }
+
+  @override
+  String get iApprovedCheckNow => 'I\'ve approved, check now';
+
+  @override
+  String get errPhoneRejected =>
+      'This number can\'t be charged. Check the number and network, or choose another way to pay.';
+
+  @override
   String get bankTransfer => 'Bank Transfer';
 
   @override
@@ -3256,9 +3284,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountNumber => 'Account number';
-
-  @override
-  String get mobileMoneyNumber => 'Mobile money number';
 
   @override
   String get accountHolderName => 'Account holder name';
