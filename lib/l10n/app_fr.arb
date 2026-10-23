@@ -181,7 +181,7 @@
   "requestsActive": "En cours",
   "requestsArchive": "Archives",
   "requestsArchiveCount": "Archives · {count}",
-  "requestsArchiveNote": "Les demandes livrées arrivent ici 24 heures après la livraison, ou quand vous les faites glisser.",
+  "requestsArchiveNote": "Les demandes livrées, annulées et expirées arrivent ici 24 heures après leur clôture, ou quand vous les faites glisser.",
   "requestsArchiveEmpty": "Rien d'archivé pour l'instant.",
   "archiveAction": "Archiver",
   "requestArchived": "Déplacée dans les archives",

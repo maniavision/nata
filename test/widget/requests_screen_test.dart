@@ -264,13 +264,15 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    DeliveredRequest delivered(
+    ClosedRequest closed(
       String id,
       Duration ago, {
+      String status = 'delivered',
       bool swiped = false,
-    }) => DeliveredRequest(
+    }) => ClosedRequest(
       id: id,
-      deliveredAt: now.subtract(ago),
+      status: status,
+      closedAt: now.subtract(ago),
       archivedByUser: swiped,
     );
 
@@ -285,9 +287,9 @@ void main() {
           sampleIncoming(id: 'old', status: 'delivered', firstName: 'Bola'),
           sampleIncoming(id: 'paid', status: 'paid', firstName: 'Chidi'),
         ];
-        service.delivered = {
-          'fresh': delivered('fresh', const Duration(hours: 3)),
-          'old': delivered('old', const Duration(hours: 25)),
+        service.closed = {
+          'fresh': closed('fresh', const Duration(hours: 3)),
+          'old': closed('old', const Duration(hours: 25)),
         };
       });
 
@@ -305,7 +307,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.textContaining('Bola'), findsWidgets);
         expect(find.textContaining('Ada'), findsNothing);
-        expect(find.textContaining('24 hours after delivery'), findsOneWidget);
+        expect(
+          find.textContaining('24 hours after they close'),
+          findsOneWidget,
+        );
       });
 
       testWidgets('a swipe left archives a delivered one now', (tester) async {
@@ -357,6 +362,24 @@ void main() {
         );
       });
 
+      testWidgets('cancelled and expired ones go straight to the Archive', (
+        tester,
+      ) async {
+        service.incoming = [
+          ...service.incoming,
+          sampleIncoming(id: 'gone', status: 'cancelled', firstName: 'Dayo'),
+          sampleIncoming(id: 'late', status: 'expired', firstName: 'Efe'),
+        ];
+        await pumpAt(tester);
+        expect(find.textContaining('Dayo'), findsNothing);
+        expect(archiveCount('3'), findsOneWidget);
+
+        await tester.tap(archiveTab());
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Dayo'), findsWidgets);
+        expect(find.textContaining('Efe'), findsWidgets);
+      });
+
       testWidgets('only delivered ones can be swiped away', (tester) async {
         await pumpAt(tester);
         expect(find.byKey(const ValueKey('archive-swipe-paid')), findsNothing);
@@ -382,7 +405,7 @@ void main() {
       testWidgets('without the archive state, nothing is hidden', (
         tester,
       ) async {
-        service.failDelivered = true;
+        service.failClosed = true;
         await pumpAt(tester);
         expect(find.textContaining('Bola'), findsWidgets);
         expect(archiveCount('0'), findsOneWidget);
@@ -396,9 +419,9 @@ void main() {
           sampleSentRequest(id: 'sent-old', status: 'delivered'),
           sampleSentRequest(id: 'sent-pending'),
         ];
-        service.delivered = {
-          'sent-new': delivered('sent-new', const Duration(hours: 2)),
-          'sent-old': delivered(
+        service.closed = {
+          'sent-new': closed('sent-new', const Duration(hours: 2)),
+          'sent-old': closed(
             'sent-old',
             const Duration(hours: 1),
             swiped: true,
@@ -428,8 +451,59 @@ void main() {
         expect(find.byType(Dismissible), findsNothing);
       });
 
+      testWidgets('cancelled and expired ones follow the same rule', (
+        tester,
+      ) async {
+        service.mine = [
+          sampleSentRequest(id: 'cancel-new', status: 'cancelled'),
+          sampleSentRequest(id: 'cancel-old', status: 'cancelled'),
+          sampleSentRequest(id: 'expired-new', status: 'expired'),
+          sampleSentRequest(id: 'still-pending'),
+        ];
+        service.closed = {
+          'cancel-new': closed(
+            'cancel-new',
+            const Duration(hours: 5),
+            status: 'cancelled',
+          ),
+          'cancel-old': closed(
+            'cancel-old',
+            const Duration(days: 2),
+            status: 'cancelled',
+          ),
+          'expired-new': closed(
+            'expired-new',
+            const Duration(hours: 1),
+            status: 'expired',
+          ),
+        };
+        await pumpAt(tester, tab: 1);
+
+        expect(
+          find.byKey(const ValueKey('archive-swipe-cancel-new')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('archive-swipe-cancel-old')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('archive-swipe-still-pending')),
+          findsNothing,
+        );
+        expect(archiveCount('1'), findsOneWidget);
+
+        await tester.drag(
+          find.byKey(const ValueKey('archive-swipe-expired-new')),
+          const Offset(-600, 0),
+        );
+        await tester.pumpAndSettle();
+        expect(service.archived, ['expired-new']);
+        expect(archiveCount('2'), findsOneWidget);
+      });
+
       testWidgets('an empty Archive says so', (tester) async {
-        service.delivered = {};
+        service.closed = {};
         await pumpAt(tester, tab: 1);
         await tester.tap(archiveTab());
         await tester.pumpAndSettle();

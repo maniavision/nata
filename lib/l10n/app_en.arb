@@ -188,7 +188,7 @@
       }
     }
   },
-  "requestsArchiveNote": "Delivered requests move here 24 hours after delivery, or when you swipe one away.",
+  "requestsArchiveNote": "Delivered, cancelled and expired requests move here 24 hours after they close, or when you swipe one away.",
   "requestsArchiveEmpty": "Nothing archived yet.",
   "archiveAction": "Archive",
   "requestArchived": "Moved to Archive",

@@ -1063,7 +1063,7 @@ abstract class AppLocalizations {
   /// No description provided for @requestsArchiveNote.
   ///
   /// In en, this message translates to:
-  /// **'Delivered requests move here 24 hours after delivery, or when you swipe one away.'**
+  /// **'Delivered, cancelled and expired requests move here 24 hours after they close, or when you swipe one away.'**
   String get requestsArchiveNote;
 
   /// No description provided for @requestsArchiveEmpty.

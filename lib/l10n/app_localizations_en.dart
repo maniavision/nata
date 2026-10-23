@@ -516,7 +516,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestsArchiveNote =>
-      'Delivered requests move here 24 hours after delivery, or when you swipe one away.';
+      'Delivered, cancelled and expired requests move here 24 hours after they close, or when you swipe one away.';
 
   @override
   String get requestsArchiveEmpty => 'Nothing archived yet.';
