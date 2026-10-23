@@ -469,7 +469,10 @@ class FakeNotificationService extends Fake implements NotificationService {
   Future<void> delete(String id) async {
     if (failDelete) throw Exception('delete failed');
     deleted.add(id);
-    items = [for (final n in items) if (n.id != id) n];
+    items = [
+      for (final n in items)
+        if (n.id != id) n,
+    ];
   }
 
   @override
@@ -964,6 +967,11 @@ class FakeRequestService extends Fake implements RequestService {
       countryName: 'Ghana',
       currency: 'GHS',
       amount: 1210,
+      dialCode: '+233',
+      networks: [
+        MobileMoneyNetwork('MTN_MOMO_GHA', 'MTN Mobile Money'),
+        MobileMoneyNetwork('VODAFONE_GHA', 'Telecel Cash'),
+      ],
     ),
     MobileMoneyOption(
       countryCode: 'KE',
@@ -971,6 +979,8 @@ class FakeRequestService extends Fake implements RequestService {
       currency: 'KES',
       amount: 14230,
       suggested: true,
+      dialCode: '+254',
+      networks: [MobileMoneyNetwork('MPESA_KEN', 'M-Pesa')],
     ),
   ];
   bool failMobileOptions = false;

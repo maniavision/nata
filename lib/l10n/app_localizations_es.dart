@@ -467,7 +467,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mobileMoney => 'Dinero móvil';
 
   @override
-  String get mobileMoneyPhoneSub => 'M-Pesa, MTN MoMo, Orange, Wave';
+  String get mobileMoneyPhoneSub => 'MTN MoMo, Airtel, Orange, M-Pesa';
 
   @override
   String get paymentBreakdown => 'DESGLOSE DE PAGO';
@@ -3101,6 +3101,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errPhoneRejected =>
       'No se puede cobrar a este número. Revisa el número y la red, o elige otra forma de pago.';
+
+  @override
+  String get errMobileAmountOutOfBounds =>
+      'Este importe es mayor o menor de lo que permite tu red de dinero móvil. Elige otra forma de pago.';
+
+  @override
+  String get errMobileNetworkUnavailable =>
+      'Tu red de dinero móvil no responde en este momento. Inténtalo de nuevo en unos minutos.';
 
   @override
   String get bankTransfer => 'Transferencia bancaria';

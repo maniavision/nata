@@ -158,6 +158,12 @@ enum RequestFailure {
   /// The payment provider refused the mobile money number or network.
   phoneRejected,
 
+  /// The amount is more or less than the mobile money network allows.
+  amountOutOfBounds,
+
+  /// The mobile money network is down for now.
+  networkUnavailable,
+
   /// The item isn't marked delivered yet.
   notDelivered,
 
@@ -204,9 +210,9 @@ enum PayMethod {
   final String wire;
 }
 
-/// A payment started with Flutterwave, and our reference for it: its
-/// payment page, or no page for mobile money charged directly, which the
-/// payer approves on their phone.
+/// A payment started, and our reference for it: Flutterwave's payment page
+/// (cards, Apple Pay, bank transfer), or no page for mobile money, charged
+/// through pawaPay: the payer approves a prompt on their phone.
 class PaymentLink {
   final Uri? link;
   final String txRef;
@@ -216,48 +222,27 @@ class PaymentLink {
   bool get direct => link == null;
 }
 
-/// A mobile money network the payer picks, with Flutterwave's code for it.
+/// A mobile money network the payer picks, with pawaPay's provider code for
+/// it (nata.mobile_money_networks).
 class MobileMoneyNetwork {
   final String code;
   final String name;
   const MobileMoneyNetwork(this.code, this.name);
-}
 
-/// The countries whose mobile money is charged directly, with no payment
-/// page: the payer approves a prompt on their phone. Elsewhere (Ghana,
-/// Uganda, Rwanda, Zambia, Senegal...) Flutterwave needs its page, so
-/// checkout opens it. Keep in step with DIRECT in create-payment.
-class DirectMobileMoney {
-  final String dialCode;
-
-  /// Empty where the number settles the network (M-Pesa, Tanzania).
-  final List<MobileMoneyNetwork> networks;
-
-  const DirectMobileMoney(this.dialCode, this.networks);
-
-  static const byCountry = <String, DirectMobileMoney>{
-    'KE': DirectMobileMoney('+254', []),
-    'TZ': DirectMobileMoney('+255', []),
-    'CM': DirectMobileMoney('+237', [
-      MobileMoneyNetwork('MTN', 'MTN Mobile Money'),
-      MobileMoneyNetwork('ORANGEMONEY', 'Orange Money'),
-    ]),
-    'CI': DirectMobileMoney('+225', [
-      MobileMoneyNetwork('MTN', 'MTN Mobile Money'),
-      MobileMoneyNetwork('ORANGEMONEY', 'Orange Money'),
-      MobileMoneyNetwork('MOOV', 'Moov Money'),
-    ]),
-  };
-
-  static DirectMobileMoney? of(String? country) =>
-      byCountry[(country ?? '').toUpperCase()];
+  factory MobileMoneyNetwork.fromJson(Map<String, dynamic> j) =>
+      MobileMoneyNetwork(
+        (j['code'] as String).trim(),
+        (j['name'] as String? ?? '').trim(),
+      );
 }
 
 /// Where a payment stands.
 enum PaymentStatus { pending, successful, failed }
 
 /// A country whose mobile money the sender can pay with, and what it would
-/// charge: the fixed price converted into that country's currency.
+/// charge: the fixed price converted into that country's currency. The
+/// payer's number and network are charged through pawaPay (a prompt on
+/// their phone, no payment page).
 class MobileMoneyOption {
   final String countryCode;
   final String countryName;
@@ -267,12 +252,20 @@ class MobileMoneyOption {
   /// The sender's own country (profile, else phone number).
   final bool suggested;
 
+  /// The country's calling code ("+242").
+  final String dialCode;
+
+  /// The networks pawaPay charges there, in the order to show them.
+  final List<MobileMoneyNetwork> networks;
+
   const MobileMoneyOption({
     required this.countryCode,
     required this.countryName,
     required this.currency,
     required this.amount,
     this.suggested = false,
+    this.dialCode = '',
+    this.networks = const [],
   });
 
   factory MobileMoneyOption.fromJson(Map<String, dynamic> j) =>
@@ -282,6 +275,11 @@ class MobileMoneyOption {
         currency: (j['currency'] as String).trim(),
         amount: (j['amount'] as num).toDouble(),
         suggested: j['suggested'] == true,
+        dialCode: (j['dial_code'] as String? ?? '').trim(),
+        networks: [
+          for (final n in (j['networks'] as List? ?? const []))
+            MobileMoneyNetwork.fromJson(Map<String, dynamic>.from(n as Map)),
+        ],
       );
 
   /// "KES 14,230"
@@ -1087,9 +1085,9 @@ class RequestService {
   /// Starts paying [requestId] into escrow: a Flutterwave payment page for
   /// the price fixed when the traveler accepted (create-payment). [email] is
   /// the payer's, for an account without one; it is kept for next time.
-  /// Mobile money with a [phone] (international) and [network] in a country
-  /// of [DirectMobileMoney] is charged directly: no page, a prompt on the
-  /// phone.
+  /// Mobile money is charged through pawaPay on the wallet's [phone]
+  /// (international) and [network] (MobileMoneyNetwork.code): no page, a
+  /// prompt on the phone.
   Future<PaymentLink> startPayment(
     String requestId,
     PayMethod method, {
@@ -1128,6 +1126,8 @@ class RequestService {
         'email_required' => RequestFailure.emailRequired,
         'mobile_money_unavailable' => RequestFailure.mobileMoneyUnavailable,
         'phone_rejected' => RequestFailure.phoneRejected,
+        'amount_out_of_bounds' => RequestFailure.amountOutOfBounds,
+        'network_unavailable' => RequestFailure.networkUnavailable,
         'rate_unavailable' => RequestFailure.rateUnavailable,
         'unauthorized' => RequestFailure.notSignedIn,
         _ => RequestFailure.other,

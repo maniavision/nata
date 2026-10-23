@@ -16,9 +16,9 @@ import '../widgets/nata_toast.dart';
 /// Pays for an accepted request. Step 1: the sender checks the traveler's
 /// flight ticket; step 2: the photo on the traveler's ID and their verified
 /// name; step 3: they pay into escrow on Flutterwave's page, which this
-/// screen watches until the payment goes through. Mobile money in the
-/// countries of [DirectMobileMoney] is charged with no page: the sender gives
-/// their number and network and approves the prompt on their phone.
+/// screen watches until the payment goes through. Mobile money is charged
+/// through pawaPay with no page: the sender gives their network and number
+/// and approves the prompt on their phone.
 class CheckoutEscrowScreen extends StatefulWidget {
   final SentRequest request;
 
@@ -78,12 +78,18 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   MobileMoneyOption? _mobileChoice;
   bool get _payingByMobile => _paymentMethod == 2;
 
-  /// Mobile money charged directly (no page): the wallet's network and
-  /// number, asked for where the chosen country allows it.
-  DirectMobileMoney? get _direct =>
-      _payingByMobile ? DirectMobileMoney.of(_mobileChoice?.countryCode) : null;
-  String? _mobileNetwork;
+  /// Mobile money is charged with no page: the wallet's country (with its
+  /// calling code and networks), network and number.
+  MobileMoneyOption? get _direct => _payingByMobile ? _mobileChoice : null;
+  String? _pickedNetwork;
   final _mobilePhoneCtrl = TextEditingController();
+
+  /// The network picked, or the country's only one.
+  String? get _mobileNetwork {
+    final networks = _direct?.networks ?? const [];
+    if (networks.length == 1) return networks.single.code;
+    return _pickedNetwork;
+  }
 
   /// The number in international form (+ code and number), or null while it
   /// isn't a whole one.
@@ -227,14 +233,13 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     try {
       final direct = _direct;
       final phone = direct == null ? null : _mobilePhone;
-      final network = direct == null || direct.networks.isEmpty
-          ? null
-          : _mobileNetwork;
+      final network = direct == null ? null : _mobileNetwork;
       final payment = await _service.startPayment(
         _r.id,
         _payMethods[_paymentMethod],
         country: _payingByMobile ? _mobileChoice?.countryCode : null,
-        email: _needsEmail ? _emailCtrl.text.trim() : null,
+        // Only Flutterwave needs an email.
+        email: _needsEmail && !_payingByMobile ? _emailCtrl.text.trim() : null,
         phone: phone,
         network: network,
       );
@@ -264,6 +269,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           RequestFailure.emailRequired => l.errEmailRequired,
           RequestFailure.mobileMoneyUnavailable => l.errMobileMoneyUnavailable,
           RequestFailure.phoneRejected => l.errPhoneRejected,
+          RequestFailure.amountOutOfBounds => l.errMobileAmountOutOfBounds,
+          RequestFailure.networkUnavailable => l.errMobileNetworkUnavailable,
           RequestFailure.rateUnavailable => l.errRateUnavailable,
           RequestFailure.notSignedIn => l.errSessionExpired,
           _ => l.errPaymentStart,
@@ -1056,7 +1063,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           }),
           if (_payingByMobile) _buildMobileMoneyPanel(),
           if (_payingByBank) _buildBankTransferPanel(),
-          if (_needsEmail) _buildEmailField(),
+          if (_needsEmail && !_payingByMobile) _buildEmailField(),
         ],
       ),
     );
@@ -1132,7 +1139,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ],
             onChanged: (code) => setState(() {
               if (code != _mobileChoice?.countryCode) {
-                _mobileNetwork = null;
+                _pickedNetwork = null;
                 _mobilePhoneCtrl.clear();
               }
               _mobileChoice = options.firstWhere((o) => o.countryCode == code);
@@ -1158,7 +1165,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   }
 
   /// The network and number to charge directly, with no payment page.
-  Widget _buildDirectWallet(DirectMobileMoney direct) {
+  Widget _buildDirectWallet(MobileMoneyOption direct) {
     final l = context.l10n;
     final label = GoogleFonts.dmSans(
       fontSize: 11,
@@ -1245,7 +1252,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   Widget _buildNetworkPill(MobileMoneyNetwork n, {required bool selected}) {
     return GestureDetector(
       key: ValueKey('mobile-money-network-${n.code}'),
-      onTap: () => setState(() => _mobileNetwork = n.code),
+      onTap: () => setState(() => _pickedNetwork = n.code),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
@@ -1553,7 +1560,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     final checked = _ticketChecked && !_expired;
     final countryChosen = !_payingByMobile || _mobileChoice != null;
     final bankReady = !_payingByBank || _bankQuote != null;
-    final emailGiven = !_needsEmail || _emailValid;
+    final emailGiven = !_needsEmail || _payingByMobile || _emailValid;
     final walletGiven = _directReady;
     final unlocked =
         checked && countryChosen && bankReady && walletGiven && emailGiven;

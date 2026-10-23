@@ -574,6 +574,8 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       case RequestFailure.notPaid:
       case RequestFailure.smsUnavailable:
       case RequestFailure.phoneRejected:
+      case RequestFailure.amountOutOfBounds:
+      case RequestFailure.networkUnavailable:
       case RequestFailure.tooSoon:
       case RequestFailure.alreadyReported:
       case RequestFailure.reportWindowClosed:
