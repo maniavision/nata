@@ -10,8 +10,12 @@ import 'notification_service.dart';
 /// one). The app sets it again whenever the count can change: when it opens
 /// or comes back, when a push arrives while it's open, when a notification is
 /// read (one, all, or a chat's messages), and back to 0 on sign-out.
+/// [unread] holds the same count for the bell on Home.
 class AppBadge {
   AppBadge._();
+
+  /// The last unread count, for the app's own badges (Home's bell).
+  static final ValueNotifier<int> unread = ValueNotifier(0);
 
   /// Replaced in tests.
   static Future<int> Function() loadUnread = () =>
@@ -23,7 +27,8 @@ class AppBadge {
   static Future<void> refresh() async {
     try {
       final count = AuthGate.isSignedIn() ? await loadUnread() : 0;
-      await show(count < 0 ? 0 : count);
+      unread.value = count < 0 ? 0 : count;
+      await show(unread.value);
     } catch (e) {
       debugPrint('[AppBadge] refresh: $e');
     }
@@ -31,6 +36,7 @@ class AppBadge {
 
   /// No badge (signing out).
   static Future<void> clear() async {
+    unread.value = 0;
     try {
       await show(0);
     } catch (e) {
