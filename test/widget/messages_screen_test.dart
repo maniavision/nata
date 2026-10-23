@@ -2,6 +2,7 @@ import 'package:carrywise_app/screens/chat_thread_screen.dart';
 import 'package:carrywise_app/screens/messages_screen.dart';
 import 'package:carrywise_app/services/message_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
@@ -358,6 +359,28 @@ void main() {
       expect(find.text('All (4)'), findsOneWidget);
       expect(find.text('Active (2)'), findsOneWidget); // accepted + paid
       expect(find.text('Completed (1)'), findsOneWidget); // delivered
+    });
+
+    testWidgets('filter labels sit in the middle of their chips', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      for (final (key, label) in [
+        ('messages-filter-0', 'All (4)'),
+        ('messages-filter-2', 'Completed (1)'),
+      ]) {
+        final chip = tester.getRect(find.byKey(ValueKey(key)));
+        final text = tester.getRect(find.text(label));
+        // The label's box is only as tall as its text (not stretched to the
+        // chip, which would draw the text at the top), and centered.
+        final lines = tester
+            .renderObject<RenderParagraph>(find.text(label))
+            .textSize
+            .height;
+        expect(text.height, closeTo(lines, 0.5), reason: label);
+        expect(text.center.dy, closeTo(chip.center.dy, 0.5), reason: label);
+      }
     });
 
     testWidgets('Active shows accepted and paid, not delivered or declined', (

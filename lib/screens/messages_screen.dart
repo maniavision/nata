@@ -294,9 +294,12 @@ class _MessagesScreenState extends State<MessagesScreen>
           return GestureDetector(
             key: ValueKey('messages-filter-$i'),
             onTap: () => setState(() => _filter = i),
+            // The row is 40 high and stretches each chip to it: keep the
+            // label in the middle.
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: active ? AppColors.primary : AppColors.card,
                 borderRadius: BorderRadius.circular(999),
