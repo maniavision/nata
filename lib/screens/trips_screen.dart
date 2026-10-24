@@ -6,6 +6,7 @@ import '../l10n/l10n_ext.dart';
 import '../services/screen_cache.dart';
 import '../services/verify_gate.dart';
 import '../services/trip_service.dart';
+import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'add_trip_screen.dart';
 import 'requests_screen.dart';
@@ -32,6 +33,10 @@ class TripsScreen extends StatefulWidget {
 }
 
 class _TripsScreenState extends State<TripsScreen> {
+  /// What the first-visit tips point at.
+  final _addTipKey = GlobalKey();
+  final _tabsTipKey = GlobalKey();
+
   static const _green = Color(0xFF168A68);
   static const _greenBg = Color(0xFFE4F4EE);
 
@@ -50,6 +55,24 @@ class _TripsScreenState extends State<TripsScreen> {
       _loading = false;
     }
     _load(quiet: cached != null);
+    CoachTips.showWhenSettled(
+      context,
+      name: 'trips',
+      tips: () => [
+        CoachTip(
+          target: _addTipKey,
+          icon: Icons.flight_takeoff_rounded,
+          title: context.l10n.tipTripsAddTitle,
+          body: context.l10n.tipTripsAddBody,
+        ),
+        CoachTip(
+          target: _tabsTipKey,
+          icon: Icons.event_rounded,
+          title: context.l10n.tipTripsTabsTitle,
+          body: context.l10n.tipTripsTabsBody,
+        ),
+      ],
+    );
   }
 
   /// [quiet] refreshes keep what is on screen if they fail.
@@ -130,7 +153,7 @@ class _TripsScreenState extends State<TripsScreen> {
             Column(
               children: [
                 _buildHeader(),
-                _buildTabs(),
+                KeyedSubtree(key: _tabsTipKey, child: _buildTabs()),
                 Expanded(child: _buildBody()),
               ],
             ),
@@ -181,6 +204,7 @@ class _TripsScreenState extends State<TripsScreen> {
             key: const ValueKey('trips-add'),
             onTap: _openAddTrip,
             child: Container(
+              key: _addTipKey,
               width: 40,
               height: 40,
               decoration: const BoxDecoration(

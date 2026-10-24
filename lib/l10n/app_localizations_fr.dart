@@ -4396,4 +4396,103 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get daNeedHelp => 'Besoin d’aide ? Contactez le support Nata.';
+
+  @override
+  String get tipSkip => 'Passer';
+
+  @override
+  String get tipNext => 'Suivant';
+
+  @override
+  String get tipGotIt => 'Compris';
+
+  @override
+  String get tipAddTripTitle => 'Vous avez un voyage prévu ?';
+
+  @override
+  String get tipAddTripBody =>
+      'Ajoutez-le ici et soyez payé pour transporter des colis pour des personnes sur votre trajet.';
+
+  @override
+  String get tipSearchTitle => 'Besoin d’envoyer quelque chose ?';
+
+  @override
+  String get tipSearchBody =>
+      'Choisissez le départ et la destination pour trouver des voyageurs sur ce trajet.';
+
+  @override
+  String get tipBellTitle => 'Vos notifications';
+
+  @override
+  String get tipBellBody =>
+      'Les nouvelles demandes, les paiements et les livraisons s’affichent ici.';
+
+  @override
+  String get tipNavTitle => 'Tout au même endroit';
+
+  @override
+  String get tipNavBody =>
+      'Suivez vos colis dans Demandes, vos voyages dans Trajets et discutez avec voyageurs et expéditeurs dans Messages.';
+
+  @override
+  String get tipRequestsTabsTitle => 'Sortantes et entrantes';
+
+  @override
+  String get tipRequestsTabsBody =>
+      'Sortantes contient les colis que vous envoyez. Entrantes contient les demandes des expéditeurs sur vos voyages.';
+
+  @override
+  String get tipArchiveTitle => 'En cours et Archives';
+
+  @override
+  String get tipArchiveBody =>
+      'Les demandes livrées, annulées et expirées passent dans les archives après 24 heures. Faites-en glisser une vers la gauche pour l’archiver tout de suite.';
+
+  @override
+  String get tipTripsAddTitle => 'Publier un voyage';
+
+  @override
+  String get tipTripsAddBody =>
+      'Touchez + pour ajouter un voyage que vous faites déjà. Les expéditeurs sur votre trajet pourront vous demander de porter leurs colis.';
+
+  @override
+  String get tipTripsTabsTitle => 'À venir et passés';
+
+  @override
+  String get tipTripsTabsBody =>
+      'Vos voyages à venir, et ceux que vous avez déjà faits.';
+
+  @override
+  String get tipChatSearchTitle => 'Trouver une discussion';
+
+  @override
+  String get tipChatSearchBody => 'Cherchez par nom, trajet ou article.';
+
+  @override
+  String get tipChatFiltersTitle => 'Quand les discussions s’ouvrent';
+
+  @override
+  String get tipChatFiltersBody =>
+      'Une discussion s’ouvre quand l’expéditeur paie et se ferme après la livraison. Les discussions fermées restent ici sous Terminées, pour les relire.';
+
+  @override
+  String get tipWalletTitle => 'Votre portefeuille Nata';
+
+  @override
+  String get tipWalletBody =>
+      'L’argent en séquestre et l’argent prêt à être retiré. Ce que vous gagnez en portant des colis s’affiche ici.';
+
+  @override
+  String get tipPayoutTitle => 'Être payé';
+
+  @override
+  String get tipPayoutBody =>
+      'Ajoutez un compte bancaire ou mobile money dans Paramètres de paiement pour recevoir vos paiements.';
+
+  @override
+  String get tipRouteAlertsTitle => 'Alertes trajets';
+
+  @override
+  String get tipRouteAlertsBody =>
+      'Enregistrez les trajets sur lesquels vous envoyez et soyez averti quand un voyageur les fait.';
 }

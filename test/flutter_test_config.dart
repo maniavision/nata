@@ -6,6 +6,7 @@ import 'package:carrywise_app/services/home_search_memory.dart';
 import 'package:carrywise_app/services/screen_cache.dart';
 import 'package:carrywise_app/services/support_service.dart';
 import 'package:carrywise_app/services/verify_gate.dart';
+import 'package:carrywise_app/widgets/coach_tips.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Runs around every test file (picked up by `flutter test` by name).
@@ -20,6 +21,8 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     ScreenCache.userId = () => 'test-user';
     // Home doesn't reach for the real services to preload the other tabs.
     HomeScreen.tabPreloads = [];
+    // ...nor covers itself with first-visit tips.
+    CoachTips.enabled = false;
   });
   // Screens are tested as a signed-in user unless a test says otherwise.
   setUp(() => AuthGate.isSignedIn = () => true);
