@@ -2,6 +2,7 @@ import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/screens/notifications_screen.dart';
 import 'package:carrywise_app/services/app_badge.dart';
 import 'package:carrywise_app/services/auth_gate.dart';
+import 'package:carrywise_app/services/unread_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -151,6 +152,98 @@ void main() {
         find.descendant(of: badge(), matching: find.text('3')),
         findsOneWidget,
       );
+    });
+  });
+
+  group('Messages tab', () {
+    Finder tabBadge() => find.byKey(const ValueKey('nav-messages-unread'));
+
+    Future<void> openHome(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(),
+            travelerService: FakeTravelerService(),
+            notificationService: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows how many messages are unread', (tester) async {
+      UnreadMessages.loadConversations = () async => [
+        sampleConversation(id: 'a', unread: 2),
+        sampleConversation(id: 'b', unread: 1),
+        sampleConversation(id: 'c'),
+      ];
+      await openHome(tester);
+      expect(
+        find.descendant(of: tabBadge(), matching: find.text('3')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('nothing unread: no badge', (tester) async {
+      UnreadMessages.loadConversations = () async => [
+        sampleConversation(id: 'a'),
+      ];
+      await openHome(tester);
+      expect(tabBadge(), findsNothing);
+    });
+
+    testWidgets('more than 9 shows 9+', (tester) async {
+      UnreadMessages.loadConversations = () async => [
+        sampleConversation(id: 'a', unread: 12),
+      ];
+      await openHome(tester);
+      expect(
+        find.descendant(of: tabBadge(), matching: find.text('9+')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a new message (push) raises it; reading clears it', (
+      tester,
+    ) async {
+      var unread = 1;
+      UnreadMessages.loadConversations = () async => [
+        sampleConversation(id: 'a', unread: unread),
+      ];
+      await openHome(tester);
+      expect(
+        find.descendant(of: tabBadge(), matching: find.text('1')),
+        findsOneWidget,
+      );
+
+      unread = 2;
+      await AppBadge.refresh(); // what a push that arrives does
+      await tester.pump();
+      expect(
+        find.descendant(of: tabBadge(), matching: find.text('2')),
+        findsOneWidget,
+      );
+
+      unread = 0;
+      await AppBadge.refresh(); // what reading a chat does
+      await tester.pump();
+      expect(tabBadge(), findsNothing);
+    });
+
+    test('signed out: nothing unread', () async {
+      UnreadMessages.count.value = 4;
+      AuthGate.isSignedIn = () => false;
+      await UnreadMessages.refresh();
+      expect(UnreadMessages.count.value, 0);
+    });
+
+    test('signing out clears it', () async {
+      UnreadMessages.count.value = 4;
+      await AppBadge.clear();
+      expect(UnreadMessages.count.value, 0);
     });
   });
 }

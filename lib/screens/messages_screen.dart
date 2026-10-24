@@ -6,6 +6,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/message_service.dart';
 import '../services/screen_cache.dart';
+import '../services/unread_messages.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'chat_thread_screen.dart';
@@ -114,6 +115,7 @@ class _MessagesScreenState extends State<MessagesScreen>
     try {
       final items = await _service.conversations();
       ScreenCache.write(MessagesScreen.cacheKey, items);
+      UnreadMessages.update(items);
       if (!mounted) return;
       setState(() {
         _items = items;

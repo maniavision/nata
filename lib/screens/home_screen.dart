@@ -23,6 +23,7 @@ import '../services/preferences_service.dart';
 import '../services/traveler_ranking.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/unread_badge.dart';
 import '../widgets/home_reminders.dart';
 import '../services/route_alert_service.dart';
 import '../widgets/date_picker_sheet.dart';
@@ -566,7 +567,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Positioned(
                       top: -4,
                       right: -4,
-                      child: _UnreadBadge(count: unread),
+                      child: UnreadBadge(
+                        key: const ValueKey('home-notifications-unread'),
+                        count: unread,
+                      ),
                     ),
                 ],
               ),
@@ -1445,36 +1449,6 @@ class _TravelerRow extends StatelessWidget {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// The unread count on Home's bell: a coral badge, "9+" above 9.
-class _UnreadBadge extends StatelessWidget {
-  final int count;
-  const _UnreadBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      key: const ValueKey('home-notifications-unread'),
-      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.accent,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.background, width: 2),
-      ),
-      child: Text(
-        count > 9 ? '9+' : '$count',
-        style: GoogleFonts.dmSans(
-          fontSize: 10,
-          height: 1.1,
-          fontWeight: FontWeight.w800,
-          color: AppColors.accentForeground,
         ),
       ),
     );

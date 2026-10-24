@@ -1,3 +1,4 @@
+import 'package:carrywise_app/services/unread_messages.dart';
 import 'package:carrywise_app/screens/chat_thread_screen.dart';
 import 'package:carrywise_app/screens/messages_screen.dart';
 import 'package:carrywise_app/services/message_service.dart';
@@ -719,5 +720,23 @@ void main() {
     expect(find.text('Escrow funded'), findsOneWidget);
     expect(find.text('Sony headphones'), findsNothing);
     expect(find.text('iPhone 15 Pro (sealed)'), findsOneWidget);
+  });
+
+  testWidgets('loading the list updates the Messages tab count', (
+    tester,
+  ) async {
+    service.convs = [
+      sampleConversation(id: 'a', unread: 2),
+      sampleConversation(id: 'b', unread: 3),
+    ];
+    await pump(tester);
+    expect(UnreadMessages.count.value, 5);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('nav-messages-unread')),
+        matching: find.text('5'),
+      ),
+      findsOneWidget,
+    );
   });
 }

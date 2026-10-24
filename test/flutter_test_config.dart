@@ -4,6 +4,7 @@ import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/services/auth_gate.dart';
 import 'package:carrywise_app/services/home_search_memory.dart';
 import 'package:carrywise_app/services/screen_cache.dart';
+import 'package:carrywise_app/services/unread_messages.dart';
 import 'package:carrywise_app/services/support_service.dart';
 import 'package:carrywise_app/services/verify_gate.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +21,9 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     ScreenCache.userId = () => 'test-user';
     // Home doesn't reach for the real services to preload the other tabs.
     HomeScreen.tabPreloads = [];
+    // ...nor for the unread messages on the Messages tab.
+    UnreadMessages.loadConversations = () async => const [];
+    UnreadMessages.clear();
   });
   // Screens are tested as a signed-in user unless a test says otherwise.
   setUp(() => AuthGate.isSignedIn = () => true);
