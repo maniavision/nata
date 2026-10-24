@@ -19,12 +19,10 @@ void main() {
 
   late FakePaymentService payments;
   PayoutAccount? popped;
-  Country pickNext = kenya;
 
   setUp(() {
     payments = FakePaymentService();
     popped = null;
-    pickNext = kenya;
   });
 
   Future<void> pump(
@@ -46,7 +44,6 @@ void main() {
                     builder: (_) => AddPayoutAccountScreen(
                       service: payments,
                       initialCountry: country,
-                      countryPicker: (_, _) async => pickNext,
                     ),
                   ),
                 );
@@ -120,17 +117,43 @@ void main() {
     expect(a.number, '254712345678');
   });
 
-  testWidgets('another country loads its own options', (tester) async {
-    await pump(tester);
-
-    await tester.tap(find.byKey(const ValueKey('payout-country')));
-    await tester.pumpAndSettle();
+  testWidgets('the country is the country of residence: shown, locked', (
+    tester,
+  ) async {
+    await pump(tester, country: kenya);
 
     expect(find.text('Kenya'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('payout-kind-mobileMoney')),
+      find.text(
+        'Your country of residence. Payouts are sent to an account there.',
+      ),
       findsOneWidget,
     );
+    // Tapping it changes nothing: there is no country to pick.
+    await tester.tap(find.byKey(const ValueKey('payout-country')));
+    await tester.pumpAndSettle();
+    expect(find.text('Kenya'), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(payments.payoutOptionCountries, ['KE']);
+  });
+
+  testWidgets('a country other than the residence is refused, and said', (
+    tester,
+  ) async {
+    payments.failAddAccount = const PayoutAccountException(
+      PayoutAccountFailure.countryMismatch,
+    );
+    await pump(tester);
+    await pick(tester, 'GTBank');
+    await fill(tester, '0690000031', 'Amara Kalu');
+    await save(tester);
+
+    expect(
+      find.text('Payout accounts must be in your country of residence.'),
+      findsOneWidget,
+    );
+    expect(popped, isNull);
   });
 
   testWidgets('a country Flutterwave can\'t pay out to says so', (
@@ -205,5 +228,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AddPayoutAccountScreen), findsOneWidget);
+  });
+
+  testWidgets('starts on the country of residence from the profile', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      appWrapper(
+        AddPayoutAccountScreen(
+          service: payments,
+          residenceCountry: () async => 'KE',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(payments.payoutOptionCountries.last, 'KE');
   });
 }

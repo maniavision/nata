@@ -3370,6 +3370,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This bank can\'t receive payouts yet. Please choose another one.';
 
   @override
+  String get payoutCountryNote =>
+      'Your country of residence. Payouts are sent to an account there.';
+
+  @override
+  String get errPayoutCountryMismatch =>
+      'Payout accounts must be in your country of residence.';
+
+  @override
   String get errSavePayoutAccount =>
       'Couldn\'t save the payout account. Please try again.';
 

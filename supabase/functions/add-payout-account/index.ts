@@ -4,13 +4,16 @@
  * Called by the app (with the traveler's JWT) with { kind: bank |
  * mobile_money, country, bank_code, institution_name, account_number,
  * holder_name }. The bank code must be one Flutterwave pays out to in that
- * country (see payout-options). The full number goes to
+ * country (see payout-options), and the country must be the traveler's
+ * country of residence (nata.profiles.country_of_residence) when the
+ * profile has one. The full number goes to
  * nata.payout_destinations, which only the server reads; the app keeps the
  * last 4 digits (nata.payout_accounts). A first account becomes the default.
  *
  * Responds 200 with the account { id, kind, institution_name, country_code,
  * account_last4, holder_name, is_default }. Errors: 401 unauthorized,
- * 400 invalid, 409 not_supported, 503 payments_unavailable.
+ * 400 invalid, 409 not_supported / country_mismatch (not the country of
+ * residence), 503 payments_unavailable.
  */
 
 // ── Flutterwave and Supabase helpers (the same in each payment function, so
@@ -150,6 +153,19 @@ Deno.serve(async (req: Request) => {
     (kind === "mobile_money" && !/^[0-9]{8,15}$/.test(number))
   ) {
     return json({ error: "invalid" }, 400);
+  }
+
+  // Payouts go to the country the traveler lives in.
+  const { data: profile } = await admin
+    .schema("nata")
+    .from("profiles")
+    .select("country_of_residence")
+    .eq("id", user.id)
+    .maybeSingle();
+  const residence = String(profile?.country_of_residence ?? "").trim()
+    .toUpperCase();
+  if (residence && residence !== country) {
+    return json({ error: "country_mismatch" }, 409);
   }
 
   const currency = await countryCurrency(country);

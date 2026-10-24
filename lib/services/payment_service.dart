@@ -213,7 +213,15 @@ class PayoutOptions {
 }
 
 /// Why saving a payout account failed.
-enum PayoutAccountFailure { invalid, notSupported, unavailable, other }
+enum PayoutAccountFailure {
+  invalid,
+  notSupported,
+
+  /// Not the traveler's country of residence.
+  countryMismatch,
+  unavailable,
+  other,
+}
 
 class PayoutAccountException implements Exception {
   final PayoutAccountFailure reason;
@@ -321,6 +329,7 @@ class PaymentService {
       throw PayoutAccountException(switch (code) {
         'invalid' => PayoutAccountFailure.invalid,
         'not_supported' => PayoutAccountFailure.notSupported,
+        'country_mismatch' => PayoutAccountFailure.countryMismatch,
         'payments_unavailable' => PayoutAccountFailure.unavailable,
         _ => PayoutAccountFailure.other,
       });

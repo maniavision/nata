@@ -3414,6 +3414,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este banco aún no puede recibir pagos. Elige otro.';
 
   @override
+  String get payoutCountryNote =>
+      'Tu país de residencia. Los pagos se envían a una cuenta en ese país.';
+
+  @override
+  String get errPayoutCountryMismatch =>
+      'La cuenta de cobro debe estar en tu país de residencia.';
+
+  @override
   String get errSavePayoutAccount =>
       'No se pudo guardar la cuenta. Inténtalo de nuevo.';
 
