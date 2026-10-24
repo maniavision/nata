@@ -18,7 +18,14 @@
 --   * nata.payout_destinations: a Stripe account is account_bank 'STRIPE',
 --     account_number its id (acct_...), currency USD.
 --   * nata.claim_payouts(): also claims payouts to a Stripe account that
---     Stripe allows payouts on; send-payouts sends them as transfers.
+--     Stripe allows payouts on; send-payouts sends them as transfers. A
+--     payout goes to the account picked at delivery while Nata can still
+--     pay it, else to the traveler's default account: an account saved for
+--     Flutterwave (no longer used) no longer holds a payout back once the
+--     traveler connects their bank through Stripe or adds mobile money.
+--   * Payouts Flutterwave refused ("merchant is not enabled to make
+--     transfers") are queued again, to go out once the traveler has an
+--     account Nata can pay.
 
 -- -----------------------------------------------------------------------------
 -- 1. Travelers' Stripe accounts
@@ -70,26 +77,27 @@ begin
      order by po.created_at
      for update skip locked
   loop
+    -- The account picked at delivery, else the default; only one Nata can
+    -- send to: a pawaPay network, or a Stripe account Stripe allows payouts
+    -- on. Other accounts (a bank saved for Flutterwave) are passed over, and
+    -- with nothing to send to the payout waits.
     select d.account_bank, d.account_number, d.currency, a.holder_name, a.id
       into dest
       from nata.payout_accounts a
       join nata.payout_destinations d on d.account_id = a.id
      where a.user_id = p.traveler_id
-       and a.id = coalesce(
-             p.payout_account_id,
-             (select x.id from nata.payout_accounts x
-               where x.user_id = p.traveler_id and x.is_default limit 1));
+       and (a.id = p.payout_account_id or a.is_default)
+       and (
+         exists (select 1 from nata.mobile_money_networks n
+                  where n.provider = d.account_bank)
+         or (d.account_bank = 'STRIPE' and exists (
+               select 1 from nata.stripe_accounts s
+                where s.account_id = d.account_number
+                  and s.user_id = p.traveler_id
+                  and s.payouts_enabled)))
+     order by (a.id is not distinct from p.payout_account_id) desc
+     limit 1;
     continue when not found;
-    -- Only where Nata can send it: a pawaPay network, or a Stripe account
-    -- Stripe allows payouts on. Other accounts (a bank saved before) wait.
-    continue when not (
-      exists (select 1 from nata.mobile_money_networks n
-               where n.provider = dest.account_bank)
-      or (dest.account_bank = 'STRIPE' and exists (
-            select 1 from nata.stripe_accounts s
-             where s.account_id = dest.account_number
-               and s.user_id = p.traveler_id
-               and s.payouts_enabled)));
 
     if dest.currency = p.currency then
       sent := p.amount;
@@ -125,3 +133,13 @@ $$;
 revoke all on function nata.claim_payouts(uuid) from public;
 revoke all on function nata.claim_payouts(uuid) from anon, authenticated;
 grant execute on function nata.claim_payouts(uuid) to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 3. Payouts Flutterwave refused: queued again
+-- -----------------------------------------------------------------------------
+update nata.payouts
+   set status = 'pending',
+       failure_reason = null,
+       updated_at = now()
+ where status = 'failed'
+   and failure_reason ilike '%merchant is not enabled to make transfers%';
