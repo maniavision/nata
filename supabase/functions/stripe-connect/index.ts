@@ -5,8 +5,11 @@
  * Switzerland.
  *
  * Called by the app (with the traveler's JWT) with { action }:
- *   * start: makes the traveler's Stripe account (Express, transfers only)
- *     if they have none, in their country of residence, and answers
+ *   * start: makes the traveler's Stripe account if they have none, in
+ *     their country of residence (Accounts v2, which Stripe requires for new
+ *     Connect platforms: a recipient that takes Stripe transfers, with the
+ *     Express dashboard, Nata collecting fees and covering losses), and
+ *     answers
  *     { url }: Stripe's own pages, where they give their identity and bank
  *     details (never to Nata). Stripe sends them back to
  *     stripe-connect-return.
@@ -164,6 +167,39 @@ async function syncAccount(userId: string, account: Record<string, unknown>) {
   }
 }
 
+/** Stripe's v2 API (Accounts v2): JSON in and out. */
+const STRIPE_V2_VERSION = "2026-09-30.endive";
+
+async function stripeV2(
+  path: string,
+  body: unknown,
+  idempotencyKey?: string,
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${stripeKey()}`,
+    "Content-Type": "application/json",
+    "Stripe-Version": STRIPE_V2_VERSION,
+  };
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+  let res: Response;
+  try {
+    res = await fetch(`https://api.stripe.com/v2${path}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch (_) {
+    return { status: 0, body: {} };
+  }
+  let parsed: Record<string, unknown> = {};
+  try {
+    parsed = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { status: res.status, body: parsed };
+}
+
 // ── This function ──────────────────────────────────────────────────────────
 
 /** Where Stripe sends the traveler back (a page that says to go back). */
@@ -233,27 +269,44 @@ Deno.serve(async (req: Request) => {
     if (!STRIPE_COUNTRIES.has(country)) {
       return json({ error: "not_supported" }, 409);
     }
-    const created = await stripe("/accounts", {
-      method: "POST",
-      // One account per traveler even if saving it below fails and they
-      // try again within the hour; a refusal (Connect not set up yet)
-      // isn't replayed for longer than that.
-      idempotencyKey: `nata-connect-${user.id}-${Math.floor(Date.now() / 3600000)}`,
-      form: {
-        type: "express",
-        country,
-        business_type: "individual",
-        "capabilities[transfers][requested]": "true",
-        "business_profile[product_description]":
-          "Carries parcels for senders on Nata, paid per delivery",
-        "metadata[user_id]": user.id,
-        ...(user.email ? { email: String(user.email) } : {}),
+    const { data: profile } = await db.from("profiles")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    const name = [profile?.first_name, profile?.last_name]
+      .filter((p) => p && String(p).trim())
+      .join(" ").trim();
+    const created = await stripeV2(
+      "/core/accounts",
+      {
+        display_name: name || "Nata traveler",
+        ...(user.email ? { contact_email: String(user.email) } : {}),
+        identity: { country: country.toLowerCase(), entity_type: "individual" },
+        configuration: {
+          recipient: {
+            capabilities: {
+              stripe_balance: { stripe_transfers: { requested: true } },
+            },
+          },
+        },
+        // The Express dashboard needs Nata to collect fees and cover losses.
+        dashboard: "express",
+        defaults: {
+          responsibilities: {
+            fees_collector: "application",
+            losses_collector: "application",
+          },
+        },
+        metadata: { user_id: user.id },
       },
-    });
+      // One account per traveler even if saving it below fails and they
+      // try again within the hour; a refusal isn't replayed for longer.
+      `nata-connect-${user.id}-${Math.floor(Date.now() / 3600000)}`,
+    );
     accountId = String(created.body.id ?? "");
     if (created.status !== 200 || !accountId.startsWith("acct_")) {
-      const err = created.body.error as { message?: string } | undefined;
-      console.error("[stripe-connect] account", created.status, err?.message);
+      const err = created.body.error as { code?: string; message?: string } | undefined;
+      console.error("[stripe-connect] account", created.status, err?.code, err?.message);
       return json({ error: "provider_error" }, 502);
     }
     const { error } = await db.from("stripe_accounts").insert({
@@ -267,19 +320,21 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  const link = await stripe("/account_links", {
-    method: "POST",
-    form: {
-      account: accountId,
+  const link = await stripeV2("/core/account_links", {
+    account: accountId,
+    use_case: {
       type: "account_onboarding",
-      refresh_url: returnUrl(true),
-      return_url: returnUrl(false),
+      account_onboarding: {
+        configurations: ["recipient"],
+        refresh_url: returnUrl(true),
+        return_url: returnUrl(false),
+      },
     },
   });
   const url = String(link.body.url ?? "");
   if (link.status !== 200 || !url) {
-    const err = link.body.error as { message?: string } | undefined;
-    console.error("[stripe-connect] link", link.status, err?.message);
+    const err = link.body.error as { code?: string; message?: string } | undefined;
+    console.error("[stripe-connect] link", link.status, err?.code, err?.message);
     return json({ error: "provider_error" }, 502);
   }
   return json({ url });
