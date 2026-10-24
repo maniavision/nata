@@ -1785,6 +1785,51 @@
   "routeAlertsErrExists": "You already have this route.",
   "routeAlertsErrFailed": "Couldn't save the route. Please try again.",
   "routeAlertsLoadFailed": "Couldn't load your routes.",
+  "routeAlertsNotifyAbout": "Notify me about",
+  "routeAlertsTravelers": "{count, plural, =1{1 traveler} other{{count} travelers}}",
+  "@routeAlertsTravelers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routeAlertsAll": "All",
+  "routeAlertsStopAfter": "We stop after {count, plural, =1{1 traveler} other{{count} travelers}}. You can restart it anytime.",
+  "@routeAlertsStopAfter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routeAlertsEveryTravelerNote": "We'll tell you about every traveler on this route.",
+  "routeAlertsEveryTraveler": "Every traveler",
+  "routeAlertsProgress": "{sent} of {max} travelers found",
+  "@routeAlertsProgress": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "routeAlertsDone": "Done · {sent} of {max} travelers found",
+  "@routeAlertsDone": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "routeAlertsRestart": "Restart",
+  "routeAlertsRestarted": "Restarted. We'll let you know about the next travelers.",
+  "routeAlertsErrRestart": "Couldn't restart this route. Please try again.",
   "homeGetStarted": "Get started",
   "homeVerifyTitle": "Verify your identity",
   "homeVerifyBody": "Takes 2 minutes. Needed to send or carry items.",

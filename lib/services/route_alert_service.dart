@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A route the member often sends on: they are notified when a trip on it
-/// goes live (migration 20240159).
+/// goes live (migration 20240159), up to [maxAlerts] travelers (20240168).
 class RouteAlert {
   final String id;
   final int fromCityId;
@@ -13,6 +13,12 @@ class RouteAlert {
   final String toCountryCode;
   final String toCountry;
 
+  /// How many travelers to be notified about; null for every one.
+  final int? maxAlerts;
+
+  /// How many travelers were notified about so far.
+  final int alertsSent;
+
   const RouteAlert({
     required this.id,
     required this.fromCityId,
@@ -23,7 +29,12 @@ class RouteAlert {
     required this.toCity,
     required this.toCountryCode,
     required this.toCountry,
+    this.maxAlerts,
+    this.alertsSent = 0,
   });
+
+  /// Reached its limit: quiet until restarted.
+  bool get done => maxAlerts != null && alertsSent >= maxAlerts!;
 
   factory RouteAlert.fromJson(Map<String, dynamic> j) => RouteAlert(
     id: j['id'] as String,
@@ -35,6 +46,8 @@ class RouteAlert {
     toCity: j['to_city'] as String? ?? '',
     toCountryCode: j['to_country_code'] as String? ?? '',
     toCountry: j['to_country'] as String? ?? '',
+    maxAlerts: (j['max_alerts'] as num?)?.toInt(),
+    alertsSent: (j['alerts_sent'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -50,6 +63,10 @@ class RouteAlertService {
   /// The most routes a member can save (enforced on the server too).
   static const maxRoutes = 5;
 
+  /// The travelers limits offered when saving a route; null is every one.
+  static const travelerLimits = <int?>[1, 3, 5, 10, null];
+  static const defaultTravelerLimit = 3;
+
   final SupabaseClient _client;
   RouteAlertService({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
@@ -62,8 +79,13 @@ class RouteAlertService {
         .toList();
   }
 
-  /// Saves a route. Throws [RouteAlertException].
-  Future<void> add({required int fromCityId, required int toCityId}) async {
+  /// Saves a route, notified about up to [maxAlerts] travelers (null: every
+  /// one). Throws [RouteAlertException].
+  Future<void> add({
+    required int fromCityId,
+    required int toCityId,
+    int? maxAlerts,
+  }) async {
     if (fromCityId == toCityId) {
       throw const RouteAlertException(RouteAlertFailure.samePlace);
     }
@@ -71,6 +93,7 @@ class RouteAlertService {
       await _client.schema('nata').from('route_alerts').insert({
         'from_city_id': fromCityId,
         'to_city_id': toCityId,
+        'max_alerts': maxAlerts,
       });
     } on PostgrestException catch (e) {
       if (e.message.contains('route_alert_limit')) {
@@ -85,4 +108,8 @@ class RouteAlertService {
 
   Future<void> remove(String id) =>
       _client.schema('nata').from('route_alerts').delete().eq('id', id);
+
+  /// Starts counting travelers again on a route that reached its limit.
+  Future<void> restart(String id) =>
+      _client.rpc('restart_route_alert', params: {'p_id': id});
 }

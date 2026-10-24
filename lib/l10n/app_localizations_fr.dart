@@ -3873,6 +3873,62 @@ class AppLocalizationsFr extends AppLocalizations {
   String get routeAlertsLoadFailed => 'Impossible de charger vos trajets.';
 
   @override
+  String get routeAlertsNotifyAbout => 'M\'avertir pour';
+
+  @override
+  String routeAlertsTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs',
+      one: '1 voyageur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routeAlertsAll => 'Tous';
+
+  @override
+  String routeAlertsStopAfter(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs',
+      one: '1 voyageur',
+    );
+    return 'Nous arrêtons après $_temp0. Vous pouvez relancer quand vous voulez.';
+  }
+
+  @override
+  String get routeAlertsEveryTravelerNote =>
+      'Nous vous avertirons pour chaque voyageur sur ce trajet.';
+
+  @override
+  String get routeAlertsEveryTraveler => 'Chaque voyageur';
+
+  @override
+  String routeAlertsProgress(int sent, int max) {
+    return '$sent voyageurs trouvés sur $max';
+  }
+
+  @override
+  String routeAlertsDone(int sent, int max) {
+    return 'Terminé · $sent voyageurs trouvés sur $max';
+  }
+
+  @override
+  String get routeAlertsRestart => 'Relancer';
+
+  @override
+  String get routeAlertsRestarted =>
+      'Relancé. Nous vous avertirons pour les prochains voyageurs.';
+
+  @override
+  String get routeAlertsErrRestart =>
+      'Impossible de relancer ce trajet. Réessayez.';
+
+  @override
   String get homeGetStarted => 'Pour commencer';
 
   @override
