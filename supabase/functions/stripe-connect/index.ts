@@ -206,6 +206,15 @@ async function stripeV2(
 
 // ── This function ──────────────────────────────────────────────────────────
 
+/**
+ * Whether Stripe answered [status] for an account it doesn't know under
+ * these keys: not found, or forbidden (an account of another Stripe account
+ * or sandbox).
+ */
+function notOurs(status: number): boolean {
+  return status === 404 || status === 403;
+}
+
 /** The same check as nata.payer_emails. */
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -244,7 +253,7 @@ Deno.serve(async (req: Request) => {
     if (!row) return json({ status: "none" });
     const res = await stripe(`/accounts/${encodeURIComponent(row.account_id)}`);
     // Made with other Stripe keys: as good as none (start makes a new one).
-    if (res.status === 404) return json({ status: "none" });
+    if (notOurs(res.status)) return json({ status: "none" });
     if (res.status !== 200) {
       console.error("[stripe-connect] status", res.status);
       return json({ error: "provider_error" }, 502);
@@ -275,7 +284,7 @@ Deno.serve(async (req: Request) => {
     // Made with other Stripe keys (test mode, then a sandbox, or live):
     // Stripe no longer knows it, so a new one is made.
     const known = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
-    if (known.status === 404) {
+    if (notOurs(known.status)) {
       await db.from("stripe_accounts").delete()
         .eq("user_id", user.id)
         .eq("account_id", accountId);
