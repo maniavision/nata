@@ -7567,6 +7567,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Need help? Contact Nata support.'**
   String get daNeedHelp;
+
+  /// No description provided for @paidSecurelyThroughStripe.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid securely through Stripe. Your card details never reach Nata.'**
+  String get paidSecurelyThroughStripe;
+
+  /// No description provided for @confirmingPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming your payment'**
+  String get confirmingPayment;
+
+  /// No description provided for @confirmingPaymentSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment made. We\'re confirming it with Stripe, which takes a few seconds.'**
+  String get confirmingPaymentSub;
 }
 
 class _AppLocalizationsDelegate

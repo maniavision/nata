@@ -10,6 +10,7 @@ import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../services/phone_number.dart';
 import '../services/request_service.dart';
+import '../services/stripe_sheet.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 
@@ -37,6 +38,9 @@ class CheckoutEscrowScreen extends StatefulWidget {
   final Future<void> Function()? closePaymentPage;
   final Duration pollInterval;
 
+  /// Override for tests: Stripe's payment sheet (cards, Apple Pay).
+  final Future<CardSheetResult> Function(StripeSheet sheet)? presentCardSheet;
+
   const CheckoutEscrowScreen({
     super.key,
     required this.request,
@@ -46,6 +50,7 @@ class CheckoutEscrowScreen extends StatefulWidget {
     this.openPaymentPage,
     this.closePaymentPage,
     this.pollInterval = const Duration(seconds: 3),
+    this.presentCardSheet,
   });
 
   @override
@@ -122,6 +127,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
 
   /// Bank transfer is paid in naira: the amount, loaded when it is chosen.
   bool get _payingByBank => _paymentMethod == 3;
+
+  /// Cards and Apple Pay, paid through Stripe.
+  bool get _payingByCard => _paymentMethod <= 1;
   LocalCharge? _bankQuote;
   bool _bankLoading = false;
   bool _bankFailed = false;
@@ -144,7 +152,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   }
 
   /// Accounts made with a phone number have no email, which Flutterwave
-  /// needs: checkout asks for one (kept by create-payment for next time).
+  /// needs for bank transfer: checkout asks for one (kept by create-payment
+  /// for next time). Cards (Stripe) and mobile money don't need one.
   bool _needsEmail = false;
   final _emailCtrl = TextEditingController();
   static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -239,11 +248,16 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         _payMethods[_paymentMethod],
         country: _payingByMobile ? _mobileChoice?.countryCode : null,
         // Only Flutterwave needs an email.
-        email: _needsEmail && !_payingByMobile ? _emailCtrl.text.trim() : null,
+        email: _needsEmail && _payingByBank ? _emailCtrl.text.trim() : null,
         phone: phone,
         network: network,
       );
       if (!mounted) return;
+      final sheet = payment.stripe;
+      if (sheet != null) {
+        await _payInSheet(payment, sheet);
+        return;
+      }
       setState(() {
         _payment = payment;
         _directAmount = _mobileChoice?.amountText ?? _totalText;
@@ -283,6 +297,27 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       );
     } finally {
       if (mounted) setState(() => _startingPayment = false);
+    }
+  }
+
+  /// Cards and Apple Pay: Stripe's sheet, then the payment is confirmed
+  /// with Stripe (verify-payment) before the request is paid.
+  Future<void> _payInSheet(PaymentLink payment, StripeSheet sheet) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await (widget.presentCardSheet ?? presentStripeSheet)(sheet);
+    if (!mounted) return;
+    switch (result) {
+      case CardSheetResult.paid:
+        setState(() => _payment = payment);
+        _startPolling();
+        _checkPayment();
+      case CardSheetResult.cancelled:
+        break;
+      case CardSheetResult.failed:
+        messenger.showSnackBar(
+          nataToast(l.errPaymentFailed, tone: ToastTone.error),
+        );
     }
   }
 
@@ -345,7 +380,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       switch (status) {
         case PaymentStatus.successful:
           _poll?.cancel();
-          if (!payment.direct) await (widget.closePaymentPage ?? _closeInApp)();
+          if (payment.link != null) {
+            await (widget.closePaymentPage ?? _closeInApp)();
+          }
           // Text the delivery code to the recipient straight away; the
           // sender can also do it, or resend it, from the request card.
           unawaited(
@@ -359,7 +396,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           navigator.pop(true);
         case PaymentStatus.failed:
           _poll?.cancel();
-          if (!payment.direct) await (widget.closePaymentPage ?? _closeInApp)();
+          if (payment.link != null) {
+            await (widget.closePaymentPage ?? _closeInApp)();
+          }
           setState(() => _payment = null);
           messenger.showSnackBar(
             nataToast(l.errPaymentFailed, tone: ToastTone.error),
@@ -1063,7 +1102,36 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           }),
           if (_payingByMobile) _buildMobileMoneyPanel(),
           if (_payingByBank) _buildBankTransferPanel(),
-          if (_needsEmail && !_payingByMobile) _buildEmailField(),
+          if (_needsEmail && _payingByBank) _buildEmailField(),
+          if (_payingByCard) _buildStripeNote(),
+        ],
+      ),
+    );
+  }
+
+  /// Cards are paid in Stripe's sheet: the details never reach Nata.
+  Widget _buildStripeNote() {
+    return Padding(
+      key: const ValueKey('checkout-stripe-note'),
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        children: [
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 16,
+            color: AppColors.primary.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              context.l10n.paidSecurelyThroughStripe,
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                height: 1.35,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1560,7 +1628,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     final checked = _ticketChecked && !_expired;
     final countryChosen = !_payingByMobile || _mobileChoice != null;
     final bankReady = !_payingByBank || _bankQuote != null;
-    final emailGiven = !_needsEmail || _payingByMobile || _emailValid;
+    final emailGiven = !_needsEmail || !_payingByBank || _emailValid;
     final walletGiven = _directReady;
     final unlocked =
         checked && countryChosen && bankReady && walletGiven && emailGiven;
@@ -1643,8 +1711,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     );
   }
 
-  /// While the sender pays on Flutterwave's page.
+  /// While the sender pays on Flutterwave's page, or once they've paid in
+  /// Stripe's sheet, while it is confirmed.
   Widget _buildPaymentInProgress(AppLocalizations l) {
+    final inSheet = _payment?.stripe != null;
     return Container(
       key: const ValueKey('checkout-payment-in-progress'),
       padding: const EdgeInsets.all(16),
@@ -1669,7 +1739,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  l.completeYourPayment,
+                  inSheet ? l.confirmingPayment : l.completeYourPayment,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -1681,7 +1751,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            l.completeYourPaymentSub,
+            inSheet ? l.confirmingPaymentSub : l.completeYourPaymentSub,
             style: GoogleFonts.dmSans(
               fontSize: 12,
               height: 1.4,
@@ -1710,26 +1780,27 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 44,
-            child: OutlinedButton(
-              key: const ValueKey('checkout-open-payment'),
-              onPressed: _openPaymentPage,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.accent,
-                side: const BorderSide(color: AppColors.accent),
-                shape: const StadiumBorder(),
-              ),
-              child: Text(
-                l.openPaymentPage,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+          if (!inSheet) const SizedBox(height: 8),
+          if (!inSheet)
+            SizedBox(
+              height: 44,
+              child: OutlinedButton(
+                key: const ValueKey('checkout-open-payment'),
+                onPressed: _openPaymentPage,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.accent,
+                  side: const BorderSide(color: AppColors.accent),
+                  shape: const StadiumBorder(),
+                ),
+                child: Text(
+                  l.openPaymentPage,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
-          ),
           TextButton(
             key: const ValueKey('checkout-abandon-payment'),
             onPressed: _abandonPayment,

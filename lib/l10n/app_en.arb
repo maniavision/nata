@@ -1983,5 +1983,9 @@
   "daBlockedDeliveries": "Deliveries in progress",
   "daBlockedDisputes": "Open problem reports",
   "daBlockedStaff": "Staff accounts are removed by Nata support",
-  "daNeedHelp": "Need help? Contact Nata support."
+  "daNeedHelp": "Need help? Contact Nata support.",
+
+  "paidSecurelyThroughStripe": "Paid securely through Stripe. Your card details never reach Nata.",
+  "confirmingPayment": "Confirming your payment",
+  "confirmingPaymentSub": "Payment made. We're confirming it with Stripe, which takes a few seconds."
 }

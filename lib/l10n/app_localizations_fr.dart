@@ -4396,4 +4396,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get daNeedHelp => 'Besoin d’aide ? Contactez le support Nata.';
+
+  @override
+  String get paidSecurelyThroughStripe =>
+      'Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.';
+
+  @override
+  String get confirmingPayment => 'Confirmation du paiement';
+
+  @override
+  String get confirmingPaymentSub =>
+      'Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes.';
 }

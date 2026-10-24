@@ -4315,4 +4315,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get daNeedHelp => 'Need help? Contact Nata support.';
+
+  @override
+  String get paidSecurelyThroughStripe =>
+      'Paid securely through Stripe. Your card details never reach Nata.';
+
+  @override
+  String get confirmingPayment => 'Confirming your payment';
+
+  @override
+  String get confirmingPaymentSub =>
+      'Payment made. We\'re confirming it with Stripe, which takes a few seconds.';
 }

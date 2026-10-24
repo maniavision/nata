@@ -1874,5 +1874,9 @@
   "daBlockedDeliveries": "Entregas en curso",
   "daBlockedDisputes": "Problemas reportados abiertos",
   "daBlockedStaff": "Las cuentas del personal las elimina el soporte de Nata",
-  "daNeedHelp": "¿Necesitas ayuda? Contacta con el soporte de Nata."
+  "daNeedHelp": "¿Necesitas ayuda? Contacta con el soporte de Nata.",
+
+  "paidSecurelyThroughStripe": "Pago seguro con Stripe. Los datos de tu tarjeta nunca llegan a Nata.",
+  "confirmingPayment": "Confirmando tu pago",
+  "confirmingPaymentSub": "Pago hecho. Lo estamos confirmando con Stripe, tarda unos segundos."
 }

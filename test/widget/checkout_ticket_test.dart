@@ -1,6 +1,7 @@
 import 'package:carrywise_app/screens/checkout_escrow_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/services/request_service.dart';
+import 'package:carrywise_app/services/stripe_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -134,6 +135,8 @@ void main() {
 
   group('paying with Flutterwave', () {
     final opened = <Uri>[];
+    final sheets = <StripeSheet>[];
+    var sheetResult = CardSheetResult.paid;
     var closed = 0;
     bool? popped;
 
@@ -141,6 +144,8 @@ void main() {
     /// be seen.
     Future<void> pumpPayable(WidgetTester tester) async {
       opened.clear();
+      sheets.clear();
+      sheetResult = CardSheetResult.paid;
       closed = 0;
       popped = null;
       tester.view.physicalSize = const Size(900, 3600);
@@ -164,6 +169,10 @@ void main() {
                         },
                         closePaymentPage: () async => closed++,
                         pollInterval: const Duration(seconds: 3),
+                        presentCardSheet: (sheet) async {
+                          sheets.add(sheet);
+                          return sheetResult;
+                        },
                       ),
                     ),
                   );
@@ -186,15 +195,21 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('opens Flutterwave for the chosen way to pay', (tester) async {
-      await pumpPayable(tester);
-      await tester.tap(find.text('Credit or Debit Card'));
+    Future<void> chooseBank(WidgetTester tester) async {
+      await tester.ensureVisible(find.text('Bank Transfer'));
+      await tester.tap(find.text('Bank Transfer'));
       await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('bank transfer opens Flutterwave\'s page', (tester) async {
+      await pumpPayable(tester);
+      await chooseBank(tester);
 
       await pay(tester);
 
       expect(service.paymentsStarted.single.id, 'req-1');
-      expect(service.paymentsStarted.single.method, PayMethod.card);
+      expect(service.paymentsStarted.single.method, PayMethod.bankTransfer);
       expect(opened, [service.nextPayment.link]);
       expect(
         find.byKey(const ValueKey('checkout-payment-in-progress')),
@@ -203,13 +218,12 @@ void main() {
       expect(find.byKey(const ValueKey('checkout-pay')), findsNothing);
     });
 
-    testWidgets('an account without an email gives one before paying', (
+    testWidgets('bank transfer: an account without an email gives one', (
       tester,
     ) async {
       service.payerEmailValue = null;
       await pumpPayable(tester);
-      await tester.tap(find.text('Credit or Debit Card'));
-      await tester.pump();
+      await chooseBank(tester);
 
       expect(find.byKey(const ValueKey('checkout-email')), findsOneWidget);
       expect(find.text('Enter your email to pay'), findsOneWidget);
@@ -230,8 +244,7 @@ void main() {
       tester,
     ) async {
       await pumpPayable(tester);
-      await tester.tap(find.text('Credit or Debit Card'));
-      await tester.pump();
+      await chooseBank(tester);
 
       expect(find.byKey(const ValueKey('checkout-email')), findsNothing);
       await pay(tester);
@@ -241,8 +254,7 @@ void main() {
     testWidgets('asks for an email when the server needs one', (tester) async {
       service.failStartPayment = RequestException(RequestFailure.emailRequired);
       await pumpPayable(tester);
-      await tester.tap(find.text('Credit or Debit Card'));
-      await tester.pump();
+      await chooseBank(tester);
 
       await pay(tester);
 
@@ -319,6 +331,105 @@ void main() {
       // No longer watched.
       await tester.pump(const Duration(seconds: 10));
       expect(service.paymentChecks, isEmpty);
+    });
+
+    group('cards and Apple Pay: Stripe\'s sheet', () {
+      const stripePayment = PaymentLink(
+        null,
+        'pi_123',
+        stripe: StripeSheet(
+          clientSecret: 'pi_123_secret_abc',
+          publishableKey: 'pk_test_abc',
+        ),
+      );
+      setUp(() => service.nextPayment = stripePayment);
+
+      Future<void> chooseCard(WidgetTester tester) async {
+        await tester.tap(find.text('Credit or Debit Card'));
+        await tester.pump();
+      }
+
+      testWidgets('opens the sheet in the app, no page, no email', (
+        tester,
+      ) async {
+        service.payerEmailValue = null; // an account made with a phone
+        await pumpPayable(tester);
+        await chooseCard(tester);
+        expect(find.byKey(const ValueKey('checkout-email')), findsNothing);
+        expect(
+          find.byKey(const ValueKey('checkout-stripe-note')),
+          findsOneWidget,
+        );
+        expect(payButton(tester).onPressed, isNotNull);
+
+        await pay(tester);
+
+        expect(service.paymentsStarted.single.method, PayMethod.card);
+        expect(service.paymentsStarted.single.email, isNull);
+        expect(sheets.single.clientSecret, 'pi_123_secret_abc');
+        expect(opened, isEmpty);
+      });
+
+      testWidgets('Apple Pay goes through the same sheet', (tester) async {
+        await pumpPayable(tester);
+        await pay(tester); // Apple Pay is picked first
+
+        expect(service.paymentsStarted.single.method, PayMethod.applePay);
+        expect(sheets, hasLength(1));
+      });
+
+      testWidgets('paid in the sheet: confirmed, then back to Requests', (
+        tester,
+      ) async {
+        service.paymentStatuses = [
+          PaymentStatus.pending,
+          PaymentStatus.successful,
+        ];
+        await pumpPayable(tester);
+        await chooseCard(tester);
+        await pay(tester);
+        await tester.pump();
+
+        // Checked straight away, while it says it is confirming.
+        expect(service.paymentChecks, ['pi_123']);
+        expect(find.text('Confirming your payment'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('checkout-open-payment')),
+          findsNothing,
+        );
+
+        await tester.pump(const Duration(seconds: 3)); // successful
+        await tester.pumpAndSettle();
+        expect(popped, isTrue);
+        expect(closed, 0); // no page to close
+        expect(find.textContaining('Payment received'), findsOneWidget);
+      });
+
+      testWidgets('closing the sheet goes back to choosing, quietly', (
+        tester,
+      ) async {
+        await pumpPayable(tester);
+        await chooseCard(tester);
+        sheetResult = CardSheetResult.cancelled;
+        await pay(tester);
+        await tester.pump();
+
+        expect(find.byKey(const ValueKey('checkout-pay')), findsOneWidget);
+        expect(find.textContaining("didn't go through"), findsNothing);
+        await tester.pump(const Duration(seconds: 10));
+        expect(service.paymentChecks, isEmpty);
+      });
+
+      testWidgets('a card Stripe refuses can be tried again', (tester) async {
+        await pumpPayable(tester);
+        await chooseCard(tester);
+        sheetResult = CardSheetResult.failed;
+        await pay(tester);
+        await tester.pump();
+
+        expect(find.textContaining("didn't go through"), findsOneWidget);
+        expect(find.byKey(const ValueKey('checkout-pay')), findsOneWidget);
+      });
     });
 
     testWidgets('mobile money: charged in the wallet country\'s currency', (
@@ -581,7 +692,7 @@ void main() {
         expect(opened, isEmpty);
       });
 
-      testWidgets('no email asked: only card payments need one', (
+      testWidgets('no email asked: only bank transfer needs one', (
         tester,
       ) async {
         service.payerEmailValue = null; // an account made with a phone

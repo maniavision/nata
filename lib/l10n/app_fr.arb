@@ -1874,5 +1874,9 @@
   "daBlockedDeliveries": "Livraisons en cours",
   "daBlockedDisputes": "Signalements de problème ouverts",
   "daBlockedStaff": "Les comptes du personnel sont supprimés par le support Nata",
-  "daNeedHelp": "Besoin d’aide ? Contactez le support Nata."
+  "daNeedHelp": "Besoin d’aide ? Contactez le support Nata.",
+
+  "paidSecurelyThroughStripe": "Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.",
+  "confirmingPayment": "Confirmation du paiement",
+  "confirmingPaymentSub": "Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes."
 }
