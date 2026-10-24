@@ -243,6 +243,8 @@ Deno.serve(async (req: Request) => {
   if (action === "status") {
     if (!row) return json({ status: "none" });
     const res = await stripe(`/accounts/${encodeURIComponent(row.account_id)}`);
+    // Made with other Stripe keys: as good as none (start makes a new one).
+    if (res.status === 404) return json({ status: "none" });
     if (res.status !== 200) {
       console.error("[stripe-connect] status", res.status);
       return json({ error: "provider_error" }, 502);
@@ -269,6 +271,17 @@ Deno.serve(async (req: Request) => {
 
   // start: the account, then a link to Stripe's pages.
   let accountId = row?.account_id as string | undefined;
+  if (accountId) {
+    // Made with other Stripe keys (test mode, then a sandbox, or live):
+    // Stripe no longer knows it, so a new one is made.
+    const known = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
+    if (known.status === 404) {
+      await db.from("stripe_accounts").delete()
+        .eq("user_id", user.id)
+        .eq("account_id", accountId);
+      accountId = undefined;
+    }
+  }
   if (!accountId) {
     const { data: profile } = await db.from("profiles")
       .select("country_of_residence")
