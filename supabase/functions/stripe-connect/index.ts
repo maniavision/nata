@@ -235,7 +235,10 @@ Deno.serve(async (req: Request) => {
     }
     const created = await stripe("/accounts", {
       method: "POST",
-      idempotencyKey: `nata-connect-${user.id}`,
+      // One account per traveler even if saving it below fails and they
+      // try again within the hour; a refusal (Connect not set up yet)
+      // isn't replayed for longer than that.
+      idempotencyKey: `nata-connect-${user.id}-${Math.floor(Date.now() / 3600000)}`,
       form: {
         type: "express",
         country,
