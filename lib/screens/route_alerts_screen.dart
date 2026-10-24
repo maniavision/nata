@@ -79,6 +79,24 @@ class _RouteAlertsScreenState extends State<RouteAlertsScreen> {
     }
   }
 
+  /// A route that reached its travelers limit counts again from zero.
+  Future<void> _restart(RouteAlert r) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _service.restart(r.id);
+      messenger.showSnackBar(
+        nataToast(l.routeAlertsRestarted, tone: ToastTone.success),
+      );
+      _load();
+    } catch (e) {
+      debugPrint('[RouteAlerts] restart: $e');
+      messenger.showSnackBar(
+        nataToast(l.routeAlertsErrRestart, tone: ToastTone.error),
+      );
+    }
+  }
+
   Future<void> _remove(RouteAlert r) async {
     setState(() => _routes = _routes.where((x) => x.id != r.id).toList());
     try {
@@ -209,7 +227,8 @@ class _RouteAlertsScreenState extends State<RouteAlertsScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          for (final r in _routes) _RouteCard(route: r, onRemove: _remove),
+          for (final r in _routes)
+            _RouteCard(route: r, onRemove: _remove, onRestart: _restart),
           const SizedBox(height: 8),
         ],
         ...[
@@ -310,8 +329,86 @@ String _flag(String isoCode) {
 class _RouteCard extends StatelessWidget {
   final RouteAlert route;
   final ValueChanged<RouteAlert> onRemove;
+  final ValueChanged<RouteAlert> onRestart;
 
-  const _RouteCard({required this.route, required this.onRemove});
+  const _RouteCard({
+    required this.route,
+    required this.onRemove,
+    required this.onRestart,
+  });
+
+  static const _green = Color(0xFF168A68);
+
+  /// How many travelers were found against the route's limit, with a thin
+  /// bar; done (in green) with a way to restart; or "Every traveler".
+  Widget _progress(BuildContext context) {
+    final l = context.l10n;
+    final max = route.maxAlerts;
+    final style = GoogleFonts.dmSans(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: AppColors.mutedForeground,
+    );
+    if (max == null) {
+      return Text(
+        l.routeAlertsEveryTraveler,
+        key: ValueKey('route-progress-${route.id}'),
+        style: style,
+      );
+    }
+    final sent = route.alertsSent.clamp(0, max);
+    final done = route.done;
+    return Column(
+      key: ValueKey('route-progress-${route.id}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                done
+                    ? l.routeAlertsDone(sent, max)
+                    : l.routeAlertsProgress(sent, max),
+                style: done
+                    ? style.copyWith(color: _green, fontWeight: FontWeight.w700)
+                    : style,
+              ),
+            ),
+            if (done)
+              GestureDetector(
+                key: ValueKey('route-restart-${route.id}'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onRestart(route),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    l.routeAlertsRestart,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: sent / max,
+            minHeight: 4,
+            backgroundColor: AppColors.muted,
+            color: done ? _green : AppColors.accent,
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _place(String code, String city, String country) => Row(
     children: [
@@ -377,6 +474,8 @@ class _RouteCard extends StatelessWidget {
                   ),
                 ),
                 _place(route.toCountryCode, route.toCity, route.toCountry),
+                const SizedBox(height: 10),
+                _progress(context),
               ],
             ),
           ),
@@ -409,6 +508,9 @@ class _AddRouteSheet extends StatefulWidget {
 class _AddRouteSheetState extends State<_AddRouteSheet> {
   LocationSelection? _from;
   LocationSelection? _to;
+
+  /// How many travelers to be notified about; null for every one.
+  int? _limit = RouteAlertService.defaultTravelerLimit;
   bool _saving = false;
   String? _error;
 
@@ -439,7 +541,11 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
       _error = null;
     });
     try {
-      await widget.service.add(fromCityId: from, toCityId: to);
+      await widget.service.add(
+        fromCityId: from,
+        toCityId: to,
+        maxAlerts: _limit,
+      );
       if (mounted) Navigator.of(context).pop(true);
     } on RouteAlertException catch (e) {
       if (!mounted) return;
@@ -524,6 +630,76 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
     );
   }
 
+  /// "Notify me about": 1, 3, 5, 10 travelers or all.
+  Widget _limitPicker() {
+    final l = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.routeAlertsNotifyAbout.toUpperCase(),
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 10,
+            letterSpacing: 1.2,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final limit in RouteAlertService.travelerLimits)
+              _limitPill(limit),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          _limit == null
+              ? l.routeAlertsEveryTravelerNote
+              : l.routeAlertsStopAfter(_limit!),
+          key: const ValueKey('route-limit-note'),
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            height: 1.4,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _limitPill(int? limit) {
+    final l = context.l10n;
+    final selected = _limit == limit;
+    return GestureDetector(
+      key: ValueKey('route-limit-${limit ?? 'all'}'),
+      onTap: _saving ? null : () => setState(() => _limit = limit),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.card,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          limit == null ? l.routeAlertsAll : l.routeAlertsTravelers(limit),
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: selected
+                ? AppColors.primaryForeground
+                : AppColors.foreground,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -564,6 +740,8 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
             _field('route-from', l.routeAlertsFrom, _from, true),
             const SizedBox(height: 12),
             _field('route-to', l.routeAlertsTo, _to, false),
+            const SizedBox(height: 18),
+            _limitPicker(),
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(

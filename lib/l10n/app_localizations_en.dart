@@ -3804,6 +3804,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routeAlertsLoadFailed => 'Couldn\'t load your routes.';
 
   @override
+  String get routeAlertsNotifyAbout => 'Notify me about';
+
+  @override
+  String routeAlertsTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers',
+      one: '1 traveler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routeAlertsAll => 'All';
+
+  @override
+  String routeAlertsStopAfter(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers',
+      one: '1 traveler',
+    );
+    return 'We stop after $_temp0. You can restart it anytime.';
+  }
+
+  @override
+  String get routeAlertsEveryTravelerNote =>
+      'We\'ll tell you about every traveler on this route.';
+
+  @override
+  String get routeAlertsEveryTraveler => 'Every traveler';
+
+  @override
+  String routeAlertsProgress(int sent, int max) {
+    return '$sent of $max travelers found';
+  }
+
+  @override
+  String routeAlertsDone(int sent, int max) {
+    return 'Done · $sent of $max travelers found';
+  }
+
+  @override
+  String get routeAlertsRestart => 'Restart';
+
+  @override
+  String get routeAlertsRestarted =>
+      'Restarted. We\'ll let you know about the next travelers.';
+
+  @override
+  String get routeAlertsErrRestart =>
+      'Couldn\'t restart this route. Please try again.';
+
+  @override
   String get homeGetStarted => 'Get started';
 
   @override

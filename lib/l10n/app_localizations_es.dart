@@ -3849,6 +3849,62 @@ class AppLocalizationsEs extends AppLocalizations {
   String get routeAlertsLoadFailed => 'No se pudieron cargar tus rutas.';
 
   @override
+  String get routeAlertsNotifyAbout => 'Avisarme de';
+
+  @override
+  String routeAlertsTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count viajeros',
+      one: '1 viajero',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routeAlertsAll => 'Todos';
+
+  @override
+  String routeAlertsStopAfter(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count viajeros',
+      one: '1 viajero',
+    );
+    return 'Paramos después de $_temp0. Puedes reiniciarlo cuando quieras.';
+  }
+
+  @override
+  String get routeAlertsEveryTravelerNote =>
+      'Te avisaremos de cada viajero en esta ruta.';
+
+  @override
+  String get routeAlertsEveryTraveler => 'Cada viajero';
+
+  @override
+  String routeAlertsProgress(int sent, int max) {
+    return '$sent de $max viajeros encontrados';
+  }
+
+  @override
+  String routeAlertsDone(int sent, int max) {
+    return 'Listo · $sent de $max viajeros encontrados';
+  }
+
+  @override
+  String get routeAlertsRestart => 'Reiniciar';
+
+  @override
+  String get routeAlertsRestarted =>
+      'Reiniciado. Te avisaremos de los próximos viajeros.';
+
+  @override
+  String get routeAlertsErrRestart =>
+      'No se pudo reiniciar esta ruta. Inténtalo de nuevo.';
+
+  @override
   String get homeGetStarted => 'Para empezar';
 
   @override

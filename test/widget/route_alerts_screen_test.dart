@@ -12,8 +12,10 @@ class FakeRouteAlertService extends Fake implements RouteAlertService {
   List<RouteAlert> routes = [];
   RouteAlertFailure? addFailure;
   bool failList = false;
-  final added = <(int, int)>[];
+  final added = <(int, int, int?)>[];
   final removed = <String>[];
+  final restarted = <String>[];
+  bool failRestart = false;
 
   @override
   Future<List<RouteAlert>> list() async {
@@ -22,9 +24,13 @@ class FakeRouteAlertService extends Fake implements RouteAlertService {
   }
 
   @override
-  Future<void> add({required int fromCityId, required int toCityId}) async {
+  Future<void> add({
+    required int fromCityId,
+    required int toCityId,
+    int? maxAlerts,
+  }) async {
     if (addFailure != null) throw RouteAlertException(addFailure!);
-    added.add((fromCityId, toCityId));
+    added.add((fromCityId, toCityId, maxAlerts));
     routes = [
       route('new-${added.length}', 'Lagos', 'NG', 'Nigeria', 'London', 'GB'),
       ...routes,
@@ -36,6 +42,29 @@ class FakeRouteAlertService extends Fake implements RouteAlertService {
     removed.add(id);
     routes = routes.where((r) => r.id != id).toList();
   }
+
+  @override
+  Future<void> restart(String id) async {
+    if (failRestart) throw Exception('restart failed');
+    restarted.add(id);
+    routes = [
+      for (final r in routes)
+        r.id == id
+            ? RouteAlert(
+                id: r.id,
+                fromCityId: r.fromCityId,
+                fromCity: r.fromCity,
+                fromCountryCode: r.fromCountryCode,
+                fromCountry: r.fromCountry,
+                toCityId: r.toCityId,
+                toCity: r.toCity,
+                toCountryCode: r.toCountryCode,
+                toCountry: r.toCountry,
+                maxAlerts: r.maxAlerts,
+              )
+            : r,
+    ];
+  }
 }
 
 RouteAlert route(
@@ -46,6 +75,8 @@ RouteAlert route(
   String to,
   String toCode, {
   String toCountry = 'United Kingdom',
+  int? maxAlerts,
+  int alertsSent = 0,
 }) => RouteAlert(
   id: id,
   fromCityId: 1,
@@ -56,6 +87,8 @@ RouteAlert route(
   toCity: to,
   toCountryCode: toCode,
   toCountry: toCountry,
+  maxAlerts: maxAlerts,
+  alertsSent: alertsSent,
 );
 
 const lagos = LocationSelection(
@@ -129,7 +162,8 @@ void main() {
     await tester.tap(save);
     await tester.pumpAndSettle();
 
-    expect(service.added, [(10, 20)]);
+    // 3 travelers unless another number is picked.
+    expect(service.added, [(10, 20, 3)]);
     expect(find.byKey(const ValueKey('route-add-sheet')), findsNothing);
     expect(find.text('1 of 5'), findsOneWidget);
   });
@@ -216,6 +250,133 @@ void main() {
 
     test('missing places: nothing to open', () {
       expect(resultsForRouteAlert({'trip_id': 'x'}), isNull);
+    });
+  });
+
+  group('travelers limit', () {
+    Future<void> openSheet(WidgetTester tester) async {
+      await pump(tester);
+      await tester.tap(find.byKey(const ValueKey('route-alerts-add')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('route-from')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('route-to')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('offers 1, 3, 5, 10 travelers or all; 3 to start', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      for (final label in [
+        '1 traveler',
+        '3 travelers',
+        '5 travelers',
+        '10 travelers',
+        'All',
+      ]) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+      expect(
+        find.text('We stop after 3 travelers. You can restart it anytime.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the number picked is saved with the route', (tester) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('route-limit-5')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('We stop after 5 travelers'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('route-save')));
+      await tester.pumpAndSettle();
+      expect(service.added, [(10, 20, 5)]);
+    });
+
+    testWidgets('All saves no limit', (tester) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('route-limit-all')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('every traveler'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('route-save')));
+      await tester.pumpAndSettle();
+      expect(service.added, [(10, 20, null)]);
+    });
+
+    testWidgets('each route shows how many travelers were found', (
+      tester,
+    ) async {
+      service.routes = [
+        route(
+          'a',
+          'Lagos',
+          'NG',
+          'Nigeria',
+          'London',
+          'GB',
+          maxAlerts: 3,
+          alertsSent: 2,
+        ),
+        route(
+          'b',
+          'Accra',
+          'GH',
+          'Ghana',
+          'Berlin',
+          'DE',
+          toCountry: 'Germany',
+        ),
+      ];
+      await pump(tester);
+      expect(find.text('2 of 3 travelers found'), findsOneWidget);
+      expect(find.text('Every traveler'), findsOneWidget);
+      expect(find.byKey(const ValueKey('route-restart-a')), findsNothing);
+    });
+
+    testWidgets('a route at its limit can be restarted', (tester) async {
+      service.routes = [
+        route(
+          'a',
+          'Lagos',
+          'NG',
+          'Nigeria',
+          'London',
+          'GB',
+          maxAlerts: 3,
+          alertsSent: 3,
+        ),
+      ];
+      await pump(tester);
+      expect(find.text('Done · 3 of 3 travelers found'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('route-restart-a')));
+      await tester.pumpAndSettle();
+      expect(service.restarted, ['a']);
+      expect(find.text('0 of 3 travelers found'), findsOneWidget);
+      expect(find.textContaining('Restarted'), findsOneWidget);
+    });
+
+    testWidgets('a failed restart is explained', (tester) async {
+      service.failRestart = true;
+      service.routes = [
+        route(
+          'a',
+          'Lagos',
+          'NG',
+          'Nigeria',
+          'London',
+          'GB',
+          maxAlerts: 1,
+          alertsSent: 1,
+        ),
+      ];
+      await pump(tester);
+      await tester.tap(find.byKey(const ValueKey('route-restart-a')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining("Couldn't restart this route"),
+        findsOneWidget,
+      );
     });
   });
 }

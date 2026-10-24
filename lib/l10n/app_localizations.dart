@@ -6656,6 +6656,72 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load your routes.'**
   String get routeAlertsLoadFailed;
 
+  /// No description provided for @routeAlertsNotifyAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me about'**
+  String get routeAlertsNotifyAbout;
+
+  /// No description provided for @routeAlertsTravelers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 traveler} other{{count} travelers}}'**
+  String routeAlertsTravelers(int count);
+
+  /// No description provided for @routeAlertsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get routeAlertsAll;
+
+  /// No description provided for @routeAlertsStopAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'We stop after {count, plural, =1{1 traveler} other{{count} travelers}}. You can restart it anytime.'**
+  String routeAlertsStopAfter(int count);
+
+  /// No description provided for @routeAlertsEveryTravelerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll tell you about every traveler on this route.'**
+  String get routeAlertsEveryTravelerNote;
+
+  /// No description provided for @routeAlertsEveryTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Every traveler'**
+  String get routeAlertsEveryTraveler;
+
+  /// No description provided for @routeAlertsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{sent} of {max} travelers found'**
+  String routeAlertsProgress(int sent, int max);
+
+  /// No description provided for @routeAlertsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done · {sent} of {max} travelers found'**
+  String routeAlertsDone(int sent, int max);
+
+  /// No description provided for @routeAlertsRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get routeAlertsRestart;
+
+  /// No description provided for @routeAlertsRestarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Restarted. We\'ll let you know about the next travelers.'**
+  String get routeAlertsRestarted;
+
+  /// No description provided for @routeAlertsErrRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restart this route. Please try again.'**
+  String get routeAlertsErrRestart;
+
   /// No description provided for @homeGetStarted.
   ///
   /// In en, this message translates to:
