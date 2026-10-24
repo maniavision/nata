@@ -4395,19 +4395,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Payout queued again. It goes out within 15 minutes.';
 
   @override
-  String get stripeBankTitle => 'Connect your bank with Stripe';
-
-  @override
-  String get stripeBankBody =>
-      'Stripe, Nata\'s payment partner, checks your identity and bank account. It takes a few minutes, and your earnings are then paid to your bank.';
-
-  @override
-  String get stripeBankButton => 'Connect bank account';
-
-  @override
-  String get stripeBankNote => 'Your bank details go to Stripe, never to Nata.';
-
-  @override
   String get stripePendingTitle => 'Stripe is checking your details';
 
   @override
@@ -4416,13 +4403,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stripeCheckAgain => 'Check again';
-
-  @override
-  String get stripeContinueSetup => 'Continue setup with Stripe';
-
-  @override
-  String get stripeNotFinished =>
-      'Stripe\'s form isn\'t finished yet. Continue setup with Stripe to finish it.';
 
   @override
   String get errStripeOpen => 'Couldn\'t open Stripe. Please try again.';
@@ -4437,4 +4417,89 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get stripeEmailNeeded =>
       'Stripe needs your email to set up payouts. Enter it above.';
+
+  @override
+  String get stripeYourDetails => 'Your details';
+
+  @override
+  String get stripeDateOfBirth => 'Date of birth';
+
+  @override
+  String get stripeHomeAddress => 'Home address';
+
+  @override
+  String get stripeStreet => 'Street address';
+
+  @override
+  String get stripeCity => 'City';
+
+  @override
+  String get stripeState => 'State';
+
+  @override
+  String get stripeProvince => 'Province';
+
+  @override
+  String get stripeZip => 'ZIP code';
+
+  @override
+  String get stripePostcode => 'Postcode';
+
+  @override
+  String get stripeIdentity => 'Identity';
+
+  @override
+  String get stripeSsnLast4 => 'Last 4 digits of your SSN';
+
+  @override
+  String get stripeSsnHelp =>
+      'Stripe uses this to confirm who you are. Nata doesn\'t keep it.';
+
+  @override
+  String get stripeBankAccount => 'Bank account';
+
+  @override
+  String get stripeRoutingNumber => 'Routing number';
+
+  @override
+  String get stripeTransitNumber => 'Transit number';
+
+  @override
+  String get stripeInstitutionNumber => 'Institution number';
+
+  @override
+  String get stripeSortCode => 'Sort code';
+
+  @override
+  String get stripeIban => 'IBAN';
+
+  @override
+  String get stripeHolderNote => 'The account must be in your own name.';
+
+  @override
+  String get stripeAgreePrefix => 'I agree to the ';
+
+  @override
+  String get stripeAgreementName => 'Stripe Connected Account Agreement';
+
+  @override
+  String get stripeSaveBank => 'Save bank account';
+
+  @override
+  String get stripeFormNote =>
+      'Your details go to Stripe, Nata\'s payment partner. Nata only keeps the last 4 digits of your account.';
+
+  @override
+  String get stripeFormIncomplete =>
+      'Fill in every field and accept the agreement.';
+
+  @override
+  String get stripeMoreTitle => 'Stripe needs a little more';
+
+  @override
+  String get stripeMoreBody =>
+      'To finish, Stripe needs something Nata\'s form doesn\'t ask for, such as a photo of your ID.';
+
+  @override
+  String get stripeFinish => 'Finish with Stripe';
 }

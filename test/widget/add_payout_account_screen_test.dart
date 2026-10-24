@@ -47,6 +47,7 @@ void main() {
                     builder: (_) => AddPayoutAccountScreen(
                       service: payments,
                       initialCountry: country,
+                      travelerName: () async => (first: 'Amara', last: 'Kalu'),
                       openStripePage: (link) async {
                         opened.add(link);
                         return true;
@@ -284,141 +285,173 @@ void main() {
   });
 
   group('a bank through Stripe (where Stripe pays out)', () {
+    const us = Country(isoCode: 'US', name: 'United States', phoneCode: '+1');
     const uk = Country(isoCode: 'GB', name: 'United Kingdom', phoneCode: '+44');
     setUp(() {
-      payments.options['GB'] = const PayoutOptions(
-        currency: 'GBP',
-        banks: [PayoutProvider('STRIPE', 'Bank account (Stripe)')],
-      );
+      for (final c in ['US', 'GB']) {
+        payments.options[c] = PayoutOptions(
+          currency: c == 'US' ? 'USD' : 'GBP',
+          banks: const [PayoutProvider('STRIPE', 'Bank account (Stripe)')],
+        );
+      }
     });
 
     const saved = PayoutAccount(
       id: 'pa-stripe',
       kind: PayoutAccountKind.bank,
-      institutionName: 'Barclays',
-      countryCode: 'GB',
-      accountLast4: '2345',
+      institutionName: 'STRIPE TEST BANK',
+      countryCode: 'US',
+      accountLast4: '6789',
       holderName: 'Amara Kalu',
       isDefault: true,
     );
 
-    testWidgets('no bank fields: Stripe connects the bank', (tester) async {
-      await pump(tester, country: uk);
+    Future<void> enter(WidgetTester tester, String key, String text) async {
+      await tester.ensureVisible(find.byKey(ValueKey(key)));
+      await tester.enterText(find.byKey(ValueKey(key)), text);
+      await tester.pump();
+    }
 
-      expect(find.byKey(const ValueKey('payout-stripe')), findsOneWidget);
-      expect(find.text('Connect your bank with Stripe'), findsOneWidget);
-      expect(find.byKey(const ValueKey('payout-number')), findsNothing);
-      expect(find.byKey(const ValueKey('payout-save')), findsNothing);
-
-      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+    Future<void> pickDob(WidgetTester tester) async {
+      await tester.ensureVisible(find.byKey(const ValueKey('stripe-dob')));
+      await tester.tap(find.byKey(const ValueKey('stripe-dob')));
       await tester.pumpAndSettle();
-      expect(opened, [Uri.parse('https://connect.stripe.test/setup/1')]);
-      // Back from Stripe: it can be checked now.
-      expect(find.byKey(const ValueKey('stripe-check')), findsOneWidget);
-    });
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    }
 
-    testWidgets('once Stripe pays out to it, it is saved and closes', (
+    Future<void> fillUs(WidgetTester tester) async {
+      await pickDob(tester);
+      await enter(tester, 'stripe-phone', '2025550123');
+      await enter(tester, 'stripe-line1', '1 Main St');
+      await enter(tester, 'stripe-city', 'Austin');
+      await enter(tester, 'stripe-state', 'tx');
+      await enter(tester, 'stripe-postal', '78701');
+      await enter(tester, 'stripe-ssn', '0000');
+      await enter(tester, 'stripe-routing', '110000000');
+      await enter(tester, 'stripe-account', '000123456789');
+      await tester.ensureVisible(find.byKey(const ValueKey('stripe-agree')));
+      await tester.tap(find.byKey(const ValueKey('stripe-agree')));
+      await tester.pump();
+    }
+
+    Future<void> save(WidgetTester tester) async {
+      await tester.ensureVisible(find.byKey(const ValueKey('stripe-save')));
+      await tester.tap(find.byKey(const ValueKey('stripe-save')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('US: the form in the app, sent to Stripe as given', (
       tester,
     ) async {
-      payments.stripeStatuses = [
-        (status: StripeBankStatus.none, account: null),
-        (status: StripeBankStatus.enabled, account: saved),
-      ];
-      await pump(tester, country: uk);
-      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
-      await tester.pumpAndSettle();
+      await pump(tester, country: us);
 
-      await tester.tap(find.byKey(const ValueKey('stripe-check')));
-      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('stripe-form')), findsOneWidget);
+      // The name comes from the profile.
+      expect(find.text('Amara'), findsOneWidget);
+      expect(find.byKey(const ValueKey('stripe-ssn')), findsOneWidget);
+      expect(find.byKey(const ValueKey('payout-save')), findsNothing);
+
+      await fillUs(tester);
+      await save(tester);
+
+      final d = payments.stripeSubmitted.single;
+      expect(d.firstName, 'Amara');
+      expect(d.lastName, 'Kalu');
+      expect(d.state, 'TX');
+      expect(d.idNumber, '0000');
+      expect(d.routingNumber, '110000000');
+      expect(d.accountNumber, '000123456789');
+      expect(d.email, isNull);
+      expect(opened, isEmpty); // no Stripe page
+      // Stripe is checking it.
+      expect(find.text('Stripe is checking your details'), findsOneWidget);
+    });
+
+    testWidgets('a form not filled in says so and sends nothing', (
+      tester,
+    ) async {
+      await pump(tester, country: us);
+      await save(tester);
+      expect(
+        find.text('Fill in every field and accept the agreement.'),
+        findsOneWidget,
+      );
+      expect(payments.stripeSubmitted, isEmpty);
+    });
+
+    testWidgets('accepted straight away: saved and closed', (tester) async {
+      payments.stripeSubmitResult = (
+        status: StripeBankStatus.enabled,
+        account: saved,
+      );
+      await pump(tester, country: us);
+      await fillUs(tester);
+      await save(tester);
 
       expect(popped?.id, 'pa-stripe');
       expect(payments.payoutsSent, 1);
       expect(find.text('Payout account saved.'), findsOneWidget);
     });
 
-    testWidgets('Stripe still checking: said, with Check again', (
-      tester,
-    ) async {
-      payments.stripeStatuses = [
-        (status: StripeBankStatus.pending, account: null),
-      ];
-      await pump(tester, country: uk);
-
-      // Started before: the screen opens on where it stands.
-      expect(find.text('Stripe is checking your details'), findsOneWidget);
-      expect(find.byKey(const ValueKey('stripe-continue')), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('stripe-check')));
-      await tester.pumpAndSettle();
-      expect(payments.stripeChecks, 2);
-      expect(popped, isNull);
-    });
-
-    testWidgets('a form not finished says so, and can be continued', (
-      tester,
-    ) async {
-      payments.stripeStatuses = [
-        (status: StripeBankStatus.incomplete, account: null),
-      ];
-      await pump(tester, country: uk);
-      expect(find.text('Continue setup with Stripe'), findsOneWidget);
-
-      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('stripe-check')));
-      await tester.pumpAndSettle();
-      expect(find.textContaining("isn't finished yet"), findsOneWidget);
-    });
-
-    testWidgets('a country Stripe can\'t pay out to is explained', (
-      tester,
-    ) async {
-      payments.failStripeLink = const PayoutAccountException(
-        PayoutAccountFailure.notSupported,
+    testWidgets('what Stripe refuses is shown in its words', (tester) async {
+      payments.failStripeSubmit = const PayoutAccountException(
+        PayoutAccountFailure.invalid,
+        'Routing number must have 9 digits',
       );
-      await pump(tester, country: uk);
-      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('payout-error')), findsOneWidget);
-      expect(opened, isEmpty);
+      await pump(tester, country: us);
+      await fillUs(tester);
+      await save(tester);
+      expect(find.text('Routing number must have 9 digits'), findsOneWidget);
+      expect(find.byKey(const ValueKey('stripe-form')), findsOneWidget);
     });
 
-    testWidgets('no email known: asked for, then sent to Stripe', (
+    testWidgets('no email known: asked for in the form, then sent', (
       tester,
     ) async {
-      payments.failStripeLink = const PayoutAccountException(
+      payments.failStripeSubmit = const PayoutAccountException(
         PayoutAccountFailure.emailRequired,
       );
-      await pump(tester, country: uk);
-      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
-      await tester.pumpAndSettle();
-
+      await pump(tester, country: us);
+      await fillUs(tester);
+      await save(tester);
       expect(find.byKey(const ValueKey('stripe-email')), findsOneWidget);
-      expect(find.textContaining('Stripe needs your email'), findsOneWidget);
-      expect(opened, isEmpty);
-      // Waits for a whole email.
-      await tester.enterText(
-        find.byKey(const ValueKey('stripe-email')),
-        'amara@',
-      );
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
-      await tester.pumpAndSettle();
-      expect(payments.stripeLinkEmails, [null]);
 
-      await tester.enterText(
-        find.byKey(const ValueKey('stripe-email')),
-        ' amara@example.com ',
-      );
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await enter(tester, 'stripe-email', 'amara@example.com');
+      await save(tester);
+      expect(payments.stripeSubmitted.last.email, 'amara@example.com');
+    });
+
+    testWidgets('Stripe needs more: finished on Stripe\'s page', (
+      tester,
+    ) async {
+      payments.stripeStatuses = [
+        (status: StripeBankStatus.actionNeeded, account: null),
+        (status: StripeBankStatus.enabled, account: saved),
+      ];
+      await pump(tester, country: us);
+
+      expect(find.text('Stripe needs a little more'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('stripe-finish')));
       await tester.pumpAndSettle();
-      expect(payments.stripeLinkEmails.last, 'amara@example.com');
-      expect(opened, hasLength(1));
+      expect(opened, [Uri.parse('https://connect.stripe.test/setup/1')]);
+
+      await tester.tap(find.byKey(const ValueKey('stripe-check')));
+      await tester.pumpAndSettle();
+      expect(popped?.id, 'pa-stripe');
+    });
+
+    testWidgets('UK: sort code, no SSN, postcode', (tester) async {
+      await pump(tester, country: uk);
+      expect(find.byKey(const ValueKey('stripe-ssn')), findsNothing);
+      expect(find.byKey(const ValueKey('stripe-state')), findsNothing);
+      expect(find.text('Sort code'), findsOneWidget);
+      expect(find.text('Postcode'), findsOneWidget);
     });
 
     testWidgets('is translated', (tester) async {
-      await pump(tester, country: uk, locale: const Locale('fr'));
-      expect(find.text('Reliez votre banque avec Stripe'), findsOneWidget);
+      await pump(tester, country: us, locale: const Locale('fr'));
+      expect(find.text('Enregistrer le compte bancaire'), findsOneWidget);
     });
   });
 }

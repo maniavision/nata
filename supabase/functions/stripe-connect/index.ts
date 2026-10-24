@@ -1,32 +1,38 @@
 /**
- * stripe-connect — a traveler connects their bank through Stripe, to be paid
- * there (20240170). For travelers who live where Stripe Connect can pay out
- * to a bank from Nata's US account: the US, the UK, the EEA, Canada and
- * Switzerland.
+ * stripe-connect — a traveler is paid to their bank through Stripe
+ * (20240170): they give their details and bank account in Nata's own form,
+ * and Nata creates their Stripe account with them. For travelers who live
+ * where Stripe Connect can pay out to a bank from Nata's US account: the US,
+ * the UK, the EEA, Canada and Switzerland.
+ *
+ * The account is an Accounts v2 recipient that takes Stripe transfers, with
+ * no Stripe dashboard: Nata collects what Stripe needs (its "requirements"),
+ * collects fees and covers losses. The traveler accepts Stripe's Connected
+ * Account Agreement in the form; Nata records that acceptance (date, IP,
+ * device) on the account. ID numbers and bank numbers are passed straight to
+ * Stripe and not kept; Nata keeps only the bank's name and last 4 digits.
  *
  * Called by the app (with the traveler's JWT) with { action }:
- *   * start: makes the traveler's Stripe account if they have none, in
- *     their country of residence (Accounts v2, which Stripe requires for new
- *     Connect platforms: a recipient that takes Stripe transfers, with the
- *     Express dashboard, Nata collecting fees and covering losses), and
- *     answers
- *     { url }: Stripe's own pages, where they give their identity and bank
- *     details (never to Nata). Stripe sends them back to
- *     stripe-connect-return.
+ *   * submit, with { first_name, last_name, dob: { day, month, year },
+ *     phone, address: { line1, city, state, postal_code }, id_number
+ *     (US: the last 4 digits of the SSN), bank: { routing_number,
+ *     account_number } (IBAN countries: account_number only), email
+ *     (only when Nata has none), tos_accepted: true }: creates (or
+ *     updates) the account and adds the bank account, then answers as
+ *     status does.
  *   * status: looks the account up with Stripe and keeps Nata in step
  *     (stripe-webhook does too, on account.updated). Answers { status }:
- *     none (no account yet), incomplete (Stripe's form isn't finished),
- *     pending (Stripe is checking it) or enabled (payouts go to the bank;
- *     it is now one of the traveler's payout accounts, given as { account },
- *     as add-payout-account answers).
+ *     none (no account yet), pending (Stripe is checking it), action_needed
+ *     (Stripe needs more than the form gives, such as an ID photo, or a
+ *     review) or enabled (payouts go to the bank; it is now one of the
+ *     traveler's payout accounts, given as { account }).
+ *   * finish: { url } of Stripe's page for what is left (action_needed),
+ *     which sends them back to stripe-connect-return.
  *
- * Stripe needs an email for the account: the traveler's account email, else
- * the one they gave at checkout before (nata.payer_emails), else the
- * { email } they give now (kept in nata.payer_emails for next time).
- *
- * Errors: 401 unauthorized, 400 bad_request, 409 not_supported (no country
- * of residence, or one Stripe can't pay out to) / email_required,
- * 503 payments_unavailable, 502 provider_error.
+ * Errors: 401 unauthorized, 400 bad_request / invalid ({ message }: what
+ * Stripe refused, such as a routing number), 409 not_supported (no country
+ * of residence, or one Stripe can't pay out to) / email_required /
+ * tos_required, 503 payments_unavailable, 502 provider_error.
  */
 
 // ── Stripe and Supabase helpers (the same in each payment function, so each
@@ -218,10 +224,36 @@ function notOurs(status: number): boolean {
 /** The same check as nata.payer_emails. */
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+/** The currency of [country] (nata.countries), or null. */
+async function countryCurrency(country: string): Promise<string | null> {
+  const { data } = await admin
+    .schema("nata")
+    .from("countries")
+    .select("currency_code")
+    .eq("iso_code", country)
+    .maybeSingle();
+  const c = String(data?.currency_code ?? "").trim().toUpperCase();
+  return /^[A-Z]{3}$/.test(c) ? c : null;
+}
+
 /** Where Stripe sends the traveler back (a page that says to go back). */
 function returnUrl(again: boolean): string {
   return `${Deno.env.get("SUPABASE_URL")}/functions/v1/stripe-connect-return` +
     (again ? "?again=1" : "");
+}
+
+/** The ID number Stripe needs from an individual, by country. */
+const ID_NUMBER_TYPE: Record<string, string> = { US: "us_ssn_last_4" };
+
+/** Where the traveler's bank account stands with Stripe. */
+function statusOf(account: Record<string, unknown>): string {
+  if (account.payouts_enabled === true) return "enabled";
+  const req = (account.requirements ?? {}) as {
+    currently_due?: string[];
+    past_due?: string[];
+  };
+  const due = [...(req.currently_due ?? []), ...(req.past_due ?? [])];
+  return due.length > 0 ? "action_needed" : "pending";
 }
 
 Deno.serve(async (req: Request) => {
@@ -230,16 +262,14 @@ Deno.serve(async (req: Request) => {
   const user = await caller(req);
   if (!user) return json({ error: "unauthorized" }, 401);
 
-  let action = "";
-  let givenEmail = "";
+  let body: Record<string, unknown> = {};
   try {
-    const body = await req.json();
-    action = String(body.action ?? "");
-    givenEmail = String(body.email ?? "").trim().toLowerCase();
+    body = await req.json();
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
-  if (action !== "start" && action !== "status") {
+  const action = String(body.action ?? "");
+  if (!["submit", "status", "finish"].includes(action)) {
     return json({ error: "bad_request" }, 400);
   }
 
@@ -248,41 +278,10 @@ Deno.serve(async (req: Request) => {
     .select("account_id")
     .eq("user_id", user.id)
     .maybeSingle();
-
-  if (action === "status") {
-    if (!row) return json({ status: "none" });
-    const res = await stripe(`/accounts/${encodeURIComponent(row.account_id)}`);
-    // Made with other Stripe keys: as good as none (start makes a new one).
-    if (notOurs(res.status)) return json({ status: "none" });
-    if (res.status !== 200) {
-      console.error("[stripe-connect] status", res.status);
-      return json({ error: "provider_error" }, 502);
-    }
-    await syncAccount(user.id, res.body);
-    if (res.body.payouts_enabled !== true) {
-      return json({
-        status: res.body.details_submitted === true ? "pending" : "incomplete",
-      });
-    }
-    const { data: dest } = await db.from("payout_destinations")
-      .select("account_id")
-      .eq("account_bank", "STRIPE")
-      .eq("account_number", row.account_id)
-      .maybeSingle();
-    const { data: account } = dest
-      ? await db.from("payout_accounts")
-        .select("id, kind, institution_name, country_code, account_last4, holder_name, is_default")
-        .eq("id", dest.account_id)
-        .maybeSingle()
-      : { data: null };
-    return json({ status: "enabled", account });
-  }
-
-  // start: the account, then a link to Stripe's pages.
   let accountId = row?.account_id as string | undefined;
   if (accountId) {
     // Made with other Stripe keys (test mode, then a sandbox, or live):
-    // Stripe no longer knows it, so a new one is made.
+    // Stripe no longer knows it, so it is as good as none.
     const known = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
     if (notOurs(known.status)) {
       await db.from("stripe_accounts").delete()
@@ -291,49 +290,158 @@ Deno.serve(async (req: Request) => {
       accountId = undefined;
     }
   }
-  if (!accountId) {
-    const { data: profile } = await db.from("profiles")
-      .select("country_of_residence")
-      .eq("id", user.id)
-      .maybeSingle();
-    const country = String(profile?.country_of_residence ?? "").trim()
-      .toUpperCase();
-    if (!STRIPE_COUNTRIES.has(country)) {
-      return json({ error: "not_supported" }, 409);
-    }
-    // Stripe needs an email for the account.
-    let email = String(user.email ?? "").trim();
-    if (!email) {
-      const { data: saved } = await db.from("payer_emails")
-        .select("email")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      email = String(saved?.email ?? "");
-    }
-    if (!email && EMAIL.test(givenEmail)) {
-      email = givenEmail;
-      const { error } = await db.from("payer_emails").upsert({
-        user_id: user.id,
-        email,
-        updated_at: new Date().toISOString(),
-      });
-      if (error) console.error("[stripe-connect] email", error);
-    }
-    if (!email) return json({ error: "email_required" }, 409);
 
-    const { data: person } = await db.from("profiles")
-      .select("first_name, last_name")
-      .eq("id", user.id)
+  /** Where it stands now, as status answers. */
+  const answer = async () => {
+    if (!accountId) return json({ status: "none" });
+    const res = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
+    if (res.status !== 200) {
+      console.error("[stripe-connect] status", res.status);
+      return json({ error: "provider_error" }, 502);
+    }
+    await syncAccount(user.id, res.body);
+    const status = statusOf(res.body);
+    if (status !== "enabled") return json({ status });
+    const { data: dest } = await db.from("payout_destinations")
+      .select("account_id")
+      .eq("account_bank", "STRIPE")
+      .eq("account_number", accountId)
       .maybeSingle();
-    const name = [person?.first_name, person?.last_name]
-      .filter((p) => p && String(p).trim())
-      .join(" ").trim();
+    const { data: account } = dest
+      ? await db.from("payout_accounts")
+        .select("id, kind, institution_name, country_code, account_last4, holder_name, is_default")
+        .eq("id", dest.account_id)
+        .maybeSingle()
+      : { data: null };
+    return json({ status, account });
+  };
+
+  if (action === "status") return answer();
+
+  if (action === "finish") {
+    if (!accountId) return json({ error: "bad_request" }, 400);
+    const link = await stripeV2("/core/account_links", {
+      account: accountId,
+      use_case: {
+        type: "account_onboarding",
+        account_onboarding: {
+          refresh_url: returnUrl(true),
+          return_url: returnUrl(false),
+        },
+      },
+    });
+    const url = String(link.body.url ?? "");
+    if (link.status !== 200 || !url) {
+      const err = link.body.error as { code?: string; message?: string } | undefined;
+      console.error("[stripe-connect] link", link.status, err?.code, err?.message);
+      return json({ error: "provider_error" }, 502);
+    }
+    return json({ url });
+  }
+
+  // submit: the traveler's details and bank account, from Nata's form.
+  const { data: profile } = await db.from("profiles")
+    .select("country_of_residence")
+    .eq("id", user.id)
+    .maybeSingle();
+  const country = String(profile?.country_of_residence ?? "").trim()
+    .toUpperCase();
+  if (!STRIPE_COUNTRIES.has(country)) {
+    return json({ error: "not_supported" }, 409);
+  }
+  if (body.tos_accepted !== true) return json({ error: "tos_required" }, 409);
+
+  const text = (v: unknown, max = 100) => String(v ?? "").trim().slice(0, max);
+  const firstName = text(body.first_name, 80);
+  const lastName = text(body.last_name, 80);
+  const phone = text(body.phone, 20);
+  const dob = (body.dob ?? {}) as Record<string, unknown>;
+  const day = Number(dob.day), month = Number(dob.month), year = Number(dob.year);
+  const address = (body.address ?? {}) as Record<string, unknown>;
+  const bank = (body.bank ?? {}) as Record<string, unknown>;
+  const accountNumber = text(bank.account_number, 40).replace(/[\s-]/g, "")
+    .toUpperCase();
+  const routing = text(bank.routing_number, 20).replace(/\s/g, "");
+  const idNumber = text(body.id_number, 20).replace(/\D/g, "");
+  const idType = ID_NUMBER_TYPE[country];
+  if (
+    firstName.length < 1 || lastName.length < 1 ||
+    !Number.isInteger(day) || !Number.isInteger(month) ||
+    !Number.isInteger(year) || year < 1900 ||
+    !text(address.line1) || !text(address.city) ||
+    !text(address.postal_code, 20) || accountNumber.length < 4 ||
+    (idType && !idNumber)
+  ) {
+    return json({ error: "bad_request" }, 400);
+  }
+
+  // Stripe needs an email: the account's, the one given at checkout, or
+  // the one given now (kept for next time).
+  let email = String(user.email ?? "").trim();
+  if (!email) {
+    const { data: saved } = await db.from("payer_emails")
+      .select("email")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    email = String(saved?.email ?? "");
+  }
+  const givenEmail = text(body.email, 200).toLowerCase();
+  if (!email && EMAIL.test(givenEmail)) {
+    email = givenEmail;
+    const { error } = await db.from("payer_emails").upsert({
+      user_id: user.id,
+      email,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) console.error("[stripe-connect] email", error);
+  }
+  if (!email) return json({ error: "email_required" }, 409);
+
+  const identity = {
+    country: country.toLowerCase(),
+    entity_type: "individual",
+    individual: {
+      given_name: firstName,
+      surname: lastName,
+      email,
+      ...(phone ? { phone } : {}),
+      date_of_birth: { day, month, year },
+      address: {
+        country: country.toLowerCase(),
+        line1: text(address.line1),
+        ...(text(address.line2) ? { line2: text(address.line2) } : {}),
+        city: text(address.city),
+        ...(text(address.state, 40) ? { state: text(address.state, 40) } : {}),
+        postal_code: text(address.postal_code, 20),
+      },
+      ...(idType ? { id_numbers: [{ type: idType, value: idNumber }] } : {}),
+    },
+    attestations: {
+      terms_of_service: {
+        account: {
+          date: new Date().toISOString(),
+          ip: (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
+            "0.0.0.0",
+          user_agent: text(req.headers.get("user-agent"), 300) || "Nata app",
+        },
+      },
+    },
+  };
+  const refused = (res: { status: number; body: Record<string, unknown> }, what: string) => {
+    const err = res.body.error as { code?: string; message?: string } | undefined;
+    console.error(`[stripe-connect] ${what}`, res.status, err?.code, err?.message);
+    return res.status === 400 && err?.message
+      ? json({ error: "invalid", message: err.message }, 400)
+      : json({ error: "provider_error" }, 502);
+  };
+
+  if (!accountId) {
     const created = await stripeV2(
       "/core/accounts",
       {
-        display_name: name || "Nata traveler",
+        display_name: `${firstName} ${lastName}`,
         contact_email: email,
-        identity: { country: country.toLowerCase(), entity_type: "individual" },
+        identity,
         configuration: {
           recipient: {
             capabilities: {
@@ -341,8 +449,9 @@ Deno.serve(async (req: Request) => {
             },
           },
         },
-        // The Express dashboard needs Nata to collect fees and cover losses.
-        dashboard: "express",
+        // No Stripe dashboard: Nata collects what Stripe needs, which
+        // means Nata also collects fees and covers losses.
+        dashboard: "none",
         defaults: {
           responsibilities: {
             fees_collector: "application",
@@ -355,12 +464,11 @@ Deno.serve(async (req: Request) => {
       // try again within the hour; a refusal isn't replayed for longer.
       `nata-connect-${user.id}-${Math.floor(Date.now() / 3600000)}`,
     );
-    accountId = String(created.body.id ?? "");
-    if (created.status !== 200 || !accountId.startsWith("acct_")) {
-      const err = created.body.error as { code?: string; message?: string } | undefined;
-      console.error("[stripe-connect] account", created.status, err?.code, err?.message);
-      return json({ error: "provider_error" }, 502);
+    const id = String(created.body.id ?? "");
+    if (created.status !== 200 || !id.startsWith("acct_")) {
+      return refused(created, "account");
     }
+    accountId = id;
     const { error } = await db.from("stripe_accounts").insert({
       user_id: user.id,
       account_id: accountId,
@@ -370,23 +478,34 @@ Deno.serve(async (req: Request) => {
       console.error("[stripe-connect] save", error);
       return json({ error: "provider_error" }, 502);
     }
+  } else {
+    // Given again (a correction, or what Stripe asked for): updated.
+    const updated = await stripeV2(
+      `/core/accounts/${encodeURIComponent(accountId)}`,
+      { contact_email: email, identity },
+    );
+    if (updated.status !== 200) return refused(updated, "update");
   }
 
-  const link = await stripeV2("/core/account_links", {
-    account: accountId,
-    use_case: {
-      type: "account_onboarding",
-      account_onboarding: {
-        refresh_url: returnUrl(true),
-        return_url: returnUrl(false),
+  // The bank account, paid out to in the country's currency.
+  const currency = await countryCurrency(country);
+  const external = await stripe(
+    `/accounts/${encodeURIComponent(accountId)}/external_accounts`,
+    {
+      method: "POST",
+      form: {
+        "external_account[object]": "bank_account",
+        "external_account[country]": country,
+        "external_account[currency]": (currency ?? "USD").toLowerCase(),
+        "external_account[account_number]": accountNumber,
+        ...(routing ? { "external_account[routing_number]": routing } : {}),
+        "external_account[account_holder_name]": `${firstName} ${lastName}`,
+        "external_account[account_holder_type]": "individual",
+        default_for_currency: "true",
       },
     },
-  });
-  const url = String(link.body.url ?? "");
-  if (link.status !== 200 || !url) {
-    const err = link.body.error as { code?: string; message?: string } | undefined;
-    console.error("[stripe-connect] link", link.status, err?.code, err?.message);
-    return json({ error: "provider_error" }, 502);
-  }
-  return json({ url });
+  );
+  if (external.status !== 200) return refused(external, "bank");
+
+  return answer();
 });
