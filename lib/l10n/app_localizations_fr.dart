@@ -4485,8 +4485,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get stripeCheckAgain => 'Vérifier à nouveau';
 
   @override
+  String get stripeContinueSetup => 'Continuer avec Stripe';
+
+  @override
+  String get stripeNotFinished =>
+      'Le formulaire de Stripe n\'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.';
+
+  @override
   String get errStripeOpen =>
       'Impossible d\'ouvrir Stripe. Veuillez réessayer.';
+
+  @override
+  String get removePayoutAccountTitle => 'Supprimer ce compte de paiement ?';
+
+  @override
+  String removePayoutAccountBody(String name, String summary) {
+    return '$name $summary ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut.';
+  }
 
   @override
   String get stripeEmailLabel => 'E-mail pour Stripe';

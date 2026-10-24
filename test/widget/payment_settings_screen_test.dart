@@ -130,6 +130,33 @@ void main() {
       expect(find.text('Apple Pay'), findsOneWidget);
     });
 
+    testWidgets('a payout account is removed after confirming', (tester) async {
+      await pump(tester);
+      await tester.pumpAndSettle();
+      final id = payments.accounts.single.id;
+
+      await tester.ensureVisible(
+        find.byKey(ValueKey('payout-account-remove-$id')),
+      );
+      await tester.tap(find.byKey(ValueKey('payout-account-remove-$id')));
+      await tester.pumpAndSettle();
+      expect(find.text('Remove this payout account?'), findsOneWidget);
+
+      // Cancel keeps it.
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(payments.removedAccounts, isEmpty);
+
+      await tester.tap(find.byKey(ValueKey('payout-account-remove-$id')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('payout-account-remove-confirm')),
+      );
+      await tester.pumpAndSettle();
+      expect(payments.removedAccounts, [id]);
+      expect(find.text('No payout account yet.'), findsOneWidget);
+    });
+
     testWidgets('no methods or payout account yet', (tester) async {
       payments = FakePaymentService();
       await pump(tester);

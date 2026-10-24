@@ -4405,7 +4405,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stripeCheckAgain => 'Check again';
 
   @override
+  String get stripeContinueSetup => 'Continue setup with Stripe';
+
+  @override
+  String get stripeNotFinished =>
+      'Stripe\'s form isn\'t finished yet. Continue setup with Stripe to finish it.';
+
+  @override
   String get errStripeOpen => 'Couldn\'t open Stripe. Please try again.';
+
+  @override
+  String get removePayoutAccountTitle => 'Remove this payout account?';
+
+  @override
+  String removePayoutAccountBody(String name, String summary) {
+    return '$name $summary will no longer be paid. Payouts waiting for it go to your default payout account.';
+  }
 
   @override
   String get stripeEmailLabel => 'Email for Stripe';

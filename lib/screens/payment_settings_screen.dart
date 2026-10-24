@@ -121,6 +121,35 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     await _change(() => _service.addMethod(added));
   }
 
+  /// Asks first: waiting payouts then go to the default account.
+  Future<void> _removePayoutAccount(PayoutAccount account) async {
+    final l = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const ValueKey('payout-account-remove-dialog'),
+        title: Text(l.removePayoutAccountTitle),
+        content: Text(
+          l.removePayoutAccountBody(account.institutionName, account.summary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const ValueKey('payout-account-remove-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: Text(l.remove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _change(() => _service.removePayoutAccount(account.id));
+  }
+
   Future<void> _removeMethod(PaymentMethod method) =>
       _change(() => _service.removeMethod(method.id));
 
@@ -462,12 +491,26 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(child: _titled(a.institutionName, a.summary)),
-                    if (a.isDefault)
+                    if (a.isDefault) ...[
                       const Icon(
                         Icons.check_circle_rounded,
                         size: 18,
                         color: _green,
                       ),
+                      const SizedBox(width: 10),
+                    ],
+                    GestureDetector(
+                      key: ValueKey('payout-account-remove-${a.id}'),
+                      onTap: () => _removePayoutAccount(a),
+                      child: Text(
+                        l.remove,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

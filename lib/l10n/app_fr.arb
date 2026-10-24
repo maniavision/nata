@@ -1913,6 +1913,13 @@
   "stripePendingTitle": "Stripe vérifie vos informations",
   "stripePendingBody": "Cela prend en général quelques minutes. Vos versements partent vers votre banque dès que Stripe l'a validée.",
   "stripeCheckAgain": "Vérifier à nouveau",
+  "stripeContinueSetup": "Continuer avec Stripe",
+  "stripeNotFinished": "Le formulaire de Stripe n'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.",
+  "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer.",
+
+  "removePayoutAccountTitle": "Supprimer ce compte de paiement ?",
+  "removePayoutAccountBody": "{name} {summary} ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut.",
+
   "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer.",
   "stripeEmailLabel": "E-mail pour Stripe",
   "stripeEmailNote": "Stripe vous envoie ici les informations sur vos versements. Il n'est montré à personne.",

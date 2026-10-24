@@ -350,6 +350,13 @@ class PaymentService {
     await _table('payment_methods').delete().eq('id', id);
   }
 
+  /// Removes a payout account. Payouts waiting for it go to the default
+  /// account instead; removing the default makes the latest other one the
+  /// default (20240171).
+  Future<void> removePayoutAccount(String id) async {
+    await _table('payout_accounts').delete().eq('id', id);
+  }
+
   /// The user's payout accounts, oldest first.
   Future<List<PayoutAccount>> payoutAccounts() async {
     final rows = await _table(

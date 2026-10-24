@@ -7718,11 +7718,35 @@ abstract class AppLocalizations {
   /// **'Check again'**
   String get stripeCheckAgain;
 
+  /// No description provided for @stripeContinueSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue setup with Stripe'**
+  String get stripeContinueSetup;
+
+  /// No description provided for @stripeNotFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe\'s form isn\'t finished yet. Continue setup with Stripe to finish it.'**
+  String get stripeNotFinished;
+
   /// No description provided for @errStripeOpen.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t open Stripe. Please try again.'**
   String get errStripeOpen;
+
+  /// No description provided for @removePayoutAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this payout account?'**
+  String get removePayoutAccountTitle;
+
+  /// No description provided for @removePayoutAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {summary} will no longer be paid. Payouts waiting for it go to your default payout account.'**
+  String removePayoutAccountBody(String name, String summary);
 
   /// No description provided for @stripeEmailLabel.
   ///
