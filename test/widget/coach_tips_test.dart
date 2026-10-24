@@ -1,4 +1,8 @@
 import 'package:carrywise_app/screens/home_screen.dart';
+import 'package:carrywise_app/screens/messages_screen.dart';
+import 'package:carrywise_app/screens/profile_screen.dart';
+import 'package:carrywise_app/screens/requests_screen.dart';
+import 'package:carrywise_app/screens/trips_screen.dart';
 import 'package:carrywise_app/services/route_alert_service.dart';
 import 'package:carrywise_app/widgets/coach_tips.dart';
 import 'package:flutter/material.dart';
@@ -75,7 +79,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(CoachTipsOverlay), findsNothing);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool(CoachTips.seenKey('home', 'me')), isTrue);
+    expect(prefs.getBool(CoachTips.seenKey('home', 'test-user')), isTrue);
   });
 
   testWidgets('Skip ends the tips and they are not shown again', (
@@ -138,5 +142,78 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(CoachTipsOverlay), findsNothing);
+  });
+
+  group('the other tabs have their own tips', () {
+    Future<void> show(WidgetTester tester, Widget page) async {
+      tester.view.physicalSize = const Size(600, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(appWrapper(page));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pumpAndSettle();
+    }
+
+    /// Goes through every tip with Next, checking each title.
+    Future<void> walk(WidgetTester tester, List<String> titles) async {
+      for (final title in titles) {
+        expect(
+          find.descendant(
+            of: find.byType(CoachTipsOverlay),
+            matching: find.text(title),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
+        await tester.pumpAndSettle();
+      }
+      expect(find.byType(CoachTipsOverlay), findsNothing);
+    }
+
+    testWidgets('Requests', (tester) async {
+      await show(
+        tester,
+        RequestsScreen(
+          requestService: FakeRequestService(),
+          exchangeRates: FakeExchangeRateService(),
+        ),
+      );
+      await walk(tester, ['Sent and received', 'Active and Archive']);
+    });
+
+    testWidgets('Trips', (tester) async {
+      await show(tester, TripsScreen(service: FakeTripService(trips: [])));
+      await walk(tester, ['Post a trip', 'Upcoming and past']);
+    });
+
+    testWidgets('Messages', (tester) async {
+      await show(
+        tester,
+        MessagesScreen(service: FakeMessageService(conversations: [])),
+      );
+      await walk(tester, ['Find a chat', 'When chats open']);
+    });
+
+    testWidgets('Profile', (tester) async {
+      await show(tester, ProfileScreen(authService: FakeAuthService()));
+      await walk(tester, ['Your Nata Wallet', 'Get paid', 'Route alerts']);
+    });
+
+    testWidgets('each page remembers its own tips', (tester) async {
+      await show(tester, TripsScreen(service: FakeTripService(trips: [])));
+      await tester.tap(find.byKey(const ValueKey('coach-tip-skip')));
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox());
+      await show(tester, TripsScreen(service: FakeTripService(trips: [])));
+      expect(find.byType(CoachTipsOverlay), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+      await show(
+        tester,
+        MessagesScreen(service: FakeMessageService(conversations: [])),
+      );
+      expect(find.text('Find a chat'), findsOneWidget);
+    });
   });
 }

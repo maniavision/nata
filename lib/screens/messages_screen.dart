@@ -6,6 +6,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/message_service.dart';
 import '../services/screen_cache.dart';
+import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'chat_thread_screen.dart';
@@ -43,6 +44,10 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen>
     with WidgetsBindingObserver {
+  /// What the first-visit tips point at.
+  final _searchTipKey = GlobalKey();
+  final _filtersTipKey = GlobalKey();
+
   List<ConversationSummary> _items = const [];
   bool _loading = true;
   bool _failed = false;
@@ -72,6 +77,24 @@ class _MessagesScreenState extends State<MessagesScreen>
     _load(quiet: cached != null);
     WidgetsBinding.instance.addObserver(this);
     _startTimer();
+    CoachTips.showWhenSettled(
+      context,
+      name: 'messages',
+      tips: () => [
+        CoachTip(
+          target: _searchTipKey,
+          icon: Icons.search_rounded,
+          title: context.l10n.tipChatSearchTitle,
+          body: context.l10n.tipChatSearchBody,
+        ),
+        CoachTip(
+          target: _filtersTipKey,
+          icon: Icons.lock_open_rounded,
+          title: context.l10n.tipChatFiltersTitle,
+          body: context.l10n.tipChatFiltersBody,
+        ),
+      ],
+    );
     _searchCtrl.addListener(() {
       final q = _searchCtrl.text.trim().toLowerCase();
       if (q != _query) setState(() => _query = q);
@@ -191,7 +214,7 @@ class _MessagesScreenState extends State<MessagesScreen>
             Column(
               children: [
                 _buildHeader(),
-                _buildFilterRow(),
+                KeyedSubtree(key: _filtersTipKey, child: _buildFilterRow()),
                 Expanded(child: _buildBody()),
               ],
             ),
@@ -241,6 +264,7 @@ class _MessagesScreenState extends State<MessagesScreen>
             ),
           const SizedBox(height: 12),
           Container(
+            key: _searchTipKey,
             decoration: BoxDecoration(
               color: AppColors.input,
               borderRadius: BorderRadius.circular(999),

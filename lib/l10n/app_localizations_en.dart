@@ -4352,4 +4352,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tipNavBody =>
       'Follow your parcels in Requests, your trips in Trips and chat with travelers and senders in Messages.';
+
+  @override
+  String get tipRequestsTabsTitle => 'Sent and received';
+
+  @override
+  String get tipRequestsTabsBody =>
+      'Outgoing has the parcels you send. Incoming has the requests senders make on your trips.';
+
+  @override
+  String get tipArchiveTitle => 'Active and Archive';
+
+  @override
+  String get tipArchiveBody =>
+      'Delivered, cancelled and expired requests move to the Archive after 24 hours. Swipe one left to archive it now.';
+
+  @override
+  String get tipTripsAddTitle => 'Post a trip';
+
+  @override
+  String get tipTripsAddBody =>
+      'Tap + to add a trip you are already taking. Senders on your route can then ask you to carry their parcels.';
+
+  @override
+  String get tipTripsTabsTitle => 'Upcoming and past';
+
+  @override
+  String get tipTripsTabsBody =>
+      'Your trips still to come, and the ones you have already made.';
+
+  @override
+  String get tipChatSearchTitle => 'Find a chat';
+
+  @override
+  String get tipChatSearchBody => 'Search by name, route or item.';
+
+  @override
+  String get tipChatFiltersTitle => 'When chats open';
+
+  @override
+  String get tipChatFiltersBody =>
+      'A chat opens once the sender pays and closes after delivery. Closed chats stay here under Completed, to read.';
+
+  @override
+  String get tipWalletTitle => 'Your Nata Wallet';
+
+  @override
+  String get tipWalletBody =>
+      'Money held in escrow and money ready to withdraw. What you earn carrying parcels shows here.';
+
+  @override
+  String get tipPayoutTitle => 'Get paid';
+
+  @override
+  String get tipPayoutBody =>
+      'Add a bank or mobile money account in Payment settings so your payouts reach you.';
+
+  @override
+  String get tipRouteAlertsTitle => 'Route alerts';
+
+  @override
+  String get tipRouteAlertsBody =>
+      'Save the routes you send on and hear when a traveler is flying them.';
 }

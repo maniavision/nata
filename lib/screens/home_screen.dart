@@ -127,7 +127,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _searchKey = GlobalKey();
   final _bellKey = GlobalKey();
   final _navKey = GlobalKey();
-  bool _tipsQueued = false;
 
   bool _loadingTravelers = true;
   bool _travelersFailed = false;
@@ -367,46 +366,41 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-  /// The first time a member opens Home: what the main parts are for.
+  /// The first time a member opens Home: what the main parts are for (once
+  /// they've ended them, this does nothing).
   void _showTips() {
-    final id = _userId;
-    if (_tipsQueued || id == null || !AuthGate.isSignedIn()) return;
-    _tipsQueued = true;
+    if (!AuthGate.isSignedIn()) return;
     final l = context.l10n;
-    final tips = [
-      CoachTip(
-        target: _addTripKey,
-        icon: Icons.flight_takeoff_rounded,
-        title: l.tipAddTripTitle,
-        body: l.tipAddTripBody,
-      ),
-      CoachTip(
-        target: _searchKey,
-        icon: Icons.search_rounded,
-        title: l.tipSearchTitle,
-        body: l.tipSearchBody,
-      ),
-      CoachTip(
-        target: _bellKey,
-        icon: Icons.notifications_outlined,
-        title: l.tipBellTitle,
-        body: l.tipBellBody,
-      ),
-      CoachTip(
-        target: _navKey,
-        icon: Icons.grid_view_rounded,
-        title: l.tipNavTitle,
-        body: l.tipNavBody,
-      ),
-    ];
-    // After Home has settled, and only while it is the screen on top.
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) {
-        _tipsQueued = false;
-        return;
-      }
-      CoachTips.showOnce(context, name: 'home', userId: id, tips: tips);
-    });
+    CoachTips.showWhenSettled(
+      context,
+      name: 'home',
+      tips: () => [
+        CoachTip(
+          target: _addTripKey,
+          icon: Icons.flight_takeoff_rounded,
+          title: l.tipAddTripTitle,
+          body: l.tipAddTripBody,
+        ),
+        CoachTip(
+          target: _searchKey,
+          icon: Icons.search_rounded,
+          title: l.tipSearchTitle,
+          body: l.tipSearchBody,
+        ),
+        CoachTip(
+          target: _bellKey,
+          icon: Icons.notifications_outlined,
+          title: l.tipBellTitle,
+          body: l.tipBellBody,
+        ),
+        CoachTip(
+          target: _navKey,
+          icon: Icons.grid_view_rounded,
+          title: l.tipNavTitle,
+          body: l.tipNavBody,
+        ),
+      ],
+    );
   }
 
   /// Loads upcoming travelers for the selected route. A random 5 of the

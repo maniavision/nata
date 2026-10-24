@@ -4402,4 +4402,65 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tipNavBody =>
       'Sigue tus paquetes en Solicitudes, tus viajes en Viajes y chatea con viajeros y remitentes en Mensajes.';
+
+  @override
+  String get tipRequestsTabsTitle => 'Salientes y entrantes';
+
+  @override
+  String get tipRequestsTabsBody =>
+      'Salientes tiene los paquetes que envías. Entrantes tiene las solicitudes de remitentes en tus viajes.';
+
+  @override
+  String get tipArchiveTitle => 'Activas y Archivo';
+
+  @override
+  String get tipArchiveBody =>
+      'Las solicitudes entregadas, canceladas y vencidas pasan al Archivo tras 24 horas. Desliza una a la izquierda para archivarla ya.';
+
+  @override
+  String get tipTripsAddTitle => 'Publica un viaje';
+
+  @override
+  String get tipTripsAddBody =>
+      'Toca + para añadir un viaje que ya vas a hacer. Los remitentes en tu ruta podrán pedirte que lleves sus paquetes.';
+
+  @override
+  String get tipTripsTabsTitle => 'Próximos y pasados';
+
+  @override
+  String get tipTripsTabsBody => 'Tus próximos viajes y los que ya hiciste.';
+
+  @override
+  String get tipChatSearchTitle => 'Encuentra un chat';
+
+  @override
+  String get tipChatSearchBody => 'Busca por nombre, ruta o artículo.';
+
+  @override
+  String get tipChatFiltersTitle => 'Cuándo se abren los chats';
+
+  @override
+  String get tipChatFiltersBody =>
+      'Un chat se abre cuando el remitente paga y se cierra tras la entrega. Los chats cerrados quedan aquí en Completadas, para leerlos.';
+
+  @override
+  String get tipWalletTitle => 'Tu billetera Nata';
+
+  @override
+  String get tipWalletBody =>
+      'El dinero en custodia y el dinero listo para retirar. Lo que ganas llevando paquetes aparece aquí.';
+
+  @override
+  String get tipPayoutTitle => 'Cobra tus entregas';
+
+  @override
+  String get tipPayoutBody =>
+      'Añade una cuenta bancaria o de dinero móvil en Ajustes de pago para recibir tus pagos.';
+
+  @override
+  String get tipRouteAlertsTitle => 'Alertas de ruta';
+
+  @override
+  String get tipRouteAlertsBody =>
+      'Guarda las rutas en las que envías y entérate cuando un viajero las vuele.';
 }

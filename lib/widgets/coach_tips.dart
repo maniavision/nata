@@ -4,9 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
+import '../services/screen_cache.dart';
 
-/// One tip: a bubble pointing at [target] (designed in Sleek, "Home (First
-/// Visit Tips)").
+/// One tip: a bubble pointing at [target] (designed in Sleek, "First Visit
+/// Tips").
 class CoachTip {
   final GlobalKey target;
   final String title;
@@ -31,6 +32,27 @@ class CoachTips {
   static String seenKey(String name, String userId) =>
       'coach_tips_seen_${name}_$userId';
 
+  /// One set of tips at a time.
+  static bool _showing = false;
+
+  /// A page's tips for the signed-in member, once the page has settled and
+  /// only while it is the screen on top. [tips] is called then, so the
+  /// targets are built.
+  static void showWhenSettled(
+    BuildContext context, {
+    required String name,
+    required List<CoachTip> Function() tips,
+  }) {
+    if (!enabled) return;
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (!context.mounted) return;
+      if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+      final userId = ScreenCache.userId();
+      if (userId == null) return;
+      showOnce(context, name: name, userId: userId, tips: tips());
+    });
+  }
+
   /// Shows [tips] unless they were seen. Tips whose target isn't on screen
   /// are left out.
   static Future<void> showOnce(
@@ -39,7 +61,7 @@ class CoachTips {
     required String userId,
     required List<CoachTip> tips,
   }) async {
-    if (!enabled) return;
+    if (!enabled || _showing) return;
     final key = seenKey(name, userId);
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -47,11 +69,12 @@ class CoachTips {
     } catch (_) {
       return;
     }
-    if (!context.mounted) return;
+    if (!context.mounted || _showing) return;
     final shown = tips.where((t) => t.target.currentContext != null).toList();
     if (shown.isEmpty) return;
     final overlay = Overlay.of(context, rootOverlay: true);
     late final OverlayEntry entry;
+    _showing = true;
     entry = OverlayEntry(
       builder: (_) => CoachTipsOverlay(
         tips: shown,
@@ -87,6 +110,13 @@ class _CoachTipsOverlayState extends State<CoachTipsOverlay> {
   void initState() {
     super.initState();
     _focus();
+  }
+
+  @override
+  void dispose() {
+    // However the tips end (or the app tears them down), others may show.
+    CoachTips._showing = false;
+    super.dispose();
   }
 
   CoachTip get _tip => widget.tips[_index];
