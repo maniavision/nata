@@ -1,5 +1,6 @@
 import 'push_service.dart';
 import 'home_search_memory.dart';
+import 'screen_cache.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -489,8 +490,10 @@ class AuthService {
   Future<void> signOut() async {
     await PushService.instance.signingOut();
     await _client.auth.signOut();
-    // The next person to sign in on this device starts with an empty search.
+    // The next person to sign in on this device starts with an empty search,
+    // and none of the pages this one saw.
     HomeSearchMemory.clear();
+    ScreenCache.clear();
   }
 }
 
