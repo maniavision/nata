@@ -1919,5 +1919,8 @@
   "stripeCheckAgain": "Comprobar de nuevo",
   "stripeContinueSetup": "Continuar con Stripe",
   "stripeNotFinished": "El formulario de Stripe aún no está terminado. Toca Continuar con Stripe para terminarlo.",
-  "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo."
+  "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo.",
+
+  "removePayoutAccountTitle": "¿Eliminar esta cuenta de cobro?",
+  "removePayoutAccountBody": "{name} {summary} ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada."
 }

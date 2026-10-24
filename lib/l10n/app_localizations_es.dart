@@ -4476,4 +4476,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errStripeOpen => 'No se pudo abrir Stripe. Inténtalo de nuevo.';
+
+  @override
+  String get removePayoutAccountTitle => '¿Eliminar esta cuenta de cobro?';
+
+  @override
+  String removePayoutAccountBody(String name, String summary) {
+    return '$name $summary ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada.';
+  }
 }
