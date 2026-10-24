@@ -2009,5 +2009,9 @@
   "stripeCheckAgain": "Check again",
   "stripeContinueSetup": "Continue setup with Stripe",
   "stripeNotFinished": "Stripe's form isn't finished yet. Continue setup with Stripe to finish it.",
-  "errStripeOpen": "Couldn't open Stripe. Please try again."
+  "errStripeOpen": "Couldn't open Stripe. Please try again.",
+
+  "removePayoutAccountTitle": "Remove this payout account?",
+  "removePayoutAccountBody": "{name} {summary} will no longer be paid. Payouts waiting for it go to your default payout account.",
+  "@removePayoutAccountBody": {"placeholders": {"name": {"type": "String"}, "summary": {"type": "String"}}}
 }

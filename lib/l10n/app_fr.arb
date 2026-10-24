@@ -1919,5 +1919,8 @@
   "stripeCheckAgain": "Vérifier à nouveau",
   "stripeContinueSetup": "Continuer avec Stripe",
   "stripeNotFinished": "Le formulaire de Stripe n'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.",
-  "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer."
+  "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer.",
+
+  "removePayoutAccountTitle": "Supprimer ce compte de paiement ?",
+  "removePayoutAccountBody": "{name} {summary} ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut."
 }
