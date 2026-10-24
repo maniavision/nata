@@ -2013,5 +2013,9 @@
   "tipPayoutTitle": "Get paid",
   "tipPayoutBody": "Add a bank or mobile money account in Payment settings so your payouts reach you.",
   "tipRouteAlertsTitle": "Route alerts",
-  "tipRouteAlertsBody": "Save the routes you send on and hear when a traveler is flying them."
+  "tipRouteAlertsBody": "Save the routes you send on and hear when a traveler is flying them.",
+
+  "paidSecurelyThroughStripe": "Paid securely through Stripe. Your card details never reach Nata.",
+  "confirmingPayment": "Confirming your payment",
+  "confirmingPaymentSub": "Payment made. We're confirming it with Stripe, which takes a few seconds."
 }

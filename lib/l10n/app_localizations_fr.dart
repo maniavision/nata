@@ -4495,4 +4495,15 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tipRouteAlertsBody =>
       'Enregistrez les trajets sur lesquels vous envoyez et soyez averti quand un voyageur les fait.';
+
+  @override
+  String get paidSecurelyThroughStripe =>
+      'Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.';
+
+  @override
+  String get confirmingPayment => 'Confirmation du paiement';
+
+  @override
+  String get confirmingPaymentSub =>
+      'Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes.';
 }

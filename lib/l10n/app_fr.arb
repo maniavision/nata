@@ -1904,5 +1904,9 @@
   "tipPayoutTitle": "Être payé",
   "tipPayoutBody": "Ajoutez un compte bancaire ou mobile money dans Paramètres de paiement pour recevoir vos paiements.",
   "tipRouteAlertsTitle": "Alertes trajets",
-  "tipRouteAlertsBody": "Enregistrez les trajets sur lesquels vous envoyez et soyez averti quand un voyageur les fait."
+  "tipRouteAlertsBody": "Enregistrez les trajets sur lesquels vous envoyez et soyez averti quand un voyageur les fait.",
+
+  "paidSecurelyThroughStripe": "Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.",
+  "confirmingPayment": "Confirmation du paiement",
+  "confirmingPaymentSub": "Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes."
 }

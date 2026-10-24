@@ -1,6 +1,7 @@
 /**
- * send-refunds — gives senders their money back: Flutterwave refunds for
- * cards, Apple Pay and bank transfer, pawaPay refunds for mobile money.
+ * send-refunds — gives senders their money back: Stripe refunds for cards
+ * and Apple Pay, Flutterwave refunds for bank transfer (and cards paid
+ * before Stripe), pawaPay refunds for mobile money.
  *
  * Called by the app (with the sender's JWT) right after a paid request is
  * cancelled, which sends that sender's pending refunds; or with the service
@@ -13,6 +14,11 @@
  * 20240165) and it is marked sent once pawaPay completes it, by its callback
  * (pawapay-callback) or by this function looking again at refunds still in
  * progress after a few minutes.
+ *
+ * A Stripe refund is marked sent once Stripe takes it (succeeded, or
+ * pending at the card's bank). Stripe is asked first whether the payment
+ * already has a refund, so one Stripe took without answering is never sent
+ * twice.
  *
  * Responds 200 with { sent, failed, started }. Errors: 401 unauthorized,
  * 503 payments_unavailable.
@@ -44,6 +50,53 @@ function json(body: unknown, status = 200): Response {
 function secretKey(): string | null {
   const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
   return key ? key : null;
+}
+
+function stripeKey(): string | null {
+  const key = Deno.env.get("STRIPE_SECRET_KEY")?.trim();
+  return key ? key : null;
+}
+
+/** Calls Stripe (form-encoded); [status] 0 when it couldn't be reached. */
+async function stripe(
+  path: string,
+  init: { method?: string; form?: Record<string, string>; idempotencyKey?: string } = {},
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${stripeKey()}`,
+  };
+  if (init.form) headers["Content-Type"] = "application/x-www-form-urlencoded";
+  if (init.idempotencyKey) headers["Idempotency-Key"] = init.idempotencyKey;
+  let res: Response;
+  try {
+    res = await fetch(`https://api.stripe.com/v1${path}`, {
+      method: init.method ?? "GET",
+      headers,
+      body: init.form ? new URLSearchParams(init.form).toString() : undefined,
+    });
+  } catch (_) {
+    return { status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { status: res.status, body };
+}
+
+/** Currencies Stripe takes in whole units (no cents). */
+const ZERO_DECIMAL = new Set([
+  "BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF",
+  "UGX", "VND", "VUV", "XAF", "XOF", "XPF",
+]);
+
+/** [amount] in Stripe's smallest unit of [currency]. */
+function toStripeAmount(amount: number, currency: string): number {
+  return ZERO_DECIMAL.has(currency.toUpperCase())
+    ? Math.round(amount)
+    : Math.round(amount * 100);
 }
 
 function pawapayToken(): string | null {
@@ -146,9 +199,71 @@ async function flutterwave(
 
 // ── This function ──────────────────────────────────────────────────────────
 
+/**
+ * Refunds [r.amount] of the PaymentIntent [r.transaction_id] through Stripe,
+ * and records it sent or failed.
+ */
+async function refundWithStripe(r: {
+  payment_id: string;
+  transaction_id: string;
+  amount: number;
+  currency: string;
+}): Promise<"sent" | "failed"> {
+  const db = admin.schema("nata");
+  const fail = async (reason: string, retry: boolean) => {
+    await db.rpc("refund_failed", {
+      p_payment_id: r.payment_id,
+      p_reason: reason,
+      p_retry: retry,
+    });
+    return "failed" as const;
+  };
+  if (!stripeKey()) return fail("Stripe isn't set up", true);
+
+  // Already refunded (a refund Stripe took without answering last time)?
+  const existing = await stripe(
+    `/refunds?payment_intent=${encodeURIComponent(r.transaction_id)}&limit=10`,
+  );
+  if (existing.status === 0 || existing.status >= 500) {
+    return fail(`Stripe unreachable (HTTP ${existing.status})`, true);
+  }
+  const taken = ((existing.body.data ?? []) as { id?: string; status?: string }[])
+    .find((x) => x.status === "succeeded" || x.status === "pending");
+  if (taken?.id) {
+    await db.rpc("refund_sent", {
+      p_payment_id: r.payment_id,
+      p_provider_id: taken.id,
+    });
+    return "sent";
+  }
+
+  const res = await stripe("/refunds", {
+    method: "POST",
+    idempotencyKey: `nata-refund-${r.payment_id}-${Date.now()}`,
+    form: {
+      payment_intent: r.transaction_id,
+      amount: String(toStripeAmount(Number(r.amount), r.currency)),
+      "metadata[payment_id]": r.payment_id,
+    },
+  });
+  const status = String(res.body.status ?? "");
+  if (res.status === 200 && (status === "succeeded" || status === "pending")) {
+    await db.rpc("refund_sent", {
+      p_payment_id: r.payment_id,
+      p_provider_id: String(res.body.id ?? ""),
+    });
+    return "sent";
+  }
+  const err = res.body.error as { message?: string } | undefined;
+  return fail(
+    err?.message || `Stripe refund ${status || `HTTP ${res.status}`}`,
+    res.status === 0 || res.status >= 500 || res.status === 429,
+  );
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!secretKey() && !pawapayToken()) {
+  if (!secretKey() && !pawapayToken() && !stripeKey()) {
     return json({ error: "payments_unavailable" }, 503);
   }
 
@@ -184,13 +299,21 @@ Deno.serve(async (req: Request) => {
       .select("id, provider")
       .in("id", refunds.map((r) => r.payment_id))
     : { data: [] };
-  const viaPawapay = new Set(
+  const providerOf = new Map(
     ((providers ?? []) as { id: string; provider: string }[])
-      .filter((p) => p.provider === "pawapay")
-      .map((p) => p.id),
+      .map((p) => [p.id, p.provider]),
+  );
+  const viaPawapay = new Set(
+    [...providerOf].filter(([, p]) => p === "pawapay").map(([id]) => id),
   );
 
   for (const r of refunds) {
+    if (providerOf.get(r.payment_id) === "stripe") {
+      const outcome = await refundWithStripe(r);
+      if (outcome === "sent") sent++;
+      else failed++;
+      continue;
+    }
     if (viaPawapay.has(r.payment_id)) {
       if (!pawapayToken()) {
         await db.rpc("refund_failed", {

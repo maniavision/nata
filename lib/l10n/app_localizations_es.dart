@@ -4463,4 +4463,15 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tipRouteAlertsBody =>
       'Guarda las rutas en las que envías y entérate cuando un viajero las vuele.';
+
+  @override
+  String get paidSecurelyThroughStripe =>
+      'Pago seguro con Stripe. Los datos de tu tarjeta nunca llegan a Nata.';
+
+  @override
+  String get confirmingPayment => 'Confirmando tu pago';
+
+  @override
+  String get confirmingPaymentSub =>
+      'Pago hecho. Lo estamos confirmando con Stripe, tarda unos segundos.';
 }

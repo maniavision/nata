@@ -1375,6 +1375,25 @@ void main() {
       expect(payment.link, Uri.parse('https://pay.test/1'));
     });
 
+    test('a card payment comes back as Stripe\'s sheet', () async {
+      answer({
+        'tx_ref': 'pi_123',
+        'client_secret': 'pi_123_secret_abc',
+        'publishable_key': 'pk_test_abc',
+        'merchant_country': 'US',
+        'apple_merchant_id': null,
+      });
+      final payment = await service.startPayment('req-1', PayMethod.card);
+      expect(sent, {'request_id': 'req-1', 'method': 'card'});
+      expect(payment.txRef, 'pi_123');
+      expect(payment.link, isNull);
+      expect(payment.direct, isFalse);
+      expect(payment.stripe!.clientSecret, 'pi_123_secret_abc');
+      expect(payment.stripe!.publishableKey, 'pk_test_abc');
+      expect(payment.stripe!.merchantCountry, 'US');
+      expect(payment.stripe!.appleMerchantId, isNull);
+    });
+
     test('a refused number is phoneRejected', () async {
       when(
         () => functions.invoke('create-payment', body: any(named: 'body')),

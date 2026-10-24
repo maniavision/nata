@@ -210,16 +210,40 @@ enum PayMethod {
   final String wire;
 }
 
-/// A payment started, and our reference for it: Flutterwave's payment page
-/// (cards, Apple Pay, bank transfer), or no page for mobile money, charged
-/// through pawaPay: the payer approves a prompt on their phone.
+/// A payment started, and our reference for it: Stripe's payment sheet in
+/// the app (cards, Apple Pay), Flutterwave's payment page (bank transfer), or
+/// no page for mobile money, charged through pawaPay: the payer approves a
+/// prompt on their phone.
 class PaymentLink {
   final Uri? link;
   final String txRef;
-  const PaymentLink(this.link, this.txRef);
+
+  /// What the app needs to show Stripe's payment sheet.
+  final StripeSheet? stripe;
+
+  const PaymentLink(this.link, this.txRef, {this.stripe});
 
   /// Charged directly: waiting for the payer to approve it on their phone.
-  bool get direct => link == null;
+  bool get direct => link == null && stripe == null;
+}
+
+/// A Stripe PaymentIntent to pay in the app's payment sheet (create-payment).
+class StripeSheet {
+  final String clientSecret;
+  final String publishableKey;
+
+  /// Where the merchant is, for Apple Pay and Google Pay.
+  final String merchantCountry;
+
+  /// Apple Pay's merchant ID; null until Apple Pay is set up (cards only).
+  final String? appleMerchantId;
+
+  const StripeSheet({
+    required this.clientSecret,
+    required this.publishableKey,
+    this.merchantCountry = 'US',
+    this.appleMerchantId,
+  });
 }
 
 /// A mobile money network the payer picks, with pawaPay's provider code for
@@ -1116,9 +1140,11 @@ class RequestService {
     return email is String && email.trim().isNotEmpty ? email.trim() : null;
   }
 
-  /// Starts paying [requestId] into escrow: a Flutterwave payment page for
-  /// the price fixed when the traveler accepted (create-payment). [email] is
-  /// the payer's, for an account without one; it is kept for next time.
+  /// Starts paying [requestId] into escrow, for the price fixed when the
+  /// traveler accepted (create-payment): Stripe's payment sheet for cards
+  /// and Apple Pay, Flutterwave's page for bank transfer. [email] is the
+  /// payer's, for an account without one (Flutterwave only); it is kept for
+  /// next time.
   /// Mobile money is charged through pawaPay on the wallet's [phone]
   /// (international) and [network] (MobileMoneyNetwork.code): no page, a
   /// prompt on the phone.
@@ -1144,9 +1170,18 @@ class RequestService {
       );
       final data = Map<String, dynamic>.from(response.data as Map);
       final link = data['link'] as String?;
+      final clientSecret = data['client_secret'] as String?;
       return PaymentLink(
         link == null ? null : Uri.parse(link),
         data['tx_ref'] as String,
+        stripe: clientSecret == null
+            ? null
+            : StripeSheet(
+                clientSecret: clientSecret,
+                publishableKey: data['publishable_key'] as String? ?? '',
+                merchantCountry: data['merchant_country'] as String? ?? 'US',
+                appleMerchantId: data['apple_merchant_id'] as String?,
+              ),
       );
     } on FunctionException catch (e) {
       final details = e.details;
@@ -1194,7 +1229,7 @@ class RequestService {
     );
   }
 
-  /// Where the payment [txRef] stands, checked with Flutterwave
+  /// Where the payment [txRef] stands, checked with its provider
   /// (verify-payment). The request becomes paid once it is successful.
   Future<PaymentStatus> paymentStatus(String txRef) async {
     final response = await _client.functions.invoke(

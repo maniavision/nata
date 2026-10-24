@@ -1904,5 +1904,9 @@
   "tipPayoutTitle": "Cobra tus entregas",
   "tipPayoutBody": "Añade una cuenta bancaria o de dinero móvil en Ajustes de pago para recibir tus pagos.",
   "tipRouteAlertsTitle": "Alertas de ruta",
-  "tipRouteAlertsBody": "Guarda las rutas en las que envías y entérate cuando un viajero las vuele."
+  "tipRouteAlertsBody": "Guarda las rutas en las que envías y entérate cuando un viajero las vuele.",
+
+  "paidSecurelyThroughStripe": "Pago seguro con Stripe. Los datos de tu tarjeta nunca llegan a Nata.",
+  "confirmingPayment": "Confirmando tu pago",
+  "confirmingPaymentSub": "Pago hecho. Lo estamos confirmando con Stripe, tarda unos segundos."
 }

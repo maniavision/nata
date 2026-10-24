@@ -1,13 +1,14 @@
 /**
  * verify-payment — where a payment the sender started stands. The app asks
- * while the sender is on Flutterwave's page (or approving a mobile money
- * prompt on their phone), so it doesn't depend on the
- * webhook arriving first.
+ * once the sender has paid in Stripe's sheet, while they are on
+ * Flutterwave's page or approving a mobile money prompt on their phone, so
+ * it doesn't depend on the webhook arriving first.
  *
  * Called by the app (with the sender's JWT) with { tx_ref }. A pending
  * payment is checked with its provider and recorded once it is settled:
- * Flutterwave for cards, Apple Pay and bank transfer, pawaPay for mobile
- * money (20240165; the tx_ref is the deposit id).
+ * Stripe for cards and Apple Pay (the tx_ref is the PaymentIntent's id),
+ * Flutterwave for bank transfer, pawaPay for mobile money (20240165; the
+ * tx_ref is the deposit id).
  *
  * Responds 200 with { status: pending | successful | failed }: successful
  * once the money is held in escrow (or already released).
@@ -41,6 +42,87 @@ function json(body: unknown, status = 200): Response {
 function secretKey(): string | null {
   const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
   return key ? key : null;
+}
+
+function stripeKey(): string | null {
+  const key = Deno.env.get("STRIPE_SECRET_KEY")?.trim();
+  return key ? key : null;
+}
+
+/** Calls Stripe (form-encoded); [status] 0 when it couldn't be reached. */
+async function stripe(
+  path: string,
+  init: { method?: string; form?: Record<string, string>; idempotencyKey?: string } = {},
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${stripeKey()}`,
+  };
+  if (init.form) headers["Content-Type"] = "application/x-www-form-urlencoded";
+  if (init.idempotencyKey) headers["Idempotency-Key"] = init.idempotencyKey;
+  let res: Response;
+  try {
+    res = await fetch(`https://api.stripe.com/v1${path}`, {
+      method: init.method ?? "GET",
+      headers,
+      body: init.form ? new URLSearchParams(init.form).toString() : undefined,
+    });
+  } catch (_) {
+    return { status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { status: res.status, body };
+}
+
+/** Currencies Stripe takes in whole units (no cents). */
+const ZERO_DECIMAL = new Set([
+  "BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF",
+  "UGX", "VND", "VUV", "XAF", "XOF", "XPF",
+]);
+
+/** A Stripe amount (smallest unit) back in whole units of [currency]. */
+function fromStripeAmount(amount: number, currency: string): number {
+  return ZERO_DECIMAL.has(currency.toUpperCase()) ? amount : amount / 100;
+}
+
+/**
+ * Looks the PaymentIntent [id] up with Stripe and records it: 'successful'
+ * (held in escrow), 'failed' (cancelled) or 'pending' (not paid yet, or
+ * Stripe couldn't be asked).
+ */
+async function recordPaymentIntent(id: string): Promise<string> {
+  const res = await stripe(`/payment_intents/${encodeURIComponent(id)}`);
+  if (res.status !== 200) return "pending";
+  const pi = res.body;
+  const db = admin.schema("nata");
+  const status = String(pi.status ?? "");
+  if (status === "succeeded") {
+    const currency = String(pi.currency ?? "").toUpperCase();
+    const { data, error } = await db.rpc("complete_payment", {
+      p_tx_ref: id,
+      p_transaction_id: id,
+      p_amount: fromStripeAmount(Number(pi.amount_received ?? 0), currency),
+      p_currency: currency,
+      p_payment_type: "card",
+    });
+    if (error) throw error;
+    return data === "mismatch" || data === "not_found" ? "failed" : "successful";
+  }
+  if (status === "canceled") {
+    const { error } = await db.rpc("fail_payment", {
+      p_tx_ref: id,
+      p_transaction_id: id,
+    });
+    if (error) throw error;
+    return "failed";
+  }
+  // requires_payment_method (a declined card can be tried again in the
+  // sheet), requires_action, processing...
+  return "pending";
 }
 
 function pawapayToken(): string | null {
@@ -237,6 +319,16 @@ Deno.serve(async (req: Request) => {
     return json({ status: "successful" });
   }
   if (payment.status !== "pending") return json({ status: "failed" });
+
+  if (payment.provider === "stripe") {
+    if (!stripeKey()) return json({ error: "payments_unavailable" }, 503);
+    try {
+      return json({ status: await recordPaymentIntent(txRef) });
+    } catch (e) {
+      console.error("[verify-payment] stripe", e);
+      return json({ status: "pending" });
+    }
+  }
 
   if (payment.provider === "pawapay") {
     if (!pawapayToken()) return json({ error: "payments_unavailable" }, 503);
