@@ -121,22 +121,18 @@ class _CoachTipsOverlayState extends State<CoachTipsOverlay> {
 
   CoachTip get _tip => widget.tips[_index];
 
-  /// Scrolls the target into view, then measures it.
+  /// Scrolls the target into place, then measures it.
   Future<void> _focus() async {
     final target = _tip.target.currentContext;
     if (target == null) return _next();
+    // Into the upper part of the page, clear of the tab bar at the bottom
+    // and with room for the bubble under it (as far as the page scrolls).
     if (Scrollable.maybeOf(target) != null) {
       await Scrollable.ensureVisible(
         target,
-        alignment: 0.5,
-        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-        duration: const Duration(milliseconds: 250),
-      );
-      if (!mounted || !target.mounted) return;
-      await Scrollable.ensureVisible(
-        target,
-        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
-        duration: const Duration(milliseconds: 250),
+        alignment: 0.3,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
       );
     }
     if (!mounted || !target.mounted) return;

@@ -4,6 +4,7 @@ import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
 import 'package:carrywise_app/services/route_alert_service.dart';
+import 'package:carrywise_app/widgets/app_bottom_nav.dart';
 import 'package:carrywise_app/widgets/coach_tips.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -198,6 +199,30 @@ void main() {
     testWidgets('Profile', (tester) async {
       await show(tester, ProfileScreen(authService: FakeAuthService()));
       await walk(tester, ['Your Nata Wallet', 'Get paid', 'Route alerts']);
+    });
+
+    testWidgets('a tip further down scrolls its row into view first', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(600, 760);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(ProfileScreen(authService: FakeAuthService())),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pumpAndSettle();
+      final row = find.byKey(const ValueKey('profile-payment-settings'));
+      final nav = tester.getRect(find.byType(AppBottomNav));
+      // Behind the tab bar or off screen before.
+      expect(tester.getRect(row).bottom, greaterThan(nav.top));
+
+      await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
+      await tester.pumpAndSettle();
+      final shown = tester.getRect(row);
+      expect(shown.top, greaterThanOrEqualTo(0));
+      expect(shown.bottom, lessThan(nav.top));
     });
 
     testWidgets('each page remembers its own tips', (tester) async {
