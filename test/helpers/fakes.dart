@@ -1529,8 +1529,13 @@ class FakePaymentService extends Fake implements PaymentService {
   int payoutsSent = 0;
 
   @override
-  Future<PayoutOptions> payoutOptions(String country) async =>
-      options[country] ?? const PayoutOptions();
+  Future<PayoutOptions> payoutOptions(String country) async {
+    payoutOptionCountries.add(country);
+    return options[country] ?? const PayoutOptions();
+  }
+
+  /// The countries whose payout options were asked for.
+  final List<String> payoutOptionCountries = [];
 
   @override
   Future<PayoutAccount> addPayoutAccount({

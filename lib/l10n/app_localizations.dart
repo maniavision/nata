@@ -5924,6 +5924,18 @@ abstract class AppLocalizations {
   /// **'This bank can\'t receive payouts yet. Please choose another one.'**
   String get errPayoutNotSupported;
 
+  /// No description provided for @payoutCountryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your country of residence. Payouts are sent to an account there.'**
+  String get payoutCountryNote;
+
+  /// No description provided for @errPayoutCountryMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout accounts must be in your country of residence.'**
+  String get errPayoutCountryMismatch;
+
   /// No description provided for @errSavePayoutAccount.
   ///
   /// In en, this message translates to:

@@ -1587,6 +1587,8 @@
   "errLoadPayoutOptions": "Impossible de charger les banques de ce pays.",
   "errPayoutAccountInvalid": "Vérifiez le numéro de compte et le nom du titulaire.",
   "errPayoutNotSupported": "Cette banque ne peut pas encore recevoir de paiements. Choisissez-en une autre.",
+  "payoutCountryNote": "Votre pays de résidence. Les paiements sont envoyés sur un compte dans ce pays.",
+  "errPayoutCountryMismatch": "Le compte de paiement doit être dans votre pays de résidence.",
   "errSavePayoutAccount": "Impossible d'enregistrer le compte. Veuillez réessayer.",
   "payoutAccountSaved": "Compte de versement enregistré.",
 

@@ -5,32 +5,35 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
+import '../services/auth_service.dart';
 import '../services/country_service.dart';
 import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
-import '../widgets/country_code_picker_sheet.dart';
 import '../widgets/nata_toast.dart';
 import '../services/phone_number.dart';
 
-/// Picks a country (the one remembered on this device to start with).
-typedef PayoutCountryPicker =
-    Future<Country?> Function(BuildContext context, Country selected);
-
 /// Adds where a traveler is paid: a bank account or mobile money, from what
-/// Flutterwave pays out to in their country. Pops the saved account.
+/// Flutterwave pays out to in their country of residence (it can't be
+/// changed here; add-payout-account checks it too). Pops the saved account.
 class AddPayoutAccountScreen extends StatefulWidget {
-  /// Overrides for tests; default to the real service, the device's
-  /// country and the country sheet.
+  /// Overrides for tests; default to the real service and the country of
+  /// residence on the profile (the device's country when it has none).
   final PaymentService? service;
   final Country? initialCountry;
-  final PayoutCountryPicker? countryPicker;
+  final Future<String?> Function()? residenceCountry;
 
   const AddPayoutAccountScreen({
     super.key,
     this.service,
     this.initialCountry,
-    this.countryPicker,
+    this.residenceCountry,
   });
+
+  static Future<String?> _profileResidence() async {
+    final profile = await AuthService().getProfile();
+    final iso = (profile?['country_of_residence'] as String?)?.trim();
+    return iso == null || iso.isEmpty ? null : iso.toUpperCase();
+  }
 
   @override
   State<AddPayoutAccountScreen> createState() => _AddPayoutAccountScreenState();
@@ -68,9 +71,12 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
     var country = widget.initialCountry;
     if (country == null) {
       try {
-        country = await CountryService().byIsoCode(
-          PreferencesService().countryIsoCode,
-        );
+        // The country of residence; the device's for a profile without one.
+        final iso =
+            await (widget.residenceCountry ??
+                AddPayoutAccountScreen._profileResidence)() ??
+            PreferencesService().countryIsoCode;
+        country = await CountryService().byIsoCode(iso);
       } catch (e) {
         debugPrint('[AddPayoutAccount] country: $e');
       }
@@ -111,20 +117,6 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  Future<void> _pickCountry() async {
-    final current = _country;
-    if (current == null) return;
-    final picked = await (widget.countryPicker ?? showCountryCodePicker)(
-      context,
-      current,
-    );
-    if (picked == null || picked.isoCode == current.isoCode || !mounted) {
-      return;
-    }
-    setState(() => _country = picked);
-    await _loadOptions();
   }
 
   List<PayoutProvider> get _providers => _kind == PayoutAccountKind.bank
@@ -190,6 +182,7 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
         () => _error = switch (e.reason) {
           PayoutAccountFailure.invalid => l.errPayoutAccountInvalid,
           PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
+          PayoutAccountFailure.countryMismatch => l.errPayoutCountryMismatch,
           PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
           PayoutAccountFailure.other => l.errSavePayoutAccount,
         },
@@ -394,32 +387,82 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
     border: Border.all(color: AppColors.border),
   );
 
-  Widget _countryField() => GestureDetector(
-    key: const ValueKey('payout-country'),
-    onTap: _pickCountry,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: _box,
-      child: Row(
+  /// The country of residence: shown, not changed.
+  Widget _countryField() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        key: const ValueKey('payout-country'),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: _box.copyWith(
+          color: AppColors.muted.withValues(alpha: 0.5),
+        ),
+        child: Row(
+          children: [
+            if (_country != null) ...[
+              Text(
+                _flag(_country!.isoCode),
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Text(
+                _country?.name ?? '…',
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.lock_outline_rounded,
+              size: 18,
+              color: AppColors.mutedForeground,
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 6),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 13,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(width: 5),
           Expanded(
             child: Text(
-              _country?.name ?? '…',
+              context.l10n.payoutCountryNote,
+              key: const ValueKey('payout-country-note'),
               style: GoogleFonts.dmSans(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: AppColors.foreground,
+                fontSize: 11,
+                height: 1.4,
+                color: AppColors.mutedForeground,
               ),
             ),
           ),
-          const Icon(
-            Icons.expand_more_rounded,
-            color: AppColors.mutedForeground,
-          ),
         ],
       ),
-    ),
+    ],
   );
+
+  /// The flag emoji of a two-letter country code.
+  static String _flag(String isoCode) {
+    final code = isoCode.trim().toUpperCase();
+    if (code.length != 2) return '';
+    const base = 0x1F1E6;
+    return String.fromCharCodes([
+      base + code.codeUnitAt(0) - 0x41,
+      base + code.codeUnitAt(1) - 0x41,
+    ]);
+  }
 
   Widget _kindToggle() {
     Widget option(PayoutAccountKind kind, String label, IconData icon) {
