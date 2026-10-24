@@ -7676,6 +7676,18 @@ abstract class AppLocalizations {
   /// **'Paid securely through Stripe. Your card details never reach Nata.'**
   String get paidSecurelyThroughStripe;
 
+  /// No description provided for @checkoutMobileOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You and the traveler both live in Africa, so this delivery is paid by mobile money.'**
+  String get checkoutMobileOnlyNote;
+
+  /// No description provided for @errMethodNotOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'This way to pay isn\'t offered for this delivery. Please choose another.'**
+  String get errMethodNotOffered;
+
   /// No description provided for @confirmingPayment.
   ///
   /// In en, this message translates to:

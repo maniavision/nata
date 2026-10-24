@@ -14,6 +14,10 @@
  * payment deadline, once the sender checked the ticket. (The traveler's ID is
  * checked in person, at the handover.)
  *
+ * The method must fit where the sender and the traveler live
+ * (nata.checkout_kind, 20240173): mobile money only when both live in a
+ * country where pawaPay takes it, card or Apple Pay otherwise.
+ *
  * Cards and Apple Pay are a Stripe PaymentIntent, paid in the app's own
  * Stripe payment sheet (no page to leave for): the payment's tx_ref is the
  * PaymentIntent's id, and verify-payment and stripe-webhook settle it. It is
@@ -29,7 +33,8 @@
  * merchant_country, apple_merchant_id } (Stripe's sheet), or
  * { tx_ref, direct: true } (mobile money, waiting for the payer's approval).
  * Errors: 401 unauthorized, 403 not_allowed, 409 not_payable / expired /
- * checks_missing / mobile_money_unavailable / rate_unavailable /
+ * checks_missing / method_not_offered / mobile_money_unavailable /
+ * rate_unavailable /
  * amount_out_of_bounds, 422 phone_rejected (the number or network doesn't
  * fit, or pawaPay refused it), 503 payments_unavailable (no key for the
  * provider) / network_unavailable (the network is down), 502 provider_error.
@@ -220,6 +225,19 @@ Deno.serve(async (req: Request) => {
   }
   if (!request.ticket_checked_at) {
     return json({ error: "checks_missing" }, 409);
+  }
+
+  // Mobile money between two members living where pawaPay takes it; card or
+  // Apple Pay otherwise.
+  const { data: kind, error: kindError } = await db.rpc("checkout_kind", {
+    p_request_id: requestId,
+  });
+  if (kindError) {
+    console.error("[create-payment] checkout kind", kindError);
+    return json({ error: "provider_error" }, 502);
+  }
+  if ((kind === "mobile_money") !== mobile) {
+    return json({ error: "method_not_offered" }, 409);
   }
 
   // Mobile money: the network must be one of the country's, and the number

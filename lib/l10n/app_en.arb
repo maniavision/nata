@@ -1993,6 +1993,8 @@
   "tipRouteAlertsBody": "Save the routes you send on and hear when a traveler is flying them.",
 
   "paidSecurelyThroughStripe": "Paid securely through Stripe. Your card details never reach Nata.",
+  "checkoutMobileOnlyNote": "You and the traveler both live in Africa, so this delivery is paid by mobile money.",
+  "errMethodNotOffered": "This way to pay isn't offered for this delivery. Please choose another.",
   "confirmingPayment": "Confirming your payment",
   "confirmingPaymentSub": "Payment made. We're confirming it with Stripe, which takes a few seconds.",
 

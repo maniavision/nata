@@ -1571,10 +1571,7 @@ class _FailedCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      l.supportReasonSaid(p.reason),
-                      style: _small(),
-                    ),
+                    child: Text(l.supportReasonSaid(p.reason), style: _small()),
                   ),
                 ],
               ),

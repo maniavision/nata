@@ -1904,6 +1904,8 @@
   "tipRouteAlertsBody": "Enregistrez les trajets sur lesquels vous envoyez et soyez averti quand un voyageur les fait.",
 
   "paidSecurelyThroughStripe": "Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.",
+  "checkoutMobileOnlyNote": "Vous et le voyageur vivez tous deux en Afrique : cette livraison se paie par mobile money.",
+  "errMethodNotOffered": "Ce moyen de paiement n'est pas proposé pour cette livraison. Choisissez-en un autre.",
   "confirmingPayment": "Confirmation du paiement",
   "confirmingPaymentSub": "Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes.",
 
