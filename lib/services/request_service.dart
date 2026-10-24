@@ -139,10 +139,6 @@ enum RequestFailure {
   /// The traveler already has a delivery in progress from this sender on the trip.
   senderOnTrip,
 
-  /// The account has no email, which the payment provider needs: checkout
-  /// asks for one.
-  emailRequired,
-
   /// The request isn't paid, so it can't be picked up or delivered.
   notPaid,
 
@@ -198,22 +194,21 @@ enum RequestFailure {
   other,
 }
 
-/// How the sender chose to pay on the checkout page. Flutterwave's page then
-/// offers the matching options.
+/// How the sender chose to pay on the checkout page: Apple Pay and cards in
+/// Stripe's sheet, mobile money through pawaPay.
 enum PayMethod {
   applePay('apple_pay'),
   card('card'),
-  mobileMoney('mobile_money'),
-  bankTransfer('bank_transfer');
+  mobileMoney('mobile_money');
 
   const PayMethod(this.wire);
   final String wire;
 }
 
 /// A payment started, and our reference for it: Stripe's payment sheet in
-/// the app (cards, Apple Pay), Flutterwave's payment page (bank transfer), or
-/// no page for mobile money, charged through pawaPay: the payer approves a
-/// prompt on their phone.
+/// the app (cards, Apple Pay), or no page for mobile money, charged through
+/// pawaPay: the payer approves a prompt on their phone. [link] is a payment
+/// page, should a provider answer with one.
 class PaymentLink {
   final Uri? link;
   final String txRef;
@@ -341,23 +336,6 @@ class MobileMoneyOption {
       );
 
   /// "KES 14,230"
-  String get amountText => PriceFormatter.write(amount, currency);
-}
-
-/// An amount to pay in another currency than the fixed price, at today's
-/// rate (bank transfer is paid in naira).
-class LocalCharge {
-  final String currency;
-  final double amount;
-
-  const LocalCharge({required this.currency, required this.amount});
-
-  factory LocalCharge.fromJson(Map<String, dynamic> j) => LocalCharge(
-    currency: (j['currency'] as String).trim(),
-    amount: (j['amount'] as num).toDouble(),
-  );
-
-  /// "NGN 178,381"
   String get amountText => PriceFormatter.write(amount, currency);
 }
 
@@ -1131,20 +1109,9 @@ class RequestService {
     }
   }
 
-  /// The email the user pays with: their account's, or the one they gave
-  /// at checkout before (my_payer_email). Null when they have none yet, as
-  /// for accounts made with a phone number.
-  Future<String?> payerEmail() async {
-    _userId;
-    final email = await _client.rpc('my_payer_email');
-    return email is String && email.trim().isNotEmpty ? email.trim() : null;
-  }
-
   /// Starts paying [requestId] into escrow, for the price fixed when the
   /// traveler accepted (create-payment): Stripe's payment sheet for cards
-  /// and Apple Pay, Flutterwave's page for bank transfer. [email] is the
-  /// payer's, for an account without one (Flutterwave only); it is kept for
-  /// next time.
+  /// and Apple Pay.
   /// Mobile money is charged through pawaPay on the wallet's [phone]
   /// (international) and [network] (MobileMoneyNetwork.code): no page, a
   /// prompt on the phone.
@@ -1152,7 +1119,6 @@ class RequestService {
     String requestId,
     PayMethod method, {
     String? country,
-    String? email,
     String? phone,
     String? network,
   }) async {
@@ -1163,7 +1129,6 @@ class RequestService {
           'request_id': requestId,
           'method': method.wire,
           if (country != null) 'country': country,
-          if (email != null) 'email': email,
           if (phone != null) 'phone': phone,
           if (network != null) 'network': network,
         },
@@ -1192,7 +1157,6 @@ class RequestService {
         'checks_missing' ||
         'not_allowed' => RequestFailure.notPayable,
         'payments_unavailable' => RequestFailure.paymentsUnavailable,
-        'email_required' => RequestFailure.emailRequired,
         'mobile_money_unavailable' => RequestFailure.mobileMoneyUnavailable,
         'phone_rejected' => RequestFailure.phoneRejected,
         'amount_out_of_bounds' => RequestFailure.amountOutOfBounds,
@@ -1215,18 +1179,6 @@ class RequestService {
       for (final r in (rows as List))
         MobileMoneyOption.fromJson(Map<String, dynamic>.from(r as Map)),
     ];
-  }
-
-  /// What paying [requestId] by bank transfer costs, in naira at today's
-  /// rate (bank_transfer_quote).
-  Future<LocalCharge> bankTransferQuote(String requestId) async {
-    final rows = await _client.rpc(
-      'bank_transfer_quote',
-      params: {'p_request_id': requestId},
-    );
-    return LocalCharge.fromJson(
-      Map<String, dynamic>.from((rows as List).single as Map),
-    );
   }
 
   /// Where the payment [txRef] stands, checked with its provider

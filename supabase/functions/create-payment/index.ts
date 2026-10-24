@@ -3,17 +3,21 @@
  * sender.
  *
  * Called by the app (with the sender's JWT) with { request_id, method,
- * country, email, phone, network }, where method is card, mobile_money,
- * bank_transfer or apple_pay. The amount and currency are the ones fixed when
- * the traveler accepted (display_total / display_currency), never taken from
- * the app. Mobile money is charged in the currency of the wallet's [country]
+ * country, phone, network }, where method is card, apple_pay or
+ * mobile_money. The amount and currency are the ones fixed when the
+ * traveler accepted (display_total / display_currency), never taken from the
+ * app. Mobile money is charged in the currency of the wallet's [country]
  * instead, converted at the latest rate (nata.mobile_money_charge); the fixed
- * price is kept as base_amount. Bank transfer is charged in naira the same
- * way (nata.local_charge).
+ * price is kept as base_amount.
  *
  * Allowed only for the request's sender, while it is accepted and before its
  * payment deadline, once the sender checked the ticket. (The traveler's ID is
  * checked in person, at the handover.)
+ *
+ * Cards and Apple Pay are a Stripe PaymentIntent, paid in the app's own
+ * Stripe payment sheet (no page to leave for): the payment's tx_ref is the
+ * PaymentIntent's id, and verify-payment and stripe-webhook settle it. It is
+ * charged in the price's own currency.
  *
  * Mobile money is a pawaPay deposit (20240165): the wallet's [phone]
  * (international, +<code><number>) on its [network] (pawaPay's provider code,
@@ -21,34 +25,20 @@
  * approve, with no payment page. The payment's tx_ref is the deposit id;
  * verify-payment and pawapay-callback settle it.
  *
- * Cards and Apple Pay are a Stripe PaymentIntent, paid in the app's own
- * Stripe payment sheet (no page to leave for): the payment's tx_ref is the
- * PaymentIntent's id, and verify-payment and stripe-webhook settle it. It is
- * charged in the price's own currency.
- *
- * Bank transfer uses Flutterwave's payment page, which needs the payer's
- * email: the account's, or for an account made with a phone number the
- * [email] the sender gave at checkout, kept in nata.payer_emails (20240148)
- * for next time.
- *
- * Responds 200 with { link, tx_ref } (Flutterwave's page),
- * { tx_ref, client_secret, publishable_key, merchant_country,
- * apple_merchant_id } (Stripe's sheet), or { tx_ref, direct: true } (mobile
- * money, waiting for the payer's approval).
+ * Responds 200 with { tx_ref, client_secret, publishable_key,
+ * merchant_country, apple_merchant_id } (Stripe's sheet), or
+ * { tx_ref, direct: true } (mobile money, waiting for the payer's approval).
  * Errors: 401 unauthorized, 403 not_allowed, 409 not_payable / expired /
- * checks_missing / email_required / mobile_money_unavailable /
- * rate_unavailable / amount_out_of_bounds, 422 phone_rejected (the number or
- * network doesn't fit, or pawaPay refused it), 503 payments_unavailable (no
- * key for the provider) / network_unavailable (the network is down),
- * 502 provider_error.
+ * checks_missing / mobile_money_unavailable / rate_unavailable /
+ * amount_out_of_bounds, 422 phone_rejected (the number or network doesn't
+ * fit, or pawaPay refused it), 503 payments_unavailable (no key for the
+ * provider) / network_unavailable (the network is down), 502 provider_error.
  */
 
-// ── Flutterwave and Supabase helpers (the same in each payment function, so
+// ── Stripe, pawaPay and Supabase helpers (the same in each payment function, so
 // each can be deployed on its own, also from the dashboard) ──────────────
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
-
-const FLW_API = "https://api.flutterwave.com/v3";
 
 /** pawaPay's API: the sandbox until PAWAPAY_API_URL names production. */
 const PAWAPAY_API = (Deno.env.get("PAWAPAY_API_URL")?.trim() ||
@@ -65,11 +55,6 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-function secretKey(): string | null {
-  const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
-  return key ? key : null;
 }
 
 function stripeKey(): string | null {
@@ -159,103 +144,10 @@ async function caller(req: Request) {
   return user ?? null;
 }
 
-async function flutterwave(
-  path: string,
-  init: { method?: string; body?: unknown } = {},
-): Promise<{ ok: boolean; status: number; body: Record<string, unknown> }> {
-  const res = await fetch(`${FLW_API}${path}`, {
-    method: init.method ?? "GET",
-    headers: {
-      Authorization: `Bearer ${secretKey()}`,
-      "Content-Type": "application/json",
-    },
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
-  });
-  let body: Record<string, unknown> = {};
-  try {
-    body = await res.json();
-  } catch (_) {
-    // Not JSON: keep the empty body.
-  }
-  return { ok: res.ok && body.status === "success", status: res.status, body };
-}
-
-/** A transaction as Flutterwave reports it. */
-interface Transaction {
-  id: string;
-  tx_ref: string;
-  status: string;
-  amount: number;
-  currency: string;
-  payment_type: string;
-}
-
-function toTransaction(data: unknown): Transaction | null {
-  const d = data as Record<string, unknown> | null;
-  if (!d || d.id == null || typeof d.tx_ref !== "string") return null;
-  return {
-    id: String(d.id),
-    tx_ref: d.tx_ref,
-    status: String(d.status ?? ""),
-    amount: Number(d.amount ?? 0),
-    currency: String(d.currency ?? ""),
-    payment_type: String(d.payment_type ?? ""),
-  };
-}
-
-/** Looks a transaction up by its Flutterwave id. */
-async function transactionById(id: string): Promise<Transaction | null> {
-  const res = await flutterwave(`/transactions/${encodeURIComponent(id)}/verify`);
-  return res.ok ? toTransaction(res.body.data) : null;
-}
-
-/** Looks a transaction up by our reference; null while there is none yet. */
-async function transactionByRef(txRef: string): Promise<Transaction | null> {
-  const res = await flutterwave(
-    `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(txRef)}`,
-  );
-  return res.ok ? toTransaction(res.body.data) : null;
-}
-
-/**
- * Records what Flutterwave confirmed. Returns 'successful' (held in escrow),
- * 'failed' or 'pending' (still in progress).
- */
-async function record(tx: Transaction): Promise<string> {
-  const db = admin.schema("nata");
-  if (tx.status === "successful") {
-    const { data, error } = await db.rpc("complete_payment", {
-      p_tx_ref: tx.tx_ref,
-      p_transaction_id: tx.id,
-      p_amount: tx.amount,
-      p_currency: tx.currency,
-      p_payment_type: tx.payment_type,
-    });
-    if (error) throw error;
-    return data === "mismatch" || data === "not_found" ? "failed" : "successful";
-  }
-  if (tx.status === "failed" || tx.status === "cancelled") {
-    const { error } = await db.rpc("fail_payment", {
-      p_tx_ref: tx.tx_ref,
-      p_transaction_id: tx.id,
-    });
-    if (error) throw error;
-    return "failed";
-  }
-  return "pending";
-}
-
 // ── This function ──────────────────────────────────────────────────────────
 
 
-/** Flutterwave payment options for what the sender picked (cards and Apple
- * Pay go through Stripe). */
-const OPTIONS: Record<string, string> = {
-  // A temporary Nigerian bank account to pay into, in naira.
-  bank_transfer: "banktransfer",
-};
-
-const METHODS = ["card", "apple_pay", "mobile_money", "bank_transfer"];
+const METHODS = ["card", "apple_pay", "mobile_money"];
 
 /** pawaPay refusals that mean the number or network doesn't fit. */
 const PHONE_REFUSALS = [
@@ -277,9 +169,6 @@ function msisdn(phone: string, dialCode: string): string | null {
   return digits;
 }
 
-/** The same check as nata.payer_emails. */
-const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
@@ -289,7 +178,6 @@ Deno.serve(async (req: Request) => {
   let requestId = "";
   let method = "card";
   let country = "";
-  let givenEmail = "";
   let phone = "";
   let network = "";
   try {
@@ -297,7 +185,6 @@ Deno.serve(async (req: Request) => {
     requestId = String(body.request_id ?? "");
     method = String(body.method ?? "card");
     country = String(body.country ?? "").trim().toUpperCase();
-    givenEmail = String(body.email ?? "").trim().toLowerCase();
     phone = String(body.phone ?? "").trim();
     network = String(body.network ?? "").trim().toUpperCase();
   } catch (_) {
@@ -307,11 +194,10 @@ Deno.serve(async (req: Request) => {
     return json({ error: "bad_request" }, 400);
   }
   const mobile = method === "mobile_money";
-  const viaStripe = method === "card" || method === "apple_pay";
   if (mobile && !/^[A-Z]{2}$/.test(country)) {
     return json({ error: "bad_request" }, 400);
   }
-  if (mobile ? !pawapayToken() : viaStripe ? !stripeKey() : !secretKey()) {
+  if (mobile ? !pawapayToken() : !stripeKey()) {
     return json({ error: "payments_unavailable" }, 503);
   }
 
@@ -355,36 +241,10 @@ Deno.serve(async (req: Request) => {
     if (!net || !wallet) return json({ error: "phone_rejected" }, 422);
   }
 
-  // The payer's email, for Flutterwave: the account's, else the one given
-  // at checkout (kept for next time), else the one given last time.
-  let email = "";
-  if (!mobile && !viaStripe) {
-    email = String(user.email ?? "").trim();
-    if (!email && EMAIL.test(givenEmail)) {
-      email = givenEmail;
-      const { error } = await db.from("payer_emails").upsert({
-        user_id: user.id,
-        email,
-        updated_at: new Date().toISOString(),
-      });
-      if (error) console.error("[create-payment] payer email", error);
-    }
-    if (!email) {
-      const { data: saved } = await db
-        .from("payer_emails")
-        .select("email")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      email = String(saved?.email ?? "");
-    }
-    if (!email) return json({ error: "email_required" }, 409);
-  }
-
   const baseAmount = Number(request.display_total);
   const baseCurrency = String(request.display_currency ?? "USD").trim().toUpperCase();
   let amount = baseAmount;
   let currency = baseCurrency;
-  const paymentOptions = OPTIONS[method] ?? "";
   if (mobile) {
     const { data: charge, error } = await db
       .rpc("mobile_money_charge", { p_request_id: requestId, p_country: country })
@@ -397,25 +257,13 @@ Deno.serve(async (req: Request) => {
     const c = charge as { amount: number; currency: string };
     amount = Number(c.amount);
     currency = String(c.currency).trim().toUpperCase();
-  } else if (method === "bank_transfer") {
-    const { data: charge, error } = await db
-      .rpc("local_charge", { p_request_id: requestId, p_currency: "NGN" })
-      .maybeSingle();
-    if (error || !charge) {
-      const msg = String(error?.message ?? "");
-      if (msg.includes("rate_unavailable")) return json({ error: "rate_unavailable" }, 409);
-      return json({ error: "not_payable" }, 409);
-    }
-    const c = charge as { amount: number; currency: string };
-    amount = Number(c.amount);
-    currency = String(c.currency).trim().toUpperCase();
   }
   // The fee, in the currency charged.
   const fee = Number(request.display_fee ?? 0) * (amount / baseAmount);
 
   // Cards and Apple Pay: the PaymentIntent first, so the payment's tx_ref
   // can be its id.
-  if (viaStripe) {
+  if (!mobile) {
     const pi = await stripe("/payment_intents", {
       method: "POST",
       idempotencyKey: `nata-${requestId}-${crypto.randomUUID()}`,
@@ -465,27 +313,20 @@ Deno.serve(async (req: Request) => {
       apple_merchant_id: Deno.env.get("STRIPE_APPLE_MERCHANT_ID")?.trim() || null,
     });
   }
-  // pawaPay's deposit id is a bare UUID; Flutterwave's reference starts with
-  // nata- (its webhook ignores anything else).
-  const txRef = mobile
-    ? crypto.randomUUID()
-    : `nata-${requestId.slice(0, 8)}-${crypto.randomUUID()}`;
+  // Mobile money: pawaPay's deposit id, a bare UUID.
+  const txRef = crypto.randomUUID();
 
   const { error: insertError } = await db.from("payments").insert({
     request_id: requestId,
     sender_id: user.id,
-    provider: mobile ? "pawapay" : "flutterwave",
+    provider: "pawapay",
     tx_ref: txRef,
     amount,
     service_fee: Math.round(fee * 100) / 100,
     currency,
     base_amount: baseAmount,
     base_currency: baseCurrency,
-    country_code: mobile
-      ? country
-      : method === "bank_transfer"
-      ? "NG"
-      : null,
+    country_code: country,
     method,
     status: "pending",
   });
@@ -494,7 +335,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: "provider_error" }, 502);
   }
 
-  if (mobile) {
+  {
     const res = await pawapay("/v2/deposits", {
       method: "POST",
       body: {
@@ -534,42 +375,4 @@ Deno.serve(async (req: Request) => {
     }
     return json({ error: "provider_error" }, 502);
   }
-
-  const { data: profile } = await db
-    .from("profiles")
-    .select("first_name, last_name")
-    .eq("id", user.id)
-    .maybeSingle();
-  const name = [profile?.first_name, profile?.last_name]
-    .filter((p) => p && String(p).trim())
-    .join(" ");
-
-  const res = await flutterwave("/payments", {
-    method: "POST",
-    body: {
-      tx_ref: txRef,
-      amount,
-      currency,
-      payment_options: paymentOptions,
-      redirect_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-return`,
-      customer: {
-        email,
-        name: name || undefined,
-        phonenumber: user.phone || undefined,
-      },
-      customizations: {
-        title: "Nata",
-        description: "Delivery payment, held in escrow until delivery",
-      },
-      meta: { request_id: requestId },
-    },
-  });
-  const link = (res.body.data as { link?: string } | undefined)?.link;
-  if (!res.ok || !link) {
-    console.error("[create-payment] flutterwave", res.status, res.body.message);
-    await db.rpc("fail_payment", { p_tx_ref: txRef, p_transaction_id: null });
-    return json({ error: "provider_error" }, 502);
-  }
-
-  return json({ link, tx_ref: txRef });
 });

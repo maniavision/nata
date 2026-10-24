@@ -931,26 +931,15 @@ class FakeRequestService extends Fake implements RequestService {
       String id,
       PayMethod method,
       String? country,
-      String? email,
       String? phone,
       String? network,
     })
   >
   paymentsStarted = [];
 
-  /// The email the user pays with; null asks for one at checkout.
-  String? payerEmailValue = 'sender@example.com';
-  bool failPayerEmail = false;
-
-  @override
-  Future<String?> payerEmail() async {
-    if (failPayerEmail) throw StateError('payer email failed');
-    return payerEmailValue;
-  }
-
   RequestException? failStartPayment;
   PaymentLink nextPayment = PaymentLink(
-    Uri.parse('https://checkout.flutterwave.test/pay/abc'),
+    Uri.parse('https://pay.example.test/abc'),
     'nata-req-1-tx',
   );
   List<PaymentStatus> paymentStatuses = [PaymentStatus.pending];
@@ -961,7 +950,6 @@ class FakeRequestService extends Fake implements RequestService {
     String requestId,
     PayMethod method, {
     String? country,
-    String? email,
     String? phone,
     String? network,
   }) async {
@@ -970,21 +958,10 @@ class FakeRequestService extends Fake implements RequestService {
       id: requestId,
       method: method,
       country: country,
-      email: email,
       phone: phone,
       network: network,
     ));
     return nextPayment;
-  }
-
-  /// The naira amount for a bank transfer; [failBankQuote] makes it fail.
-  LocalCharge bankQuote = const LocalCharge(currency: 'NGN', amount: 178381);
-  bool failBankQuote = false;
-
-  @override
-  Future<LocalCharge> bankTransferQuote(String requestId) async {
-    if (failBankQuote) throw StateError('bank quote failed');
-    return bankQuote;
   }
 
   /// Mobile money countries offered at checkout; [failMobileOptions] makes

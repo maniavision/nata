@@ -16,10 +16,10 @@ import '../widgets/nata_toast.dart';
 
 /// Pays for an accepted request. Step 1: the sender checks the traveler's
 /// flight ticket; step 2: the photo on the traveler's ID and their verified
-/// name; step 3: they pay into escrow on Flutterwave's page, which this
-/// screen watches until the payment goes through. Mobile money is charged
-/// through pawaPay with no page: the sender gives their network and number
-/// and approves the prompt on their phone.
+/// name; step 3: they pay into escrow, which this screen watches until the
+/// payment goes through. Cards and Apple Pay are paid in Stripe's sheet;
+/// mobile money is charged through pawaPay with no page: the sender gives
+/// their network and number and approves the prompt on their phone.
 class CheckoutEscrowScreen extends StatefulWidget {
   final SentRequest request;
 
@@ -32,7 +32,7 @@ class CheckoutEscrowScreen extends StatefulWidget {
   /// Override for tests; defaults to [DateTime.now].
   final DateTime Function()? now;
 
-  /// Overrides for tests: opening and closing Flutterwave's payment page
+  /// Overrides for tests: opening and closing a payment page
   /// (an in-app browser by default), and how often the payment is checked.
   final Future<bool> Function(Uri link)? openPaymentPage;
   final Future<void> Function()? closePaymentPage;
@@ -58,15 +58,14 @@ class CheckoutEscrowScreen extends StatefulWidget {
 }
 
 class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
-  int _paymentMethod = 0; // 0=Apple Pay, 1=Card, 2=Mobile Money, 3=Bank
+  int _paymentMethod = 0; // 0=Apple Pay, 1=Card, 2=Mobile Money
   static const _payMethods = [
     PayMethod.applePay,
     PayMethod.card,
     PayMethod.mobileMoney,
-    PayMethod.bankTransfer,
   ];
 
-  /// The payment in progress on Flutterwave's page, checked every
+  /// The payment in progress, checked every
   /// [CheckoutEscrowScreen.pollInterval] for up to [_maxPolls] times.
   PaymentLink? _payment;
   bool _startingPayment = false;
@@ -125,49 +124,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   String _directAmount = '';
   String _directTo = '';
 
-  /// Bank transfer is paid in naira: the amount, loaded when it is chosen.
-  bool get _payingByBank => _paymentMethod == 3;
-
   /// Cards and Apple Pay, paid through Stripe.
   bool get _payingByCard => _paymentMethod <= 1;
-  LocalCharge? _bankQuote;
-  bool _bankLoading = false;
-  bool _bankFailed = false;
-
-  Future<void> _loadBankQuote() async {
-    if (_bankLoading || _bankQuote != null) return;
-    setState(() {
-      _bankLoading = true;
-      _bankFailed = false;
-    });
-    try {
-      final quote = await _service.bankTransferQuote(_r.id);
-      if (mounted) setState(() => _bankQuote = quote);
-    } catch (e) {
-      debugPrint('[Checkout] bank transfer quote: $e');
-      if (mounted) setState(() => _bankFailed = true);
-    } finally {
-      if (mounted) setState(() => _bankLoading = false);
-    }
-  }
-
-  /// Accounts made with a phone number have no email, which Flutterwave
-  /// needs for bank transfer: checkout asks for one (kept by create-payment
-  /// for next time). Cards (Stripe) and mobile money don't need one.
-  bool _needsEmail = false;
-  final _emailCtrl = TextEditingController();
-  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-  bool get _emailValid => _emailPattern.hasMatch(_emailCtrl.text.trim());
-
-  Future<void> _loadPayerEmail() async {
-    try {
-      final email = await _service.payerEmail();
-      if (mounted && email == null) setState(() => _needsEmail = true);
-    } catch (e) {
-      // Pay anyway: create-payment answers email_required if one is needed.
-      debugPrint('[Checkout] payer email: $e');
-    }
-  }
 
   Future<void> _loadMobileOptions() async {
     if (_mobileLoading || _mobileOptions != null) return;
@@ -230,7 +188,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       });
     }
     if (_hasTicketImage) _loadTicket();
-    _loadPayerEmail();
   }
 
   // ── Paying ─────────────────────────────────────────────────────────────────
@@ -247,8 +204,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         _r.id,
         _payMethods[_paymentMethod],
         country: _payingByMobile ? _mobileChoice?.countryCode : null,
-        // Only Flutterwave needs an email.
-        email: _needsEmail && _payingByBank ? _emailCtrl.text.trim() : null,
         phone: phone,
         network: network,
       );
@@ -273,14 +228,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       // Charged directly: the prompt is on the sender's phone, no page.
       if (!payment.direct) await _openPaymentPage();
     } on RequestException catch (e) {
-      if (e.reason == RequestFailure.emailRequired && mounted) {
-        setState(() => _needsEmail = true);
-      }
       messenger.showSnackBar(
         nataToast(switch (e.reason) {
           RequestFailure.notPayable => l.errRequestNotPayable,
           RequestFailure.paymentsUnavailable => l.errPaymentsUnavailable,
-          RequestFailure.emailRequired => l.errEmailRequired,
           RequestFailure.mobileMoneyUnavailable => l.errMobileMoneyUnavailable,
           RequestFailure.phoneRejected => l.errPhoneRejected,
           RequestFailure.amountOutOfBounds => l.errMobileAmountOutOfBounds,
@@ -433,7 +384,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   void dispose() {
     _timer?.cancel();
     _poll?.cancel();
-    _emailCtrl.dispose();
     _mobilePhoneCtrl.dispose();
     super.dispose();
   }
@@ -959,14 +909,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         title: context.l10n.mobileMoney,
         subtitle: context.l10n.mobileMoneyPhoneSub,
       ),
-      _PayMethod(
-        icon: Icons.account_balance_rounded,
-        iconBg: AppColors.card,
-        iconColor: AppColors.primary,
-        title: context.l10n.bankTransfer,
-        subtitle: context.l10n.bankTransferSub,
-        iconBorder: true,
-      ),
     ];
 
     return Container(
@@ -1003,7 +945,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 onTap: () {
                   setState(() => _paymentMethod = e.key);
                   if (e.key == 2) _loadMobileOptions();
-                  if (e.key == 3) _loadBankQuote();
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
@@ -1101,8 +1042,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             );
           }),
           if (_payingByMobile) _buildMobileMoneyPanel(),
-          if (_payingByBank) _buildBankTransferPanel(),
-          if (_needsEmail && _payingByBank) _buildEmailField(),
           if (_payingByCard) _buildStripeNote(),
         ],
       ),
@@ -1359,96 +1298,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     );
   }
 
-  /// The amount in naira, for a bank transfer.
-  Widget _buildBankTransferPanel() {
-    final l = context.l10n;
-    final quote = _bankQuote;
-    final Widget body;
-    if (_bankFailed) {
-      body = Row(
-        children: [
-          Expanded(
-            child: Text(
-              l.errBankTransferQuote,
-              key: const ValueKey('bank-transfer-error'),
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.destructive,
-              ),
-            ),
-          ),
-          TextButton(onPressed: _loadBankQuote, child: Text(l.retry)),
-        ],
-      );
-    } else if (quote == null) {
-      body = const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        child: Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.accent,
-            ),
-          ),
-        ),
-      );
-    } else {
-      body = Text(
-        l.bankTransferChargedAs(quote.amountText, _totalText),
-        key: const ValueKey('bank-transfer-charge'),
-        style: GoogleFonts.dmSans(
-          fontSize: 11,
-          height: 1.4,
-          color: AppColors.mutedForeground,
-        ),
-      );
-    }
-    return Padding(padding: const EdgeInsets.only(top: 12), child: body);
-  }
-
-  /// The payer's email, for an account without one.
-  Widget _buildEmailField() {
-    final l = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            key: const ValueKey('checkout-email'),
-            controller: _emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            autofillHints: const [AutofillHints.email],
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: l.payerEmail,
-              hintText: l.payerEmailHint,
-              isDense: true,
-              filled: true,
-              fillColor: AppColors.input,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l.payerEmailNote,
-            style: GoogleFonts.dmSans(
-              fontSize: 11,
-              height: 1.4,
-              color: AppColors.mutedForeground,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ── Breakdown ──────────────────────────────────────────────────────────────
   Widget _buildBreakdownCard() {
     return Container(
@@ -1627,17 +1476,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     final l = context.l10n;
     final checked = _ticketChecked && !_expired;
     final countryChosen = !_payingByMobile || _mobileChoice != null;
-    final bankReady = !_payingByBank || _bankQuote != null;
-    final emailGiven = !_needsEmail || !_payingByBank || _emailValid;
     final walletGiven = _directReady;
-    final unlocked =
-        checked && countryChosen && bankReady && walletGiven && emailGiven;
-    // Mobile money is charged in the wallet's currency, bank transfer in
-    // naira.
+    final unlocked = checked && countryChosen && walletGiven;
+    // Mobile money is charged in the wallet's currency.
     final amount = _payingByMobile && _mobileChoice != null
         ? _mobileChoice!.amountText
-        : _payingByBank && _bankQuote != null
-        ? _bankQuote!.amountText
         : _totalText;
     final payment = _payment;
     if (payment != null) {
@@ -1686,11 +1529,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   ? l.validateToUnlock
                   : !countryChosen
                   ? l.chooseCountry
-                  : !bankReady
-                  ? l.bankTransfer
-                  : !walletGiven
-                  ? l.enterMobileNumberToPay
-                  : l.enterEmailToPay,
+                  : l.enterMobileNumberToPay,
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
@@ -1711,7 +1550,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     );
   }
 
-  /// While the sender pays on Flutterwave's page, or once they've paid in
+  /// While the sender pays on a payment page, or once they've paid in
   /// Stripe's sheet, while it is confirmed.
   Widget _buildPaymentInProgress(AppLocalizations l) {
     final inSheet = _payment?.stripe != null;

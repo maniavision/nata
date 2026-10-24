@@ -90,8 +90,8 @@ class SupportService {
     ];
   }
 
-  /// Tries a payout again now (returns 'processing' or 'failed'), or puts a
-  /// refund back for the next payment job ('pending').
+  /// Puts a failed payout or refund back for the next payment job (returns
+  /// 'pending').
   Future<String> retry(FailedPayment p) async {
     final result = await _client.rpc(
       'support_retry',
@@ -271,7 +271,7 @@ class FailedPayment {
   final double amount;
   final String currency;
 
-  /// Flutterwave's reason.
+  /// The provider's reason (pawaPay, Stripe).
   final String reason;
   final DateTime updatedAt;
 

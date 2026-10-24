@@ -1,10 +1,12 @@
 /**
  * pawapay-callback — pawaPay tells Nata a deposit (a sender's mobile money
- * payment) or a refund reached its final status (20240165).
+ * payment), a refund (20240165) or a payout to a traveler (20240169) reached
+ * its final status.
  *
- * Set as the deposits and refunds callback URL in pawaPay's dashboard, and
+ * Set as the deposits, refunds and payouts callback URL in pawaPay's
+ * dashboard, and
  * deployed with --no-verify-jwt: pawaPay has no Supabase login. The body is
- * never trusted: the deposit or refund is looked up again with pawaPay
+ * never trusted: the deposit, refund or payout is looked up again with pawaPay
  * (PAWAPAY_API_TOKEN) and only what pawaPay answers is recorded, so a forged
  * callback can do no more than ask for that check.
  *
@@ -64,8 +66,8 @@ async function pawapay(
 }
 
 /**
- * Looks a pawaPay deposit up and records it as record() does for
- * Flutterwave: 'successful', 'failed', 'pending', or 'not_found' while
+ * Looks a pawaPay deposit up and records it: 'successful' (held in
+ * escrow), 'failed', 'pending', or 'not_found' while
  * pawaPay has no such deposit.
  */
 async function recordDeposit(depositId: string): Promise<string> {
@@ -103,6 +105,42 @@ async function recordDeposit(depositId: string): Promise<string> {
 
 /** pawaPay failures worth trying again later (Nata's wallet was short). */
 const PAWAPAY_RETRY = ["PAWAPAY_WALLET_OUT_OF_FUNDS", "UNKNOWN_ERROR"];
+
+/**
+ * Looks the pawaPay payout [payoutId] up and records it: 'paid' (completed:
+ * the escrow payment is released), 'failed', 'pending' (still in
+ * progress), or 'not_found' when pawaPay never got it.
+ */
+async function recordPayout(reference: string, payoutId: string): Promise<string> {
+  const res = await pawapay(`/v2/payouts/${encodeURIComponent(payoutId)}`);
+  if (res.status !== 200) return "pending";
+  if (res.body.status === "NOT_FOUND") return "not_found";
+  const d = res.body.data as Record<string, unknown> | undefined;
+  if (res.body.status !== "FOUND" || !d || d.payoutId !== payoutId) return "pending";
+  const db = admin.schema("nata");
+  if (d.status === "COMPLETED") {
+    const { error } = await db.rpc("release_payout", {
+      p_reference: reference,
+      p_provider_id: payoutId,
+    });
+    if (error) throw error;
+    return "paid";
+  }
+  if (d.status === "FAILED") {
+    const reason = d.failureReason as
+      | { failureCode?: string; failureMessage?: string }
+      | undefined;
+    const { error } = await db.rpc("payout_failed", {
+      p_reference: reference,
+      p_reason: String(reason?.failureMessage ?? reason?.failureCode ?? "Payout failed"),
+      p_retry: PAWAPAY_RETRY.includes(String(reason?.failureCode ?? "")),
+    });
+    if (error) throw error;
+    return "failed";
+  }
+  return "pending";
+}
+
 
 /**
  * Looks a pawaPay refund up and records it: 'sent' (completed), 'failed',
@@ -146,17 +184,25 @@ Deno.serve(async (req: Request) => {
 
   let depositId = "";
   let refundId = "";
+  let payoutId = "";
   try {
     const body = await req.json();
     depositId = String(body?.depositId ?? "");
     refundId = String(body?.refundId ?? "");
+    payoutId = String(body?.payoutId ?? "");
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
 
   const db = admin.schema("nata");
   try {
-    if (UUID.test(refundId)) {
+    if (UUID.test(payoutId)) {
+      const { data: payout } = await db.from("payouts")
+        .select("reference")
+        .eq("provider_payout_id", payoutId)
+        .maybeSingle();
+      if (payout?.reference) await recordPayout(String(payout.reference), payoutId);
+    } else if (UUID.test(refundId)) {
       const { data: payment } = await db.from("payments")
         .select("id")
         .eq("provider", "pawapay")
@@ -171,7 +217,7 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
       if (payment?.status === "pending") await recordDeposit(depositId);
     }
-    // Anything else (a payout, or not one of ours): nothing to record.
+    // Anything else (not one of ours): nothing to record.
     return json({ received: true });
   } catch (e) {
     console.error("[pawapay-callback]", e);

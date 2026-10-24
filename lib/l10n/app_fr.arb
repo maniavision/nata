@@ -1831,9 +1831,6 @@
   "supportLockedTab": "Livraisons bloquées",
   "supportPayout": "Versement",
   "supportRefund": "Remboursement",
-  "supportFlutterwaveSaid": "Flutterwave : « {reason} »",
-  "supportRetrySent": "Versement accepté par Flutterwave.",
-  "supportRetryFailed": "Flutterwave l'a de nouveau refusé.",
   "supportRefundRequeued": "Remboursement remis en file. Il part dans les 15 minutes.",
   "supportLocked": "Bloquée",
   "supportWrongAttempts": "Codes erronés",
@@ -1908,5 +1905,8 @@
 
   "paidSecurelyThroughStripe": "Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.",
   "confirmingPayment": "Confirmation du paiement",
-  "confirmingPaymentSub": "Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes."
+  "confirmingPaymentSub": "Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes.",
+
+  "supportReasonSaid": "Motif : « {reason} »",
+  "supportPayoutRequeued": "Versement remis en file. Il part dans les 15 minutes."
 }

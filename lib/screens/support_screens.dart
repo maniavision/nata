@@ -1327,11 +1327,13 @@ class _SupportPaymentsScreenState extends State<SupportPaymentsScreen> {
     try {
       final status = await _service.retry(p);
       if (!mounted) return;
-      _snack(context, switch (status) {
-        'processing' || 'paid' => l.supportRetrySent,
-        'pending' => l.supportRefundRequeued,
-        _ => l.supportRetryFailed,
-      });
+      // Both go out with the next payment job.
+      _snack(
+        context,
+        p.kind == FailedPaymentKind.payout
+            ? l.supportPayoutRequeued
+            : l.supportRefundRequeued,
+      );
     } catch (e) {
       debugPrint('[Support] retry: $e');
       if (mounted) _snack(context, l.supportActionFailed);
@@ -1570,7 +1572,7 @@ class _FailedCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      l.supportFlutterwaveSaid(p.reason),
+                      l.supportReasonSaid(p.reason),
                       style: _small(),
                     ),
                   ),
