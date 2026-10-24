@@ -1546,30 +1546,35 @@ class FakePaymentService extends Fake implements PaymentService {
   @override
   Future<int> sendPayouts() async => ++payoutsSent;
 
-  /// The bank through Stripe: the links asked for, and the statuses
-  /// answered in order (the last one repeating).
+  /// The bank through Stripe: the forms sent ([failStripeSubmit] refuses
+  /// the next one), what each answers ([stripeSubmitResult]), the links to
+  /// Stripe's page, and the statuses answered in order (the last one
+  /// repeating).
+  final List<StripeBankDetails> stripeSubmitted = [];
+  PayoutAccountException? failStripeSubmit;
+  StripeBank stripeSubmitResult = (
+    status: StripeBankStatus.pending,
+    account: null,
+  );
   int stripeLinks = 0;
-  PayoutAccountException? failStripeLink;
   List<StripeBank> stripeStatuses = [
     (status: StripeBankStatus.none, account: null),
   ];
   int stripeChecks = 0;
 
-  /// The emails given with each link asked for.
-  final List<String?> stripeLinkEmails = [];
+  @override
+  Future<StripeBank> submitStripeBank(StripeBankDetails details) async {
+    stripeSubmitted.add(details);
+    final fail = failStripeSubmit;
+    if (fail != null) {
+      failStripeSubmit = null;
+      throw fail;
+    }
+    return stripeSubmitResult;
+  }
 
   @override
-  Future<Uri> stripeBankLink({String? email}) async {
-    stripeLinkEmails.add(email);
-    final fail = failStripeLink;
-    if (fail != null) {
-      // An email given answers Stripe's need for one.
-      if (fail.reason == PayoutAccountFailure.emailRequired && email != null) {
-        failStripeLink = null;
-      } else {
-        throw fail;
-      }
-    }
+  Future<Uri> stripeBankLink() async {
     stripeLinks++;
     return Uri.parse('https://connect.stripe.test/setup/$stripeLinks');
   }

@@ -18,9 +18,9 @@ const DONE = [
 const AGAIN = [
   "Nata",
   "",
-  "This link has expired. Go back to the Nata app and tap Continue setup with Stripe.",
-  "Ce lien a expiré. Revenez dans l'application Nata et touchez Continuer avec Stripe.",
-  "Este enlace ha caducado. Vuelve a la aplicación Nata y toca Continuar con Stripe.",
+  "This link has expired. Go back to the Nata app and tap Finish with Stripe.",
+  "Ce lien a expiré. Revenez dans l'application Nata et touchez Terminer avec Stripe.",
+  "Este enlace ha caducado. Vuelve a la aplicación Nata y toca Terminar con Stripe.",
 ].join("\n");
 
 Deno.serve((req: Request) => {

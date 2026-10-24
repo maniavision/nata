@@ -129,12 +129,10 @@ void main() {
           return FunctionResponse(data: data, status: 200);
         });
 
-    test('start gives Stripe\'s page', () async {
+    test('finish gives Stripe\'s page', () async {
       answer({'url': 'https://connect.stripe.com/setup/e/abc'});
       final link = await service.stripeBankLink();
-      expect(sent.single, {'action': 'start'});
-      await service.stripeBankLink(email: 'amara@example.com');
-      expect(sent.last, {'action': 'start', 'email': 'amara@example.com'});
+      expect(sent.single, {'action': 'finish'});
       expect(link, Uri.parse('https://connect.stripe.com/setup/e/abc'));
     });
 
@@ -156,6 +154,52 @@ void main() {
       expect(bank.status, StripeBankStatus.enabled);
       expect(bank.account?.institutionName, 'Barclays');
       expect(bank.account?.accountLast4, '2345');
+    });
+
+    test('submit sends the form; refusals keep Stripe\'s words', () async {
+      answer({'status': 'action_needed'});
+      final bank = await service.submitStripeBank(
+        StripeBankDetails(
+          firstName: 'Amara',
+          lastName: 'Kalu',
+          dateOfBirth: DateTime(1990, 4, 7),
+          phone: '+12025550123',
+          line1: '1 Main St',
+          city: 'Austin',
+          state: 'TX',
+          postalCode: '78701',
+          idNumber: '0000',
+          routingNumber: '110000000',
+          accountNumber: '000123456789',
+        ),
+      );
+      expect(bank.status, StripeBankStatus.actionNeeded);
+      expect(sent.single['action'], 'submit');
+      expect(sent.single['dob'], {'day': 7, 'month': 4, 'year': 1990});
+      expect(sent.single['id_number'], '0000');
+      expect(sent.single['bank'], {
+        'routing_number': '110000000',
+        'account_number': '000123456789',
+      });
+      expect(sent.single['tos_accepted'], isTrue);
+      expect(sent.single.containsKey('email'), isFalse);
+
+      when(
+        () => functions.invoke('stripe-connect', body: any(named: 'body')),
+      ).thenThrow(
+        const FunctionException(
+          status: 400,
+          details: {'error': 'invalid', 'message': 'Invalid routing number'},
+        ),
+      );
+      expect(
+        service.stripeBankStatus(),
+        throwsA(
+          isA<PayoutAccountException>()
+              .having((e) => e.reason, 'reason', PayoutAccountFailure.invalid)
+              .having((e) => e.message, 'message', 'Invalid routing number'),
+        ),
+      );
     });
 
     test('pending and none have no account', () async {
