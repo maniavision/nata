@@ -269,11 +269,11 @@ Deno.serve(async (req: Request) => {
     if (!STRIPE_COUNTRIES.has(country)) {
       return json({ error: "not_supported" }, 409);
     }
-    const { data: profile } = await db.from("profiles")
+    const { data: person } = await db.from("profiles")
       .select("first_name, last_name")
       .eq("id", user.id)
       .maybeSingle();
-    const name = [profile?.first_name, profile?.last_name]
+    const name = [person?.first_name, person?.last_name]
       .filter((p) => p && String(p).trim())
       .join(" ").trim();
     const created = await stripeV2(
