@@ -96,7 +96,8 @@ const STRIPE_COUNTRIES = new Set([
  * Keeps nata.stripe_accounts in step with the Stripe account [account] (as
  * Stripe returns it) of [userId]. Once Stripe allows payouts, the account is
  * one of the traveler's payout accounts (kind bank, paid in US dollars):
- * added the first time, its bank's name and last digits kept up to date.
+ * added the first time, as their default, its bank's name and last digits
+ * kept up to date.
  */
 async function syncAccount(userId: string, account: Record<string, unknown>) {
   const db = admin.schema("nata");
@@ -144,6 +145,8 @@ async function syncAccount(userId: string, account: Record<string, unknown>) {
     country_code: String(account.country ?? "").toUpperCase() || null,
     account_last4: last4,
     holder_name: holder.length >= 2 ? holder : "Nata traveler",
+    // The bank the traveler just connected is where they want to be paid.
+    is_default: true,
   }).select("id").single();
   if (error || !saved) {
     console.error("[stripe-connect] payout account", error);
