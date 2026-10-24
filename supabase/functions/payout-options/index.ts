@@ -1,12 +1,13 @@
 /**
  * payout-options — where a traveler in [country] can be paid: the mobile
  * money networks pawaPay pays out to there (nata.mobile_money_networks), with
- * the country's currency. Bank payouts aren't offered yet (20240169: they
- * will go through Stripe), so the bank list is empty.
+ * the country's currency, and their bank through Stripe where Stripe Connect
+ * can pay out (20240170: the US, the UK, the EEA, Canada and Switzerland).
  *
  * Called by the app (with the traveler's JWT) with { country } (ISO code).
- * Responds 200 with { currency, banks: [], mobile_money: [{ code, name }] };
- * mobile_money is empty where pawaPay can't pay out. Errors:
+ * Responds 200 with { currency, banks, mobile_money: [{ code, name }] };
+ * banks is [{ code: STRIPE, name }] where Stripe can pay out (the bank is
+ * then connected through stripe-connect), else empty. Errors:
  * 401 unauthorized.
  */
 
@@ -57,6 +58,16 @@ async function networks(country: string): Promise<{ code: string; name: string }
     .map((n) => ({ code: n.provider, name: n.name }));
 }
 
+/** Where Stripe Connect can pay out to a bank from Nata's US account:
+ * the US, the UK, the EEA, Canada and Switzerland (cross-border payouts). */
+const STRIPE_COUNTRIES = new Set([
+  "US", "GB", "CA", "CH",
+  // The EEA.
+  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR",
+  "HU", "IS", "IE", "IT", "LV", "LI", "LT", "LU", "MT", "NL", "NO", "PL",
+  "PT", "RO", "SK", "SI", "ES", "SE",
+]);
+
 // ── This function ──────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -74,7 +85,9 @@ Deno.serve(async (req: Request) => {
   const currency = await countryCurrency(country);
   return json({
     currency,
-    banks: [],
+    banks: STRIPE_COUNTRIES.has(country)
+      ? [{ code: "STRIPE", name: "Bank account (Stripe)" }]
+      : [],
     mobile_money: currency ? await networks(country) : [],
   });
 });

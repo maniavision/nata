@@ -7699,6 +7699,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payout queued again. It goes out within 15 minutes.'**
   String get supportPayoutRequeued;
+
+  /// No description provided for @stripeBankTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your bank with Stripe'**
+  String get stripeBankTitle;
+
+  /// No description provided for @stripeBankBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe, Nata\'s payment partner, checks your identity and bank account. It takes a few minutes, and your earnings are then paid to your bank.'**
+  String get stripeBankBody;
+
+  /// No description provided for @stripeBankButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect bank account'**
+  String get stripeBankButton;
+
+  /// No description provided for @stripeBankNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bank details go to Stripe, never to Nata.'**
+  String get stripeBankNote;
+
+  /// No description provided for @stripePendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe is checking your details'**
+  String get stripePendingTitle;
+
+  /// No description provided for @stripePendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This usually takes a few minutes. Your payouts go to your bank once Stripe approves it.'**
+  String get stripePendingBody;
+
+  /// No description provided for @stripeCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get stripeCheckAgain;
+
+  /// No description provided for @stripeContinueSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue setup with Stripe'**
+  String get stripeContinueSetup;
+
+  /// No description provided for @stripeNotFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe\'s form isn\'t finished yet. Continue setup with Stripe to finish it.'**
+  String get stripeNotFinished;
+
+  /// No description provided for @errStripeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Stripe. Please try again.'**
+  String get errStripeOpen;
 }
 
 class _AppLocalizationsDelegate

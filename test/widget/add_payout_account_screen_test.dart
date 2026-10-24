@@ -25,6 +25,9 @@ void main() {
     popped = null;
   });
 
+  final opened = <Uri>[];
+  setUp(opened.clear);
+
   Future<void> pump(
     WidgetTester tester, {
     Country country = nigeria,
@@ -44,6 +47,10 @@ void main() {
                     builder: (_) => AddPayoutAccountScreen(
                       service: payments,
                       initialCountry: country,
+                      openStripePage: (link) async {
+                        opened.add(link);
+                        return true;
+                      },
                     ),
                   ),
                 );
@@ -186,9 +193,7 @@ void main() {
     expect(popped, isNull);
   });
 
-  testWidgets('a country Nata can\'t pay out to says so', (
-    tester,
-  ) async {
+  testWidgets('a country Nata can\'t pay out to says so', (tester) async {
     await pump(tester, country: france);
 
     expect(find.text("Nata can't pay out to France yet."), findsOneWidget);
@@ -276,5 +281,110 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(payments.payoutOptionCountries.last, 'KE');
+  });
+
+  group('a bank through Stripe (where Stripe pays out)', () {
+    const uk = Country(isoCode: 'GB', name: 'United Kingdom', phoneCode: '+44');
+    setUp(() {
+      payments.options['GB'] = const PayoutOptions(
+        currency: 'GBP',
+        banks: [PayoutProvider('STRIPE', 'Bank account (Stripe)')],
+      );
+    });
+
+    const saved = PayoutAccount(
+      id: 'pa-stripe',
+      kind: PayoutAccountKind.bank,
+      institutionName: 'Barclays',
+      countryCode: 'GB',
+      accountLast4: '2345',
+      holderName: 'Amara Kalu',
+      isDefault: true,
+    );
+
+    testWidgets('no bank fields: Stripe connects the bank', (tester) async {
+      await pump(tester, country: uk);
+
+      expect(find.byKey(const ValueKey('payout-stripe')), findsOneWidget);
+      expect(find.text('Connect your bank with Stripe'), findsOneWidget);
+      expect(find.byKey(const ValueKey('payout-number')), findsNothing);
+      expect(find.byKey(const ValueKey('payout-save')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await tester.pumpAndSettle();
+      expect(opened, [Uri.parse('https://connect.stripe.test/setup/1')]);
+      // Back from Stripe: it can be checked now.
+      expect(find.byKey(const ValueKey('stripe-check')), findsOneWidget);
+    });
+
+    testWidgets('once Stripe pays out to it, it is saved and closes', (
+      tester,
+    ) async {
+      payments.stripeStatuses = [
+        (status: StripeBankStatus.none, account: null),
+        (status: StripeBankStatus.enabled, account: saved),
+      ];
+      await pump(tester, country: uk);
+      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('stripe-check')));
+      await tester.pumpAndSettle();
+
+      expect(popped?.id, 'pa-stripe');
+      expect(payments.payoutsSent, 1);
+      expect(find.text('Payout account saved.'), findsOneWidget);
+    });
+
+    testWidgets('Stripe still checking: said, with Check again', (
+      tester,
+    ) async {
+      payments.stripeStatuses = [
+        (status: StripeBankStatus.pending, account: null),
+      ];
+      await pump(tester, country: uk);
+
+      // Started before: the screen opens on where it stands.
+      expect(find.text('Stripe is checking your details'), findsOneWidget);
+      expect(find.byKey(const ValueKey('stripe-continue')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('stripe-check')));
+      await tester.pumpAndSettle();
+      expect(payments.stripeChecks, 2);
+      expect(popped, isNull);
+    });
+
+    testWidgets('a form not finished says so, and can be continued', (
+      tester,
+    ) async {
+      payments.stripeStatuses = [
+        (status: StripeBankStatus.incomplete, account: null),
+      ];
+      await pump(tester, country: uk);
+      expect(find.text('Continue setup with Stripe'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('stripe-check')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining("isn't finished yet"), findsOneWidget);
+    });
+
+    testWidgets('a country Stripe can\'t pay out to is explained', (
+      tester,
+    ) async {
+      payments.failStripeLink = const PayoutAccountException(
+        PayoutAccountFailure.notSupported,
+      );
+      await pump(tester, country: uk);
+      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('payout-error')), findsOneWidget);
+      expect(opened, isEmpty);
+    });
+
+    testWidgets('is translated', (tester) async {
+      await pump(tester, country: uk, locale: const Locale('fr'));
+      expect(find.text('Reliez votre banque avec Stripe'), findsOneWidget);
+    });
   });
 }

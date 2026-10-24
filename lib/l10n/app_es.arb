@@ -1908,5 +1908,16 @@
   "confirmingPaymentSub": "Pago hecho. Lo estamos confirmando con Stripe, tarda unos segundos.",
 
   "supportReasonSaid": "Motivo: \"{reason}\"",
-  "supportPayoutRequeued": "Pago en cola de nuevo. Se envía en 15 minutos como máximo."
+  "supportPayoutRequeued": "Pago en cola de nuevo. Se envía en 15 minutos como máximo.",
+
+  "stripeBankTitle": "Conecta tu banco con Stripe",
+  "stripeBankBody": "Stripe, el socio de pagos de Nata, verifica tu identidad y tu cuenta bancaria. Tarda unos minutos y luego tus ganancias se pagan en tu banco.",
+  "stripeBankButton": "Conectar cuenta bancaria",
+  "stripeBankNote": "Tus datos bancarios van a Stripe, nunca a Nata.",
+  "stripePendingTitle": "Stripe está revisando tus datos",
+  "stripePendingBody": "Suele tardar unos minutos. Tus pagos van a tu banco en cuanto Stripe lo apruebe.",
+  "stripeCheckAgain": "Comprobar de nuevo",
+  "stripeContinueSetup": "Continuar con Stripe",
+  "stripeNotFinished": "El formulario de Stripe aún no está terminado. Toca Continuar con Stripe para terminarlo.",
+  "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo."
 }

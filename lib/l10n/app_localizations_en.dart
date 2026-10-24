@@ -4393,4 +4393,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get supportPayoutRequeued =>
       'Payout queued again. It goes out within 15 minutes.';
+
+  @override
+  String get stripeBankTitle => 'Connect your bank with Stripe';
+
+  @override
+  String get stripeBankBody =>
+      'Stripe, Nata\'s payment partner, checks your identity and bank account. It takes a few minutes, and your earnings are then paid to your bank.';
+
+  @override
+  String get stripeBankButton => 'Connect bank account';
+
+  @override
+  String get stripeBankNote => 'Your bank details go to Stripe, never to Nata.';
+
+  @override
+  String get stripePendingTitle => 'Stripe is checking your details';
+
+  @override
+  String get stripePendingBody =>
+      'This usually takes a few minutes. Your payouts go to your bank once Stripe approves it.';
+
+  @override
+  String get stripeCheckAgain => 'Check again';
+
+  @override
+  String get stripeContinueSetup => 'Continue setup with Stripe';
+
+  @override
+  String get stripeNotFinished =>
+      'Stripe\'s form isn\'t finished yet. Continue setup with Stripe to finish it.';
+
+  @override
+  String get errStripeOpen => 'Couldn\'t open Stripe. Please try again.';
 }

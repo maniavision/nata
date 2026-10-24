@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
@@ -14,9 +15,11 @@ import '../services/phone_number.dart';
 
 /// Adds where a traveler is paid: their mobile money, on a network pawaPay
 /// pays out to in their country of residence (it can't be changed here;
-/// add-payout-account checks it too). Banks show only where payout-options
-/// lists some (none for now: bank payouts will go through Stripe). Pops the
-/// saved account.
+/// add-payout-account checks it too), or their bank through Stripe where
+/// Stripe can pay out (payout-options lists it as the STRIPE bank). The bank
+/// is connected on Stripe's own pages (designed in Sleek, "Add Payout
+/// Account" and "Add Payout Account - Stripe Pending"); the account is saved
+/// by itself once Stripe allows payouts. Pops the saved account.
 class AddPayoutAccountScreen extends StatefulWidget {
   /// Overrides for tests; default to the real service and the country of
   /// residence on the profile (the device's country when it has none).
@@ -24,12 +27,20 @@ class AddPayoutAccountScreen extends StatefulWidget {
   final Country? initialCountry;
   final Future<String?> Function()? residenceCountry;
 
+  /// Override for tests: opening Stripe's page (an in-app browser by
+  /// default).
+  final Future<bool> Function(Uri link)? openStripePage;
+
   const AddPayoutAccountScreen({
     super.key,
     this.service,
     this.initialCountry,
     this.residenceCountry,
+    this.openStripePage,
   });
+
+  /// payout-options' code for a bank connected through Stripe.
+  static const stripeBank = 'STRIPE';
 
   static Future<String?> _profileResidence() async {
     final profile = await AuthService().getProfile();
@@ -41,7 +52,8 @@ class AddPayoutAccountScreen extends StatefulWidget {
   State<AddPayoutAccountScreen> createState() => _AddPayoutAccountScreenState();
 }
 
-class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
+class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
+    with WidgetsBindingObserver {
   Country? _country;
   PayoutOptions? _options;
   bool _loading = true;
@@ -54,16 +66,39 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
   bool _saving = false;
   String? _error;
 
+  /// The bank through Stripe: where it stands (null until known), and
+  /// whether Stripe's page was opened from here.
+  StripeBankStatus? _stripe;
+  bool _stripeBusy = false;
+  bool _stripeOpened = false;
+
   PaymentService get _service => widget.service ?? PaymentService();
+
+  bool get _viaStripe =>
+      _kind == PayoutAccountKind.bank &&
+      (_options?.banks.any(
+            (b) => b.code == AddPayoutAccountScreen.stripeBank,
+          ) ??
+          false);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _start();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Back from Stripe's page in another app: see where it stands.
+    if (state == AppLifecycleState.resumed && _stripeOpened) {
+      _checkStripe(quiet: true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _number.dispose();
     _holder.dispose();
     super.dispose();
@@ -113,6 +148,12 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
             ? PayoutAccountKind.bank
             : PayoutAccountKind.mobileMoney;
       });
+      // Started with Stripe before: show where it stands.
+      if (options.banks.any(
+        (b) => b.code == AddPayoutAccountScreen.stripeBank,
+      )) {
+        unawaited(_checkStripe(quiet: true));
+      }
     } catch (e) {
       debugPrint('[AddPayoutAccount] options: $e');
       if (mounted) setState(() => _loadFailed = true);
@@ -197,6 +238,274 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
     }
   }
 
+  // ── The bank through Stripe ───────────────────────────────────────────────
+  /// Opens Stripe's page, where the traveler gives their identity and bank.
+  Future<void> _connectStripe() async {
+    if (_stripeBusy) return;
+    final l = context.l10n;
+    setState(() {
+      _stripeBusy = true;
+      _error = null;
+    });
+    try {
+      final link = await _service.stripeBankLink();
+      final opened = await (widget.openStripePage ?? _openInApp)(link);
+      if (!mounted) return;
+      setState(() {
+        _stripeOpened = _stripeOpened || opened;
+        if (!opened) _error = l.errStripeOpen;
+      });
+    } on PayoutAccountException catch (e) {
+      if (!mounted) return;
+      setState(
+        () => _error = switch (e.reason) {
+          PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
+          PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
+          _ => l.errStripeOpen,
+        },
+      );
+    } catch (e) {
+      debugPrint('[AddPayoutAccount] stripe link: $e');
+      if (mounted) setState(() => _error = l.errStripeOpen);
+    } finally {
+      if (mounted) setState(() => _stripeBusy = false);
+    }
+  }
+
+  static Future<bool> _openInApp(Uri link) =>
+      launchUrl(link, mode: LaunchMode.inAppBrowserView);
+
+  /// Asks where the bank stands with Stripe. Once Stripe pays out to it,
+  /// the account is saved: payouts waiting go out and the screen closes.
+  /// [quiet]: on opening or coming back, without saying "not finished".
+  Future<void> _checkStripe({bool quiet = false}) async {
+    if (_stripeBusy) return;
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    setState(() {
+      _stripeBusy = true;
+      if (!quiet) _error = null;
+    });
+    try {
+      final bank = await _service.stripeBankStatus();
+      if (!mounted) return;
+      if (bank.status == StripeBankStatus.enabled && bank.account != null) {
+        unawaited(
+          _service.sendPayouts().catchError((Object e) {
+            debugPrint('[AddPayoutAccount] send payouts: $e');
+            return 0;
+          }),
+        );
+        messenger.showSnackBar(
+          nataToast(l.payoutAccountSaved, tone: ToastTone.success),
+        );
+        navigator.pop(bank.account);
+        return;
+      }
+      setState(() {
+        _stripe = bank.status;
+        if (!quiet && bank.status == StripeBankStatus.incomplete) {
+          _error = l.stripeNotFinished;
+        }
+      });
+    } catch (e) {
+      debugPrint('[AddPayoutAccount] stripe status: $e');
+      if (mounted && !quiet) setState(() => _error = l.errRequestFailed);
+    } finally {
+      if (mounted) setState(() => _stripeBusy = false);
+    }
+  }
+
+  /// Connect the bank on Stripe's pages, or (once sent) Stripe checking it.
+  Widget _stripeCard() {
+    final l = context.l10n;
+    final pending = _stripe == StripeBankStatus.pending;
+    final title = pending ? l.stripePendingTitle : l.stripeBankTitle;
+    final body = pending ? l.stripePendingBody : l.stripeBankBody;
+    Widget button({
+      required String key,
+      required String label,
+      required VoidCallback onPressed,
+      bool outlined = false,
+      IconData? icon,
+    }) {
+      final child = _stripeBusy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.accent,
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                if (icon != null) ...[
+                  const SizedBox(width: 6),
+                  Icon(icon, size: 16),
+                ],
+              ],
+            );
+      return SizedBox(
+        height: 48,
+        width: double.infinity,
+        child: outlined
+            ? OutlinedButton(
+                key: ValueKey(key),
+                onPressed: _stripeBusy ? null : onPressed,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.accent,
+                  side: const BorderSide(color: AppColors.accent),
+                  shape: const StadiumBorder(),
+                ),
+                child: child,
+              )
+            : ElevatedButton(
+                key: ValueKey(key),
+                onPressed: _stripeBusy ? null : onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.muted,
+                  elevation: 0,
+                  shape: const StadiumBorder(),
+                ),
+                child: child,
+              ),
+      );
+    }
+
+    return Container(
+      key: const ValueKey('payout-stripe'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.secondary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  pending
+                      ? Icons.hourglass_top_rounded
+                      : Icons.account_balance_rounded,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      body,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (pending) ...[
+            button(
+              key: 'stripe-check',
+              label: l.stripeCheckAgain,
+              onPressed: _checkStripe,
+              outlined: true,
+            ),
+            TextButton(
+              key: const ValueKey('stripe-continue'),
+              onPressed: _stripeBusy ? null : _connectStripe,
+              child: Text(
+                l.stripeContinueSetup,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ] else ...[
+            button(
+              key: 'stripe-connect',
+              label: _stripe == StripeBankStatus.incomplete
+                  ? l.stripeContinueSetup
+                  : l.stripeBankButton,
+              onPressed: _connectStripe,
+              icon: Icons.open_in_new_rounded,
+            ),
+            // Back from Stripe's page: check now.
+            if (_stripeOpened) ...[
+              const SizedBox(height: 8),
+              button(
+                key: 'stripe-check',
+                label: l.stripeCheckAgain,
+                onPressed: _checkStripe,
+                outlined: true,
+              ),
+            ],
+          ],
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 13,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  l.stripeBankNote,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -243,86 +552,104 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
                       _kindToggle(),
                       const SizedBox(height: 16),
                     ],
-                    _label(
-                      _kind == PayoutAccountKind.bank
-                          ? l.bankLabel
-                          : l.providerLabel,
-                    ),
-                    _providerField(),
-                    const SizedBox(height: 16),
-                    _label(
-                      _kind == PayoutAccountKind.bank
-                          ? l.accountNumber
-                          : l.mobileMoneyNumber,
-                    ),
-                    _textField(
-                      _number,
-                      key: 'payout-number',
-                      keyboard: _kind == PayoutAccountKind.bank
-                          ? TextInputType.text
-                          : TextInputType.phone,
-                      prefix: _kind == PayoutAccountKind.mobileMoney
-                          ? _country?.phoneCode
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    _label(l.accountHolderName),
-                    _textField(
-                      _holder,
-                      key: 'payout-holder',
-                      keyboard: TextInputType.name,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      l.payoutAccountNoteSecure,
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        height: 1.4,
-                        color: AppColors.mutedForeground,
+                    if (_viaStripe) ...[
+                      _stripeCard(),
+                      if (_error != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _error!,
+                          key: const ValueKey('payout-error'),
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            color: AppColors.destructive,
+                          ),
+                        ),
+                      ],
+                    ] else ...[
+                      _label(
+                        _kind == PayoutAccountKind.bank
+                            ? l.bankLabel
+                            : l.providerLabel,
                       ),
-                    ),
-                    if (_error != null) ...[
+                      _providerField(),
+                      const SizedBox(height: 16),
+                      _label(
+                        _kind == PayoutAccountKind.bank
+                            ? l.accountNumber
+                            : l.mobileMoneyNumber,
+                      ),
+                      _textField(
+                        _number,
+                        key: 'payout-number',
+                        keyboard: _kind == PayoutAccountKind.bank
+                            ? TextInputType.text
+                            : TextInputType.phone,
+                        prefix: _kind == PayoutAccountKind.mobileMoney
+                            ? _country?.phoneCode
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      _label(l.accountHolderName),
+                      _textField(
+                        _holder,
+                        key: 'payout-holder',
+                        keyboard: TextInputType.name,
+                      ),
                       const SizedBox(height: 12),
                       Text(
-                        _error!,
-                        key: const ValueKey('payout-error'),
+                        l.payoutAccountNoteSecure,
                         style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          color: AppColors.destructive,
+                          fontSize: 11,
+                          height: 1.4,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _error!,
+                          key: const ValueKey('payout-error'),
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            color: AppColors.destructive,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          key: const ValueKey('payout-save'),
+                          onPressed: _saving || _provider == null
+                              ? null
+                              : _save,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.primaryForeground,
+                            disabledBackgroundColor: AppColors.muted,
+                            shape: const StadiumBorder(),
+                          ),
+                          child: _saving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primaryForeground,
+                                  ),
+                                )
+                              : Text(
+                                  l.savePayoutAccount,
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 50,
-                      child: ElevatedButton(
-                        key: const ValueKey('payout-save'),
-                        onPressed: _saving || _provider == null ? null : _save,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.primaryForeground,
-                          disabledBackgroundColor: AppColors.muted,
-                          shape: const StadiumBorder(),
-                        ),
-                        child: _saving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primaryForeground,
-                                ),
-                              )
-                            : Text(
-                                l.savePayoutAccount,
-                                style: GoogleFonts.dmSans(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14,
-                                ),
-                              ),
-                      ),
-                    ),
                   ],
                 ],
               ),

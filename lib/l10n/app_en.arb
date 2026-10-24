@@ -1998,5 +1998,16 @@
 
   "supportReasonSaid": "Reason: \"{reason}\"",
   "supportPayoutRequeued": "Payout queued again. It goes out within 15 minutes.",
-  "@supportReasonSaid": {"placeholders": {"reason": {"type": "String"}}}
+  "@supportReasonSaid": {"placeholders": {"reason": {"type": "String"}}},
+
+  "stripeBankTitle": "Connect your bank with Stripe",
+  "stripeBankBody": "Stripe, Nata's payment partner, checks your identity and bank account. It takes a few minutes, and your earnings are then paid to your bank.",
+  "stripeBankButton": "Connect bank account",
+  "stripeBankNote": "Your bank details go to Stripe, never to Nata.",
+  "stripePendingTitle": "Stripe is checking your details",
+  "stripePendingBody": "This usually takes a few minutes. Your payouts go to your bank once Stripe approves it.",
+  "stripeCheckAgain": "Check again",
+  "stripeContinueSetup": "Continue setup with Stripe",
+  "stripeNotFinished": "Stripe's form isn't finished yet. Continue setup with Stripe to finish it.",
+  "errStripeOpen": "Couldn't open Stripe. Please try again."
 }
