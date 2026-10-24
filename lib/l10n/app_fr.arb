@@ -1912,6 +1912,12 @@
 
   "stripePendingTitle": "Stripe vérifie vos informations",
   "stripePendingBody": "Cela prend en général quelques minutes. Vos versements partent vers votre banque dès que Stripe l'a validée.",
+  "stripeConnectedTitle": "Votre banque est connectée",
+  "stripeConnectedBody": "{bank} •••• {last4}, connectée avec Stripe.",
+  "stripeConnectedAdded": "Elle fait déjà partie de vos comptes de paiement.",
+  "stripeUseBank": "Utiliser cette banque",
+  "stripeChangeBank": "Utiliser un autre compte bancaire",
+  "stripeDone": "Terminé",
   "stripeCheckAgain": "Vérifier à nouveau",
   "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer.",
   "stripeEmailLabel": "E-mail pour Stripe",
@@ -1944,5 +1950,7 @@
   "stripeFormIncomplete": "Remplissez tous les champs et acceptez le contrat.",
   "stripeMoreTitle": "Stripe a besoin d'un peu plus",
   "stripeMoreBody": "Pour terminer, Stripe a besoin d'un élément que le formulaire de Nata ne demande pas, comme une photo de votre pièce d'identité.",
-  "stripeFinish": "Terminer avec Stripe"
+  "stripeFinish": "Terminer avec Stripe",
+  "removePayoutAccountTitle": "Supprimer ce compte de paiement ?",
+  "removePayoutAccountBody": "{name} {summary} ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut."
 }

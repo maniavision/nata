@@ -1912,6 +1912,12 @@
 
   "stripePendingTitle": "Stripe está revisando tus datos",
   "stripePendingBody": "Suele tardar unos minutos. Tus pagos van a tu banco en cuanto Stripe lo apruebe.",
+  "stripeConnectedTitle": "Tu banco está conectado",
+  "stripeConnectedBody": "{bank} •••• {last4}, conectado con Stripe.",
+  "stripeConnectedAdded": "Ya es una de tus cuentas de cobro.",
+  "stripeUseBank": "Usar este banco",
+  "stripeChangeBank": "Usar otra cuenta bancaria",
+  "stripeDone": "Listo",
   "stripeCheckAgain": "Comprobar de nuevo",
   "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo.",
   "stripeEmailLabel": "Correo para Stripe",
@@ -1944,5 +1950,7 @@
   "stripeFormIncomplete": "Completa todos los campos y acepta el acuerdo.",
   "stripeMoreTitle": "Stripe necesita un poco más",
   "stripeMoreBody": "Para terminar, Stripe necesita algo que el formulario de Nata no pide, como una foto de tu documento.",
-  "stripeFinish": "Terminar con Stripe"
+  "stripeFinish": "Terminar con Stripe",
+  "removePayoutAccountTitle": "¿Eliminar esta cuenta de cobro?",
+  "removePayoutAccountBody": "{name} {summary} ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada."
 }

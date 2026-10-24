@@ -289,7 +289,17 @@ class StripeBankDetails {
 }
 
 /// [status], and the payout account it became once [StripeBankStatus.enabled].
-typedef StripeBank = ({StripeBankStatus status, PayoutAccount? account});
+/// The bank Stripe pays out to: its name and last digits.
+typedef StripeConnectedBank = ({String institution, String last4});
+
+/// [status]; once [StripeBankStatus.enabled], the [bank] connected and the
+/// payout account it is (null while it isn't one of the traveler's payout
+/// accounts, e.g. after they removed it).
+typedef StripeBank = ({
+  StripeBankStatus status,
+  PayoutAccount? account,
+  StripeConnectedBank? bank,
+});
 
 class PayoutAccountException implements Exception {
   final PayoutAccountFailure reason;
@@ -348,6 +358,13 @@ class PaymentService {
 
   Future<void> removeMethod(String id) async {
     await _table('payment_methods').delete().eq('id', id);
+  }
+
+  /// Removes a payout account. Payouts waiting for it go to the default
+  /// account instead; removing the default makes the latest other one the
+  /// default (20240171).
+  Future<void> removePayoutAccount(String id) async {
+    await _table('payout_accounts').delete().eq('id', id);
   }
 
   /// The user's payout accounts, oldest first.
@@ -426,14 +443,18 @@ class PaymentService {
     return Uri.parse(data['url'] as String);
   }
 
-  /// Where the traveler's bank stands with Stripe; once Stripe pays out to
-  /// it, it is one of their payout accounts.
-  Future<StripeBank> stripeBankStatus() async {
-    return _stripeBank(await _stripeConnect('status'));
+  /// Where the traveler's bank stands with Stripe. [save] adds the
+  /// connected bank as a payout account ("Use this bank"); it is otherwise
+  /// added by itself only the first time (20240172).
+  Future<StripeBank> stripeBankStatus({bool save = false}) async {
+    return _stripeBank(
+      await _stripeConnect('status', {if (save) 'save': true}),
+    );
   }
 
   StripeBank _stripeBank(Map<String, dynamic> data) {
     final account = data['account'];
+    final bank = data['bank'];
     return (
       status: switch (data['status']) {
         'enabled' => StripeBankStatus.enabled,
@@ -443,6 +464,12 @@ class PaymentService {
       },
       account: account is Map
           ? PayoutAccount.fromJson(Map<String, dynamic>.from(account))
+          : null,
+      bank: bank is Map
+          ? (
+              institution: '${bank['institution_name'] ?? ''}',
+              last4: '${bank['account_last4'] ?? ''}',
+            )
           : null,
     );
   }
