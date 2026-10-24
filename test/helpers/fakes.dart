@@ -1545,6 +1545,32 @@ class FakePaymentService extends Fake implements PaymentService {
 
   @override
   Future<int> sendPayouts() async => ++payoutsSent;
+
+  /// The bank through Stripe: the links asked for, and the statuses
+  /// answered in order (the last one repeating).
+  int stripeLinks = 0;
+  PayoutAccountException? failStripeLink;
+  List<StripeBank> stripeStatuses = [
+    (status: StripeBankStatus.none, account: null),
+  ];
+  int stripeChecks = 0;
+
+  @override
+  Future<Uri> stripeBankLink() async {
+    if (failStripeLink != null) throw failStripeLink!;
+    stripeLinks++;
+    return Uri.parse('https://connect.stripe.test/setup/$stripeLinks');
+  }
+
+  @override
+  Future<StripeBank> stripeBankStatus() async {
+    final i = stripeChecks < stripeStatuses.length
+        ? stripeChecks
+        : stripeStatuses.length - 1;
+    stripeChecks++;
+    return stripeStatuses[i];
+  }
+
   bool failLoad = false;
   bool failSave = false;
   int _nextId = 1;

@@ -1908,5 +1908,16 @@
   "confirmingPaymentSub": "Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes.",
 
   "supportReasonSaid": "Motif : « {reason} »",
-  "supportPayoutRequeued": "Versement remis en file. Il part dans les 15 minutes."
+  "supportPayoutRequeued": "Versement remis en file. Il part dans les 15 minutes.",
+
+  "stripeBankTitle": "Reliez votre banque avec Stripe",
+  "stripeBankBody": "Stripe, le partenaire de paiement de Nata, vérifie votre identité et votre compte bancaire. Cela prend quelques minutes, puis vos gains sont versés sur votre compte.",
+  "stripeBankButton": "Relier un compte bancaire",
+  "stripeBankNote": "Vos coordonnées bancaires vont à Stripe, jamais à Nata.",
+  "stripePendingTitle": "Stripe vérifie vos informations",
+  "stripePendingBody": "Cela prend en général quelques minutes. Vos versements partent vers votre banque dès que Stripe l'a validée.",
+  "stripeCheckAgain": "Vérifier à nouveau",
+  "stripeContinueSetup": "Continuer avec Stripe",
+  "stripeNotFinished": "Le formulaire de Stripe n'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.",
+  "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer."
 }

@@ -224,6 +224,13 @@ enum PayoutAccountFailure {
   other,
 }
 
+/// Where a traveler's bank stands with Stripe (stripe-connect, 20240170):
+/// not started, Stripe's form not finished, Stripe checking it, or paid to.
+enum StripeBankStatus { none, incomplete, pending, enabled }
+
+/// [status], and the payout account it became once [StripeBankStatus.enabled].
+typedef StripeBank = ({StripeBankStatus status, PayoutAccount? account});
+
 class PayoutAccountException implements Exception {
   final PayoutAccountFailure reason;
   const PayoutAccountException(this.reason);
@@ -331,6 +338,50 @@ class PaymentService {
         'invalid' => PayoutAccountFailure.invalid,
         'not_supported' => PayoutAccountFailure.notSupported,
         'country_mismatch' => PayoutAccountFailure.countryMismatch,
+        'payments_unavailable' => PayoutAccountFailure.unavailable,
+        _ => PayoutAccountFailure.other,
+      });
+    }
+  }
+
+  /// Stripe's page where the traveler connects their bank (their Stripe
+  /// account is made the first time). Travelers living where Stripe can't
+  /// pay out get [PayoutAccountFailure.notSupported].
+  Future<Uri> stripeBankLink() async {
+    final data = await _stripeConnect('start');
+    return Uri.parse(data['url'] as String);
+  }
+
+  /// Where the traveler's bank stands with Stripe; once Stripe pays out to
+  /// it, it is one of their payout accounts.
+  Future<StripeBank> stripeBankStatus() async {
+    final data = await _stripeConnect('status');
+    final account = data['account'];
+    return (
+      status: switch (data['status']) {
+        'enabled' => StripeBankStatus.enabled,
+        'pending' => StripeBankStatus.pending,
+        'incomplete' => StripeBankStatus.incomplete,
+        _ => StripeBankStatus.none,
+      },
+      account: account is Map
+          ? PayoutAccount.fromJson(Map<String, dynamic>.from(account))
+          : null,
+    );
+  }
+
+  Future<Map<String, dynamic>> _stripeConnect(String action) async {
+    try {
+      final response = await _client.functions.invoke(
+        'stripe-connect',
+        body: {'action': action},
+      );
+      return Map<String, dynamic>.from(response.data as Map);
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final code = details is Map ? '${details['error']}' : '';
+      throw PayoutAccountException(switch (code) {
+        'not_supported' => PayoutAccountFailure.notSupported,
         'payments_unavailable' => PayoutAccountFailure.unavailable,
         _ => PayoutAccountFailure.other,
       });

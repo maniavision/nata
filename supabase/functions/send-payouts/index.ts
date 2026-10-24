@@ -1,6 +1,8 @@
 /**
  * send-payouts — pays travelers: pawaPay payouts to their mobile money
- * (20240169; Flutterwave is no longer used).
+ * (20240169; Flutterwave is no longer used), and Stripe transfers to the
+ * Stripe account of travelers paid to a bank (20240170), which Stripe then
+ * pays out to their bank.
  *
  * Called by the app (with the traveler's JWT) right after a delivery is
  * confirmed, after adding a payout account, and from Withdraw, which sends
@@ -9,7 +11,11 @@
  * (nata.call_send_payouts), with { traveler } or for everyone's.
  *
  * nata.claim_payouts takes the pending payouts that have a mobile money
- * account to go to. Each attempt has its own pawaPay payoutId (pawaPay never
+ * account to go to (a pawaPay network, or a Stripe account Stripe allows
+ * payouts on). A Stripe transfer carries the payout's reference as its
+ * transfer_group, and Stripe is asked first whether one was already made,
+ * so a payout is never transferred twice; it is paid as soon as Stripe
+ * makes it. Each pawaPay attempt has its own pawaPay payoutId (pawaPay never
  * pays one twice), kept on the payout before it is sent so an attempt
  * pawaPay took without answering is still found. Payouts with nowhere to go
  * yet (no payout
@@ -59,6 +65,40 @@ async function pawapay(
         "Content-Type": "application/json",
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+  } catch (_) {
+    return { status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { status: res.status, body };
+}
+
+function stripeKey(): string | null {
+  const key = Deno.env.get("STRIPE_SECRET_KEY")?.trim();
+  return key ? key : null;
+}
+
+/** Calls Stripe (form-encoded); [status] 0 when it couldn't be reached. */
+async function stripe(
+  path: string,
+  init: { method?: string; form?: Record<string, string>; idempotencyKey?: string } = {},
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${stripeKey()}`,
+  };
+  if (init.form) headers["Content-Type"] = "application/x-www-form-urlencoded";
+  if (init.idempotencyKey) headers["Idempotency-Key"] = init.idempotencyKey;
+  let res: Response;
+  try {
+    res = await fetch(`https://api.stripe.com/v1${path}`, {
+      method: init.method ?? "GET",
+      headers,
+      body: init.form ? new URLSearchParams(init.form).toString() : undefined,
     });
   } catch (_) {
     return { status: 0, body: {} };
@@ -124,13 +164,80 @@ async function recordPayout(reference: string, payoutId: string): Promise<string
   return "pending";
 }
 
+/**
+ * Sends the payout [p] to the traveler's Stripe account ([p.account_number])
+ * as a transfer in US dollars, and records it paid, or failed (tried again
+ * later when Nata's Stripe balance was short or Stripe didn't answer).
+ */
+async function transferWithStripe(p: {
+  reference: string;
+  amount: number;
+  currency: string;
+  account_number: string;
+}): Promise<boolean> {
+  const db = admin.schema("nata");
+  const fail = async (reason: string, retry: boolean) => {
+    await db.rpc("payout_failed", {
+      p_reference: p.reference,
+      p_reason: reason,
+      p_retry: retry,
+    });
+    return false;
+  };
+  if (!stripeKey()) return fail("Stripe isn't set up", true);
+  if (p.currency.toUpperCase() !== "USD") {
+    return fail(`A Stripe payout in ${p.currency}`, false);
+  }
+
+  // Already transferred (Stripe took it without answering last time)?
+  const existing = await stripe(
+    `/transfers?transfer_group=${encodeURIComponent(p.reference)}&limit=10`,
+  );
+  if (existing.status === 0 || existing.status >= 500) {
+    return fail(`Stripe unreachable (HTTP ${existing.status})`, true);
+  }
+  const made = ((existing.body.data ?? []) as { id?: string; reversed?: boolean }[])
+    .find((x) => x.id && !x.reversed);
+  if (made?.id) {
+    await db.rpc("release_payout", { p_reference: p.reference, p_provider_id: made.id });
+    return true;
+  }
+
+  const res = await stripe("/transfers", {
+    method: "POST",
+    idempotencyKey: `${p.reference}-${crypto.randomUUID()}`,
+    form: {
+      amount: String(Math.round(Number(p.amount) * 100)),
+      currency: "usd",
+      destination: p.account_number,
+      transfer_group: p.reference,
+      description: "Nata delivery payout",
+      "metadata[payout_reference]": p.reference,
+    },
+  });
+  const id = String(res.body.id ?? "");
+  if (res.status === 200 && id.startsWith("tr_")) {
+    await db.rpc("release_payout", { p_reference: p.reference, p_provider_id: id });
+    return true;
+  }
+  const err = res.body.error as { code?: string; message?: string } | undefined;
+  console.error("[send-payouts] stripe", res.status, err?.code, err?.message);
+  return fail(
+    err?.message || `Stripe transfer HTTP ${res.status}`,
+    res.status === 0 || res.status >= 500 || res.status === 429 ||
+      err?.code === "balance_insufficient",
+  );
+}
+
 // ── This function ──────────────────────────────────────────────────────────
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!pawapayToken()) return json({ error: "payments_unavailable" }, 503);
+  if (!pawapayToken() && !stripeKey()) {
+    return json({ error: "payments_unavailable" }, 503);
+  }
   const job = isJob(req);
   const user = job ? null : await caller(req);
   if (!job && !user) return json({ error: "unauthorized" }, 401);
@@ -165,6 +272,20 @@ Deno.serve(async (req: Request) => {
     account_bank: string;
     account_number: string;
   }[]) {
+    if (p.account_bank === "STRIPE") {
+      if (await transferWithStripe(p)) sent++;
+      else failed++;
+      continue;
+    }
+    if (!pawapayToken()) {
+      await db.rpc("payout_failed", {
+        p_reference: p.reference,
+        p_reason: "pawaPay isn't set up",
+        p_retry: true,
+      });
+      failed++;
+      continue;
+    }
     const payoutId = crypto.randomUUID();
     await db.rpc("payout_accepted", {
       p_reference: p.reference,

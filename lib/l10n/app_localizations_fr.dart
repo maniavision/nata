@@ -4473,4 +4473,39 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get supportPayoutRequeued =>
       'Versement remis en file. Il part dans les 15 minutes.';
+
+  @override
+  String get stripeBankTitle => 'Reliez votre banque avec Stripe';
+
+  @override
+  String get stripeBankBody =>
+      'Stripe, le partenaire de paiement de Nata, vérifie votre identité et votre compte bancaire. Cela prend quelques minutes, puis vos gains sont versés sur votre compte.';
+
+  @override
+  String get stripeBankButton => 'Relier un compte bancaire';
+
+  @override
+  String get stripeBankNote =>
+      'Vos coordonnées bancaires vont à Stripe, jamais à Nata.';
+
+  @override
+  String get stripePendingTitle => 'Stripe vérifie vos informations';
+
+  @override
+  String get stripePendingBody =>
+      'Cela prend en général quelques minutes. Vos versements partent vers votre banque dès que Stripe l\'a validée.';
+
+  @override
+  String get stripeCheckAgain => 'Vérifier à nouveau';
+
+  @override
+  String get stripeContinueSetup => 'Continuer avec Stripe';
+
+  @override
+  String get stripeNotFinished =>
+      'Le formulaire de Stripe n\'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.';
+
+  @override
+  String get errStripeOpen =>
+      'Impossible d\'ouvrir Stripe. Veuillez réessayer.';
 }
