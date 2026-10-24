@@ -2009,6 +2009,22 @@
   "stripeCheckAgain": "Check again",
   "stripeContinueSetup": "Continue setup with Stripe",
   "stripeNotFinished": "Stripe's form isn't finished yet. Continue setup with Stripe to finish it.",
+  "stripeConnectedTitle": "Your bank is connected",
+  "stripeConnectedBody": "{bank} •••• {last4}, connected with Stripe.",
+  "@stripeConnectedBody": {
+    "placeholders": {
+      "bank": {
+        "type": "String"
+      },
+      "last4": {
+        "type": "String"
+      }
+    }
+  },
+  "stripeConnectedAdded": "It's already one of your payout accounts.",
+  "stripeUseBank": "Use this bank",
+  "stripeChangeBank": "Change bank on Stripe",
+  "stripeDone": "Done",
   "errStripeOpen": "Couldn't open Stripe. Please try again.",
 
   "removePayoutAccountTitle": "Remove this payout account?",

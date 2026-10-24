@@ -302,6 +302,11 @@ void main() {
       isDefault: true,
     );
 
+    const StripeConnectedBank testBank = (
+      institution: 'Stripe test bank',
+      last4: '6789',
+    );
+
     testWidgets('no bank fields: Stripe connects the bank', (tester) async {
       await pump(tester, country: uk);
 
@@ -321,8 +326,8 @@ void main() {
       tester,
     ) async {
       payments.stripeStatuses = [
-        (status: StripeBankStatus.none, account: null),
-        (status: StripeBankStatus.enabled, account: saved),
+        (status: StripeBankStatus.none, account: null, bank: null),
+        (status: StripeBankStatus.enabled, account: saved, bank: testBank),
       ];
       await pump(tester, country: uk);
       await tester.tap(find.byKey(const ValueKey('stripe-connect')));
@@ -336,11 +341,58 @@ void main() {
       expect(find.text('Payout account saved.'), findsOneWidget);
     });
 
+    testWidgets('a connected bank removed before is shown, not re-added', (
+      tester,
+    ) async {
+      payments.stripeStatuses = [
+        (status: StripeBankStatus.enabled, account: null, bank: testBank),
+        (status: StripeBankStatus.enabled, account: saved, bank: testBank),
+      ];
+      await pump(tester, country: uk);
+
+      // Opening only shows it: nothing saved, the screen stays.
+      expect(popped, isNull);
+      expect(payments.stripeSaves, [false]);
+      expect(find.text('Your bank is connected'), findsOneWidget);
+      expect(
+        find.text('Stripe test bank •••• 6789, connected with Stripe.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('stripe-change')), findsOneWidget);
+
+      // "Use this bank" saves it.
+      await tester.tap(find.byKey(const ValueKey('stripe-use')));
+      await tester.pumpAndSettle();
+      expect(payments.stripeSaves, [false, true]);
+      expect(popped?.id, 'pa-stripe');
+      expect(find.text('Payout account saved.'), findsOneWidget);
+    });
+
+    testWidgets('a bank already among the payout accounts: Done', (
+      tester,
+    ) async {
+      payments.stripeStatuses = [
+        (status: StripeBankStatus.enabled, account: saved, bank: testBank),
+      ];
+      await pump(tester, country: uk);
+
+      expect(popped, isNull);
+      expect(
+        find.textContaining("It's already one of your payout accounts"),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('stripe-use')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('stripe-done')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('payout-stripe')), findsNothing);
+      expect(payments.payoutsSent, 0);
+    });
+
     testWidgets('Stripe still checking: said, with Check again', (
       tester,
     ) async {
       payments.stripeStatuses = [
-        (status: StripeBankStatus.pending, account: null),
+        (status: StripeBankStatus.pending, account: null, bank: null),
       ];
       await pump(tester, country: uk);
 
@@ -357,7 +409,7 @@ void main() {
       tester,
     ) async {
       payments.stripeStatuses = [
-        (status: StripeBankStatus.incomplete, account: null),
+        (status: StripeBankStatus.incomplete, account: null, bank: null),
       ];
       await pump(tester, country: uk);
       expect(find.text('Continue setup with Stripe'), findsOneWidget);
