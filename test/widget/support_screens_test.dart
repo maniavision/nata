@@ -18,7 +18,7 @@ class FakeSupportService extends Fake implements SupportService {
   List<FailedPayment> failed = [];
   List<LockedDelivery> locked = [];
   bool fail = false;
-  String retryResult = 'processing';
+  String retryResult = 'pending';
 
   final List<String> resolvedIds = [];
   final List<String> refundedIds = [];
@@ -199,7 +199,7 @@ void main() {
         personName: 'Daniel O.',
         amount: 153229,
         currency: 'NGN',
-        reason: 'merchant is not enabled to make transfers.',
+        reason: 'Recipient wallet is not active.',
         updatedAt: DateTime.now(),
       ),
     ];
@@ -208,11 +208,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('merchant is not enabled'), findsOneWidget);
+    expect(
+      find.text('Reason: "Recipient wallet is not active."'),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey('retry-p1')));
     await tester.pumpAndSettle();
     expect(service.retried, ['p1']);
-    expect(find.text('Payout accepted by Flutterwave.'), findsOneWidget);
+    expect(
+      find.text('Payout queued again. It goes out within 15 minutes.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a locked delivery is unlocked after confirming', (tester) async {

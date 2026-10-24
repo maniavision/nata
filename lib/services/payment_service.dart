@@ -175,7 +175,8 @@ class PayoutAccount {
   );
 }
 
-/// A bank or mobile money provider Flutterwave pays out to, with its code.
+/// A bank or mobile money network Nata pays out to, with its code (pawaPay's
+/// provider code for mobile money).
 class PayoutProvider {
   final String code;
   final String name;

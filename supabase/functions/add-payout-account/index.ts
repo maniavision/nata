@@ -1,27 +1,25 @@
 /**
- * add-payout-account — saves where a traveler is paid.
+ * add-payout-account — saves where a traveler is paid: their mobile money,
+ * paid out by pawaPay (20240169).
  *
- * Called by the app (with the traveler's JWT) with { kind: bank |
- * mobile_money, country, bank_code, institution_name, account_number,
- * holder_name }. The bank code must be one Flutterwave pays out to in that
- * country (see payout-options), and the country must be the traveler's
- * country of residence (nata.profiles.country_of_residence) when the
- * profile has one. The full number goes to
- * nata.payout_destinations, which only the server reads; the app keeps the
- * last 4 digits (nata.payout_accounts). A first account becomes the default.
+ * Called by the app (with the traveler's JWT) with { kind: mobile_money,
+ * country, bank_code, institution_name, account_number, holder_name }. The
+ * bank code is pawaPay's provider code of a network it pays out to in that
+ * country (see payout-options), the number is the wallet's with the
+ * country's calling code, and the country must be the traveler's country of
+ * residence (nata.profiles.country_of_residence) when the profile has one.
+ * Bank accounts aren't taken yet (bank payouts will go through Stripe). The
+ * full number goes to nata.payout_destinations, which only the server reads;
+ * the app keeps the last 4 digits (nata.payout_accounts). A first account
+ * becomes the default.
  *
  * Responds 200 with the account { id, kind, institution_name, country_code,
  * account_last4, holder_name, is_default }. Errors: 401 unauthorized,
- * 400 invalid, 409 not_supported / country_mismatch (not the country of
- * residence), 503 payments_unavailable.
+ * 400 invalid, 409 not_supported (a bank, or a network pawaPay doesn't pay
+ * out to there) / country_mismatch (not the country of residence).
  */
 
-// ── Flutterwave and Supabase helpers (the same in each payment function, so
-// each can be deployed on its own, also from the dashboard) ──────────────
-
 import { createClient } from "jsr:@supabase/supabase-js@2";
-
-const FLW_API = "https://api.flutterwave.com/v3";
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -36,11 +34,6 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function secretKey(): string | null {
-  const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
-  return key ? key : null;
-}
-
 /** The signed-in user calling the function, from their JWT. */
 async function caller(req: Request) {
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
@@ -48,67 +41,6 @@ async function caller(req: Request) {
   const { data: { user } } = await admin.auth.getUser(token);
   return user ?? null;
 }
-
-async function flutterwave(
-  path: string,
-  init: { method?: string; body?: unknown } = {},
-): Promise<{ ok: boolean; status: number; body: Record<string, unknown> }> {
-  const res = await fetch(`${FLW_API}${path}`, {
-    method: init.method ?? "GET",
-    headers: {
-      Authorization: `Bearer ${secretKey()}`,
-      "Content-Type": "application/json",
-    },
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
-  });
-  let body: Record<string, unknown> = {};
-  try {
-    body = await res.json();
-  } catch (_) {
-    // Not JSON: keep the empty body.
-  }
-  return { ok: res.ok && body.status === "success", status: res.status, body };
-}
-
-/**
- * The mobile money Flutterwave pays out to, by country, with its bank code.
- * Check these against Flutterwave's transfer docs in test mode before going
- * live; banks come from Flutterwave's own list instead.
- *
- * In the CFA franc countries (XOF / XAF) Flutterwave pays out with one code
- * (FMM) to the operators of that country, so each country lists its own.
- */
-function fmm(...names: string[]): { code: string; name: string }[] {
-  return names.map((name) => ({ code: "FMM", name }));
-}
-const MOBILE_MONEY: Record<string, { code: string; name: string }[]> = {
-  KE: [{ code: "MPS", name: "M-Pesa" }],
-  GH: [
-    { code: "MTN", name: "MTN Mobile Money" },
-    { code: "VDF", name: "Vodafone Cash" },
-    { code: "ATL", name: "AirtelTigo Money" },
-  ],
-  UG: [
-    { code: "MPS", name: "MTN Mobile Money" },
-    { code: "MPS", name: "Airtel Money" },
-  ],
-  TZ: [{ code: "MPS", name: "M-Pesa" }, { code: "MPS", name: "Airtel Money" }],
-  RW: [{ code: "MPS", name: "MTN Mobile Money" }, { code: "MPS", name: "Airtel Money" }],
-  ZM: [{ code: "MPS", name: "MTN Mobile Money" }, { code: "MPS", name: "Airtel Money" }],
-  // CFA franc countries (XOF / XAF).
-  SN: fmm("Orange Money", "Free Money"),
-  CI: fmm("Orange Money", "MTN Mobile Money", "Moov Money"),
-  BF: fmm("Orange Money", "Moov Money"),
-  ML: fmm("Orange Money", "Moov Money"),
-  BJ: fmm("MTN Mobile Money", "Moov Money"),
-  TG: fmm("Moov Money", "T-Money"),
-  NE: fmm("Airtel Money", "Moov Money"),
-  CM: fmm("MTN Mobile Money", "Orange Money"),
-  GA: fmm("Airtel Money", "Moov Money"),
-  CG: fmm("MTN Mobile Money", "Airtel Money"),
-  TD: fmm("Airtel Money", "Moov Money"),
-  CF: fmm("Orange Money", "Telecel Money"),
-};
 
 /** The currency of [country] (nata.countries), or null. */
 async function countryCurrency(country: string): Promise<string | null> {
@@ -122,11 +54,22 @@ async function countryCurrency(country: string): Promise<string | null> {
   return /^[A-Z]{3}$/.test(c) ? c : null;
 }
 
+/** The mobile money networks pawaPay pays out to in [country]. */
+async function networks(country: string): Promise<{ code: string; name: string }[]> {
+  const { data } = await admin
+    .schema("nata")
+    .from("mobile_money_networks")
+    .select("provider, name")
+    .eq("country_code", country)
+    .order("position");
+  return ((data ?? []) as { provider: string; name: string }[])
+    .map((n) => ({ code: n.provider, name: n.name }));
+}
+
 // ── This function ──────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!secretKey()) return json({ error: "payments_unavailable" }, 503);
   const user = await caller(req);
   if (!user) return json({ error: "unauthorized" }, 401);
 
@@ -171,16 +114,20 @@ Deno.serve(async (req: Request) => {
   const currency = await countryCurrency(country);
   if (!currency) return json({ error: "not_supported" }, 409);
 
-  // Only codes Flutterwave pays out to there.
-  if (kind === "mobile_money") {
-    if (!(MOBILE_MONEY[country] ?? []).some((m) => m.code === bankCode)) {
-      return json({ error: "not_supported" }, 409);
-    }
-  } else {
-    const res = await flutterwave(`/banks/${country}`);
-    const known = res.ok && Array.isArray(res.body.data) &&
-      (res.body.data as { code?: unknown }[]).some((x) => String(x.code) === bankCode);
-    if (!known) return json({ error: "not_supported" }, 409);
+  // Only a network pawaPay pays out to there, and a number with the
+  // country's calling code. Bank payouts aren't offered yet.
+  if (kind !== "mobile_money") return json({ error: "not_supported" }, 409);
+  const network = (await networks(country)).find((n) => n.code === bankCode);
+  if (!network) return json({ error: "not_supported" }, 409);
+  const { data: place } = await admin
+    .schema("nata")
+    .from("countries")
+    .select("phone_code")
+    .eq("iso_code", country)
+    .maybeSingle();
+  const dial = String(place?.phone_code ?? "").replace(/\D/g, "");
+  if (!dial || !number.startsWith(dial) || number.length < dial.length + 7) {
+    return json({ error: "invalid" }, 400);
   }
 
   const db = admin.schema("nata");
@@ -189,7 +136,8 @@ Deno.serve(async (req: Request) => {
     .insert({
       user_id: user.id,
       kind,
-      institution_name: institution,
+      // pawaPay's name for the network.
+      institution_name: network.name,
       country_code: country,
       account_last4: number.slice(-4),
       holder_name: holder,

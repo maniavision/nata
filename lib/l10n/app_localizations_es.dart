@@ -3074,22 +3074,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chooseCountry => 'Elige un país';
 
   @override
-  String get payerEmail => 'Correo para tu recibo';
-
-  @override
-  String get payerEmailHint => 'tu@ejemplo.com';
-
-  @override
-  String get payerEmailNote =>
-      'El proveedor de pagos te envía el recibo aquí. Es privado y solo se te pide una vez.';
-
-  @override
-  String get enterEmailToPay => 'Escribe tu correo para pagar';
-
-  @override
-  String get errEmailRequired => 'Escribe tu correo para pagar.';
-
-  @override
   String mobileMoneyChargedAs(String local, String price) {
     return 'Se cobra en la moneda de tu billetera al tipo de cambio de hoy: $local. El precio de la entrega sigue siendo $price.';
   }
@@ -3137,20 +3121,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errMobileNetworkUnavailable =>
       'Tu red de dinero móvil no responde en este momento. Inténtalo de nuevo en unos minutos.';
-
-  @override
-  String get bankTransfer => 'Transferencia bancaria';
-
-  @override
-  String get bankTransferSub => 'Paga a una cuenta bancaria nigeriana (NGN)';
-
-  @override
-  String bankTransferChargedAs(String local, String price) {
-    return 'Pagarás $local por transferencia bancaria, al tipo de cambio de hoy. El precio de la entrega sigue siendo $price. Flutterwave te da la cuenta a la que pagar.';
-  }
-
-  @override
-  String get errBankTransferQuote => 'No se pudo obtener el importe en nairas.';
 
   @override
   String get signInPromptTitle => 'Inicia sesión para continuar';
@@ -4227,17 +4197,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get supportRefund => 'Reembolso';
 
   @override
-  String supportFlutterwaveSaid(String reason) {
-    return 'Flutterwave: \"$reason\"';
-  }
-
-  @override
-  String get supportRetrySent => 'Flutterwave aceptó el pago.';
-
-  @override
-  String get supportRetryFailed => 'Flutterwave lo volvió a rechazar.';
-
-  @override
   String get supportRefundRequeued =>
       'Reembolso en cola de nuevo. Se envía en 15 minutos como máximo.';
 
@@ -4474,4 +4433,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get confirmingPaymentSub =>
       'Pago hecho. Lo estamos confirmando con Stripe, tarda unos segundos.';
+
+  @override
+  String supportReasonSaid(String reason) {
+    return 'Motivo: \"$reason\"';
+  }
+
+  @override
+  String get supportPayoutRequeued =>
+      'Pago en cola de nuevo. Se envía en 15 minutos como máximo.';
 }

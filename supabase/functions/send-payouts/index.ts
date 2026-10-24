@@ -1,24 +1,31 @@
 /**
- * send-payouts — sends the signed-in traveler's pending payouts with
- * Flutterwave transfers.
+ * send-payouts — pays travelers: pawaPay payouts to their mobile money
+ * (20240169; Flutterwave is no longer used).
  *
  * Called by the app (with the traveler's JWT) right after a delivery is
  * confirmed, after adding a payout account, and from Withdraw, which sends
  * that traveler's payouts; or with the x-job-secret header (matching
- * PAYMENT_JOBS_SECRET) to send everyone's.
+ * PAYMENT_JOBS_SECRET) from the payment-jobs schedule
+ * (nata.call_send_payouts), with { traveler } or for everyone's.
  *
- * The transfers themselves are asked for by the database
- * (nata.send_payouts, 20240151): Flutterwave only takes them from a
- * whitelisted IP address, which edge functions don't have. Payouts with
- * nowhere to go yet (no payout account) stay pending. Flutterwave then
- * reports the result to flutterwave-webhook (paid, or failed with its
- * reason).
+ * nata.claim_payouts takes the pending payouts that have a mobile money
+ * account to go to. Each attempt has its own pawaPay payoutId (pawaPay never
+ * pays one twice), kept on the payout before it is sent so an attempt
+ * pawaPay took without answering is still found. Payouts with nowhere to go
+ * yet (no payout
+ * account, or a bank account: bank payouts aren't sent yet) stay pending.
+ * pawaPay reports the result to pawapay-callback; the schedule also looks
+ * again at payouts still in progress after a few minutes.
  *
- * Responds 200 with { sent, failed }. Errors: 401 unauthorized,
- * 503 payments_unavailable.
+ * Responds 200 with { sent, failed } (sent: taken by pawaPay). Errors:
+ * 401 unauthorized, 503 payments_unavailable.
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+
+/** pawaPay's API: the sandbox until PAWAPAY_API_URL names production. */
+const PAWAPAY_API = (Deno.env.get("PAWAPAY_API_URL")?.trim() ||
+  "https://api.sandbox.pawapay.io").replace(/\/+$/, "");
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -33,6 +40,38 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+function pawapayToken(): string | null {
+  const token = Deno.env.get("PAWAPAY_API_TOKEN")?.trim();
+  return token ? token : null;
+}
+
+/** Calls pawaPay; [status] 0 when it couldn't be reached. */
+async function pawapay(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  let res: Response;
+  try {
+    res = await fetch(`${PAWAPAY_API}${path}`, {
+      method: init.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${pawapayToken()}`,
+        "Content-Type": "application/json",
+      },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+  } catch (_) {
+    return { status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { status: res.status, body };
+}
+
 /** The signed-in user calling the function, from their JWT. */
 async function caller(req: Request) {
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
@@ -41,29 +80,162 @@ async function caller(req: Request) {
   return user ?? null;
 }
 
-/** A call from the payment-jobs schedule or support, which sends everyone's. */
+/** A call from the payment-jobs schedule, which may send everyone's. */
 function isJob(req: Request): boolean {
   const secret = Deno.env.get("PAYMENT_JOBS_SECRET")?.trim();
   return !!secret && req.headers.get("x-job-secret") === secret;
 }
 
+/** pawaPay failures worth trying again later (Nata's wallet was short). */
+const PAWAPAY_RETRY = ["PAWAPAY_WALLET_OUT_OF_FUNDS", "UNKNOWN_ERROR"];
+
+/**
+ * Looks the pawaPay payout [payoutId] up and records it: 'paid' (completed:
+ * the escrow payment is released), 'failed', 'pending' (still in
+ * progress), or 'not_found' when pawaPay never got it.
+ */
+async function recordPayout(reference: string, payoutId: string): Promise<string> {
+  const res = await pawapay(`/v2/payouts/${encodeURIComponent(payoutId)}`);
+  if (res.status !== 200) return "pending";
+  if (res.body.status === "NOT_FOUND") return "not_found";
+  const d = res.body.data as Record<string, unknown> | undefined;
+  if (res.body.status !== "FOUND" || !d || d.payoutId !== payoutId) return "pending";
+  const db = admin.schema("nata");
+  if (d.status === "COMPLETED") {
+    const { error } = await db.rpc("release_payout", {
+      p_reference: reference,
+      p_provider_id: payoutId,
+    });
+    if (error) throw error;
+    return "paid";
+  }
+  if (d.status === "FAILED") {
+    const reason = d.failureReason as
+      | { failureCode?: string; failureMessage?: string }
+      | undefined;
+    const { error } = await db.rpc("payout_failed", {
+      p_reference: reference,
+      p_reason: String(reason?.failureMessage ?? reason?.failureCode ?? "Payout failed"),
+      p_retry: PAWAPAY_RETRY.includes(String(reason?.failureCode ?? "")),
+    });
+    if (error) throw error;
+    return "failed";
+  }
+  return "pending";
+}
+
+// ── This function ──────────────────────────────────────────────────────────
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!Deno.env.get("FLW_SECRET_KEY")?.trim()) {
-    return json({ error: "payments_unavailable" }, 503);
-  }
+  if (!pawapayToken()) return json({ error: "payments_unavailable" }, 503);
   const job = isJob(req);
   const user = job ? null : await caller(req);
   if (!job && !user) return json({ error: "unauthorized" }, 401);
 
-  const { data, error } = await admin
-    .schema("nata")
-    .rpc("send_payouts", { p_traveler: user?.id ?? null })
-    .maybeSingle();
+  // The schedule may name one traveler; the app always sends its own.
+  let traveler: string | null = user?.id ?? null;
+  if (job) {
+    try {
+      const t = String((await req.json())?.traveler ?? "");
+      traveler = UUID.test(t) ? t : null;
+    } catch (_) {
+      traveler = null;
+    }
+  }
+
+  const db = admin.schema("nata");
+  const { data: claimed, error } = await db.rpc("claim_payouts", {
+    p_traveler: traveler,
+  });
   if (error) {
-    console.error("[send-payouts]", error);
+    console.error("[send-payouts] claim", error);
     return json({ sent: 0, failed: 0 });
   }
-  const result = data as { sent?: number; failed?: number } | null;
-  return json({ sent: result?.sent ?? 0, failed: result?.failed ?? 0 });
+
+  let sent = 0;
+  let failed = 0;
+  for (const p of (claimed ?? []) as {
+    payout_id: string;
+    reference: string;
+    amount: number;
+    currency: string;
+    account_bank: string;
+    account_number: string;
+  }[]) {
+    const payoutId = crypto.randomUUID();
+    await db.rpc("payout_accepted", {
+      p_reference: p.reference,
+      p_provider_id: payoutId,
+    });
+    const res = await pawapay("/v2/payouts", {
+      method: "POST",
+      body: {
+        payoutId,
+        amount: String(Number(p.amount)),
+        currency: p.currency,
+        recipient: {
+          type: "MMO",
+          accountDetails: {
+            phoneNumber: p.account_number,
+            provider: p.account_bank,
+          },
+        },
+        clientReferenceId: p.reference,
+        customerMessage: "Nata payout",
+      },
+    });
+    const status = String(res.body.status ?? "");
+    if (
+      status === "ACCEPTED" || status === "DUPLICATE_IGNORED" ||
+      // No answer: it may have been taken, so it's looked up again later
+      // (and sent again, as a new attempt, if pawaPay never got it).
+      res.status === 0 || res.status >= 500
+    ) {
+      sent++;
+      continue;
+    }
+    const reason = res.body.failureReason as
+      | { failureCode?: string; failureMessage?: string }
+      | undefined;
+    const code = String(reason?.failureCode ?? "");
+    console.error("[send-payouts] pawapay", res.status, code, reason?.failureMessage);
+    await db.rpc("payout_failed", {
+      p_reference: p.reference,
+      p_reason: String(reason?.failureMessage || code || `HTTP ${res.status}`),
+      p_retry: PAWAPAY_RETRY.includes(code),
+    });
+    failed++;
+  }
+
+  // Payouts still in progress after a few minutes (a callback that never
+  // came): ask pawaPay. Only the schedule does this.
+  if (job) {
+    const { data: waiting } = await db.from("payouts")
+      .select("reference, provider_payout_id")
+      .eq("status", "processing")
+      .not("provider_payout_id", "is", null)
+      .lt("updated_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .limit(50);
+    for (const w of (waiting ?? []) as { reference: string; provider_payout_id: string }[]) {
+      if (!UUID.test(w.provider_payout_id)) continue; // not a pawaPay payout
+      try {
+        const status = await recordPayout(w.reference, w.provider_payout_id);
+        if (status === "not_found") {
+          // pawaPay never got it: queue it again (a new attempt).
+          await db.rpc("payout_failed", {
+            p_reference: w.reference,
+            p_reason: "Not received by pawaPay",
+            p_retry: true,
+          });
+        }
+      } catch (e) {
+        console.error("[send-payouts] pawapay check", e);
+      }
+    }
+  }
+
+  return json({ sent, failed });
 });

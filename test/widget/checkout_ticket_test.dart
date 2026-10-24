@@ -133,7 +133,7 @@ void main() {
     expect(payButton(tester).onPressed, isNotNull);
   });
 
-  group('paying with Flutterwave', () {
+  group('paying', () {
     final opened = <Uri>[];
     final sheets = <StripeSheet>[];
     var sheetResult = CardSheetResult.paid;
@@ -195,21 +195,15 @@ void main() {
       await tester.pump();
     }
 
-    Future<void> chooseBank(WidgetTester tester) async {
-      await tester.ensureVisible(find.text('Bank Transfer'));
-      await tester.tap(find.text('Bank Transfer'));
-      await tester.pump();
-      await tester.pump();
-    }
-
-    testWidgets('bank transfer opens Flutterwave\'s page', (tester) async {
+    // A provider answering with a payment page (none does now) still works:
+    // the page opens and checkout watches it. Apple Pay is picked first.
+    testWidgets('a payment page in the answer is opened', (tester) async {
       await pumpPayable(tester);
-      await chooseBank(tester);
 
       await pay(tester);
 
       expect(service.paymentsStarted.single.id, 'req-1');
-      expect(service.paymentsStarted.single.method, PayMethod.bankTransfer);
+      expect(service.paymentsStarted.single.method, PayMethod.applePay);
       expect(opened, [service.nextPayment.link]);
       expect(
         find.byKey(const ValueKey('checkout-payment-in-progress')),
@@ -218,51 +212,7 @@ void main() {
       expect(find.byKey(const ValueKey('checkout-pay')), findsNothing);
     });
 
-    testWidgets('bank transfer: an account without an email gives one', (
-      tester,
-    ) async {
-      service.payerEmailValue = null;
-      await pumpPayable(tester);
-      await chooseBank(tester);
-
-      expect(find.byKey(const ValueKey('checkout-email')), findsOneWidget);
-      expect(find.text('Enter your email to pay'), findsOneWidget);
-      expect(payButton(tester).onPressed, isNull);
-
-      await tester.enterText(
-        find.byKey(const ValueKey('checkout-email')),
-        ' Ama@Example.com ',
-      );
-      await tester.pump();
-      await pay(tester);
-
-      expect(service.paymentsStarted.single.email, 'Ama@Example.com');
-      expect(opened, [service.nextPayment.link]);
-    });
-
-    testWidgets('an account with an email is not asked for one', (
-      tester,
-    ) async {
-      await pumpPayable(tester);
-      await chooseBank(tester);
-
-      expect(find.byKey(const ValueKey('checkout-email')), findsNothing);
-      await pay(tester);
-      expect(service.paymentsStarted.single.email, isNull);
-    });
-
-    testWidgets('asks for an email when the server needs one', (tester) async {
-      service.failStartPayment = RequestException(RequestFailure.emailRequired);
-      await pumpPayable(tester);
-      await chooseBank(tester);
-
-      await pay(tester);
-
-      expect(find.text('Enter your email to pay.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('checkout-email')), findsOneWidget);
-    });
-
-    testWidgets('once paid, it closes Flutterwave and goes back', (
+    testWidgets('once paid, it closes the page and goes back', (
       tester,
     ) async {
       service.paymentStatuses = [
@@ -349,13 +299,9 @@ void main() {
         await tester.pump();
       }
 
-      testWidgets('opens the sheet in the app, no page, no email', (
-        tester,
-      ) async {
-        service.payerEmailValue = null; // an account made with a phone
+      testWidgets('opens the sheet in the app, no page', (tester) async {
         await pumpPayable(tester);
         await chooseCard(tester);
-        expect(find.byKey(const ValueKey('checkout-email')), findsNothing);
         expect(
           find.byKey(const ValueKey('checkout-stripe-note')),
           findsOneWidget,
@@ -365,7 +311,6 @@ void main() {
         await pay(tester);
 
         expect(service.paymentsStarted.single.method, PayMethod.card);
-        expect(service.paymentsStarted.single.email, isNull);
         expect(sheets.single.clientSecret, 'pi_123_secret_abc');
         expect(opened, isEmpty);
       });
@@ -692,17 +637,10 @@ void main() {
         expect(opened, isEmpty);
       });
 
-      testWidgets('no email asked: only bank transfer needs one', (
-        tester,
-      ) async {
-        service.payerEmailValue = null; // an account made with a phone
-        await chooseMobileMoney(tester);
+      testWidgets('no Bank Transfer, and no email asked', (tester) async {
+        await pumpPayable(tester);
+        expect(find.text('Bank Transfer'), findsNothing);
         expect(find.byKey(const ValueKey('checkout-email')), findsNothing);
-
-        await enterWallet(tester);
-        expect(payButton(tester).onPressed, isNotNull);
-        await pay(tester);
-        expect(service.paymentsStarted.single.email, isNull);
       });
 
       testWidgets('an amount the network refuses is explained', (tester) async {
@@ -726,45 +664,6 @@ void main() {
         await tester.pump();
         expect(find.textContaining("isn't answering"), findsOneWidget);
       });
-    });
-
-    testWidgets('bank transfer: charged in naira at today\'s rate', (
-      tester,
-    ) async {
-      await pumpPayable(tester);
-      await tester.ensureVisible(find.text('Bank Transfer'));
-      await tester.tap(find.text('Bank Transfer'));
-      await tester.pump();
-      await tester.pump();
-
-      expect(
-        find.byKey(const ValueKey('bank-transfer-charge')),
-        findsOneWidget,
-      );
-      expect(find.text('Pay NGN 178,381 into Escrow'), findsOneWidget);
-
-      await pay(tester);
-      expect(service.paymentsStarted.single.method, PayMethod.bankTransfer);
-    });
-
-    testWidgets('a bank transfer amount that fails to load can be retried', (
-      tester,
-    ) async {
-      service.failBankQuote = true;
-      await pumpPayable(tester);
-      await tester.ensureVisible(find.text('Bank Transfer'));
-      await tester.tap(find.text('Bank Transfer'));
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.byKey(const ValueKey('bank-transfer-error')), findsOneWidget);
-      expect(payButton(tester).onPressed, isNull);
-
-      service.failBankQuote = false;
-      await tester.tap(find.text('Retry'));
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('Pay NGN 178,381 into Escrow'), findsOneWidget);
     });
 
     testWidgets('mobile money waits for a country when none is suggested', (

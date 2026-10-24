@@ -8,7 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
 import '../helpers/fakes.dart';
 
-/// Adding where a traveler is paid: a bank or mobile money that Flutterwave
+/// Adding where a traveler is paid: a bank or mobile money that Nata
 /// pays out to in their country.
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
@@ -117,6 +117,36 @@ void main() {
     expect(a.number, '254712345678');
   });
 
+  testWidgets('pawaPay networks only (no banks): straight to mobile money', (
+    tester,
+  ) async {
+    const congo = Country(
+      isoCode: 'CG',
+      name: 'Republic of the Congo',
+      phoneCode: '+242',
+    );
+    payments.options['CG'] = const PayoutOptions(
+      currency: 'XAF',
+      mobileMoney: [
+        PayoutProvider('MTN_MOMO_COG', 'MTN Mobile Money'),
+        PayoutProvider('AIRTEL_COG', 'Airtel Money'),
+      ],
+    );
+    await pump(tester, country: congo);
+
+    // No bank / mobile money toggle: mobile money is the only kind.
+    expect(find.byKey(const ValueKey('payout-kind-bank')), findsNothing);
+    expect(find.text('+242 '), findsOneWidget);
+    await pick(tester, 'Airtel Money');
+    await fill(tester, '05 123 4567', 'Amara Kalu');
+    await save(tester);
+
+    final a = payments.addedAccounts.single;
+    expect(a.kind, PayoutAccountKind.mobileMoney);
+    expect(a.code, 'AIRTEL_COG');
+    expect(a.number, '242051234567');
+  });
+
   testWidgets('the country is the country of residence: shown, locked', (
     tester,
   ) async {
@@ -156,7 +186,7 @@ void main() {
     expect(popped, isNull);
   });
 
-  testWidgets('a country Flutterwave can\'t pay out to says so', (
+  testWidgets('a country Nata can\'t pay out to says so', (
     tester,
   ) async {
     await pump(tester, country: france);

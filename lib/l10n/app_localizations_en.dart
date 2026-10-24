@@ -2993,7 +2993,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completeYourPaymentSub =>
-      'Finish paying on the Flutterwave page. This page updates by itself once the payment goes through.';
+      'Finish paying on the payment page. This page updates by itself once the payment goes through.';
 
   @override
   String get openPaymentPage => 'Open payment page';
@@ -3029,22 +3029,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseCountry => 'Choose a country';
-
-  @override
-  String get payerEmail => 'Email for your receipt';
-
-  @override
-  String get payerEmailHint => 'you@example.com';
-
-  @override
-  String get payerEmailNote =>
-      'The payment provider sends your receipt here. It stays private, and you\'re only asked once.';
-
-  @override
-  String get enterEmailToPay => 'Enter your email to pay';
-
-  @override
-  String get errEmailRequired => 'Enter your email to pay.';
 
   @override
   String mobileMoneyChargedAs(String local, String price) {
@@ -3094,20 +3078,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errMobileNetworkUnavailable =>
       'Your mobile money network isn\'t answering right now. Please try again in a few minutes.';
-
-  @override
-  String get bankTransfer => 'Bank Transfer';
-
-  @override
-  String get bankTransferSub => 'Pay into a Nigerian bank account (NGN)';
-
-  @override
-  String bankTransferChargedAs(String local, String price) {
-    return 'You\'ll pay $local by bank transfer, at today\'s rate. The delivery price stays $price. Flutterwave gives you the account to pay into.';
-  }
-
-  @override
-  String get errBankTransferQuote => 'Couldn\'t get the amount in naira.';
 
   @override
   String get signInPromptTitle => 'Sign in to continue';
@@ -4179,17 +4149,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportRefund => 'Refund';
 
   @override
-  String supportFlutterwaveSaid(String reason) {
-    return 'Flutterwave: \"$reason\"';
-  }
-
-  @override
-  String get supportRetrySent => 'Payout accepted by Flutterwave.';
-
-  @override
-  String get supportRetryFailed => 'Flutterwave refused it again.';
-
-  @override
   String get supportRefundRequeued =>
       'Refund queued again. It goes out within 15 minutes.';
 
@@ -4425,4 +4384,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get confirmingPaymentSub =>
       'Payment made. We\'re confirming it with Stripe, which takes a few seconds.';
+
+  @override
+  String supportReasonSaid(String reason) {
+    return 'Reason: \"$reason\"';
+  }
+
+  @override
+  String get supportPayoutRequeued =>
+      'Payout queued again. It goes out within 15 minutes.';
 }

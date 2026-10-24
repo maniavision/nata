@@ -12,9 +12,11 @@ import '../services/preferences_service.dart';
 import '../widgets/nata_toast.dart';
 import '../services/phone_number.dart';
 
-/// Adds where a traveler is paid: a bank account or mobile money, from what
-/// Flutterwave pays out to in their country of residence (it can't be
-/// changed here; add-payout-account checks it too). Pops the saved account.
+/// Adds where a traveler is paid: their mobile money, on a network pawaPay
+/// pays out to in their country of residence (it can't be changed here;
+/// add-payout-account checks it too). Banks show only where payout-options
+/// lists some (none for now: bank payouts will go through Stripe). Pops the
+/// saved account.
 class AddPayoutAccountScreen extends StatefulWidget {
   /// Overrides for tests; default to the real service and the country of
   /// residence on the profile (the device's country when it has none).

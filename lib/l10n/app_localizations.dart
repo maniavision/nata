@@ -5297,7 +5297,7 @@ abstract class AppLocalizations {
   /// No description provided for @completeYourPaymentSub.
   ///
   /// In en, this message translates to:
-  /// **'Finish paying on the Flutterwave page. This page updates by itself once the payment goes through.'**
+  /// **'Finish paying on the payment page. This page updates by itself once the payment goes through.'**
   String get completeYourPaymentSub;
 
   /// No description provided for @openPaymentPage.
@@ -5359,36 +5359,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a country'**
   String get chooseCountry;
-
-  /// No description provided for @payerEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Email for your receipt'**
-  String get payerEmail;
-
-  /// No description provided for @payerEmailHint.
-  ///
-  /// In en, this message translates to:
-  /// **'you@example.com'**
-  String get payerEmailHint;
-
-  /// No description provided for @payerEmailNote.
-  ///
-  /// In en, this message translates to:
-  /// **'The payment provider sends your receipt here. It stays private, and you\'re only asked once.'**
-  String get payerEmailNote;
-
-  /// No description provided for @enterEmailToPay.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your email to pay'**
-  String get enterEmailToPay;
-
-  /// No description provided for @errEmailRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your email to pay.'**
-  String get errEmailRequired;
 
   /// No description provided for @mobileMoneyChargedAs.
   ///
@@ -5467,30 +5437,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your mobile money network isn\'t answering right now. Please try again in a few minutes.'**
   String get errMobileNetworkUnavailable;
-
-  /// No description provided for @bankTransfer.
-  ///
-  /// In en, this message translates to:
-  /// **'Bank Transfer'**
-  String get bankTransfer;
-
-  /// No description provided for @bankTransferSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay into a Nigerian bank account (NGN)'**
-  String get bankTransferSub;
-
-  /// No description provided for @bankTransferChargedAs.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'ll pay {local} by bank transfer, at today\'s rate. The delivery price stays {price}. Flutterwave gives you the account to pay into.'**
-  String bankTransferChargedAs(String local, String price);
-
-  /// No description provided for @errBankTransferQuote.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t get the amount in naira.'**
-  String get errBankTransferQuote;
 
   /// No description provided for @signInPromptTitle.
   ///
@@ -7304,24 +7250,6 @@ abstract class AppLocalizations {
   /// **'Refund'**
   String get supportRefund;
 
-  /// No description provided for @supportFlutterwaveSaid.
-  ///
-  /// In en, this message translates to:
-  /// **'Flutterwave: \"{reason}\"'**
-  String supportFlutterwaveSaid(String reason);
-
-  /// No description provided for @supportRetrySent.
-  ///
-  /// In en, this message translates to:
-  /// **'Payout accepted by Flutterwave.'**
-  String get supportRetrySent;
-
-  /// No description provided for @supportRetryFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Flutterwave refused it again.'**
-  String get supportRetryFailed;
-
   /// No description provided for @supportRefundRequeued.
   ///
   /// In en, this message translates to:
@@ -7759,6 +7687,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment made. We\'re confirming it with Stripe, which takes a few seconds.'**
   String get confirmingPaymentSub;
+
+  /// No description provided for @supportReasonSaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason: \"{reason}\"'**
+  String supportReasonSaid(String reason);
+
+  /// No description provided for @supportPayoutRequeued.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout queued again. It goes out within 15 minutes.'**
+  String get supportPayoutRequeued;
 }
 
 class _AppLocalizationsDelegate

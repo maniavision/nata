@@ -3093,22 +3093,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chooseCountry => 'Choisissez un pays';
 
   @override
-  String get payerEmail => 'E-mail pour votre reçu';
-
-  @override
-  String get payerEmailHint => 'vous@exemple.com';
-
-  @override
-  String get payerEmailNote =>
-      'Le prestataire de paiement vous envoie votre reçu ici. Il reste privé et ne vous est demandé qu\'une fois.';
-
-  @override
-  String get enterEmailToPay => 'Saisissez votre e-mail pour payer';
-
-  @override
-  String get errEmailRequired => 'Saisissez votre e-mail pour payer.';
-
-  @override
   String mobileMoneyChargedAs(String local, String price) {
     return 'Débité dans la devise de votre portefeuille au taux du jour : $local. Le prix de la livraison reste $price.';
   }
@@ -3156,21 +3140,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errMobileNetworkUnavailable =>
       'Votre réseau de mobile money ne répond pas pour le moment. Réessayez dans quelques minutes.';
-
-  @override
-  String get bankTransfer => 'Virement bancaire';
-
-  @override
-  String get bankTransferSub => 'Payez sur un compte bancaire nigérian (NGN)';
-
-  @override
-  String bankTransferChargedAs(String local, String price) {
-    return 'Vous paierez $local par virement, au taux du jour. Le prix de la livraison reste $price. Flutterwave vous donne le compte à créditer.';
-  }
-
-  @override
-  String get errBankTransferQuote =>
-      'Impossible d\'obtenir le montant en nairas.';
 
   @override
   String get signInPromptTitle => 'Connectez-vous pour continuer';
@@ -4252,17 +4221,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportRefund => 'Remboursement';
 
   @override
-  String supportFlutterwaveSaid(String reason) {
-    return 'Flutterwave : « $reason »';
-  }
-
-  @override
-  String get supportRetrySent => 'Versement accepté par Flutterwave.';
-
-  @override
-  String get supportRetryFailed => 'Flutterwave l\'a de nouveau refusé.';
-
-  @override
   String get supportRefundRequeued =>
       'Remboursement remis en file. Il part dans les 15 minutes.';
 
@@ -4506,4 +4464,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get confirmingPaymentSub =>
       'Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes.';
+
+  @override
+  String supportReasonSaid(String reason) {
+    return 'Motif : « $reason »';
+  }
+
+  @override
+  String get supportPayoutRequeued =>
+      'Versement remis en file. Il part dans les 15 minutes.';
 }

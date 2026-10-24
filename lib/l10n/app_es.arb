@@ -1831,9 +1831,6 @@
   "supportLockedTab": "Entregas bloqueadas",
   "supportPayout": "Pago",
   "supportRefund": "Reembolso",
-  "supportFlutterwaveSaid": "Flutterwave: \"{reason}\"",
-  "supportRetrySent": "Flutterwave aceptó el pago.",
-  "supportRetryFailed": "Flutterwave lo volvió a rechazar.",
   "supportRefundRequeued": "Reembolso en cola de nuevo. Se envía en 15 minutos como máximo.",
   "supportLocked": "Bloqueada",
   "supportWrongAttempts": "Intentos de código erróneos",
@@ -1908,5 +1905,8 @@
 
   "paidSecurelyThroughStripe": "Pago seguro con Stripe. Los datos de tu tarjeta nunca llegan a Nata.",
   "confirmingPayment": "Confirmando tu pago",
-  "confirmingPaymentSub": "Pago hecho. Lo estamos confirmando con Stripe, tarda unos segundos."
+  "confirmingPaymentSub": "Pago hecho. Lo estamos confirmando con Stripe, tarda unos segundos.",
+
+  "supportReasonSaid": "Motivo: \"{reason}\"",
+  "supportPayoutRequeued": "Pago en cola de nuevo. Se envía en 15 minutos como máximo."
 }
