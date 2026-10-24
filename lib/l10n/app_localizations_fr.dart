@@ -4604,4 +4604,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get stripeFinish => 'Terminer avec Stripe';
+
+  @override
+  String get removePayoutAccountTitle => 'Supprimer ce compte de paiement ?';
+
+  @override
+  String removePayoutAccountBody(String name, String summary) {
+    return '$name $summary ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut.';
+  }
 }

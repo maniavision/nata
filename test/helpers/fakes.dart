@@ -1637,6 +1637,19 @@ class FakePaymentService extends Fake implements PaymentService {
     return accounts;
   }
 
+  /// The payout accounts removed.
+  final List<String> removedAccounts = [];
+
+  @override
+  Future<void> removePayoutAccount(String id) async {
+    if (failSave) throw StateError('save failed');
+    removedAccounts.add(id);
+    accounts = [
+      for (final a in accounts)
+        if (a.id != id) a,
+    ];
+  }
+
   @override
   Future<PayoutSchedule> payoutSchedule() async => schedule;
 }

@@ -4523,4 +4523,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stripeFinish => 'Finish with Stripe';
+
+  @override
+  String get removePayoutAccountTitle => 'Remove this payout account?';
+
+  @override
+  String removePayoutAccountBody(String name, String summary) {
+    return '$name $summary will no longer be paid. Payouts waiting for it go to your default payout account.';
+  }
 }

@@ -2050,5 +2050,8 @@
   "stripeFormIncomplete": "Fill in every field and accept the agreement.",
   "stripeMoreTitle": "Stripe needs a little more",
   "stripeMoreBody": "To finish, Stripe needs something Nata's form doesn't ask for, such as a photo of your ID.",
-  "stripeFinish": "Finish with Stripe"
+  "stripeFinish": "Finish with Stripe",
+  "removePayoutAccountTitle": "Remove this payout account?",
+  "removePayoutAccountBody": "{name} {summary} will no longer be paid. Payouts waiting for it go to your default payout account.",
+  "@removePayoutAccountBody": {"placeholders": {"name": {"type": "String"}, "summary": {"type": "String"}}}
 }

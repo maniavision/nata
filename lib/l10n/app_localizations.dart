@@ -7939,6 +7939,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finish with Stripe'**
   String get stripeFinish;
+
+  /// No description provided for @removePayoutAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this payout account?'**
+  String get removePayoutAccountTitle;
+
+  /// No description provided for @removePayoutAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {summary} will no longer be paid. Payouts waiting for it go to your default payout account.'**
+  String removePayoutAccountBody(String name, String summary);
 }
 
 class _AppLocalizationsDelegate

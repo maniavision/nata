@@ -1950,5 +1950,7 @@
   "stripeFormIncomplete": "Completa todos los campos y acepta el acuerdo.",
   "stripeMoreTitle": "Stripe necesita un poco más",
   "stripeMoreBody": "Para terminar, Stripe necesita algo que el formulario de Nata no pide, como una foto de tu documento.",
-  "stripeFinish": "Terminar con Stripe"
+  "stripeFinish": "Terminar con Stripe",
+  "removePayoutAccountTitle": "¿Eliminar esta cuenta de cobro?",
+  "removePayoutAccountBody": "{name} {summary} ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada."
 }
