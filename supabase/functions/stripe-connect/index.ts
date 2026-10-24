@@ -20,12 +20,15 @@
  *     (only when Nata has none), tos_accepted: true }: creates (or
  *     updates) the account and adds the bank account, then answers as
  *     status does.
- *   * status: looks the account up with Stripe and keeps Nata in step
- *     (stripe-webhook does too, on account.updated). Answers { status }:
- *     none (no account yet), pending (Stripe is checking it), action_needed
- *     (Stripe needs more than the form gives, such as an ID photo, or a
- *     review) or enabled (payouts go to the bank; it is now one of the
- *     traveler's payout accounts, given as { account }).
+ *   * status (with { save }): looks the account up with Stripe and keeps
+ *     Nata in step (stripe-webhook does too, on account.updated). Answers
+ *     { status }: none (no account yet), pending (Stripe is checking it),
+ *     action_needed (Stripe needs more than the form gives, such as an ID
+ *     photo, or a review) or enabled (payouts can go to the bank: { bank:
+ *     { institution_name, account_last4 } }, and { account } once it is one
+ *     of the traveler's payout accounts). The bank becomes one by itself the
+ *     first time, and after submit; after the traveler removed it, only
+ *     with save ("Use this bank", 20240172).
  *   * finish: { url } of Stripe's page for what is left (action_needed),
  *     which sends them back to stripe-connect-return.
  *
@@ -107,12 +110,18 @@ const STRIPE_COUNTRIES = new Set([
 
 /**
  * Keeps nata.stripe_accounts in step with the Stripe account [account] (as
- * Stripe returns it) of [userId]. Once Stripe allows payouts, the account is
- * one of the traveler's payout accounts (kind bank, paid in US dollars):
- * added the first time, as their default, its bank's name and last digits
- * kept up to date.
+ * Stripe returns it) of [userId]. Once Stripe allows payouts, the bank is one
+ * of the traveler's payout accounts (kind bank, paid in US dollars): added
+ * as their default the first time (20240172), and again only when [save]
+ * (the traveler tapped "Use this bank"), so a removed one stays removed. A
+ * bank already among their accounts gets its name and last digits kept up
+ * to date. Answers the bank's name and last digits once payouts are allowed.
  */
-async function syncAccount(userId: string, account: Record<string, unknown>) {
+async function syncAccount(
+  userId: string,
+  account: Record<string, unknown>,
+  save = false,
+): Promise<{ institution: string; last4: string } | null> {
   const db = admin.schema("nata");
   const id = String(account.id ?? "");
   const payoutsEnabled = account.payouts_enabled === true;
@@ -121,13 +130,14 @@ async function syncAccount(userId: string, account: Record<string, unknown>) {
     payouts_enabled: payoutsEnabled,
     updated_at: new Date().toISOString(),
   }).eq("user_id", userId).eq("account_id", id);
-  if (!payoutsEnabled) return;
+  if (!payoutsEnabled) return null;
 
   const banks = ((account.external_accounts as { data?: unknown[] } | undefined)
     ?.data ?? []) as { bank_name?: string; last4?: string }[];
   const bank = banks[0] ?? {};
-  const institution = String(bank.bank_name ?? "").trim().slice(0, 80) ||
+  let institution = String(bank.bank_name ?? "").trim().slice(0, 80) ||
     "Bank account";
+  if (institution.length < 2) institution = "Bank account";
   const last4 = String(bank.last4 ?? "").toUpperCase().replace(/[^0-9A-Z]/g, "")
     .slice(-4).padStart(4, "0");
 
@@ -138,11 +148,19 @@ async function syncAccount(userId: string, account: Record<string, unknown>) {
     .maybeSingle();
   if (existing) {
     await db.from("payout_accounts")
-      .update({ institution_name: institution.length >= 2 ? institution : "Bank account", account_last4: last4 })
+      .update({ institution_name: institution, account_last4: last4 })
       .eq("id", existing.account_id)
       .eq("user_id", userId);
-    return;
+    return { institution, last4 };
   }
+
+  // Added once by itself; after the traveler removed it, only when asked.
+  const { data: row } = await db.from("stripe_accounts")
+    .select("bank_added_at")
+    .eq("user_id", userId)
+    .eq("account_id", id)
+    .maybeSingle();
+  if (row?.bank_added_at && !save) return { institution, last4 };
 
   const { data: profile } = await db.from("profiles")
     .select("first_name, last_name")
@@ -154,7 +172,7 @@ async function syncAccount(userId: string, account: Record<string, unknown>) {
   const { data: saved, error } = await db.from("payout_accounts").insert({
     user_id: userId,
     kind: "bank",
-    institution_name: institution.length >= 2 ? institution : "Bank account",
+    institution_name: institution,
     country_code: String(account.country ?? "").toUpperCase() || null,
     account_last4: last4,
     holder_name: holder.length >= 2 ? holder : "Nata traveler",
@@ -163,7 +181,7 @@ async function syncAccount(userId: string, account: Record<string, unknown>) {
   }).select("id").single();
   if (error || !saved) {
     console.error("[stripe-connect] payout account", error);
-    return;
+    return { institution, last4 };
   }
   const { error: destError } = await db.from("payout_destinations").insert({
     account_id: saved.id,
@@ -174,7 +192,13 @@ async function syncAccount(userId: string, account: Record<string, unknown>) {
   if (destError) {
     console.error("[stripe-connect] payout destination", destError);
     await db.from("payout_accounts").delete().eq("id", saved.id);
+    return { institution, last4 };
   }
+  await db.from("stripe_accounts")
+    .update({ bank_added_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .eq("account_id", id);
+  return { institution, last4 };
 }
 
 /** Stripe's v2 API (Accounts v2): JSON in and out. */
@@ -291,15 +315,15 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  /** Where it stands now, as status answers. */
-  const answer = async () => {
+  /** Where it stands now, as status answers; [save] adds the bank. */
+  const answer = async (save = false) => {
     if (!accountId) return json({ status: "none" });
     const res = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
     if (res.status !== 200) {
       console.error("[stripe-connect] status", res.status);
       return json({ error: "provider_error" }, 502);
     }
-    await syncAccount(user.id, res.body);
+    const bank = await syncAccount(user.id, res.body, save);
     const status = statusOf(res.body);
     if (status !== "enabled") return json({ status });
     const { data: dest } = await db.from("payout_destinations")
@@ -313,10 +337,16 @@ Deno.serve(async (req: Request) => {
         .eq("id", dest.account_id)
         .maybeSingle()
       : { data: null };
-    return json({ status, account });
+    return json({
+      status,
+      account,
+      bank: bank
+        ? { institution_name: bank.institution, account_last4: bank.last4 }
+        : null,
+    });
   };
 
-  if (action === "status") return answer();
+  if (action === "status") return answer(body.save === true);
 
   if (action === "finish") {
     if (!accountId) return json({ error: "bad_request" }, 400);
@@ -507,5 +537,6 @@ Deno.serve(async (req: Request) => {
   );
   if (external.status !== 200) return refused(external, "bank");
 
-  return answer();
+  // Just given in the form: this bank is where they want to be paid.
+  return answer(true);
 });

@@ -1912,6 +1912,12 @@
 
   "stripePendingTitle": "Stripe está revisando tus datos",
   "stripePendingBody": "Suele tardar unos minutos. Tus pagos van a tu banco en cuanto Stripe lo apruebe.",
+  "stripeConnectedTitle": "Tu banco está conectado",
+  "stripeConnectedBody": "{bank} •••• {last4}, conectado con Stripe.",
+  "stripeConnectedAdded": "Ya es una de tus cuentas de cobro.",
+  "stripeUseBank": "Usar este banco",
+  "stripeChangeBank": "Usar otra cuenta bancaria",
+  "stripeDone": "Listo",
   "stripeCheckAgain": "Comprobar de nuevo",
   "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo.",
   "stripeEmailLabel": "Correo para Stripe",

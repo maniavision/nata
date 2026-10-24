@@ -4402,6 +4402,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'This usually takes a few minutes. Your payouts go to your bank once Stripe approves it.';
 
   @override
+  String get stripeConnectedTitle => 'Your bank is connected';
+
+  @override
+  String stripeConnectedBody(String bank, String last4) {
+    return '$bank •••• $last4, connected with Stripe.';
+  }
+
+  @override
+  String get stripeConnectedAdded =>
+      'It\'s already one of your payout accounts.';
+
+  @override
+  String get stripeUseBank => 'Use this bank';
+
+  @override
+  String get stripeChangeBank => 'Use another bank account';
+
+  @override
+  String get stripeDone => 'Done';
+
+  @override
   String get stripeCheckAgain => 'Check again';
 
   @override

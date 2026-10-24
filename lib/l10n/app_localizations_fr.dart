@@ -4482,6 +4482,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cela prend en général quelques minutes. Vos versements partent vers votre banque dès que Stripe l\'a validée.';
 
   @override
+  String get stripeConnectedTitle => 'Votre banque est connectée';
+
+  @override
+  String stripeConnectedBody(String bank, String last4) {
+    return '$bank •••• $last4, connectée avec Stripe.';
+  }
+
+  @override
+  String get stripeConnectedAdded =>
+      'Elle fait déjà partie de vos comptes de paiement.';
+
+  @override
+  String get stripeUseBank => 'Utiliser cette banque';
+
+  @override
+  String get stripeChangeBank => 'Utiliser un autre compte bancaire';
+
+  @override
+  String get stripeDone => 'Terminé';
+
+  @override
   String get stripeCheckAgain => 'Vérifier à nouveau';
 
   @override

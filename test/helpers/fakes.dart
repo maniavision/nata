@@ -1555,12 +1555,16 @@ class FakePaymentService extends Fake implements PaymentService {
   StripeBank stripeSubmitResult = (
     status: StripeBankStatus.pending,
     account: null,
+    bank: null,
   );
   int stripeLinks = 0;
   List<StripeBank> stripeStatuses = [
-    (status: StripeBankStatus.none, account: null),
+    (status: StripeBankStatus.none, account: null, bank: null),
   ];
   int stripeChecks = 0;
+
+  /// The checks that asked to save the connected bank ("Use this bank").
+  final List<bool> stripeSaves = [];
 
   @override
   Future<StripeBank> submitStripeBank(StripeBankDetails details) async {
@@ -1580,7 +1584,8 @@ class FakePaymentService extends Fake implements PaymentService {
   }
 
   @override
-  Future<StripeBank> stripeBankStatus() async {
+  Future<StripeBank> stripeBankStatus({bool save = false}) async {
+    stripeSaves.add(save);
     final i = stripeChecks < stripeStatuses.length
         ? stripeChecks
         : stripeStatuses.length - 1;

@@ -2002,6 +2002,22 @@
 
   "stripePendingTitle": "Stripe is checking your details",
   "stripePendingBody": "This usually takes a few minutes. Your payouts go to your bank once Stripe approves it.",
+  "stripeConnectedTitle": "Your bank is connected",
+  "stripeConnectedBody": "{bank} •••• {last4}, connected with Stripe.",
+  "@stripeConnectedBody": {
+    "placeholders": {
+      "bank": {
+        "type": "String"
+      },
+      "last4": {
+        "type": "String"
+      }
+    }
+  },
+  "stripeConnectedAdded": "It's already one of your payout accounts.",
+  "stripeUseBank": "Use this bank",
+  "stripeChangeBank": "Use another bank account",
+  "stripeDone": "Done",
   "stripeCheckAgain": "Check again",
   "errStripeOpen": "Couldn't open Stripe. Please try again.",
   "stripeEmailLabel": "Email for Stripe",

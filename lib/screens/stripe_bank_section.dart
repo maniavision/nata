@@ -80,6 +80,13 @@ class _StripeBankSectionState extends State<StripeBankSection>
   StripeBankStatus? _status;
   bool _busy = false;
   bool _stripeOpened = false;
+
+  /// Once Stripe pays out to it: the bank connected, whether it is already
+  /// one of the traveler's payout accounts, and whether they chose to give
+  /// another bank in the form instead.
+  StripeConnectedBank? _connected;
+  bool _connectedAdded = false;
+  bool _changing = false;
   String? _error;
 
   final _first = TextEditingController();
@@ -187,16 +194,28 @@ class _StripeBankSectionState extends State<StripeBankSection>
     widget.onSaved(account);
   }
 
-  void _show(StripeBank bank) {
-    if (bank.status == StripeBankStatus.enabled && bank.account != null) {
+  /// Shows where it stands. A bank Stripe pays out to is saved (and the
+  /// screen closes) when [save]: the form was just sent, the traveler tapped
+  /// "Use this bank", or came back from Stripe's page. On opening it is only
+  /// shown, so one removed from Payment settings doesn't come back by itself.
+  void _show(StripeBank bank, {bool save = false}) {
+    if (bank.status == StripeBankStatus.enabled &&
+        bank.account != null &&
+        save) {
       _done(bank.account!);
       return;
     }
-    setState(() => _status = bank.status);
+    setState(() {
+      _status = bank.status;
+      _connected = bank.bank;
+      _connectedAdded = bank.account != null;
+      _changing = false;
+    });
   }
 
-  /// Asks where it stands. [quiet]: on opening or coming back.
-  Future<void> _check({bool quiet = false}) async {
+  /// Asks where it stands. [quiet]: on opening or coming back; [save]:
+  /// "Use this bank".
+  Future<void> _check({bool quiet = false, bool save = false}) async {
     if (_busy) return;
     final l = context.l10n;
     setState(() {
@@ -204,8 +223,9 @@ class _StripeBankSectionState extends State<StripeBankSection>
       if (!quiet) _error = null;
     });
     try {
-      final bank = await widget.service.stripeBankStatus();
-      if (mounted) _show(bank);
+      final saveNow = save || _stripeOpened;
+      final bank = await widget.service.stripeBankStatus(save: saveNow);
+      if (mounted) _show(bank, save: saveNow);
     } catch (e) {
       debugPrint('[StripeBank] status: $e');
       if (mounted) {
@@ -285,7 +305,7 @@ class _StripeBankSectionState extends State<StripeBankSection>
     });
     try {
       final bank = await widget.service.submitStripeBank(details);
-      if (mounted) _show(bank);
+      if (mounted) _show(bank, save: true);
     } on PayoutAccountException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -369,6 +389,8 @@ class _StripeBankSectionState extends State<StripeBankSection>
         else if (_status == StripeBankStatus.pending ||
             _status == StripeBankStatus.actionNeeded)
           _statusCard()
+        else if (_status == StripeBankStatus.enabled && !_changing)
+          _connectedCard()
         else
           _form(),
         if (_error != null) ...[
@@ -653,6 +675,102 @@ class _StripeBankSectionState extends State<StripeBankSection>
           ],
         ),
       ],
+    );
+  }
+
+  // ── The bank already connected ─────────────────────────────────────────────
+  static const _green = Color(0xFF168A68);
+  static const _greenBg = Color(0xFFE4F4EE);
+
+  Widget _connectedCard() {
+    final l = context.l10n;
+    final bank = _connected;
+    final body = [
+      if (bank != null) l.stripeConnectedBody(bank.institution, bank.last4),
+      if (_connectedAdded) l.stripeConnectedAdded,
+    ].join(' ');
+    return Container(
+      key: const ValueKey('stripe-connected'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _greenBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  size: 20,
+                  color: _green,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.stripeConnectedTitle,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    if (body.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        body,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 13,
+                          height: 1.4,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _connectedAdded
+              ? _button(
+                  key: 'stripe-done',
+                  label: l.stripeDone,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                )
+              : _button(
+                  key: 'stripe-use',
+                  label: l.stripeUseBank,
+                  onPressed: () => _check(save: true),
+                ),
+          TextButton(
+            key: const ValueKey('stripe-change'),
+            onPressed: _busy ? null : () => setState(() => _changing = true),
+            child: Text(
+              l.stripeChangeBank,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

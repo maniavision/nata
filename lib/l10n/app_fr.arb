@@ -1912,6 +1912,12 @@
 
   "stripePendingTitle": "Stripe vérifie vos informations",
   "stripePendingBody": "Cela prend en général quelques minutes. Vos versements partent vers votre banque dès que Stripe l'a validée.",
+  "stripeConnectedTitle": "Votre banque est connectée",
+  "stripeConnectedBody": "{bank} •••• {last4}, connectée avec Stripe.",
+  "stripeConnectedAdded": "Elle fait déjà partie de vos comptes de paiement.",
+  "stripeUseBank": "Utiliser cette banque",
+  "stripeChangeBank": "Utiliser un autre compte bancaire",
+  "stripeDone": "Terminé",
   "stripeCheckAgain": "Vérifier à nouveau",
   "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer.",
   "stripeEmailLabel": "E-mail pour Stripe",

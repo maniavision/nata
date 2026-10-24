@@ -156,6 +156,32 @@ void main() {
       expect(bank.account?.accountLast4, '2345');
     });
 
+    test(
+      'a connected bank not saved: its name and digits, no account',
+      () async {
+        answer({
+          'status': 'enabled',
+          'account': null,
+          'bank': {
+            'institution_name': 'Stripe test bank',
+            'account_last4': '6789',
+          },
+        });
+        final bank = await service.stripeBankStatus();
+        expect(sent.single, {'action': 'status'});
+        expect(bank.status, StripeBankStatus.enabled);
+        expect(bank.account, isNull);
+        expect(bank.bank?.institution, 'Stripe test bank');
+        expect(bank.bank?.last4, '6789');
+      },
+    );
+
+    test('"Use this bank" asks to save it', () async {
+      answer({'status': 'enabled'});
+      await service.stripeBankStatus(save: true);
+      expect(sent.single, {'action': 'status', 'save': true});
+    });
+
     test('submit sends the form; refusals keep Stripe\'s words', () async {
       answer({'status': 'action_needed'});
       final bank = await service.submitStripeBank(

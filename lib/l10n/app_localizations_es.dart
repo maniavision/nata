@@ -4451,6 +4451,26 @@ class AppLocalizationsEs extends AppLocalizations {
       'Suele tardar unos minutos. Tus pagos van a tu banco en cuanto Stripe lo apruebe.';
 
   @override
+  String get stripeConnectedTitle => 'Tu banco está conectado';
+
+  @override
+  String stripeConnectedBody(String bank, String last4) {
+    return '$bank •••• $last4, conectado con Stripe.';
+  }
+
+  @override
+  String get stripeConnectedAdded => 'Ya es una de tus cuentas de cobro.';
+
+  @override
+  String get stripeUseBank => 'Usar este banco';
+
+  @override
+  String get stripeChangeBank => 'Usar otra cuenta bancaria';
+
+  @override
+  String get stripeDone => 'Listo';
+
+  @override
   String get stripeCheckAgain => 'Comprobar de nuevo';
 
   @override
