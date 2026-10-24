@@ -1,6 +1,12 @@
 import 'package:carrywise_app/l10n/app_localizations_en.dart';
 import 'package:carrywise_app/services/payment_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class _Client extends Mock implements SupabaseClient {}
+
+class _Functions extends Mock implements FunctionsClient {}
 
 void main() {
   final l = AppLocalizationsEn();
@@ -99,5 +105,88 @@ void main() {
     expect(PayoutSchedule.fromDb('weekly'), PayoutSchedule.weekly);
     expect(PayoutSchedule.fromDb(null), PayoutSchedule.automatic);
     expect(PayoutSchedule.fromDb('???'), PayoutSchedule.automatic);
+  });
+
+  group('the bank through Stripe (stripe-connect)', () {
+    late _Client client;
+    late _Functions functions;
+    late PaymentService service;
+    final sent = <Map<String, dynamic>>[];
+
+    setUp(() {
+      client = _Client();
+      functions = _Functions();
+      sent.clear();
+      when(() => client.functions).thenReturn(functions);
+      service = PaymentService(client: client);
+    });
+
+    void answer(Map<String, dynamic> data) =>
+        when(
+          () => functions.invoke('stripe-connect', body: any(named: 'body')),
+        ).thenAnswer((inv) async {
+          sent.add(Map<String, dynamic>.from(inv.namedArguments[#body] as Map));
+          return FunctionResponse(data: data, status: 200);
+        });
+
+    test('start gives Stripe\'s page', () async {
+      answer({'url': 'https://connect.stripe.com/setup/e/abc'});
+      final link = await service.stripeBankLink();
+      expect(sent.single, {'action': 'start'});
+      expect(link, Uri.parse('https://connect.stripe.com/setup/e/abc'));
+    });
+
+    test('enabled comes with the payout account it became', () async {
+      answer({
+        'status': 'enabled',
+        'account': {
+          'id': 'pa1',
+          'kind': 'bank',
+          'institution_name': 'Barclays',
+          'country_code': 'GB',
+          'account_last4': '2345',
+          'holder_name': 'Amara Kalu',
+          'is_default': true,
+        },
+      });
+      final bank = await service.stripeBankStatus();
+      expect(sent.single, {'action': 'status'});
+      expect(bank.status, StripeBankStatus.enabled);
+      expect(bank.account?.institutionName, 'Barclays');
+      expect(bank.account?.accountLast4, '2345');
+    });
+
+    test('pending and none have no account', () async {
+      answer({'status': 'pending'});
+      expect(
+        (await service.stripeBankStatus()).status,
+        StripeBankStatus.pending,
+      );
+      answer({'status': 'none'});
+      final none = await service.stripeBankStatus();
+      expect(none.status, StripeBankStatus.none);
+      expect(none.account, isNull);
+    });
+
+    test('a country Stripe can\'t pay out to is notSupported', () async {
+      when(
+        () => functions.invoke('stripe-connect', body: any(named: 'body')),
+      ).thenThrow(
+        const FunctionException(
+          status: 409,
+          details: {'error': 'not_supported'},
+        ),
+      );
+      expect(
+        service.stripeBankLink(),
+        throwsA(
+          isA<PayoutAccountException>().having(
+            (e) => e.reason,
+            'reason',
+            PayoutAccountFailure.notSupported,
+          ),
+        ),
+      );
+    });
   });
 }

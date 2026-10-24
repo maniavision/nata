@@ -1,17 +1,20 @@
 /**
  * stripe-webhook — Stripe's notices about card and Apple Pay payments
- * (payment_intent.succeeded, payment_intent.canceled).
+ * (payment_intent.succeeded, payment_intent.canceled), and about travelers'
+ * connected accounts for bank payouts (account.updated, 20240170).
  *
  * Set in the Stripe dashboard (Developers > Webhooks) to
  *   https://<project>.supabase.co/functions/v1/stripe-webhook
- * for those events; its signing secret is the STRIPE_WEBHOOK_SECRET secret.
+ * twice: for those payment events on Nata's account (its signing secret is
+ * the STRIPE_WEBHOOK_SECRET secret), and for account.updated on connected
+ * accounts (STRIPE_CONNECT_WEBHOOK_SECRET).
  * Deployed with --no-verify-jwt: Stripe has no Supabase login, so each
  * notice's Stripe-Signature is checked instead (and must be under 5 minutes
  * old).
  *
- * The notice itself is not trusted: the PaymentIntent is looked up again
- * with Stripe before anything is recorded. PaymentIntents that aren't one of
- * Nata's payments are ignored.
+ * The notice itself is not trusted: the PaymentIntent or account is looked
+ * up again with Stripe before anything is recorded. Ones that aren't Nata's
+ * are ignored.
  */
 
 // ── Stripe and Supabase helpers (the same in each payment function, so each
@@ -113,6 +116,78 @@ async function recordPaymentIntent(id: string): Promise<string> {
   return "pending";
 }
 
+/**
+ * Keeps nata.stripe_accounts in step with the Stripe account [account] (as
+ * Stripe returns it) of [userId]. Once Stripe allows payouts, the account is
+ * one of the traveler's payout accounts (kind bank, paid in US dollars):
+ * added the first time, as their default, its bank's name and last digits
+ * kept up to date.
+ */
+async function syncAccount(userId: string, account: Record<string, unknown>) {
+  const db = admin.schema("nata");
+  const id = String(account.id ?? "");
+  const payoutsEnabled = account.payouts_enabled === true;
+  await db.from("stripe_accounts").update({
+    details_submitted: account.details_submitted === true,
+    payouts_enabled: payoutsEnabled,
+    updated_at: new Date().toISOString(),
+  }).eq("user_id", userId).eq("account_id", id);
+  if (!payoutsEnabled) return;
+
+  const banks = ((account.external_accounts as { data?: unknown[] } | undefined)
+    ?.data ?? []) as { bank_name?: string; last4?: string }[];
+  const bank = banks[0] ?? {};
+  const institution = String(bank.bank_name ?? "").trim().slice(0, 80) ||
+    "Bank account";
+  const last4 = String(bank.last4 ?? "").toUpperCase().replace(/[^0-9A-Z]/g, "")
+    .slice(-4).padStart(4, "0");
+
+  const { data: existing } = await db.from("payout_destinations")
+    .select("account_id")
+    .eq("account_bank", "STRIPE")
+    .eq("account_number", id)
+    .maybeSingle();
+  if (existing) {
+    await db.from("payout_accounts")
+      .update({ institution_name: institution.length >= 2 ? institution : "Bank account", account_last4: last4 })
+      .eq("id", existing.account_id)
+      .eq("user_id", userId);
+    return;
+  }
+
+  const { data: profile } = await db.from("profiles")
+    .select("first_name, last_name")
+    .eq("id", userId)
+    .maybeSingle();
+  const holder = [profile?.first_name, profile?.last_name]
+    .filter((p) => p && String(p).trim())
+    .join(" ").trim().slice(0, 80);
+  const { data: saved, error } = await db.from("payout_accounts").insert({
+    user_id: userId,
+    kind: "bank",
+    institution_name: institution.length >= 2 ? institution : "Bank account",
+    country_code: String(account.country ?? "").toUpperCase() || null,
+    account_last4: last4,
+    holder_name: holder.length >= 2 ? holder : "Nata traveler",
+    // The bank the traveler just connected is where they want to be paid.
+    is_default: true,
+  }).select("id").single();
+  if (error || !saved) {
+    console.error("[stripe-webhook] payout account", error);
+    return;
+  }
+  const { error: destError } = await db.from("payout_destinations").insert({
+    account_id: saved.id,
+    account_bank: "STRIPE",
+    account_number: id,
+    currency: "USD",
+  });
+  if (destError) {
+    console.error("[stripe-webhook] payout destination", destError);
+    await db.from("payout_accounts").delete().eq("id", saved.id);
+  }
+}
+
 // ── This function ──────────────────────────────────────────────────────────
 
 /** How old a notice may be, in seconds (Stripe's own default). */
@@ -167,12 +242,17 @@ async function signedByStripe(
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  const secret = Deno.env.get("STRIPE_WEBHOOK_SECRET")?.trim() ?? "";
   const payload = await req.text();
   const signature = req.headers.get("Stripe-Signature") ?? "";
-  if (!secret || !stripeKey() || !(await signedByStripe(payload, signature, secret))) {
-    return json({ error: "unauthorized" }, 401);
+  const secrets = [
+    Deno.env.get("STRIPE_WEBHOOK_SECRET")?.trim() ?? "",
+    Deno.env.get("STRIPE_CONNECT_WEBHOOK_SECRET")?.trim() ?? "",
+  ].filter((s) => s);
+  let signed = false;
+  for (const secret of secrets) {
+    if (await signedByStripe(payload, signature, secret)) signed = true;
   }
+  if (!stripeKey() || !signed) return json({ error: "unauthorized" }, 401);
 
   let type = "";
   let id = "";
@@ -182,6 +262,23 @@ Deno.serve(async (req: Request) => {
     id = String(event?.data?.object?.id ?? "");
   } catch (_) {
     return json({ error: "bad_request" }, 400);
+  }
+  if (type === "account.updated" && id.startsWith("acct_")) {
+    try {
+      const { data: row } = await admin.schema("nata").from("stripe_accounts")
+        .select("user_id")
+        .eq("account_id", id)
+        .maybeSingle();
+      if (row) {
+        const res = await stripe(`/accounts/${encodeURIComponent(id)}`);
+        if (res.status !== 200) return json({ error: "retry" }, 500);
+        await syncAccount(String(row.user_id), res.body);
+      }
+      return json({ received: true });
+    } catch (e) {
+      console.error("[stripe-webhook] account", e);
+      return json({ error: "retry" }, 500);
+    }
   }
   if (!type.startsWith("payment_intent.") || !id.startsWith("pi_")) {
     return json({ received: true });

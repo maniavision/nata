@@ -212,9 +212,7 @@ void main() {
       expect(find.byKey(const ValueKey('checkout-pay')), findsNothing);
     });
 
-    testWidgets('once paid, it closes the page and goes back', (
-      tester,
-    ) async {
+    testWidgets('once paid, it closes the page and goes back', (tester) async {
       service.paymentStatuses = [
         PaymentStatus.pending,
         PaymentStatus.successful,
