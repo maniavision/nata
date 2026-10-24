@@ -4315,4 +4315,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get daNeedHelp => 'Need help? Contact Nata support.';
+
+  @override
+  String get tipSkip => 'Skip';
+
+  @override
+  String get tipNext => 'Next';
+
+  @override
+  String get tipGotIt => 'Got it';
+
+  @override
+  String get tipAddTripTitle => 'Do you have an upcoming trip?';
+
+  @override
+  String get tipAddTripBody =>
+      'Add it here and get paid to carry parcels for people on your route.';
+
+  @override
+  String get tipSearchTitle => 'Need to send something?';
+
+  @override
+  String get tipSearchBody =>
+      'Choose where it leaves from and where it is going to find travelers on that route.';
+
+  @override
+  String get tipBellTitle => 'Your updates';
+
+  @override
+  String get tipBellBody =>
+      'New requests, payments and deliveries show up here.';
+
+  @override
+  String get tipNavTitle => 'Everything in one place';
+
+  @override
+  String get tipNavBody =>
+      'Follow your parcels in Requests, your trips in Trips and chat with travelers and senders in Messages.';
 }

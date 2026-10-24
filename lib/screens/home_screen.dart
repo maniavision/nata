@@ -23,6 +23,7 @@ import '../services/preferences_service.dart';
 import '../services/traveler_ranking.dart';
 import '../services/traveler_service.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/coach_tips.dart';
 import '../widgets/home_reminders.dart';
 import '../services/route_alert_service.dart';
 import '../widgets/date_picker_sheet.dart';
@@ -120,6 +121,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// For the "Get started" reminders (null until the profile loads).
   String? _verificationStatus;
   String? _userId;
+
+  /// What the first-visit tips point at.
+  final _addTripKey = GlobalKey();
+  final _searchKey = GlobalKey();
+  final _bellKey = GlobalKey();
+  final _navKey = GlobalKey();
+  bool _tipsQueued = false;
 
   bool _loadingTravelers = true;
   bool _travelersFailed = false;
@@ -355,7 +363,50 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         'verificationStatus': _verificationStatus,
         'userId': _userId,
       });
+      _showTips();
     }
+  }
+
+  /// The first time a member opens Home: what the main parts are for.
+  void _showTips() {
+    final id = _userId;
+    if (_tipsQueued || id == null || !AuthGate.isSignedIn()) return;
+    _tipsQueued = true;
+    final l = context.l10n;
+    final tips = [
+      CoachTip(
+        target: _addTripKey,
+        icon: Icons.flight_takeoff_rounded,
+        title: l.tipAddTripTitle,
+        body: l.tipAddTripBody,
+      ),
+      CoachTip(
+        target: _searchKey,
+        icon: Icons.search_rounded,
+        title: l.tipSearchTitle,
+        body: l.tipSearchBody,
+      ),
+      CoachTip(
+        target: _bellKey,
+        icon: Icons.notifications_outlined,
+        title: l.tipBellTitle,
+        body: l.tipBellBody,
+      ),
+      CoachTip(
+        target: _navKey,
+        icon: Icons.grid_view_rounded,
+        title: l.tipNavTitle,
+        body: l.tipNavBody,
+      ),
+    ];
+    // After Home has settled, and only while it is the screen on top.
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) {
+        _tipsQueued = false;
+        return;
+      }
+      CoachTips.showOnce(context, name: 'home', userId: id, tips: tips);
+    });
   }
 
   /// Loads upcoming travelers for the selected route. A random 5 of the
@@ -461,9 +512,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 onChanged: _loadProfile,
                                 routeService: widget.routeAlertService,
                               ),
-                              _buildSearchCard(),
+                              KeyedSubtree(
+                                key: _searchKey,
+                                child: _buildSearchCard(),
+                              ),
                               const SizedBox(height: 24),
-                              _buildAddTripButton(l),
+                              KeyedSubtree(
+                                key: _addTripKey,
+                                child: _buildAddTripButton(l),
+                              ),
                               const SizedBox(height: 24),
                               _buildTravelersSection(),
                               const SizedBox(height: 16),
@@ -477,7 +534,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               bottom: 0,
               left: 0,
               right: 0,
-              child: AppBottomNav(current: 0, onReturn: _loadProfile),
+              child: KeyedSubtree(
+                key: _navKey,
+                child: AppBottomNav(current: 0, onReturn: _loadProfile),
+              ),
             ),
           ],
         ),
@@ -557,6 +617,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               );
             },
             child: ValueListenableBuilder<int>(
+              key: _bellKey,
               valueListenable: AppBadge.unread,
               builder: (context, unread, bell) => Stack(
                 clipBehavior: Clip.none,

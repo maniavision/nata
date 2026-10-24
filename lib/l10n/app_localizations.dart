@@ -7567,6 +7567,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Need help? Contact Nata support.'**
   String get daNeedHelp;
+
+  /// No description provided for @tipSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tipSkip;
+
+  /// No description provided for @tipNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tipNext;
+
+  /// No description provided for @tipGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get tipGotIt;
+
+  /// No description provided for @tipAddTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you have an upcoming trip?'**
+  String get tipAddTripTitle;
+
+  /// No description provided for @tipAddTripBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add it here and get paid to carry parcels for people on your route.'**
+  String get tipAddTripBody;
+
+  /// No description provided for @tipSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Need to send something?'**
+  String get tipSearchTitle;
+
+  /// No description provided for @tipSearchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where it leaves from and where it is going to find travelers on that route.'**
+  String get tipSearchBody;
+
+  /// No description provided for @tipBellTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your updates'**
+  String get tipBellTitle;
+
+  /// No description provided for @tipBellBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New requests, payments and deliveries show up here.'**
+  String get tipBellBody;
+
+  /// No description provided for @tipNavTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in one place'**
+  String get tipNavTitle;
+
+  /// No description provided for @tipNavBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your parcels in Requests, your trips in Trips and chat with travelers and senders in Messages.'**
+  String get tipNavBody;
 }
 
 class _AppLocalizationsDelegate

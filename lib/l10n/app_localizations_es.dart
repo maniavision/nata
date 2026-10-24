@@ -4365,4 +4365,41 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get daNeedHelp => '¿Necesitas ayuda? Contacta con el soporte de Nata.';
+
+  @override
+  String get tipSkip => 'Omitir';
+
+  @override
+  String get tipNext => 'Siguiente';
+
+  @override
+  String get tipGotIt => 'Entendido';
+
+  @override
+  String get tipAddTripTitle => '¿Tienes un viaje próximo?';
+
+  @override
+  String get tipAddTripBody =>
+      'Añádelo aquí y gana dinero llevando paquetes para personas en tu ruta.';
+
+  @override
+  String get tipSearchTitle => '¿Necesitas enviar algo?';
+
+  @override
+  String get tipSearchBody =>
+      'Elige el origen y el destino para encontrar viajeros en esa ruta.';
+
+  @override
+  String get tipBellTitle => 'Tus novedades';
+
+  @override
+  String get tipBellBody =>
+      'Aquí aparecen las nuevas solicitudes, los pagos y las entregas.';
+
+  @override
+  String get tipNavTitle => 'Todo en un solo lugar';
+
+  @override
+  String get tipNavBody =>
+      'Sigue tus paquetes en Solicitudes, tus viajes en Viajes y chatea con viajeros y remitentes en Mensajes.';
 }

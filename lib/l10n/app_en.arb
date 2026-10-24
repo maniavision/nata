@@ -1983,5 +1983,17 @@
   "daBlockedDeliveries": "Deliveries in progress",
   "daBlockedDisputes": "Open problem reports",
   "daBlockedStaff": "Staff accounts are removed by Nata support",
-  "daNeedHelp": "Need help? Contact Nata support."
+  "daNeedHelp": "Need help? Contact Nata support.",
+
+  "tipSkip": "Skip",
+  "tipNext": "Next",
+  "tipGotIt": "Got it",
+  "tipAddTripTitle": "Do you have an upcoming trip?",
+  "tipAddTripBody": "Add it here and get paid to carry parcels for people on your route.",
+  "tipSearchTitle": "Need to send something?",
+  "tipSearchBody": "Choose where it leaves from and where it is going to find travelers on that route.",
+  "tipBellTitle": "Your updates",
+  "tipBellBody": "New requests, payments and deliveries show up here.",
+  "tipNavTitle": "Everything in one place",
+  "tipNavBody": "Follow your parcels in Requests, your trips in Trips and chat with travelers and senders in Messages."
 }

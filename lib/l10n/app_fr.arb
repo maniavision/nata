@@ -1874,5 +1874,17 @@
   "daBlockedDeliveries": "Livraisons en cours",
   "daBlockedDisputes": "Signalements de problème ouverts",
   "daBlockedStaff": "Les comptes du personnel sont supprimés par le support Nata",
-  "daNeedHelp": "Besoin d’aide ? Contactez le support Nata."
+  "daNeedHelp": "Besoin d’aide ? Contactez le support Nata.",
+
+  "tipSkip": "Passer",
+  "tipNext": "Suivant",
+  "tipGotIt": "Compris",
+  "tipAddTripTitle": "Vous avez un voyage prévu ?",
+  "tipAddTripBody": "Ajoutez-le ici et soyez payé pour transporter des colis pour des personnes sur votre trajet.",
+  "tipSearchTitle": "Besoin d’envoyer quelque chose ?",
+  "tipSearchBody": "Choisissez le départ et la destination pour trouver des voyageurs sur ce trajet.",
+  "tipBellTitle": "Vos notifications",
+  "tipBellBody": "Les nouvelles demandes, les paiements et les livraisons s’affichent ici.",
+  "tipNavTitle": "Tout au même endroit",
+  "tipNavBody": "Suivez vos colis dans Demandes, vos voyages dans Trajets et discutez avec voyageurs et expéditeurs dans Messages."
 }

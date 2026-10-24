@@ -1874,5 +1874,17 @@
   "daBlockedDeliveries": "Entregas en curso",
   "daBlockedDisputes": "Problemas reportados abiertos",
   "daBlockedStaff": "Las cuentas del personal las elimina el soporte de Nata",
-  "daNeedHelp": "¿Necesitas ayuda? Contacta con el soporte de Nata."
+  "daNeedHelp": "¿Necesitas ayuda? Contacta con el soporte de Nata.",
+
+  "tipSkip": "Omitir",
+  "tipNext": "Siguiente",
+  "tipGotIt": "Entendido",
+  "tipAddTripTitle": "¿Tienes un viaje próximo?",
+  "tipAddTripBody": "Añádelo aquí y gana dinero llevando paquetes para personas en tu ruta.",
+  "tipSearchTitle": "¿Necesitas enviar algo?",
+  "tipSearchBody": "Elige el origen y el destino para encontrar viajeros en esa ruta.",
+  "tipBellTitle": "Tus novedades",
+  "tipBellBody": "Aquí aparecen las nuevas solicitudes, los pagos y las entregas.",
+  "tipNavTitle": "Todo en un solo lugar",
+  "tipNavBody": "Sigue tus paquetes en Solicitudes, tus viajes en Viajes y chatea con viajeros y remitentes en Mensajes."
 }
