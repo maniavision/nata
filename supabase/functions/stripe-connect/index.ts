@@ -355,7 +355,6 @@ Deno.serve(async (req: Request) => {
     use_case: {
       type: "account_onboarding",
       account_onboarding: {
-        configurations: ["recipient"],
         refresh_url: returnUrl(true),
         return_url: returnUrl(false),
       },
