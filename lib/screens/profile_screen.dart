@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
+import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
@@ -83,6 +84,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  /// What the first-visit tips point at.
+  final _walletTipKey = GlobalKey();
+  final _payoutTipKey = GlobalKey();
+  final _routesTipKey = GlobalKey();
+
   AuthService get _auth => widget.authService ?? AuthService();
 
   String? _imagePath;
@@ -181,6 +187,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _setupStreams();
     _loadEmergencyContact();
     _loadAdmin();
+    CoachTips.showWhenSettled(
+      context,
+      name: 'profile',
+      tips: () => [
+        CoachTip(
+          target: _walletTipKey,
+          icon: Icons.account_balance_wallet_outlined,
+          title: context.l10n.tipWalletTitle,
+          body: context.l10n.tipWalletBody,
+        ),
+        CoachTip(
+          target: _payoutTipKey,
+          icon: Icons.payments_outlined,
+          title: context.l10n.tipPayoutTitle,
+          body: context.l10n.tipPayoutBody,
+        ),
+        CoachTip(
+          target: _routesTipKey,
+          icon: Icons.notification_add_outlined,
+          title: context.l10n.tipRouteAlertsTitle,
+          body: context.l10n.tipRouteAlertsBody,
+        ),
+      ],
+    );
   }
 
   Future<void> _loadAdmin() async {
@@ -433,7 +463,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         _buildProfileCard(),
                         const SizedBox(height: 16),
-                        _buildWalletCard(),
+                        KeyedSubtree(
+                          key: _walletTipKey,
+                          child: _buildWalletCard(),
+                        ),
                         const SizedBox(height: 16),
                         _buildSettingsList(),
                         const SizedBox(height: 16),
@@ -1120,6 +1153,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Settings list ──────────────────────────────────────────────────────────
+  /// The settings rows the first-visit tips point at.
+  GlobalKey? _tipKeyFor(Key? row) => switch (row) {
+    ValueKey(value: 'profile-payment-settings') => _payoutTipKey,
+    ValueKey(value: 'profile-route-alerts') => _routesTipKey,
+    _ => null,
+  };
+
   Widget _buildSettingsList() {
     final prefs = PreferencesService();
     final items = [
@@ -1275,6 +1315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 key: item.key,
                 onTap: item.onTap,
                 child: Container(
+                  key: _tipKeyFor(item.key),
                   color: Colors.transparent,
                   padding: const EdgeInsets.all(14),
                   child: Row(

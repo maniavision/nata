@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../main.dart';
 import '../services/request_service.dart';
 import '../services/screen_cache.dart';
+import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'checkout_escrow_screen.dart';
@@ -81,6 +82,10 @@ class RequestsScreen extends StatefulWidget {
 }
 
 class _RequestsScreenState extends State<RequestsScreen> {
+  /// What the first-visit tips point at.
+  final _tabsTipKey = GlobalKey();
+  final _archiveTipKey = GlobalKey();
+
   late int _tab = widget.initialTab; // 0 = Incoming, 1 = Outgoing
 
   /// Each tab shows its active requests or its Archive: delivered,
@@ -110,6 +115,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   @override
   void initState() {
     super.initState();
+    _showTips();
     // What this page showed last time, straight away; then the latest,
     // quietly.
     _sent = ScreenCache.read<List<SentRequest>>(RequestsScreen._kSent);
@@ -653,8 +659,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
             Column(
               children: [
                 _buildHeader(),
-                _buildTabSwitcher(),
-                _buildArchiveToggle(),
+                KeyedSubtree(key: _tabsTipKey, child: _buildTabSwitcher()),
+                KeyedSubtree(key: _archiveTipKey, child: _buildArchiveToggle()),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
@@ -719,6 +725,28 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 
   // ── Tab switcher ───────────────────────────────────────────────────────────
+  /// The first visit: what the switches are for.
+  void _showTips() {
+    CoachTips.showWhenSettled(
+      context,
+      name: 'requests',
+      tips: () => [
+        CoachTip(
+          target: _tabsTipKey,
+          icon: Icons.swap_vert_rounded,
+          title: context.l10n.tipRequestsTabsTitle,
+          body: context.l10n.tipRequestsTabsBody,
+        ),
+        CoachTip(
+          target: _archiveTipKey,
+          icon: Icons.inventory_2_outlined,
+          title: context.l10n.tipArchiveTitle,
+          body: context.l10n.tipArchiveBody,
+        ),
+      ],
+    );
+  }
+
   Widget _buildTabSwitcher() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),

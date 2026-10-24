@@ -7568,6 +7568,180 @@ abstract class AppLocalizations {
   /// **'Need help? Contact Nata support.'**
   String get daNeedHelp;
 
+  /// No description provided for @tipSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tipSkip;
+
+  /// No description provided for @tipNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tipNext;
+
+  /// No description provided for @tipGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get tipGotIt;
+
+  /// No description provided for @tipAddTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you have an upcoming trip?'**
+  String get tipAddTripTitle;
+
+  /// No description provided for @tipAddTripBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add it here and get paid to carry parcels for people on your route.'**
+  String get tipAddTripBody;
+
+  /// No description provided for @tipSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Need to send something?'**
+  String get tipSearchTitle;
+
+  /// No description provided for @tipSearchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where it leaves from and where it is going to find travelers on that route.'**
+  String get tipSearchBody;
+
+  /// No description provided for @tipBellTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your updates'**
+  String get tipBellTitle;
+
+  /// No description provided for @tipBellBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New requests, payments and deliveries show up here.'**
+  String get tipBellBody;
+
+  /// No description provided for @tipNavTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in one place'**
+  String get tipNavTitle;
+
+  /// No description provided for @tipNavBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your parcels in Requests, your trips in Trips and chat with travelers and senders in Messages.'**
+  String get tipNavBody;
+
+  /// No description provided for @tipRequestsTabsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent and received'**
+  String get tipRequestsTabsTitle;
+
+  /// No description provided for @tipRequestsTabsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing has the parcels you send. Incoming has the requests senders make on your trips.'**
+  String get tipRequestsTabsBody;
+
+  /// No description provided for @tipArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Active and Archive'**
+  String get tipArchiveTitle;
+
+  /// No description provided for @tipArchiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered, cancelled and expired requests move to the Archive after 24 hours. Swipe one left to archive it now.'**
+  String get tipArchiveBody;
+
+  /// No description provided for @tipTripsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a trip'**
+  String get tipTripsAddTitle;
+
+  /// No description provided for @tipTripsAddBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to add a trip you are already taking. Senders on your route can then ask you to carry their parcels.'**
+  String get tipTripsAddBody;
+
+  /// No description provided for @tipTripsTabsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming and past'**
+  String get tipTripsTabsTitle;
+
+  /// No description provided for @tipTripsTabsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trips still to come, and the ones you have already made.'**
+  String get tipTripsTabsBody;
+
+  /// No description provided for @tipChatSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a chat'**
+  String get tipChatSearchTitle;
+
+  /// No description provided for @tipChatSearchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, route or item.'**
+  String get tipChatSearchBody;
+
+  /// No description provided for @tipChatFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When chats open'**
+  String get tipChatFiltersTitle;
+
+  /// No description provided for @tipChatFiltersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A chat opens once the sender pays and closes after delivery. Closed chats stay here under Completed, to read.'**
+  String get tipChatFiltersBody;
+
+  /// No description provided for @tipWalletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Nata Wallet'**
+  String get tipWalletTitle;
+
+  /// No description provided for @tipWalletBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Money held in escrow and money ready to withdraw. What you earn carrying parcels shows here.'**
+  String get tipWalletBody;
+
+  /// No description provided for @tipPayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get paid'**
+  String get tipPayoutTitle;
+
+  /// No description provided for @tipPayoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a bank or mobile money account in Payment settings so your payouts reach you.'**
+  String get tipPayoutBody;
+
+  /// No description provided for @tipRouteAlertsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Route alerts'**
+  String get tipRouteAlertsTitle;
+
+  /// No description provided for @tipRouteAlertsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the routes you send on and hear when a traveler is flying them.'**
+  String get tipRouteAlertsBody;
+
   /// No description provided for @paidSecurelyThroughStripe.
   ///
   /// In en, this message translates to:
