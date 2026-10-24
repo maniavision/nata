@@ -11,6 +11,8 @@ import '../screens/messages_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/requests_screen.dart';
 import '../screens/trips_screen.dart';
+import '../services/unread_messages.dart';
+import 'unread_badge.dart';
 
 /// The app-wide bottom navigation bar:
 /// Home · Requests · Trips · Messages · Profile.
@@ -95,6 +97,36 @@ class AppBottomNav extends StatelessWidget {
     }
   }
 
+  /// The tab's icon; Messages carries the unread messages count.
+  Widget _icon(int i, bool active) {
+    final icon = Icon(
+      active ? _icons[i].$2 : _icons[i].$1,
+      size: 22,
+      color: active ? AppColors.primary : AppColors.mutedForeground,
+    );
+    if (i != 3) return icon;
+    return ValueListenableBuilder<int>(
+      valueListenable: UnreadMessages.count,
+      builder: (context, unread, child) => Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child!,
+          if (unread > 0)
+            Positioned(
+              top: -7,
+              right: -12,
+              child: UnreadBadge(
+                key: const ValueKey('nav-messages-unread'),
+                count: unread,
+                ringColor: AppColors.card,
+              ),
+            ),
+        ],
+      ),
+      child: icon,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Visitors who aren't signed in only browse Home: no tab bar.
@@ -123,13 +155,7 @@ class AppBottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        active ? _icons[i].$2 : _icons[i].$1,
-                        size: 22,
-                        color: active
-                            ? AppColors.primary
-                            : AppColors.mutedForeground,
-                      ),
+                      _icon(i, active),
                       const SizedBox(height: 3),
                       Text(
                         labels[i],
