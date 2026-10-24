@@ -220,6 +220,9 @@ enum PayoutAccountFailure {
 
   /// Not the traveler's country of residence.
   countryMismatch,
+
+  /// Stripe needs an email for the account, and Nata has none.
+  emailRequired,
   unavailable,
   other,
 }
@@ -346,9 +349,11 @@ class PaymentService {
 
   /// Stripe's page where the traveler connects their bank (their Stripe
   /// account is made the first time). Travelers living where Stripe can't
-  /// pay out get [PayoutAccountFailure.notSupported].
-  Future<Uri> stripeBankLink() async {
-    final data = await _stripeConnect('start');
+  /// pay out get [PayoutAccountFailure.notSupported]; an account with no
+  /// email known gets [PayoutAccountFailure.emailRequired], and gives one as
+  /// [email].
+  Future<Uri> stripeBankLink({String? email}) async {
+    final data = await _stripeConnect('start', email: email);
     return Uri.parse(data['url'] as String);
   }
 
@@ -370,11 +375,14 @@ class PaymentService {
     );
   }
 
-  Future<Map<String, dynamic>> _stripeConnect(String action) async {
+  Future<Map<String, dynamic>> _stripeConnect(
+    String action, {
+    String? email,
+  }) async {
     try {
       final response = await _client.functions.invoke(
         'stripe-connect',
-        body: {'action': action},
+        body: {'action': action, if (email != null) 'email': email},
       );
       return Map<String, dynamic>.from(response.data as Map);
     } on FunctionException catch (e) {
@@ -382,6 +390,7 @@ class PaymentService {
       final code = details is Map ? '${details['error']}' : '';
       throw PayoutAccountException(switch (code) {
         'not_supported' => PayoutAccountFailure.notSupported,
+        'email_required' => PayoutAccountFailure.emailRequired,
         'payments_unavailable' => PayoutAccountFailure.unavailable,
         _ => PayoutAccountFailure.other,
       });

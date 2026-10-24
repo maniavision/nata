@@ -1919,5 +1919,8 @@
   "stripeCheckAgain": "Comprobar de nuevo",
   "stripeContinueSetup": "Continuar con Stripe",
   "stripeNotFinished": "El formulario de Stripe aún no está terminado. Toca Continuar con Stripe para terminarlo.",
-  "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo."
+  "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo.",
+  "stripeEmailLabel": "Correo para Stripe",
+  "stripeEmailNote": "Stripe te envía aquí novedades sobre tus pagos. No se muestra a nadie.",
+  "stripeEmailNeeded": "Stripe necesita tu correo para activar los pagos. Escríbelo arriba."
 }

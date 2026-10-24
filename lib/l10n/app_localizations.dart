@@ -7759,6 +7759,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t open Stripe. Please try again.'**
   String get errStripeOpen;
+
+  /// No description provided for @stripeEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email for Stripe'**
+  String get stripeEmailLabel;
+
+  /// No description provided for @stripeEmailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe sends you updates about your payouts here. It isn\'t shown to anyone.'**
+  String get stripeEmailNote;
+
+  /// No description provided for @stripeEmailNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe needs your email to set up payouts. Enter it above.'**
+  String get stripeEmailNeeded;
 }
 
 class _AppLocalizationsDelegate

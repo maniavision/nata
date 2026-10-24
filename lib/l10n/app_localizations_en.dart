@@ -4426,4 +4426,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errStripeOpen => 'Couldn\'t open Stripe. Please try again.';
+
+  @override
+  String get stripeEmailLabel => 'Email for Stripe';
+
+  @override
+  String get stripeEmailNote =>
+      'Stripe sends you updates about your payouts here. It isn\'t shown to anyone.';
+
+  @override
+  String get stripeEmailNeeded =>
+      'Stripe needs your email to set up payouts. Enter it above.';
 }

@@ -20,9 +20,13 @@
  *     it is now one of the traveler's payout accounts, given as { account },
  *     as add-payout-account answers).
  *
+ * Stripe needs an email for the account: the traveler's account email, else
+ * the one they gave at checkout before (nata.payer_emails), else the
+ * { email } they give now (kept in nata.payer_emails for next time).
+ *
  * Errors: 401 unauthorized, 400 bad_request, 409 not_supported (no country
- * of residence, or one Stripe can't pay out to), 503 payments_unavailable,
- * 502 provider_error.
+ * of residence, or one Stripe can't pay out to) / email_required,
+ * 503 payments_unavailable, 502 provider_error.
  */
 
 // ── Stripe and Supabase helpers (the same in each payment function, so each
@@ -202,6 +206,9 @@ async function stripeV2(
 
 // ── This function ──────────────────────────────────────────────────────────
 
+/** The same check as nata.payer_emails. */
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
 /** Where Stripe sends the traveler back (a page that says to go back). */
 function returnUrl(again: boolean): string {
   return `${Deno.env.get("SUPABASE_URL")}/functions/v1/stripe-connect-return` +
@@ -215,8 +222,11 @@ Deno.serve(async (req: Request) => {
   if (!user) return json({ error: "unauthorized" }, 401);
 
   let action = "";
+  let givenEmail = "";
   try {
-    action = String((await req.json()).action ?? "");
+    const body = await req.json();
+    action = String(body.action ?? "");
+    givenEmail = String(body.email ?? "").trim().toLowerCase();
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
@@ -269,6 +279,26 @@ Deno.serve(async (req: Request) => {
     if (!STRIPE_COUNTRIES.has(country)) {
       return json({ error: "not_supported" }, 409);
     }
+    // Stripe needs an email for the account.
+    let email = String(user.email ?? "").trim();
+    if (!email) {
+      const { data: saved } = await db.from("payer_emails")
+        .select("email")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      email = String(saved?.email ?? "");
+    }
+    if (!email && EMAIL.test(givenEmail)) {
+      email = givenEmail;
+      const { error } = await db.from("payer_emails").upsert({
+        user_id: user.id,
+        email,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) console.error("[stripe-connect] email", error);
+    }
+    if (!email) return json({ error: "email_required" }, 409);
+
     const { data: person } = await db.from("profiles")
       .select("first_name, last_name")
       .eq("id", user.id)
@@ -280,7 +310,7 @@ Deno.serve(async (req: Request) => {
       "/core/accounts",
       {
         display_name: name || "Nata traveler",
-        ...(user.email ? { contact_email: String(user.email) } : {}),
+        contact_email: email,
         identity: { country: country.toLowerCase(), entity_type: "individual" },
         configuration: {
           recipient: {

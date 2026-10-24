@@ -382,6 +382,40 @@ void main() {
       expect(opened, isEmpty);
     });
 
+    testWidgets('no email known: asked for, then sent to Stripe', (
+      tester,
+    ) async {
+      payments.failStripeLink = const PayoutAccountException(
+        PayoutAccountFailure.emailRequired,
+      );
+      await pump(tester, country: uk);
+      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('stripe-email')), findsOneWidget);
+      expect(find.textContaining('Stripe needs your email'), findsOneWidget);
+      expect(opened, isEmpty);
+      // Waits for a whole email.
+      await tester.enterText(
+        find.byKey(const ValueKey('stripe-email')),
+        'amara@',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await tester.pumpAndSettle();
+      expect(payments.stripeLinkEmails, [null]);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('stripe-email')),
+        ' amara@example.com ',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('stripe-connect')));
+      await tester.pumpAndSettle();
+      expect(payments.stripeLinkEmails.last, 'amara@example.com');
+      expect(opened, hasLength(1));
+    });
+
     testWidgets('is translated', (tester) async {
       await pump(tester, country: uk, locale: const Locale('fr'));
       expect(find.text('Reliez votre banque avec Stripe'), findsOneWidget);

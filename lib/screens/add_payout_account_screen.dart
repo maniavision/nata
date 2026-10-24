@@ -72,6 +72,13 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
   bool _stripeBusy = false;
   bool _stripeOpened = false;
 
+  /// Stripe needs an email for the account: asked for when Nata has none.
+  bool _stripeNeedsEmail = false;
+  final _stripeEmail = TextEditingController();
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+  bool get _stripeEmailValid =>
+      _emailPattern.hasMatch(_stripeEmail.text.trim());
+
   PaymentService get _service => widget.service ?? PaymentService();
 
   bool get _viaStripe =>
@@ -99,6 +106,7 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _stripeEmail.dispose();
     _number.dispose();
     _holder.dispose();
     super.dispose();
@@ -227,6 +235,7 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
           PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
           PayoutAccountFailure.countryMismatch => l.errPayoutCountryMismatch,
           PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
+          PayoutAccountFailure.emailRequired ||
           PayoutAccountFailure.other => l.errSavePayoutAccount,
         },
       );
@@ -248,7 +257,9 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
       _error = null;
     });
     try {
-      final link = await _service.stripeBankLink();
+      final link = await _service.stripeBankLink(
+        email: _stripeNeedsEmail ? _stripeEmail.text.trim() : null,
+      );
       final opened = await (widget.openStripePage ?? _openInApp)(link);
       if (!mounted) return;
       setState(() {
@@ -257,13 +268,17 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
       });
     } on PayoutAccountException catch (e) {
       if (!mounted) return;
-      setState(
-        () => _error = switch (e.reason) {
+      setState(() {
+        if (e.reason == PayoutAccountFailure.emailRequired) {
+          _stripeNeedsEmail = true;
+        }
+        _error = switch (e.reason) {
           PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
           PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
+          PayoutAccountFailure.emailRequired => l.stripeEmailNeeded,
           _ => l.errStripeOpen,
-        },
-      );
+        };
+      });
     } catch (e) {
       debugPrint('[AddPayoutAccount] stripe link: $e');
       if (mounted) setState(() => _error = l.errStripeOpen);
@@ -326,7 +341,7 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
     Widget button({
       required String key,
       required String label,
-      required VoidCallback onPressed,
+      required VoidCallback? onPressed,
       bool outlined = false,
       IconData? icon,
     }) {
@@ -461,12 +476,58 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
               ),
             ),
           ] else ...[
+            // No email known: Stripe needs one for the account.
+            if (_stripeNeedsEmail) ...[
+              _label(l.stripeEmailLabel),
+              TextField(
+                key: const ValueKey('stripe-email'),
+                controller: _stripeEmail,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                autofillHints: const [AutofillHints.email],
+                onChanged: (_) => setState(() => _error = null),
+                style: GoogleFonts.dmSans(
+                  fontSize: 14,
+                  color: AppColors.foreground,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'you@example.com',
+                  filled: true,
+                  fillColor: AppColors.input,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l.stripeEmailNote,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  height: 1.4,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             button(
               key: 'stripe-connect',
               label: _stripe == StripeBankStatus.incomplete
                   ? l.stripeContinueSetup
                   : l.stripeBankButton,
-              onPressed: _connectStripe,
+              onPressed: _stripeNeedsEmail && !_stripeEmailValid
+                  ? null
+                  : _connectStripe,
               icon: Icons.open_in_new_rounded,
             ),
             // Back from Stripe's page: check now.

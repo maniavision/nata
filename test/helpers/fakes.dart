@@ -1555,9 +1555,21 @@ class FakePaymentService extends Fake implements PaymentService {
   ];
   int stripeChecks = 0;
 
+  /// The emails given with each link asked for.
+  final List<String?> stripeLinkEmails = [];
+
   @override
-  Future<Uri> stripeBankLink() async {
-    if (failStripeLink != null) throw failStripeLink!;
+  Future<Uri> stripeBankLink({String? email}) async {
+    stripeLinkEmails.add(email);
+    final fail = failStripeLink;
+    if (fail != null) {
+      // An email given answers Stripe's need for one.
+      if (fail.reason == PayoutAccountFailure.emailRequired && email != null) {
+        failStripeLink = null;
+      } else {
+        throw fail;
+      }
+    }
     stripeLinks++;
     return Uri.parse('https://connect.stripe.test/setup/$stripeLinks');
   }

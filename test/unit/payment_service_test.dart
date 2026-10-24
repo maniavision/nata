@@ -133,6 +133,8 @@ void main() {
       answer({'url': 'https://connect.stripe.com/setup/e/abc'});
       final link = await service.stripeBankLink();
       expect(sent.single, {'action': 'start'});
+      await service.stripeBankLink(email: 'amara@example.com');
+      expect(sent.last, {'action': 'start', 'email': 'amara@example.com'});
       expect(link, Uri.parse('https://connect.stripe.com/setup/e/abc'));
     });
 

@@ -2009,5 +2009,8 @@
   "stripeCheckAgain": "Check again",
   "stripeContinueSetup": "Continue setup with Stripe",
   "stripeNotFinished": "Stripe's form isn't finished yet. Continue setup with Stripe to finish it.",
-  "errStripeOpen": "Couldn't open Stripe. Please try again."
+  "errStripeOpen": "Couldn't open Stripe. Please try again.",
+  "stripeEmailLabel": "Email for Stripe",
+  "stripeEmailNote": "Stripe sends you updates about your payouts here. It isn't shown to anyone.",
+  "stripeEmailNeeded": "Stripe needs your email to set up payouts. Enter it above."
 }

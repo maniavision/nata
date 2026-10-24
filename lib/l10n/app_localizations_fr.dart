@@ -4508,4 +4508,15 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errStripeOpen =>
       'Impossible d\'ouvrir Stripe. Veuillez réessayer.';
+
+  @override
+  String get stripeEmailLabel => 'E-mail pour Stripe';
+
+  @override
+  String get stripeEmailNote =>
+      'Stripe vous envoie ici les informations sur vos versements. Il n\'est montré à personne.';
+
+  @override
+  String get stripeEmailNeeded =>
+      'Stripe a besoin de votre e-mail pour activer les versements. Saisissez-le ci-dessus.';
 }
