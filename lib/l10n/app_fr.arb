@@ -1919,6 +1919,12 @@
   "stripeCheckAgain": "Vérifier à nouveau",
   "stripeContinueSetup": "Continuer avec Stripe",
   "stripeNotFinished": "Le formulaire de Stripe n'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.",
+  "stripeConnectedTitle": "Votre banque est connectée",
+  "stripeConnectedBody": "{bank} •••• {last4}, connectée avec Stripe.",
+  "stripeConnectedAdded": "Elle fait déjà partie de vos comptes de paiement.",
+  "stripeUseBank": "Utiliser cette banque",
+  "stripeChangeBank": "Changer de banque sur Stripe",
+  "stripeDone": "Terminé",
   "errStripeOpen": "Impossible d'ouvrir Stripe. Veuillez réessayer.",
 
   "removePayoutAccountTitle": "Supprimer ce compte de paiement ?",

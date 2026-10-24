@@ -4506,6 +4506,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le formulaire de Stripe n\'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.';
 
   @override
+  String get stripeConnectedTitle => 'Votre banque est connectée';
+
+  @override
+  String stripeConnectedBody(String bank, String last4) {
+    return '$bank •••• $last4, connectée avec Stripe.';
+  }
+
+  @override
+  String get stripeConnectedAdded =>
+      'Elle fait déjà partie de vos comptes de paiement.';
+
+  @override
+  String get stripeUseBank => 'Utiliser cette banque';
+
+  @override
+  String get stripeChangeBank => 'Changer de banque sur Stripe';
+
+  @override
+  String get stripeDone => 'Terminé';
+
+  @override
   String get errStripeOpen =>
       'Impossible d\'ouvrir Stripe. Veuillez réessayer.';
 

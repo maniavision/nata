@@ -54,6 +54,9 @@ class AddPayoutAccountScreen extends StatefulWidget {
 
 class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
     with WidgetsBindingObserver {
+  static const _green = Color(0xFF168A68);
+  static const _greenBg = Color(0xFFE4F4EE);
+
   Country? _country;
   PayoutOptions? _options;
   bool _loading = true;
@@ -71,6 +74,11 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
   StripeBankStatus? _stripe;
   bool _stripeBusy = false;
   bool _stripeOpened = false;
+
+  /// Once Stripe pays out to it: the bank connected, and whether it is
+  /// already one of the traveler's payout accounts.
+  StripeConnectedBank? _connected;
+  bool _connectedAdded = false;
 
   PaymentService get _service => widget.service ?? PaymentService();
 
@@ -275,10 +283,13 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
   static Future<bool> _openInApp(Uri link) =>
       launchUrl(link, mode: LaunchMode.inAppBrowserView);
 
-  /// Asks where the bank stands with Stripe. Once Stripe pays out to it,
-  /// the account is saved: payouts waiting go out and the screen closes.
+  /// Asks where the bank stands with Stripe. Once Stripe pays out to it, it
+  /// is saved (payouts waiting go out and the screen closes) when the
+  /// traveler asks ([save]: "Use this bank") or comes back from finishing on
+  /// Stripe's page; on opening, a bank already connected is only shown, so
+  /// one removed from Payment settings doesn't come back by itself.
   /// [quiet]: on opening or coming back, without saying "not finished".
-  Future<void> _checkStripe({bool quiet = false}) async {
+  Future<void> _checkStripe({bool quiet = false, bool save = false}) async {
     if (_stripeBusy) return;
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -288,9 +299,12 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
       if (!quiet) _error = null;
     });
     try {
-      final bank = await _service.stripeBankStatus();
+      final saveNow = save || _stripeOpened;
+      final bank = await _service.stripeBankStatus(save: saveNow);
       if (!mounted) return;
-      if (bank.status == StripeBankStatus.enabled && bank.account != null) {
+      if (bank.status == StripeBankStatus.enabled &&
+          bank.account != null &&
+          saveNow) {
         unawaited(
           _service.sendPayouts().catchError((Object e) {
             debugPrint('[AddPayoutAccount] send payouts: $e');
@@ -305,6 +319,8 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
       }
       setState(() {
         _stripe = bank.status;
+        _connected = bank.bank;
+        _connectedAdded = bank.account != null;
         if (!quiet && bank.status == StripeBankStatus.incomplete) {
           _error = l.stripeNotFinished;
         }
@@ -317,12 +333,27 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
     }
   }
 
-  /// Connect the bank on Stripe's pages, or (once sent) Stripe checking it.
+  /// Connect the bank on Stripe's pages, (once sent) Stripe checking it, or
+  /// (once Stripe pays out to it) the bank connected, to use.
   Widget _stripeCard() {
     final l = context.l10n;
     final pending = _stripe == StripeBankStatus.pending;
-    final title = pending ? l.stripePendingTitle : l.stripeBankTitle;
-    final body = pending ? l.stripePendingBody : l.stripeBankBody;
+    final connected = _stripe == StripeBankStatus.enabled;
+    final bank = _connected;
+    final title = connected
+        ? l.stripeConnectedTitle
+        : pending
+        ? l.stripePendingTitle
+        : l.stripeBankTitle;
+    final body = connected
+        ? [
+            if (bank != null)
+              l.stripeConnectedBody(bank.institution, bank.last4),
+            if (_connectedAdded) l.stripeConnectedAdded,
+          ].join(' ')
+        : pending
+        ? l.stripePendingBody
+        : l.stripeBankBody;
     Widget button({
       required String key,
       required String label,
@@ -402,15 +433,17 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary,
+                  color: connected ? _greenBg : AppColors.secondary,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  pending
+                  connected
+                      ? Icons.check_circle_rounded
+                      : pending
                       ? Icons.hourglass_top_rounded
                       : Icons.account_balance_rounded,
                   size: 20,
-                  color: AppColors.primary,
+                  color: connected ? _green : AppColors.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -441,7 +474,31 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
             ],
           ),
           const SizedBox(height: 16),
-          if (pending) ...[
+          if (connected) ...[
+            _connectedAdded
+                ? button(
+                    key: 'stripe-done',
+                    label: l.stripeDone,
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                : button(
+                    key: 'stripe-use',
+                    label: l.stripeUseBank,
+                    onPressed: () => _checkStripe(save: true),
+                  ),
+            TextButton(
+              key: const ValueKey('stripe-change'),
+              onPressed: _stripeBusy ? null : _connectStripe,
+              child: Text(
+                l.stripeChangeBank,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
+          ] else if (pending) ...[
             button(
               key: 'stripe-check',
               label: l.stripeCheckAgain,

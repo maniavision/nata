@@ -7754,6 +7754,42 @@ abstract class AppLocalizations {
   /// **'Stripe\'s form isn\'t finished yet. Continue setup with Stripe to finish it.'**
   String get stripeNotFinished;
 
+  /// No description provided for @stripeConnectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bank is connected'**
+  String get stripeConnectedTitle;
+
+  /// No description provided for @stripeConnectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{bank} •••• {last4}, connected with Stripe.'**
+  String stripeConnectedBody(String bank, String last4);
+
+  /// No description provided for @stripeConnectedAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s already one of your payout accounts.'**
+  String get stripeConnectedAdded;
+
+  /// No description provided for @stripeUseBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this bank'**
+  String get stripeUseBank;
+
+  /// No description provided for @stripeChangeBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Change bank on Stripe'**
+  String get stripeChangeBank;
+
+  /// No description provided for @stripeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get stripeDone;
+
   /// No description provided for @errStripeOpen.
   ///
   /// In en, this message translates to:

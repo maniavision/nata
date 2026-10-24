@@ -228,8 +228,17 @@ enum PayoutAccountFailure {
 /// not started, Stripe's form not finished, Stripe checking it, or paid to.
 enum StripeBankStatus { none, incomplete, pending, enabled }
 
-/// [status], and the payout account it became once [StripeBankStatus.enabled].
-typedef StripeBank = ({StripeBankStatus status, PayoutAccount? account});
+/// The bank Stripe pays out to: its name and last digits.
+typedef StripeConnectedBank = ({String institution, String last4});
+
+/// [status]; once [StripeBankStatus.enabled], the [bank] connected and the
+/// payout account it is (null while it isn't one of the traveler's payout
+/// accounts, e.g. after they removed it).
+typedef StripeBank = ({
+  StripeBankStatus status,
+  PayoutAccount? account,
+  StripeConnectedBank? bank,
+});
 
 class PayoutAccountException implements Exception {
   final PayoutAccountFailure reason;
@@ -361,9 +370,13 @@ class PaymentService {
 
   /// Where the traveler's bank stands with Stripe; once Stripe pays out to
   /// it, it is one of their payout accounts.
-  Future<StripeBank> stripeBankStatus() async {
-    final data = await _stripeConnect('status');
+  /// Where the bank through Stripe stands. [save] adds the connected bank
+  /// as a payout account ("Use this bank"); it is otherwise added by itself
+  /// only the first time (20240172).
+  Future<StripeBank> stripeBankStatus({bool save = false}) async {
+    final data = await _stripeConnect('status', save: save);
     final account = data['account'];
+    final bank = data['bank'];
     return (
       status: switch (data['status']) {
         'enabled' => StripeBankStatus.enabled,
@@ -374,14 +387,23 @@ class PaymentService {
       account: account is Map
           ? PayoutAccount.fromJson(Map<String, dynamic>.from(account))
           : null,
+      bank: bank is Map
+          ? (
+              institution: '${bank['institution_name'] ?? ''}',
+              last4: '${bank['account_last4'] ?? ''}',
+            )
+          : null,
     );
   }
 
-  Future<Map<String, dynamic>> _stripeConnect(String action) async {
+  Future<Map<String, dynamic>> _stripeConnect(
+    String action, {
+    bool save = false,
+  }) async {
     try {
       final response = await _client.functions.invoke(
         'stripe-connect',
-        body: {'action': action},
+        body: {'action': action, if (save) 'save': true},
       );
       return Map<String, dynamic>.from(response.data as Map);
     } on FunctionException catch (e) {
