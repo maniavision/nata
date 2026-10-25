@@ -4639,4 +4639,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String notifDeliveryConfirmedBody(String name) {
     return 'Entregaste el artículo de $name. Tu pago está en camino.';
   }
+
+  @override
+  String get routeAlertsWeight => 'Peso a enviar (opcional)';
+
+  @override
+  String get routeAlertsWeightHint => 'p. ej. 5';
+
+  @override
+  String get routeAlertsWeightNote =>
+      'Solo viajeros que puedan llevar al menos este peso. Déjalo vacío para cualquier viajero.';
+
+  @override
+  String routeAlertsWeightChip(String kg) {
+    return '$kg kg+';
+  }
+
+  @override
+  String routeAlertsErrWeight(String max) {
+    return 'Escribe un peso entre 0,1 y $max kg, o déjalo vacío.';
+  }
 }

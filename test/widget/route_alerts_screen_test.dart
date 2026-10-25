@@ -13,6 +13,9 @@ class FakeRouteAlertService extends Fake implements RouteAlertService {
   RouteAlertFailure? addFailure;
   bool failList = false;
   final added = <(int, int, int?)>[];
+
+  /// The weight given with each route added (null: any).
+  final weights = <double?>[];
   final removed = <String>[];
   final restarted = <String>[];
   bool failRestart = false;
@@ -28,9 +31,11 @@ class FakeRouteAlertService extends Fake implements RouteAlertService {
     required int fromCityId,
     required int toCityId,
     int? maxAlerts,
+    double? minWeightKg,
   }) async {
     if (addFailure != null) throw RouteAlertException(addFailure!);
     added.add((fromCityId, toCityId, maxAlerts));
+    weights.add(minWeightKg);
     routes = [
       route('new-${added.length}', 'Lagos', 'NG', 'Nigeria', 'London', 'GB'),
       ...routes,
@@ -77,6 +82,7 @@ RouteAlert route(
   String toCountry = 'United Kingdom',
   int? maxAlerts,
   int alertsSent = 0,
+  double? minWeightKg,
 }) => RouteAlert(
   id: id,
   fromCityId: 1,
@@ -89,6 +95,7 @@ RouteAlert route(
   toCountry: toCountry,
   maxAlerts: maxAlerts,
   alertsSent: alertsSent,
+  minWeightKg: minWeightKg,
 );
 
 const lagos = LocationSelection(
@@ -291,6 +298,63 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('route-save')));
       await tester.pumpAndSettle();
       expect(service.added, [(10, 20, 5)]);
+    });
+
+    testWidgets('no weight: any traveler', (tester) async {
+      await openSheet(tester);
+      expect(find.text('WEIGHT TO SEND (OPTIONAL)'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('route-save')));
+      await tester.pumpAndSettle();
+      expect(service.weights, [null]);
+    });
+
+    testWidgets('a weight is saved with the route', (tester) async {
+      await openSheet(tester);
+      await tester.enterText(find.byKey(const ValueKey('route-weight')), '2,5');
+      await tester.ensureVisible(find.byKey(const ValueKey('route-save')));
+      await tester.tap(find.byKey(const ValueKey('route-save')));
+      await tester.pumpAndSettle();
+      expect(service.weights, [2.5]);
+    });
+
+    testWidgets('a weight that makes no sense is explained', (tester) async {
+      await openSheet(tester);
+      for (final bad in ['abc', '150']) {
+        await tester.enterText(find.byKey(const ValueKey('route-weight')), bad);
+        await tester.ensureVisible(find.byKey(const ValueKey('route-save')));
+        await tester.tap(find.byKey(const ValueKey('route-save')));
+        await tester.pumpAndSettle();
+        expect(
+          find.text(
+            'Enter a weight between 0.1 and 100 kg, or leave it empty.',
+          ),
+          findsOneWidget,
+          reason: bad,
+        );
+      }
+      expect(service.weights, isEmpty);
+    });
+
+    testWidgets('a saved route shows its weight', (tester) async {
+      service.routes = [
+        route(
+          'a',
+          'Lagos',
+          'NG',
+          'Nigeria',
+          'London',
+          'GB',
+          maxAlerts: 3,
+          minWeightKg: 5,
+        ),
+        route('b', 'Accra', 'GH', 'Ghana', 'Paris', 'FR', minWeightKg: 2.5),
+        route('c', 'Accra', 'GH', 'Ghana', 'Berlin', 'DE'),
+      ];
+      await pump(tester);
+      await tester.pumpAndSettle();
+      expect(find.text('5 kg+'), findsOneWidget);
+      expect(find.text('2.5 kg+'), findsOneWidget);
+      expect(find.byKey(const ValueKey('route-weight-c')), findsNothing);
     });
 
     testWidgets('All saves no limit', (tester) async {

@@ -1967,5 +1967,10 @@
   "notifPaymentReceivedTitle": "Pago recibido",
   "notifPaymentReceivedBody": "Tu pago se guarda de forma segura hasta la entrega. Ya puedes chatear con {name}.",
   "notifDeliveryConfirmedTitle": "Entrega confirmada",
-  "notifDeliveryConfirmedBody": "Entregaste el artículo de {name}. Tu pago está en camino."
+  "notifDeliveryConfirmedBody": "Entregaste el artículo de {name}. Tu pago está en camino.",
+  "routeAlertsWeight": "Peso a enviar (opcional)",
+  "routeAlertsWeightHint": "p. ej. 5",
+  "routeAlertsWeightNote": "Solo viajeros que puedan llevar al menos este peso. Déjalo vacío para cualquier viajero.",
+  "routeAlertsWeightChip": "{kg} kg+",
+  "routeAlertsErrWeight": "Escribe un peso entre 0,1 y {max} kg, o déjalo vacío."
 }

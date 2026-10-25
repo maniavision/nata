@@ -2080,5 +2080,12 @@
   "notifDeliveryConfirmedTitle": "Delivery confirmed",
   "notifDeliveryConfirmedBody": "You delivered {name}'s item. Your payout is on its way.",
   "@notifPaymentReceivedBody": {"placeholders": {"name": {"type": "String"}}},
-  "@notifDeliveryConfirmedBody": {"placeholders": {"name": {"type": "String"}}}
+  "@notifDeliveryConfirmedBody": {"placeholders": {"name": {"type": "String"}}},
+  "routeAlertsWeight": "Weight to send (optional)",
+  "routeAlertsWeightHint": "e.g. 5",
+  "routeAlertsWeightNote": "Only travelers who can carry at least this much. Leave it empty for any traveler.",
+  "routeAlertsWeightChip": "{kg} kg+",
+  "routeAlertsErrWeight": "Enter a weight between 0.1 and {max} kg, or leave it empty.",
+  "@routeAlertsWeightChip": {"placeholders": {"kg": {"type": "String"}}},
+  "@routeAlertsErrWeight": {"placeholders": {"max": {"type": "String"}}}
 }

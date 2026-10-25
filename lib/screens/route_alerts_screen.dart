@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
+import '../services/request_service.dart' show RequestInput;
 import '../services/route_alert_service.dart';
 import '../widgets/location_search_sheet.dart';
 import '../widgets/nata_toast.dart';
@@ -339,6 +340,29 @@ class _RouteCard extends StatelessWidget {
 
   static const _green = Color(0xFF168A68);
 
+  /// "5 kg+": only travelers who can carry that much; null without a weight.
+  Widget? _weightChip(BuildContext context) {
+    final kg = route.minWeightKg;
+    if (kg == null) return null;
+    return Container(
+      key: ValueKey('route-weight-${route.id}'),
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        context.l10n.routeAlertsWeightChip(formatKg(kg)),
+        style: GoogleFonts.dmSans(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.accent,
+        ),
+      ),
+    );
+  }
+
   /// How many travelers were found against the route's limit, with a thin
   /// bar; done (in green) with a way to restart; or "Every traveler".
   Widget _progress(BuildContext context) {
@@ -350,10 +374,12 @@ class _RouteCard extends StatelessWidget {
       color: AppColors.mutedForeground,
     );
     if (max == null) {
-      return Text(
-        l.routeAlertsEveryTraveler,
+      return Row(
         key: ValueKey('route-progress-${route.id}'),
-        style: style,
+        children: [
+          Flexible(child: Text(l.routeAlertsEveryTraveler, style: style)),
+          ?_weightChip(context),
+        ],
       );
     }
     final sent = route.alertsSent.clamp(0, max);
@@ -374,6 +400,7 @@ class _RouteCard extends StatelessWidget {
                     : style,
               ),
             ),
+            ?_weightChip(context),
             if (done)
               GestureDetector(
                 key: ValueKey('route-restart-${route.id}'),
@@ -511,8 +538,17 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
 
   /// How many travelers to be notified about; null for every one.
   int? _limit = RouteAlertService.defaultTravelerLimit;
+
+  /// What the member wants to send; empty for any weight.
+  final _weight = TextEditingController();
   bool _saving = false;
   String? _error;
+
+  @override
+  void dispose() {
+    _weight.dispose();
+    super.dispose();
+  }
 
   Future<void> _pick({required bool from}) async {
     final l = context.l10n;
@@ -536,6 +572,18 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
     final from = _from?.cityId;
     final to = _to?.cityId;
     if (from == null || to == null) return;
+    double? weight;
+    if (_weight.text.trim().isNotEmpty) {
+      weight = RequestInput.parseWeightKg(_weight.text);
+      if (weight == null || weight > RouteAlertService.maxWeightKg) {
+        setState(
+          () => _error = l.routeAlertsErrWeight(
+            formatKg(RouteAlertService.maxWeightKg),
+          ),
+        );
+        return;
+      }
+    }
     setState(() {
       _saving = true;
       _error = null;
@@ -545,6 +593,7 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
         fromCityId: from,
         toCityId: to,
         maxAlerts: _limit,
+        minWeightKg: weight,
       );
       if (mounted) Navigator.of(context).pop(true);
     } on RouteAlertException catch (e) {
@@ -624,6 +673,81 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
                 ),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// "Weight to send (optional)": only travelers who can carry that much.
+  Widget _weightField() {
+    final l = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.routeAlertsWeight.toUpperCase(),
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 10,
+            letterSpacing: 1.2,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          key: const ValueKey('route-weight'),
+          controller: _weight,
+          enabled: !_saving,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          onChanged: (_) {
+            if (_error != null) setState(() => _error = null);
+          },
+          style: GoogleFonts.dmSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground,
+          ),
+          decoration: InputDecoration(
+            hintText: l.routeAlertsWeightHint,
+            hintStyle: GoogleFonts.dmSans(
+              fontSize: 14,
+              color: AppColors.mutedForeground,
+            ),
+            prefixIcon: const Icon(
+              Icons.scale_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
+            suffixText: 'kg',
+            filled: true,
+            fillColor: AppColors.input,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l.routeAlertsWeightNote,
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            height: 1.4,
+            color: AppColors.mutedForeground,
           ),
         ),
       ],
@@ -741,6 +865,8 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
             const SizedBox(height: 12),
             _field('route-to', l.routeAlertsTo, _to, false),
             const SizedBox(height: 18),
+            _weightField(),
+            const SizedBox(height: 18),
             _limitPicker(),
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -786,3 +912,8 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
     );
   }
 }
+
+/// 5 -> "5", 2.5 -> "2.5".
+String formatKg(double kg) => kg == kg.roundToDouble()
+    ? kg.toInt().toString()
+    : kg.toStringAsFixed(kg * 10 == (kg * 10).roundToDouble() ? 1 : 2);
