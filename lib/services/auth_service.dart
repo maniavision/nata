@@ -1,6 +1,8 @@
 import 'push_service.dart';
 import 'home_search_memory.dart';
 import 'screen_cache.dart';
+import 'exchange_rate_service.dart';
+import 'wallet_money.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -250,9 +252,12 @@ class AuthService {
     );
   }
 
-  /// Fetches wallet balances based on the specified logic:
-  /// - Available: Sum of amount in nata.payouts where traveler_id = current_user and status != 'paid'
-  /// - Escrow: Sum of amount in nata.payments where sender_id = current_user and status = 'held'
+  /// Fetches wallet balances, in US dollars ([WalletMoney] shows them in the
+  /// member's currency):
+  /// - Available: nata.payouts where traveler_id = current_user and status != 'paid'
+  /// - Escrow: nata.payments where sender_id = current_user and status = 'held'
+  /// Each is in its own currency (NGN, XOF...), so it is turned into dollars
+  /// before they are added up.
   Future<Map<String, double>> getWalletBalances() async {
     final userId = currentUser?.id;
     if (userId == null) return {'available': 0.0, 'escrow': 0.0};
@@ -262,41 +267,23 @@ class AuthService {
       final payoutsResponse = await _client
           .schema('nata')
           .from('payouts')
-          .select('amount')
+          .select('amount, currency')
           .eq('traveler_id', userId)
           .neq('status', 'paid');
-
-      double available = 0.0;
-      final payouts = payoutsResponse as List?;
-      if (payouts != null) {
-        for (final row in payouts) {
-          final amount = row['amount'];
-          if (amount != null) {
-            available += (amount as num).toDouble();
-          }
-        }
-      }
 
       // Fetch Held in Escrow
       final paymentsResponse = await _client
           .schema('nata')
           .from('payments')
-          .select('amount')
+          .select('amount, currency')
           .eq('sender_id', userId)
           .eq('status', 'held');
 
-      double escrow = 0.0;
-      final payments = paymentsResponse as List?;
-      if (payments != null) {
-        for (final row in payments) {
-          final amount = row['amount'];
-          if (amount != null) {
-            escrow += (amount as num).toDouble();
-          }
-        }
-      }
-
-      return {'available': available, 'escrow': escrow};
+      final rates = await ExchangeRateService.shared.rates();
+      return {
+        'available': WalletMoney.sumInUsd(payoutsResponse as List, rates),
+        'escrow': WalletMoney.sumInUsd(paymentsResponse as List, rates),
+      };
     } catch (e) {
       debugPrint('[AuthService] getWalletBalances error: $e');
       return {'available': 0.0, 'escrow': 0.0};

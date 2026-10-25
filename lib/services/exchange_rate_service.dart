@@ -99,6 +99,9 @@ class ExchangeRates {
 /// also kept on the device, so prices still convert when the phone is offline.
 class ExchangeRateService {
   static const url = 'https://open.er-api.com/v6/latest/USD';
+
+  /// One for the whole app, so screens share what it already fetched.
+  static final shared = ExchangeRateService();
   static const _storeKey = 'exchange_rates_usd';
   static const _fallbackLifetime = Duration(hours: 6);
 
@@ -122,6 +125,10 @@ class ExchangeRateService {
     final until = r.nextUpdateAt ?? fetchedAt.add(_fallbackLifetime);
     return now.isBefore(until);
   }
+
+  /// The rates fetched last, without fetching: null until [rates] has
+  /// answered once.
+  ExchangeRates? get latest => _memory;
 
   /// The current rates, or null when they cannot be had at all (never fetched
   /// and offline). Never throws.

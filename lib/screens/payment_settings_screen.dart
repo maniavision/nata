@@ -2,12 +2,13 @@ import 'wallet_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'add_payout_account_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
+import '../services/exchange_rate_service.dart';
+import '../services/wallet_money.dart';
 import 'add_payment_method_screen.dart';
 
 const _green = Color(0xFF168A68);
@@ -224,8 +225,17 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
         ),
       };
 
-  String _usd(double v) =>
-      NumberFormat.currency(symbol: r'$', decimalDigits: 2).format(v);
+  /// The wallet's dollar figures in the member's currency.
+  String _money(double usd) => WalletMoney.format(
+    usd,
+    PreferencesService().currency.code,
+    ExchangeRateService.shared.latest,
+  );
+
+  String get _shownCurrency => WalletMoney.shown(
+    PreferencesService().currency.code,
+    ExchangeRateService.shared.latest,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -365,7 +375,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                _usd(widget.availableBalance),
+                _money(widget.availableBalance),
                 key: const ValueKey('payment-settings-available'),
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w800,
@@ -374,14 +384,16 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 6),
-              Text(
-                'USD',
-                style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.7),
+              if (WalletMoney.hasSymbol(_shownCurrency)) ...[
+                const SizedBox(width: 6),
+                Text(
+                  _shownCurrency,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 14),
@@ -393,7 +405,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  '${_usd(widget.escrowBalance)} ${l.heldInEscrow}',
+                  '${_money(widget.escrowBalance)} ${l.heldInEscrow}',
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.8),
@@ -693,12 +705,11 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       action: GestureDetector(
         key: const ValueKey('payment-transactions-all'),
         onTap: () {
-          final money = NumberFormat.currency(symbol: r'$', decimalDigits: 2);
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => WalletHistoryScreen(
-                available: money.format(widget.availableBalance),
-                inEscrow: money.format(widget.escrowBalance),
+                available: _money(widget.availableBalance),
+                inEscrow: _money(widget.escrowBalance),
                 service: widget.service,
               ),
             ),

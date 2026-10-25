@@ -12,6 +12,8 @@ import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
+import '../services/exchange_rate_service.dart';
+import '../services/wallet_money.dart';
 import '../services/screen_cache.dart';
 import '../widgets/avatar_image.dart';
 import '../services/emergency_contact_service.dart';
@@ -1015,10 +1017,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              NumberFormat.currency(
-                                symbol: '\$',
-                                decimalDigits: 2,
-                              ).format(_availableBalance),
+                              _money(_availableBalance),
                               style: GoogleFonts.manrope(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 28,
@@ -1026,14 +1025,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 letterSpacing: -1.0,
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'USD',
-                              style: GoogleFonts.dmSans(
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.7),
+                            if (WalletMoney.hasSymbol(_shownCurrency)) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                _shownCurrency,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ],
@@ -1088,7 +1089,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
-                            '${NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(_escrowBalance)} ${context.l10n.heldInEscrow}',
+                            '${_money(_escrowBalance)} ${context.l10n.heldInEscrow}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.dmSans(
@@ -1124,13 +1125,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// The wallet's dollar figures in the member's currency.
+  String _money(double usd) => WalletMoney.format(
+    usd,
+    PreferencesService().currency.code,
+    ExchangeRateService.shared.latest,
+  );
+
+  String get _shownCurrency => WalletMoney.shown(
+    PreferencesService().currency.code,
+    ExchangeRateService.shared.latest,
+  );
+
   void _openHistory() {
-    final money = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => WalletHistoryScreen(
-          available: money.format(_availableBalance),
-          inEscrow: money.format(_escrowBalance),
+          available: _money(_availableBalance),
+          inEscrow: _money(_escrowBalance),
         ),
       ),
     );
