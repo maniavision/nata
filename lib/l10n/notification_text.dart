@@ -40,6 +40,14 @@ import 'app_localizations.dart';
       l.notifCancelledBySenderBody(sender, route),
     ),
     'request_paid' => (l.notifPaidTitle, l.notifPaidBody(sender)),
+    'payment_received' => (
+      l.notifPaymentReceivedTitle,
+      l.notifPaymentReceivedBody(traveler),
+    ),
+    'delivery_confirmed' => (
+      l.notifDeliveryConfirmedTitle,
+      l.notifDeliveryConfirmedBody(sender),
+    ),
     'trip_match' => (
       l.notifTripMatchTitle,
       l.notifTripMatchBody(traveler, route),
@@ -88,6 +96,7 @@ int? requestsTabForEvent(String? event) => switch (event) {
   'request_paid' ||
   'request_cancelled_by_sender' ||
   'request_expired_unpaid_traveler' ||
+  'delivery_confirmed' ||
   'payout_paid' => 0,
   'request_accepted' ||
   'request_declined' ||
@@ -96,6 +105,7 @@ int? requestsTabForEvent(String? event) => switch (event) {
   'request_cancelled_by_traveler' ||
   'item_picked_up' ||
   'item_delivered' ||
+  'payment_received' ||
   'refund_sent' => 1,
   _ => null,
 };

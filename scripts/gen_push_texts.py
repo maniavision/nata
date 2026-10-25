@@ -19,6 +19,8 @@ EVENTS = {
     "request_cancelled_by_traveler": ("notifCancelledTitle", "notifCancelledByTravelerBody"),
     "request_cancelled_by_sender": ("notifCancelledTitle", "notifCancelledBySenderBody"),
     "request_paid": ("notifPaidTitle", "notifPaidBody"),
+    "payment_received": ("notifPaymentReceivedTitle", "notifPaymentReceivedBody"),
+    "delivery_confirmed": ("notifDeliveryConfirmedTitle", "notifDeliveryConfirmedBody"),
     "item_picked_up": ("notifPickedUpTitle", "notifPickedUpBody"),
     "item_delivered": ("notifDeliveredTitle", "notifDeliveredBody"),
     "payout_paid": ("notifPayoutTitle", "notifPayoutBody"),

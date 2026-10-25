@@ -40,6 +40,14 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Payment secured",
       "{name} paid. The money is held safely until delivery, and chat is open."
     ],
+    "payment_received": [
+      "Payment received",
+      "Your payment is held safely until delivery. You can now chat with {name}."
+    ],
+    "delivery_confirmed": [
+      "Delivery confirmed",
+      "You delivered {name}'s item. Your payout is on its way."
+    ],
     "item_picked_up": [
       "Item picked up",
       "{name} has your item and is on the way."
@@ -118,6 +126,14 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Pago asegurado",
       "{name} pagó. El dinero se guarda de forma segura hasta la entrega y el chat está abierto."
     ],
+    "payment_received": [
+      "Pago recibido",
+      "Tu pago se guarda de forma segura hasta la entrega. Ya puedes chatear con {name}."
+    ],
+    "delivery_confirmed": [
+      "Entrega confirmada",
+      "Entregaste el artículo de {name}. Tu pago está en camino."
+    ],
     "item_picked_up": [
       "Artículo recogido",
       "{name} tiene tu artículo y va en camino."
@@ -195,6 +211,14 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "request_paid": [
       "Paiement sécurisé",
       "{name} a payé. L’argent est conservé en sécurité jusqu’à la livraison, et le chat est ouvert."
+    ],
+    "payment_received": [
+      "Paiement reçu",
+      "Votre paiement est conservé en sécurité jusqu’à la livraison. Vous pouvez maintenant discuter avec {name}."
+    ],
+    "delivery_confirmed": [
+      "Livraison confirmée",
+      "Vous avez livré l’objet de {name}. Votre paiement est en route."
     ],
     "item_picked_up": [
       "Objet récupéré",

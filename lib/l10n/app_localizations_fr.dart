@@ -4658,6 +4658,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tapToMakeDefault => 'Toucher pour définir par défaut';
 
   @override
+  String get notifPaymentReceivedTitle => 'Paiement reçu';
+
+  @override
+  String notifPaymentReceivedBody(String name) {
+    return 'Votre paiement est conservé en sécurité jusqu’à la livraison. Vous pouvez maintenant discuter avec $name.';
+  }
+
+  @override
+  String get notifDeliveryConfirmedTitle => 'Livraison confirmée';
+
+  @override
+  String notifDeliveryConfirmedBody(String name) {
+    return 'Vous avez livré l’objet de $name. Votre paiement est en route.';
+  }
+
+  @override
   String get routeAlertsWeight => 'Poids à envoyer (facultatif)';
 
   @override
