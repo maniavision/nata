@@ -31,12 +31,16 @@ class PaymentSettingsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [PaymentService].
   final PaymentService? service;
 
+  /// Override for tests; defaults to [ExchangeRateService.shared].
+  final ExchangeRateService? exchangeRates;
+
   const PaymentSettingsScreen({
     super.key,
     required this.availableBalance,
     required this.escrowBalance,
     required this.holderName,
     this.service,
+    this.exchangeRates,
   });
 
   @override
@@ -60,7 +64,30 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
   @override
   void initState() {
     super.initState();
+    PreferencesService().addListener(_onPrefsChanged);
     _load();
+    _loadRates();
+  }
+
+  @override
+  void dispose() {
+    PreferencesService().removeListener(_onPrefsChanged);
+    super.dispose();
+  }
+
+  void _onPrefsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  ExchangeRateService get _exchange =>
+      widget.exchangeRates ?? ExchangeRateService.shared;
+
+  /// The wallet is shown in the member's currency once the rates are
+  /// here (in dollars until then).
+  Future<void> _loadRates() async {
+    if (_exchange.latest != null) return;
+    await _exchange.rates();
+    if (mounted) setState(() {});
   }
 
   /// The latest payouts and payments; null while loading.
@@ -229,13 +256,11 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
   String _money(double usd) => WalletMoney.format(
     usd,
     PreferencesService().currency.code,
-    ExchangeRateService.shared.latest,
+    _exchange.latest,
   );
 
-  String get _shownCurrency => WalletMoney.shown(
-    PreferencesService().currency.code,
-    ExchangeRateService.shared.latest,
-  );
+  String get _shownCurrency =>
+      WalletMoney.shown(PreferencesService().currency.code, _exchange.latest);
 
   @override
   Widget build(BuildContext context) {

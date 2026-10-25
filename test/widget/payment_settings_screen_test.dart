@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:carrywise_app/screens/wallet_history_screen.dart';
 import 'package:carrywise_app/screens/payment_settings_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
+import 'package:carrywise_app/services/exchange_rate_service.dart';
 import 'package:carrywise_app/services/payment_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +30,11 @@ void main() {
     ),
   );
 
-  Future<void> pump(WidgetTester tester, {Locale? locale}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    Locale? locale,
+    ExchangeRateService? exchangeRates,
+  }) async {
     bigScreen(tester);
     await tester.pumpWidget(
       appWrapper(
@@ -36,6 +43,7 @@ void main() {
           escrowBalance: 180,
           holderName: 'Fortune Niama',
           service: payments,
+          exchangeRates: exchangeRates ?? FakeExchangeRateService(),
         ),
         locale: locale ?? const Locale('en'),
       ),
@@ -115,6 +123,29 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('EUR (€)'), findsOneWidget);
+    });
+
+    testWidgets("the wallet is shown in the user's currency", (tester) async {
+      PreferencesService().setCurrency(AppCurrency.eur);
+      final rates = FakeExchangeRateService()..gate = Completer<void>();
+      await pump(tester, exchangeRates: rates);
+
+      // Dollars until the rates are here...
+      expect(find.text(r'$320.00'), findsOneWidget);
+
+      rates.gate!.complete();
+      await tester.pumpAndSettle();
+      // ...then euros (0.892438 per dollar).
+      expect(find.text('€285.58'), findsOneWidget);
+      expect(find.text('€160.64 held in Escrow'), findsOneWidget);
+      expect(find.text('EUR'), findsOneWidget);
+      expect(find.text('USD'), findsNothing);
+
+      // XOF has no symbol: its code leads, and isn't repeated after.
+      PreferencesService().setCurrency(AppCurrency.xof);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('XOF '), findsWidgets);
+      expect(find.text('EUR'), findsNothing);
     });
 
     testWidgets('Remove deletes the card after confirming', (tester) async {

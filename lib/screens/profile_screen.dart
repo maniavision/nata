@@ -180,6 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     PreferencesService().addListener(_onPrefsChanged);
+    _loadRates();
     // What this page showed last time, straight away; then the latest.
     final cached = ScreenCache.read<Map<String, Object?>>(
       ProfileScreen.cacheKey,
@@ -1123,6 +1124,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  /// The wallet is shown in the member's currency once the rates are
+  /// here (in dollars until then).
+  Future<void> _loadRates() async {
+    if (ExchangeRateService.shared.latest != null) return;
+    await ExchangeRateService.shared.rates();
+    if (mounted) setState(() {});
   }
 
   /// The wallet's dollar figures in the member's currency.
