@@ -1904,6 +1904,10 @@
   "tipRouteAlertsBody": "Guarda las rutas en las que envías y entérate cuando un viajero las vuele.",
 
   "paidSecurelyThroughStripe": "Pago seguro con Stripe. Los datos de tu tarjeta nunca llegan a Nata.",
+  "paymentMobileOnlyNote": "Vives en {country}, así que pagas con dinero móvil.",
+  "errChooseNetwork": "Elige tu red.",
+  "errPaymentMethodNotOffered": "Esta forma de pago no está disponible donde vives.",
+  "errWholeMobileNumber": "Ingresa el número móvil completo.",
   "checkoutMobileOnlyNote": "Tú y el viajero viven en África, así que esta entrega se paga con dinero móvil.",
   "errMethodNotOffered": "Esta forma de pago no está disponible para esta entrega. Elige otra.",
   "confirmingPayment": "Confirmando tu pago",

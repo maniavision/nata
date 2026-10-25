@@ -7676,6 +7676,30 @@ abstract class AppLocalizations {
   /// **'Paid securely through Stripe. Your card details never reach Nata.'**
   String get paidSecurelyThroughStripe;
 
+  /// No description provided for @paymentMobileOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You live in {country}, so you pay by mobile money.'**
+  String paymentMobileOnlyNote(String country);
+
+  /// No description provided for @errChooseNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your network.'**
+  String get errChooseNetwork;
+
+  /// No description provided for @errPaymentMethodNotOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'This way to pay isn\'t offered where you live.'**
+  String get errPaymentMethodNotOffered;
+
+  /// No description provided for @errWholeMobileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the whole mobile number.'**
+  String get errWholeMobileNumber;
+
   /// No description provided for @checkoutMobileOnlyNote.
   ///
   /// In en, this message translates to:

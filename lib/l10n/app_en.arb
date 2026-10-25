@@ -1993,6 +1993,17 @@
   "tipRouteAlertsBody": "Save the routes you send on and hear when a traveler is flying them.",
 
   "paidSecurelyThroughStripe": "Paid securely through Stripe. Your card details never reach Nata.",
+  "paymentMobileOnlyNote": "You live in {country}, so you pay by mobile money.",
+  "@paymentMobileOnlyNote": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "errChooseNetwork": "Choose your network.",
+  "errPaymentMethodNotOffered": "This way to pay isn't offered where you live.",
+  "errWholeMobileNumber": "Enter the whole mobile number.",
   "checkoutMobileOnlyNote": "You and the traveler both live in Africa, so this delivery is paid by mobile money.",
   "errMethodNotOffered": "This way to pay isn't offered for this delivery. Please choose another.",
   "confirmingPayment": "Confirming your payment",
