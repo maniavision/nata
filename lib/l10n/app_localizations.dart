@@ -7736,30 +7736,6 @@ abstract class AppLocalizations {
   /// **'Payout queued again. It goes out within 15 minutes.'**
   String get supportPayoutRequeued;
 
-  /// No description provided for @stripeBankTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect your bank with Stripe'**
-  String get stripeBankTitle;
-
-  /// No description provided for @stripeBankBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Stripe, Nata\'s payment partner, checks your identity and bank account. It takes a few minutes, and your earnings are then paid to your bank.'**
-  String get stripeBankBody;
-
-  /// No description provided for @stripeBankButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect bank account'**
-  String get stripeBankButton;
-
-  /// No description provided for @stripeBankNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Your bank details go to Stripe, never to Nata.'**
-  String get stripeBankNote;
-
   /// No description provided for @stripePendingTitle.
   ///
   /// In en, this message translates to:
@@ -7771,24 +7747,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This usually takes a few minutes. Your payouts go to your bank once Stripe approves it.'**
   String get stripePendingBody;
-
-  /// No description provided for @stripeCheckAgain.
-  ///
-  /// In en, this message translates to:
-  /// **'Check again'**
-  String get stripeCheckAgain;
-
-  /// No description provided for @stripeContinueSetup.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue setup with Stripe'**
-  String get stripeContinueSetup;
-
-  /// No description provided for @stripeNotFinished.
-  ///
-  /// In en, this message translates to:
-  /// **'Stripe\'s form isn\'t finished yet. Continue setup with Stripe to finish it.'**
-  String get stripeNotFinished;
 
   /// No description provided for @stripeConnectedTitle.
   ///
@@ -7817,7 +7775,7 @@ abstract class AppLocalizations {
   /// No description provided for @stripeChangeBank.
   ///
   /// In en, this message translates to:
-  /// **'Change bank on Stripe'**
+  /// **'Use another bank account'**
   String get stripeChangeBank;
 
   /// No description provided for @stripeDone.
@@ -7826,11 +7784,197 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get stripeDone;
 
+  /// No description provided for @stripeCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get stripeCheckAgain;
+
   /// No description provided for @errStripeOpen.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t open Stripe. Please try again.'**
   String get errStripeOpen;
+
+  /// No description provided for @stripeEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email for Stripe'**
+  String get stripeEmailLabel;
+
+  /// No description provided for @stripeEmailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe sends you updates about your payouts here. It isn\'t shown to anyone.'**
+  String get stripeEmailNote;
+
+  /// No description provided for @stripeEmailNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe needs your email to set up payouts. Enter it above.'**
+  String get stripeEmailNeeded;
+
+  /// No description provided for @stripeYourDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details'**
+  String get stripeYourDetails;
+
+  /// No description provided for @stripeDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get stripeDateOfBirth;
+
+  /// No description provided for @stripeHomeAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Home address'**
+  String get stripeHomeAddress;
+
+  /// No description provided for @stripeStreet.
+  ///
+  /// In en, this message translates to:
+  /// **'Street address'**
+  String get stripeStreet;
+
+  /// No description provided for @stripeCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get stripeCity;
+
+  /// No description provided for @stripeState.
+  ///
+  /// In en, this message translates to:
+  /// **'State'**
+  String get stripeState;
+
+  /// No description provided for @stripeProvince.
+  ///
+  /// In en, this message translates to:
+  /// **'Province'**
+  String get stripeProvince;
+
+  /// No description provided for @stripeZip.
+  ///
+  /// In en, this message translates to:
+  /// **'ZIP code'**
+  String get stripeZip;
+
+  /// No description provided for @stripePostcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Postcode'**
+  String get stripePostcode;
+
+  /// No description provided for @stripeIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get stripeIdentity;
+
+  /// No description provided for @stripeSsnLast4.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 4 digits of your SSN'**
+  String get stripeSsnLast4;
+
+  /// No description provided for @stripeSsnHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe uses this to confirm who you are. Nata doesn\'t keep it.'**
+  String get stripeSsnHelp;
+
+  /// No description provided for @stripeBankAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank account'**
+  String get stripeBankAccount;
+
+  /// No description provided for @stripeRoutingNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Routing number'**
+  String get stripeRoutingNumber;
+
+  /// No description provided for @stripeTransitNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Transit number'**
+  String get stripeTransitNumber;
+
+  /// No description provided for @stripeInstitutionNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Institution number'**
+  String get stripeInstitutionNumber;
+
+  /// No description provided for @stripeSortCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort code'**
+  String get stripeSortCode;
+
+  /// No description provided for @stripeIban.
+  ///
+  /// In en, this message translates to:
+  /// **'IBAN'**
+  String get stripeIban;
+
+  /// No description provided for @stripeHolderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The account must be in your own name.'**
+  String get stripeHolderNote;
+
+  /// No description provided for @stripeAgreePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the '**
+  String get stripeAgreePrefix;
+
+  /// No description provided for @stripeAgreementName.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe Connected Account Agreement'**
+  String get stripeAgreementName;
+
+  /// No description provided for @stripeSaveBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Save bank account'**
+  String get stripeSaveBank;
+
+  /// No description provided for @stripeFormNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details go to Stripe, Nata\'s payment partner. Nata only keeps the last 4 digits of your account.'**
+  String get stripeFormNote;
+
+  /// No description provided for @stripeFormIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in every field and accept the agreement.'**
+  String get stripeFormIncomplete;
+
+  /// No description provided for @stripeMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe needs a little more'**
+  String get stripeMoreTitle;
+
+  /// No description provided for @stripeMoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To finish, Stripe needs something Nata\'s form doesn\'t ask for, such as a photo of your ID.'**
+  String get stripeMoreBody;
+
+  /// No description provided for @stripeFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish with Stripe'**
+  String get stripeFinish;
 
   /// No description provided for @removePayoutAccountTitle.
   ///

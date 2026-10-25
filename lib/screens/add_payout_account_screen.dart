@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
@@ -12,14 +11,13 @@ import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
 import '../widgets/nata_toast.dart';
 import '../services/phone_number.dart';
+import 'stripe_bank_section.dart';
 
 /// Adds where a traveler is paid: their mobile money, on a network pawaPay
 /// pays out to in their country of residence (it can't be changed here;
 /// add-payout-account checks it too), or their bank through Stripe where
-/// Stripe can pay out (payout-options lists it as the STRIPE bank). The bank
-/// is connected on Stripe's own pages (designed in Sleek, "Add Payout
-/// Account" and "Add Payout Account - Stripe Pending"); the account is saved
-/// by itself once Stripe allows payouts. Pops the saved account.
+/// Stripe can pay out (payout-options lists it as the STRIPE bank), given
+/// in Nata's own form ([StripeBankSection]). Pops the saved account.
 class AddPayoutAccountScreen extends StatefulWidget {
   /// Overrides for tests; default to the real service and the country of
   /// residence on the profile (the device's country when it has none).
@@ -27,9 +25,11 @@ class AddPayoutAccountScreen extends StatefulWidget {
   final Country? initialCountry;
   final Future<String?> Function()? residenceCountry;
 
-  /// Override for tests: opening Stripe's page (an in-app browser by
-  /// default).
+  /// Overrides for tests: opening Stripe's page (an in-app browser by
+  /// default), and the traveler's name to start the bank form with (the
+  /// profile's by default).
   final Future<bool> Function(Uri link)? openStripePage;
+  final Future<({String first, String last})?> Function()? travelerName;
 
   const AddPayoutAccountScreen({
     super.key,
@@ -37,6 +37,7 @@ class AddPayoutAccountScreen extends StatefulWidget {
     this.initialCountry,
     this.residenceCountry,
     this.openStripePage,
+    this.travelerName,
   });
 
   /// payout-options' code for a bank connected through Stripe.
@@ -52,11 +53,7 @@ class AddPayoutAccountScreen extends StatefulWidget {
   State<AddPayoutAccountScreen> createState() => _AddPayoutAccountScreenState();
 }
 
-class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
-    with WidgetsBindingObserver {
-  static const _green = Color(0xFF168A68);
-  static const _greenBg = Color(0xFFE4F4EE);
-
+class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
   Country? _country;
   PayoutOptions? _options;
   bool _loading = true;
@@ -68,17 +65,6 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
   final _holder = TextEditingController();
   bool _saving = false;
   String? _error;
-
-  /// The bank through Stripe: where it stands (null until known), and
-  /// whether Stripe's page was opened from here.
-  StripeBankStatus? _stripe;
-  bool _stripeBusy = false;
-  bool _stripeOpened = false;
-
-  /// Once Stripe pays out to it: the bank connected, and whether it is
-  /// already one of the traveler's payout accounts.
-  StripeConnectedBank? _connected;
-  bool _connectedAdded = false;
 
   PaymentService get _service => widget.service ?? PaymentService();
 
@@ -92,21 +78,11 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _start();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Back from Stripe's page in another app: see where it stands.
-    if (state == AppLifecycleState.resumed && _stripeOpened) {
-      _checkStripe(quiet: true);
-    }
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _number.dispose();
     _holder.dispose();
     super.dispose();
@@ -156,12 +132,6 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
             ? PayoutAccountKind.bank
             : PayoutAccountKind.mobileMoney;
       });
-      // Started with Stripe before: show where it stands.
-      if (options.banks.any(
-        (b) => b.code == AddPayoutAccountScreen.stripeBank,
-      )) {
-        unawaited(_checkStripe(quiet: true));
-      }
     } catch (e) {
       debugPrint('[AddPayoutAccount] options: $e');
       if (mounted) setState(() => _loadFailed = true);
@@ -235,6 +205,7 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
           PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
           PayoutAccountFailure.countryMismatch => l.errPayoutCountryMismatch,
           PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
+          PayoutAccountFailure.emailRequired ||
           PayoutAccountFailure.other => l.errSavePayoutAccount,
         },
       );
@@ -244,323 +215,6 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
     } finally {
       if (mounted) setState(() => _saving = false);
     }
-  }
-
-  // ── The bank through Stripe ───────────────────────────────────────────────
-  /// Opens Stripe's page, where the traveler gives their identity and bank.
-  Future<void> _connectStripe() async {
-    if (_stripeBusy) return;
-    final l = context.l10n;
-    setState(() {
-      _stripeBusy = true;
-      _error = null;
-    });
-    try {
-      final link = await _service.stripeBankLink();
-      final opened = await (widget.openStripePage ?? _openInApp)(link);
-      if (!mounted) return;
-      setState(() {
-        _stripeOpened = _stripeOpened || opened;
-        if (!opened) _error = l.errStripeOpen;
-      });
-    } on PayoutAccountException catch (e) {
-      if (!mounted) return;
-      setState(
-        () => _error = switch (e.reason) {
-          PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
-          PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
-          _ => l.errStripeOpen,
-        },
-      );
-    } catch (e) {
-      debugPrint('[AddPayoutAccount] stripe link: $e');
-      if (mounted) setState(() => _error = l.errStripeOpen);
-    } finally {
-      if (mounted) setState(() => _stripeBusy = false);
-    }
-  }
-
-  static Future<bool> _openInApp(Uri link) =>
-      launchUrl(link, mode: LaunchMode.inAppBrowserView);
-
-  /// Asks where the bank stands with Stripe. Once Stripe pays out to it, it
-  /// is saved (payouts waiting go out and the screen closes) when the
-  /// traveler asks ([save]: "Use this bank") or comes back from finishing on
-  /// Stripe's page; on opening, a bank already connected is only shown, so
-  /// one removed from Payment settings doesn't come back by itself.
-  /// [quiet]: on opening or coming back, without saying "not finished".
-  Future<void> _checkStripe({bool quiet = false, bool save = false}) async {
-    if (_stripeBusy) return;
-    final l = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    setState(() {
-      _stripeBusy = true;
-      if (!quiet) _error = null;
-    });
-    try {
-      final saveNow = save || _stripeOpened;
-      final bank = await _service.stripeBankStatus(save: saveNow);
-      if (!mounted) return;
-      if (bank.status == StripeBankStatus.enabled &&
-          bank.account != null &&
-          saveNow) {
-        unawaited(
-          _service.sendPayouts().catchError((Object e) {
-            debugPrint('[AddPayoutAccount] send payouts: $e');
-            return 0;
-          }),
-        );
-        messenger.showSnackBar(
-          nataToast(l.payoutAccountSaved, tone: ToastTone.success),
-        );
-        navigator.pop(bank.account);
-        return;
-      }
-      setState(() {
-        _stripe = bank.status;
-        _connected = bank.bank;
-        _connectedAdded = bank.account != null;
-        if (!quiet && bank.status == StripeBankStatus.incomplete) {
-          _error = l.stripeNotFinished;
-        }
-      });
-    } catch (e) {
-      debugPrint('[AddPayoutAccount] stripe status: $e');
-      if (mounted && !quiet) setState(() => _error = l.errRequestFailed);
-    } finally {
-      if (mounted) setState(() => _stripeBusy = false);
-    }
-  }
-
-  /// Connect the bank on Stripe's pages, (once sent) Stripe checking it, or
-  /// (once Stripe pays out to it) the bank connected, to use.
-  Widget _stripeCard() {
-    final l = context.l10n;
-    final pending = _stripe == StripeBankStatus.pending;
-    final connected = _stripe == StripeBankStatus.enabled;
-    final bank = _connected;
-    final title = connected
-        ? l.stripeConnectedTitle
-        : pending
-        ? l.stripePendingTitle
-        : l.stripeBankTitle;
-    final body = connected
-        ? [
-            if (bank != null)
-              l.stripeConnectedBody(bank.institution, bank.last4),
-            if (_connectedAdded) l.stripeConnectedAdded,
-          ].join(' ')
-        : pending
-        ? l.stripePendingBody
-        : l.stripeBankBody;
-    Widget button({
-      required String key,
-      required String label,
-      required VoidCallback onPressed,
-      bool outlined = false,
-      IconData? icon,
-    }) {
-      final child = _stripeBusy
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.accent,
-              ),
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
-                ),
-                if (icon != null) ...[
-                  const SizedBox(width: 6),
-                  Icon(icon, size: 16),
-                ],
-              ],
-            );
-      return SizedBox(
-        height: 48,
-        width: double.infinity,
-        child: outlined
-            ? OutlinedButton(
-                key: ValueKey(key),
-                onPressed: _stripeBusy ? null : onPressed,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.accent,
-                  side: const BorderSide(color: AppColors.accent),
-                  shape: const StadiumBorder(),
-                ),
-                child: child,
-              )
-            : ElevatedButton(
-                key: ValueKey(key),
-                onPressed: _stripeBusy ? null : onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.muted,
-                  elevation: 0,
-                  shape: const StadiumBorder(),
-                ),
-                child: child,
-              ),
-      );
-    }
-
-    return Container(
-      key: const ValueKey('payout-stripe'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: connected ? _greenBg : AppColors.secondary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  connected
-                      ? Icons.check_circle_rounded
-                      : pending
-                      ? Icons.hourglass_top_rounded
-                      : Icons.account_balance_rounded,
-                  size: 20,
-                  color: connected ? _green : AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: AppColors.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      body,
-                      style: GoogleFonts.dmSans(
-                        fontSize: 13,
-                        height: 1.4,
-                        color: AppColors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (connected) ...[
-            _connectedAdded
-                ? button(
-                    key: 'stripe-done',
-                    label: l.stripeDone,
-                    onPressed: () => Navigator.of(context).pop(),
-                  )
-                : button(
-                    key: 'stripe-use',
-                    label: l.stripeUseBank,
-                    onPressed: () => _checkStripe(save: true),
-                  ),
-            TextButton(
-              key: const ValueKey('stripe-change'),
-              onPressed: _stripeBusy ? null : _connectStripe,
-              child: Text(
-                l.stripeChangeBank,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: AppColors.mutedForeground,
-                ),
-              ),
-            ),
-          ] else if (pending) ...[
-            button(
-              key: 'stripe-check',
-              label: l.stripeCheckAgain,
-              onPressed: _checkStripe,
-              outlined: true,
-            ),
-            TextButton(
-              key: const ValueKey('stripe-continue'),
-              onPressed: _stripeBusy ? null : _connectStripe,
-              child: Text(
-                l.stripeContinueSetup,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: AppColors.mutedForeground,
-                ),
-              ),
-            ),
-          ] else ...[
-            button(
-              key: 'stripe-connect',
-              label: _stripe == StripeBankStatus.incomplete
-                  ? l.stripeContinueSetup
-                  : l.stripeBankButton,
-              onPressed: _connectStripe,
-              icon: Icons.open_in_new_rounded,
-            ),
-            // Back from Stripe's page: check now.
-            if (_stripeOpened) ...[
-              const SizedBox(height: 8),
-              button(
-                key: 'stripe-check',
-                label: l.stripeCheckAgain,
-                onPressed: _checkStripe,
-                outlined: true,
-              ),
-            ],
-          ],
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.lock_outline_rounded,
-                size: 13,
-                color: AppColors.mutedForeground,
-              ),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  l.stripeBankNote,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 11,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -609,21 +263,16 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen>
                       _kindToggle(),
                       const SizedBox(height: 16),
                     ],
-                    if (_viaStripe) ...[
-                      _stripeCard(),
-                      if (_error != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          _error!,
-                          key: const ValueKey('payout-error'),
-                          style: GoogleFonts.dmSans(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                            color: AppColors.destructive,
-                          ),
-                        ),
-                      ],
-                    ] else ...[
+                    if (_viaStripe)
+                      StripeBankSection(
+                        service: _service,
+                        country: _country!,
+                        travelerName: widget.travelerName,
+                        openStripePage: widget.openStripePage,
+                        onSaved: (account) =>
+                            Navigator.of(context).pop(account),
+                      )
+                    else ...[
                       _label(
                         _kind == PayoutAccountKind.bank
                             ? l.bankLabel

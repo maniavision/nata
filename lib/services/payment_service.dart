@@ -271,14 +271,75 @@ enum PayoutAccountFailure {
 
   /// Not the traveler's country of residence.
   countryMismatch,
+
+  /// Stripe needs an email for the account, and Nata has none.
+  emailRequired,
   unavailable,
   other,
 }
 
 /// Where a traveler's bank stands with Stripe (stripe-connect, 20240170):
-/// not started, Stripe's form not finished, Stripe checking it, or paid to.
-enum StripeBankStatus { none, incomplete, pending, enabled }
+/// not given yet, Stripe checking it, Stripe needing more than Nata's form
+/// gives (finished on Stripe's page), or paid to.
+enum StripeBankStatus { none, pending, actionNeeded, enabled }
 
+/// What a traveler gives in Nata's form for their bank through Stripe.
+/// [idNumber] is the ID number Stripe needs in their country (US: the last
+/// 4 digits of the SSN); [routingNumber] is empty for IBAN countries.
+class StripeBankDetails {
+  final String firstName;
+  final String lastName;
+  final DateTime dateOfBirth;
+  final String phone;
+  final String line1;
+  final String city;
+  final String state;
+  final String postalCode;
+  final String? idNumber;
+  final String routingNumber;
+  final String accountNumber;
+
+  /// Only when Nata has no email for the traveler.
+  final String? email;
+
+  const StripeBankDetails({
+    required this.firstName,
+    required this.lastName,
+    required this.dateOfBirth,
+    required this.phone,
+    required this.line1,
+    required this.city,
+    this.state = '',
+    required this.postalCode,
+    this.idNumber,
+    this.routingNumber = '',
+    required this.accountNumber,
+    this.email,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'first_name': firstName,
+    'last_name': lastName,
+    'dob': {
+      'day': dateOfBirth.day,
+      'month': dateOfBirth.month,
+      'year': dateOfBirth.year,
+    },
+    'phone': phone,
+    'address': {
+      'line1': line1,
+      'city': city,
+      'state': state,
+      'postal_code': postalCode,
+    },
+    if (idNumber != null) 'id_number': idNumber,
+    'bank': {'routing_number': routingNumber, 'account_number': accountNumber},
+    if (email != null) 'email': email,
+    'tos_accepted': true,
+  };
+}
+
+/// [status], and the payout account it became once [StripeBankStatus.enabled].
 /// The bank Stripe pays out to: its name and last digits.
 typedef StripeConnectedBank = ({String institution, String last4});
 
@@ -293,7 +354,11 @@ typedef StripeBank = ({
 
 class PayoutAccountException implements Exception {
   final PayoutAccountFailure reason;
-  const PayoutAccountException(this.reason);
+
+  /// What Stripe refused, in its words (an invalid routing number...).
+  final String? message;
+
+  const PayoutAccountException(this.reason, [this.message]);
 }
 
 /// When earnings are paid out (`payment_preferences.payout_schedule`).
@@ -421,28 +486,41 @@ class PaymentService {
     }
   }
 
-  /// Stripe's page where the traveler connects their bank (their Stripe
-  /// account is made the first time). Travelers living where Stripe can't
-  /// pay out get [PayoutAccountFailure.notSupported].
+  /// Sends what the traveler gave in Nata's form: Stripe's account is made
+  /// (or updated) with it and the bank account added. Answers where it
+  /// stands, as [stripeBankStatus]. Travelers living where Stripe can't pay
+  /// out get [PayoutAccountFailure.notSupported]; with no email known,
+  /// [PayoutAccountFailure.emailRequired]; something Stripe refuses,
+  /// [PayoutAccountFailure.invalid] with its message.
+  Future<StripeBank> submitStripeBank(StripeBankDetails details) async {
+    final data = await _stripeConnect('submit', details.toJson());
+    return _stripeBank(data);
+  }
+
+  /// Stripe's page for what Nata's form doesn't cover, once Stripe asks for
+  /// more ([StripeBankStatus.actionNeeded]: an ID photo, a review).
   Future<Uri> stripeBankLink() async {
-    final data = await _stripeConnect('start');
+    final data = await _stripeConnect('finish');
     return Uri.parse(data['url'] as String);
   }
 
-  /// Where the traveler's bank stands with Stripe; once Stripe pays out to
-  /// it, it is one of their payout accounts.
-  /// Where the bank through Stripe stands. [save] adds the connected bank
-  /// as a payout account ("Use this bank"); it is otherwise added by itself
-  /// only the first time (20240172).
+  /// Where the traveler's bank stands with Stripe. [save] adds the
+  /// connected bank as a payout account ("Use this bank"); it is otherwise
+  /// added by itself only the first time (20240172).
   Future<StripeBank> stripeBankStatus({bool save = false}) async {
-    final data = await _stripeConnect('status', save: save);
+    return _stripeBank(
+      await _stripeConnect('status', {if (save) 'save': true}),
+    );
+  }
+
+  StripeBank _stripeBank(Map<String, dynamic> data) {
     final account = data['account'];
     final bank = data['bank'];
     return (
       status: switch (data['status']) {
         'enabled' => StripeBankStatus.enabled,
         'pending' => StripeBankStatus.pending,
-        'incomplete' => StripeBankStatus.incomplete,
+        'action_needed' => StripeBankStatus.actionNeeded,
         _ => StripeBankStatus.none,
       },
       account: account is Map
@@ -458,23 +536,26 @@ class PaymentService {
   }
 
   Future<Map<String, dynamic>> _stripeConnect(
-    String action, {
-    bool save = false,
-  }) async {
+    String action, [
+    Map<String, dynamic> fields = const {},
+  ]) async {
     try {
       final response = await _client.functions.invoke(
         'stripe-connect',
-        body: {'action': action, if (save) 'save': true},
+        body: {'action': action, ...fields},
       );
       return Map<String, dynamic>.from(response.data as Map);
     } on FunctionException catch (e) {
       final details = e.details;
       final code = details is Map ? '${details['error']}' : '';
+      final message = details is Map ? details['message'] as String? : null;
       throw PayoutAccountException(switch (code) {
         'not_supported' => PayoutAccountFailure.notSupported,
+        'email_required' => PayoutAccountFailure.emailRequired,
+        'invalid' || 'bad_request' => PayoutAccountFailure.invalid,
         'payments_unavailable' => PayoutAccountFailure.unavailable,
         _ => PayoutAccountFailure.other,
-      });
+      }, message);
     }
   }
 

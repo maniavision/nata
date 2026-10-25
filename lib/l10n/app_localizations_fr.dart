@@ -4498,35 +4498,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Versement remis en file. Il part dans les 15 minutes.';
 
   @override
-  String get stripeBankTitle => 'Reliez votre banque avec Stripe';
-
-  @override
-  String get stripeBankBody =>
-      'Stripe, le partenaire de paiement de Nata, vérifie votre identité et votre compte bancaire. Cela prend quelques minutes, puis vos gains sont versés sur votre compte.';
-
-  @override
-  String get stripeBankButton => 'Relier un compte bancaire';
-
-  @override
-  String get stripeBankNote =>
-      'Vos coordonnées bancaires vont à Stripe, jamais à Nata.';
-
-  @override
   String get stripePendingTitle => 'Stripe vérifie vos informations';
 
   @override
   String get stripePendingBody =>
       'Cela prend en général quelques minutes. Vos versements partent vers votre banque dès que Stripe l\'a validée.';
-
-  @override
-  String get stripeCheckAgain => 'Vérifier à nouveau';
-
-  @override
-  String get stripeContinueSetup => 'Continuer avec Stripe';
-
-  @override
-  String get stripeNotFinished =>
-      'Le formulaire de Stripe n\'est pas encore terminé. Touchez Continuer avec Stripe pour le finir.';
 
   @override
   String get stripeConnectedTitle => 'Votre banque est connectée';
@@ -4544,14 +4520,113 @@ class AppLocalizationsFr extends AppLocalizations {
   String get stripeUseBank => 'Utiliser cette banque';
 
   @override
-  String get stripeChangeBank => 'Changer de banque sur Stripe';
+  String get stripeChangeBank => 'Utiliser un autre compte bancaire';
 
   @override
   String get stripeDone => 'Terminé';
 
   @override
+  String get stripeCheckAgain => 'Vérifier à nouveau';
+
+  @override
   String get errStripeOpen =>
       'Impossible d\'ouvrir Stripe. Veuillez réessayer.';
+
+  @override
+  String get stripeEmailLabel => 'E-mail pour Stripe';
+
+  @override
+  String get stripeEmailNote =>
+      'Stripe vous envoie ici les informations sur vos versements. Il n\'est montré à personne.';
+
+  @override
+  String get stripeEmailNeeded =>
+      'Stripe a besoin de votre e-mail pour activer les versements. Saisissez-le ci-dessus.';
+
+  @override
+  String get stripeYourDetails => 'Vos informations';
+
+  @override
+  String get stripeDateOfBirth => 'Date de naissance';
+
+  @override
+  String get stripeHomeAddress => 'Adresse';
+
+  @override
+  String get stripeStreet => 'Rue et numéro';
+
+  @override
+  String get stripeCity => 'Ville';
+
+  @override
+  String get stripeState => 'État';
+
+  @override
+  String get stripeProvince => 'Province';
+
+  @override
+  String get stripeZip => 'Code ZIP';
+
+  @override
+  String get stripePostcode => 'Code postal';
+
+  @override
+  String get stripeIdentity => 'Identité';
+
+  @override
+  String get stripeSsnLast4 => '4 derniers chiffres de votre SSN';
+
+  @override
+  String get stripeSsnHelp =>
+      'Stripe s\'en sert pour confirmer votre identité. Nata ne le conserve pas.';
+
+  @override
+  String get stripeBankAccount => 'Compte bancaire';
+
+  @override
+  String get stripeRoutingNumber => 'Numéro de routage (routing number)';
+
+  @override
+  String get stripeTransitNumber => 'Numéro de transit';
+
+  @override
+  String get stripeInstitutionNumber => 'Numéro d\'institution';
+
+  @override
+  String get stripeSortCode => 'Sort code';
+
+  @override
+  String get stripeIban => 'IBAN';
+
+  @override
+  String get stripeHolderNote => 'Le compte doit être à votre nom.';
+
+  @override
+  String get stripeAgreePrefix => 'J\'accepte le ';
+
+  @override
+  String get stripeAgreementName => 'Contrat de compte connecté Stripe';
+
+  @override
+  String get stripeSaveBank => 'Enregistrer le compte bancaire';
+
+  @override
+  String get stripeFormNote =>
+      'Vos informations vont à Stripe, le partenaire de paiement de Nata. Nata ne garde que les 4 derniers chiffres de votre compte.';
+
+  @override
+  String get stripeFormIncomplete =>
+      'Remplissez tous les champs et acceptez le contrat.';
+
+  @override
+  String get stripeMoreTitle => 'Stripe a besoin d\'un peu plus';
+
+  @override
+  String get stripeMoreBody =>
+      'Pour terminer, Stripe a besoin d\'un élément que le formulaire de Nata ne demande pas, comme une photo de votre pièce d\'identité.';
+
+  @override
+  String get stripeFinish => 'Terminer avec Stripe';
 
   @override
   String get removePayoutAccountTitle => 'Supprimer ce compte de paiement ?';
