@@ -8017,6 +8017,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to make default'**
   String get tapToMakeDefault;
+
+  /// No description provided for @notifPaymentReceivedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment received'**
+  String get notifPaymentReceivedTitle;
+
+  /// No description provided for @notifPaymentReceivedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payment is held safely until delivery. You can now chat with {name}.'**
+  String notifPaymentReceivedBody(String name);
+
+  /// No description provided for @notifDeliveryConfirmedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery confirmed'**
+  String get notifDeliveryConfirmedTitle;
+
+  /// No description provided for @notifDeliveryConfirmedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You delivered {name}\'s item. Your payout is on its way.'**
+  String notifDeliveryConfirmedBody(String name);
 }
 
 class _AppLocalizationsDelegate
