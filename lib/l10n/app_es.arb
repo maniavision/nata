@@ -1934,5 +1934,8 @@
   "errStripeOpen": "No se pudo abrir Stripe. Inténtalo de nuevo.",
 
   "removePayoutAccountTitle": "¿Eliminar esta cuenta de cobro?",
-  "removePayoutAccountBody": "{name} {summary} ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada."
+  "removePayoutAccountBody": "{name} {summary} ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada.",
+  "removePaymentMethodTitle": "¿Eliminar este método de pago?",
+  "removePaymentMethodBody": "{name} se eliminará de tus métodos de pago.",
+  "removeDefaultPaymentMethodBody": "{name} es tu método de pago predeterminado. El método añadido más recientemente pasará a ser el predeterminado."
 }

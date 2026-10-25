@@ -2042,5 +2042,10 @@
 
   "removePayoutAccountTitle": "Remove this payout account?",
   "removePayoutAccountBody": "{name} {summary} will no longer be paid. Payouts waiting for it go to your default payout account.",
-  "@removePayoutAccountBody": {"placeholders": {"name": {"type": "String"}, "summary": {"type": "String"}}}
+  "@removePayoutAccountBody": {"placeholders": {"name": {"type": "String"}, "summary": {"type": "String"}}},
+  "removePaymentMethodTitle": "Remove this payment method?",
+  "removePaymentMethodBody": "{name} will be removed from your payment methods.",
+  "removeDefaultPaymentMethodBody": "{name} is your default payment method. Your most recently added method becomes the default.",
+  "@removePaymentMethodBody": {"placeholders": {"name": {"type": "String"}}},
+  "@removeDefaultPaymentMethodBody": {"placeholders": {"name": {"type": "String"}}}
 }

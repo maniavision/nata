@@ -7843,6 +7843,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} {summary} will no longer be paid. Payouts waiting for it go to your default payout account.'**
   String removePayoutAccountBody(String name, String summary);
+
+  /// No description provided for @removePaymentMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this payment method?'**
+  String get removePaymentMethodTitle;
+
+  /// No description provided for @removePaymentMethodBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be removed from your payment methods.'**
+  String removePaymentMethodBody(String name);
+
+  /// No description provided for @removeDefaultPaymentMethodBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is your default payment method. Your most recently added method becomes the default.'**
+  String removeDefaultPaymentMethodBody(String name);
 }
 
 class _AppLocalizationsDelegate
