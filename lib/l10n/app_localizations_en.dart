@@ -4575,4 +4575,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tapToMakeDefault => 'Tap to make default';
+
+  @override
+  String get routeAlertsWeight => 'Weight to send (optional)';
+
+  @override
+  String get routeAlertsWeightHint => 'e.g. 5';
+
+  @override
+  String get routeAlertsWeightNote =>
+      'Only travelers who can carry at least this much. Leave it empty for any traveler.';
+
+  @override
+  String routeAlertsWeightChip(String kg) {
+    return '$kg kg+';
+  }
+
+  @override
+  String routeAlertsErrWeight(String max) {
+    return 'Enter a weight between 0.1 and $max kg, or leave it empty.';
+  }
 }

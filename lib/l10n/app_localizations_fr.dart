@@ -4656,4 +4656,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tapToMakeDefault => 'Toucher pour définir par défaut';
+
+  @override
+  String get routeAlertsWeight => 'Poids à envoyer (facultatif)';
+
+  @override
+  String get routeAlertsWeightHint => 'ex. 5';
+
+  @override
+  String get routeAlertsWeightNote =>
+      'Seulement les voyageurs qui peuvent porter au moins ce poids. Laissez vide pour tous les voyageurs.';
+
+  @override
+  String routeAlertsWeightChip(String kg) {
+    return '$kg kg+';
+  }
+
+  @override
+  String routeAlertsErrWeight(String max) {
+    return 'Saisissez un poids entre 0,1 et $max kg, ou laissez vide.';
+  }
 }

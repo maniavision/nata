@@ -8017,6 +8017,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to make default'**
   String get tapToMakeDefault;
+
+  /// No description provided for @routeAlertsWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight to send (optional)'**
+  String get routeAlertsWeight;
+
+  /// No description provided for @routeAlertsWeightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 5'**
+  String get routeAlertsWeightHint;
+
+  /// No description provided for @routeAlertsWeightNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only travelers who can carry at least this much. Leave it empty for any traveler.'**
+  String get routeAlertsWeightNote;
+
+  /// No description provided for @routeAlertsWeightChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{kg} kg+'**
+  String routeAlertsWeightChip(String kg);
+
+  /// No description provided for @routeAlertsErrWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a weight between 0.1 and {max} kg, or leave it empty.'**
+  String routeAlertsErrWeight(String max);
 }
 
 class _AppLocalizationsDelegate
