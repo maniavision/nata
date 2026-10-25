@@ -9,7 +9,9 @@
  * no Stripe dashboard: Nata collects what Stripe needs (its "requirements"),
  * collects fees and covers losses. The traveler accepts Stripe's Connected
  * Account Agreement in the form; Nata records that acceptance (date, IP,
- * device) on the account. ID numbers and bank numbers are passed straight to
+ * device) on the account. Travelers have no business website, so Nata gives
+ * Stripe a description of what they do instead (PROFILE), which Stripe takes
+ * in place of one. ID numbers and bank numbers are passed straight to
  * Stripe and not kept; Nata keeps only the bank's name and last 4 digits.
  *
  * Called by the app (with the traveler's JWT) with { action }:
@@ -266,6 +268,28 @@ function returnUrl(again: boolean): string {
     (again ? "?again=1" : "");
 }
 
+/** What a traveler does, for Stripe: travelers have no website, and Stripe
+ * takes a product description in place of one (otherwise the account is
+ * restricted until a website is given). */
+const PROFILE = {
+  product_description:
+    "Carries parcels for senders on Nata, a peer-to-peer delivery app, " +
+    "on trips they are already taking, and is paid out by Nata once the " +
+    "delivery is confirmed.",
+};
+
+/** Stripe asks for a website or a description of the business. */
+function needsProfile(account: Record<string, unknown>): boolean {
+  const req = (account.requirements ?? {}) as {
+    currently_due?: string[];
+    past_due?: string[];
+  };
+  return [...(req.currently_due ?? []), ...(req.past_due ?? [])].some((r) =>
+    r === "business_profile.url" ||
+    r === "business_profile.product_description"
+  );
+}
+
 /** The ID number Stripe needs from an individual, by country. */
 const ID_NUMBER_TYPE: Record<string, string> = { US: "us_ssn_last_4" };
 
@@ -318,7 +342,20 @@ Deno.serve(async (req: Request) => {
   /** Where it stands now, as status answers; [save] adds the bank. */
   const answer = async (save = false) => {
     if (!accountId) return json({ status: "none" });
-    const res = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
+    let res = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
+    if (res.status === 200 && needsProfile(res.body)) {
+      // Made before Nata gave the description: given now, then looked up
+      // again.
+      const given = await stripeV2(
+        `/core/accounts/${encodeURIComponent(accountId)}`,
+        { defaults: { profile: PROFILE } },
+      );
+      if (given.status === 200) {
+        res = await stripe(`/accounts/${encodeURIComponent(accountId)}`);
+      } else {
+        console.error("[stripe-connect] profile", given.status);
+      }
+    }
     if (res.status !== 200) {
       console.error("[stripe-connect] status", res.status);
       return json({ error: "provider_error" }, 502);
@@ -483,6 +520,7 @@ Deno.serve(async (req: Request) => {
         // means Nata also collects fees and covers losses.
         dashboard: "none",
         defaults: {
+          profile: PROFILE,
           responsibilities: {
             fees_collector: "application",
             losses_collector: "application",
@@ -512,7 +550,7 @@ Deno.serve(async (req: Request) => {
     // Given again (a correction, or what Stripe asked for): updated.
     const updated = await stripeV2(
       `/core/accounts/${encodeURIComponent(accountId)}`,
-      { contact_email: email, identity },
+      { contact_email: email, identity, defaults: { profile: PROFILE } },
     );
     if (updated.status !== 200) return refused(updated, "update");
   }
