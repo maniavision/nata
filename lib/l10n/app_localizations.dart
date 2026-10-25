@@ -8005,6 +8005,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} is your default payment method. Your most recently added method becomes the default.'**
   String removeDefaultPaymentMethodBody(String name);
+
+  /// No description provided for @payoutAccountLimitNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can have up to {count} payout accounts. Remove one to add another.'**
+  String payoutAccountLimitNote(int count);
+
+  /// No description provided for @tapToMakeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to make default'**
+  String get tapToMakeDefault;
 }
 
 class _AppLocalizationsDelegate

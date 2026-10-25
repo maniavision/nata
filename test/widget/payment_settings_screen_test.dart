@@ -201,6 +201,72 @@ void main() {
       expect(find.text('No payout account yet.'), findsOneWidget);
     });
 
+    group('two payout accounts', () {
+      setUp(
+        () => payments.accounts = [
+          samplePayoutAccount(),
+          sampleMobilePayoutAccount(),
+        ],
+      );
+
+      testWidgets('no third one: a note instead of Add', (tester) async {
+        await pump(tester);
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const ValueKey('payout-account-add')), findsNothing);
+        expect(
+          find.text(
+            'You can have up to 2 payout accounts. Remove one to add another.',
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('a tap makes the other one the default', (tester) async {
+        await pump(tester);
+        await tester.pumpAndSettle();
+        expect(find.text('Tap to make default'), findsOneWidget);
+
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('payout-account-mpesa')),
+        );
+        await tester.tap(find.byKey(const ValueKey('payout-account-mpesa')));
+        await tester.pumpAndSettle();
+
+        expect(payments.defaultAccounts, ['mpesa']);
+        expect(payments.accounts.where((a) => a.isDefault).map((a) => a.id), [
+          'mpesa',
+        ]);
+        // Barclays is now the one to tap.
+        await tester.tap(find.byKey(const ValueKey('payout-account-mpesa')));
+        await tester.pumpAndSettle();
+        expect(payments.defaultAccounts, ['mpesa']);
+      });
+
+      testWidgets('removing one brings Add back', (tester) async {
+        await pump(tester);
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('payout-account-remove-mpesa')),
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('payout-account-remove-mpesa')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey('payout-account-remove-confirm')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('payout-account-add')),
+          findsOneWidget,
+        );
+        expect(find.text('Tap to make default'), findsNothing);
+      });
+    });
+
     testWidgets('no methods or payout account yet', (tester) async {
       payments = FakePaymentService();
       await pump(tester);

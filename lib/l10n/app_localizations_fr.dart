@@ -4648,4 +4648,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String removeDefaultPaymentMethodBody(String name) {
     return '$name est votre moyen de paiement par défaut. Le moyen ajouté le plus récemment deviendra celui par défaut.';
   }
+
+  @override
+  String payoutAccountLimitNote(int count) {
+    return 'Vous pouvez avoir jusqu\'à $count comptes de paiement. Supprimez-en un pour en ajouter un autre.';
+  }
+
+  @override
+  String get tapToMakeDefault => 'Toucher pour définir par défaut';
 }

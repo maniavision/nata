@@ -16,7 +16,8 @@
  * Responds 200 with the account { id, kind, institution_name, country_code,
  * account_last4, holder_name, is_default }. Errors: 401 unauthorized,
  * 400 invalid, 409 not_supported (a bank, or a network pawaPay doesn't pay
- * out to there) / country_mismatch (not the country of residence).
+ * out to there) / country_mismatch (not the country of residence) /
+ * limit_reached (already two payout accounts, 20240175).
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -145,6 +146,9 @@ Deno.serve(async (req: Request) => {
     .select("id, kind, institution_name, country_code, account_last4, holder_name, is_default")
     .single();
   if (error || !account) {
+    if (error?.message?.includes("payout_account_limit")) {
+      return json({ error: "limit_reached" }, 409);
+    }
     console.error("[add-payout-account] account", error);
     return json({ error: "invalid" }, 400);
   }

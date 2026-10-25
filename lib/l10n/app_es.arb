@@ -1961,5 +1961,7 @@
   "removePayoutAccountBody": "{name} {summary} ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada.",
   "removePaymentMethodTitle": "¿Eliminar este método de pago?",
   "removePaymentMethodBody": "{name} se eliminará de tus métodos de pago.",
-  "removeDefaultPaymentMethodBody": "{name} es tu método de pago predeterminado. El método añadido más recientemente pasará a ser el predeterminado."
+  "removeDefaultPaymentMethodBody": "{name} es tu método de pago predeterminado. El método añadido más recientemente pasará a ser el predeterminado.",
+  "payoutAccountLimitNote": "Puedes tener hasta {count} cuentas de cobro. Elimina una para añadir otra.",
+  "tapToMakeDefault": "Toca para hacerla predeterminada"
 }

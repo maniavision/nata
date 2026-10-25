@@ -231,7 +231,12 @@ class _StripeBankSectionState extends State<StripeBankSection>
       if (mounted) {
         setState(() {
           _status ??= StripeBankStatus.none;
-          if (!quiet) _error = l.errRequestFailed;
+          if (e is PayoutAccountException &&
+              e.reason == PayoutAccountFailure.limitReached) {
+            _error = l.payoutAccountLimitNote(maxPayoutAccounts);
+          } else if (!quiet) {
+            _error = l.errRequestFailed;
+          }
         });
       }
     } finally {
@@ -314,6 +319,9 @@ class _StripeBankSectionState extends State<StripeBankSection>
           PayoutAccountFailure.emailRequired => l.stripeEmailNeeded,
           PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
           PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
+          PayoutAccountFailure.limitReached => l.payoutAccountLimitNote(
+            maxPayoutAccounts,
+          ),
           // Stripe's own words (an invalid routing number...).
           PayoutAccountFailure.invalid =>
             e.message ?? l.errPayoutAccountInvalid,

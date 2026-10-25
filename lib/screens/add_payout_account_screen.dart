@@ -204,6 +204,9 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
           PayoutAccountFailure.invalid => l.errPayoutAccountInvalid,
           PayoutAccountFailure.notSupported => l.errPayoutNotSupported,
           PayoutAccountFailure.countryMismatch => l.errPayoutCountryMismatch,
+          PayoutAccountFailure.limitReached => l.payoutAccountLimitNote(
+            maxPayoutAccounts,
+          ),
           PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
           PayoutAccountFailure.emailRequired ||
           PayoutAccountFailure.other => l.errSavePayoutAccount,

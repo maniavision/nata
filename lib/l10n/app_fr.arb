@@ -1961,5 +1961,7 @@
   "removePayoutAccountBody": "{name} {summary} ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut.",
   "removePaymentMethodTitle": "Supprimer ce moyen de paiement ?",
   "removePaymentMethodBody": "{name} sera retiré de vos moyens de paiement.",
-  "removeDefaultPaymentMethodBody": "{name} est votre moyen de paiement par défaut. Le moyen ajouté le plus récemment deviendra celui par défaut."
+  "removeDefaultPaymentMethodBody": "{name} est votre moyen de paiement par défaut. Le moyen ajouté le plus récemment deviendra celui par défaut.",
+  "payoutAccountLimitNote": "Vous pouvez avoir jusqu'à {count} comptes de paiement. Supprimez-en un pour en ajouter un autre.",
+  "tapToMakeDefault": "Toucher pour définir par défaut"
 }

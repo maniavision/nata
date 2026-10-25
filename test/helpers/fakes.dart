@@ -1650,6 +1650,27 @@ class FakePaymentService extends Fake implements PaymentService {
   /// The payout accounts removed.
   final List<String> removedAccounts = [];
 
+  /// The payout accounts made the default.
+  final List<String> defaultAccounts = [];
+
+  @override
+  Future<void> setDefaultPayoutAccount(String id) async {
+    if (failSave) throw StateError('save failed');
+    defaultAccounts.add(id);
+    accounts = [
+      for (final a in accounts)
+        PayoutAccount(
+          id: a.id,
+          kind: a.kind,
+          institutionName: a.institutionName,
+          countryCode: a.countryCode,
+          accountLast4: a.accountLast4,
+          holderName: a.holderName,
+          isDefault: a.id == id,
+        ),
+    ];
+  }
+
   @override
   Future<void> removePayoutAccount(String id) async {
     if (failSave) throw StateError('save failed');
