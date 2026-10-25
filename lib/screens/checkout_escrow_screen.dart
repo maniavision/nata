@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/payment_service.dart';
 import '../services/phone_number.dart';
 import '../services/request_service.dart';
 import '../services/stripe_sheet.dart';
@@ -29,6 +30,10 @@ class CheckoutEscrowScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RequestService].
   final RequestService? service;
 
+  /// Override for tests: the saved payment methods (a saved mobile money
+  /// wallet fills in checkout); defaults to the real [PaymentService].
+  final PaymentService? paymentService;
+
   /// Override for tests; defaults to [DateTime.now].
   final DateTime Function()? now;
 
@@ -46,6 +51,7 @@ class CheckoutEscrowScreen extends StatefulWidget {
     required this.request,
     this.money = PriceFormatter.usd,
     this.service,
+    this.paymentService,
     this.now,
     this.openPaymentPage,
     this.closePaymentPage,
@@ -168,11 +174,50 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         _mobileOptions = options;
         _mobileChoice ??= options.where((o) => o.suggested).firstOrNull;
       });
+      unawaited(_prefillWallet(options));
     } catch (e) {
       debugPrint('[Checkout] mobile money options: $e');
       if (mounted) setState(() => _mobileFailed = true);
     } finally {
       if (mounted) setState(() => _mobileLoading = false);
+    }
+  }
+
+  /// The member's saved mobile money wallet (the default first) fills in the
+  /// country, network and number, unless they started typing one.
+  Future<void> _prefillWallet(List<MobileMoneyOption> options) async {
+    try {
+      final methods = await (widget.paymentService ?? PaymentService())
+          .methods();
+      final wallets =
+          methods
+              .where(
+                (m) =>
+                    m.kind == PaymentMethodKind.mobileMoney &&
+                    m.mobileNetwork != null &&
+                    m.mobileNumber != null,
+              )
+              .toList()
+            ..sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      for (final w in wallets) {
+        final option = options
+            .where((o) => o.networks.any((n) => n.code == w.mobileNetwork))
+            .firstOrNull;
+        if (option == null) continue;
+        final code = option.dialCode.replaceAll(RegExp(r'\D'), '');
+        final digits = w.mobileNumber!.replaceAll(RegExp(r'\D'), '');
+        if (!mounted || _mobilePhoneCtrl.text.isNotEmpty) return;
+        setState(() {
+          _mobileChoice = option;
+          _pickedNetwork = w.mobileNetwork;
+          _mobilePhoneCtrl.text = digits.startsWith(code)
+              ? digits.substring(code.length)
+              : digits;
+        });
+        return;
+      }
+    } catch (e) {
+      debugPrint('[Checkout] saved wallet: $e');
     }
   }
 

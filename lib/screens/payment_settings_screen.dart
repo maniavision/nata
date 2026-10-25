@@ -160,7 +160,15 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       await _load();
     } catch (e) {
       debugPrint('[PaymentSettings] save error: $e');
-      if (mounted) setState(() => _error = (l) => l.errPaymentSettingsSave);
+      // Not what fits where the member lives (20240174).
+      final notOffered = '$e'.contains('_not_offered');
+      if (mounted) {
+        setState(
+          () => _error = (l) => notOffered
+              ? l.errPaymentMethodNotOffered
+              : l.errPaymentSettingsSave,
+        );
+      }
     }
   }
 

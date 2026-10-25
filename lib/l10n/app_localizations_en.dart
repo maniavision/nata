@@ -4379,6 +4379,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paid securely through Stripe. Your card details never reach Nata.';
 
   @override
+  String paymentMobileOnlyNote(String country) {
+    return 'You live in $country, so you pay by mobile money.';
+  }
+
+  @override
+  String get errChooseNetwork => 'Choose your network.';
+
+  @override
+  String get errPaymentMethodNotOffered =>
+      'This way to pay isn\'t offered where you live.';
+
+  @override
+  String get errWholeMobileNumber => 'Enter the whole mobile number.';
+
+  @override
   String get checkoutMobileOnlyNote =>
       'You and the traveler both live in Africa, so this delivery is paid by mobile money.';
 
