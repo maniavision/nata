@@ -4719,4 +4719,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String resultsWeightAtLeast(String kg) {
     return 'Voyageurs qui peuvent porter $kg kg ou plus';
   }
+
+  @override
+  String get resultsWeightButton => 'Poids';
 }

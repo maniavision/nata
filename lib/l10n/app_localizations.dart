@@ -8113,6 +8113,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Travelers who can carry {kg} kg or more'**
   String resultsWeightAtLeast(String kg);
+
+  /// No description provided for @resultsWeightButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get resultsWeightButton;
 }
 
 class _AppLocalizationsDelegate

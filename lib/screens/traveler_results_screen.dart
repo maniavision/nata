@@ -48,6 +48,9 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   /// Only travelers who can carry at least this much (kg), or everyone.
   double? _minKg;
 
+  /// The weight card is open (the Weight button in the sort row).
+  bool _showWeight = false;
+
   /// [_results] the traveler can carry [_minKg] for. A trip with no capacity
   /// set is kept, as for route alerts: the traveler may still take it.
   List<TravelerTrip> get _matching {
@@ -220,8 +223,9 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
               ),
             ),
           if (_results.isNotEmpty) ...[
-            _buildWeightFilter(),
-            if (_matching.isEmpty) _buildNoneCanCarry() else _buildSortBar(),
+            if (_showWeight) _buildWeightFilter(),
+            _buildSortBar(),
+            if (_matching.isEmpty) _buildNoneCanCarry(),
           ],
           ..._sorted.map(
             (r) => Padding(
@@ -410,6 +414,57 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
     );
   }
 
+  /// Opens or closes the weight card; shows the weight picked, if any.
+  Widget _weightButton() {
+    final min = _minKg;
+    final active = min != null;
+    final color = active
+        ? AppColors.primaryForeground
+        : AppColors.mutedForeground;
+    return Semantics(
+      button: true,
+      expanded: _showWeight,
+      child: GestureDetector(
+        key: const ValueKey('weight-toggle'),
+        onTap: () => setState(() => _showWeight = !_showWeight),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: active
+                ? AppColors.primary
+                : AppColors.secondary.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: active
+                  ? AppColors.primary
+                  : _showWeight
+                  ? AppColors.mutedForeground
+                  : AppColors.border,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.scale_outlined, size: 13, color: color),
+              const SizedBox(width: 4),
+              Text(
+                active
+                    ? context.l10n.routeAlertsWeightChip(formatKg(min))
+                    : context.l10n.resultsWeightButton,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Sort ───────────────────────────────────────────────────────────────────
   Widget _buildSortBar() {
     final l = context.l10n;
@@ -464,6 +519,8 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
               ),
             ),
           ),
+          _weightButton(),
+          const SizedBox(width: 6),
           Container(
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(

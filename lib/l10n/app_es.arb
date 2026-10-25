@@ -1979,5 +1979,6 @@
   "resultsWeightNoneHint": "Prueba un peso menor, o mira a todos los viajeros.",
   "resultsWeightClear": "Ver todos los viajeros",
   "resultsWeightAnyNote": "Todos los viajeros, sea cual sea el peso",
-  "resultsWeightAtLeast": "Viajeros que pueden llevar {kg} kg o más"
+  "resultsWeightAtLeast": "Viajeros que pueden llevar {kg} kg o más",
+  "resultsWeightButton": "Peso"
 }

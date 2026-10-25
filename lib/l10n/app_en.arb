@@ -2096,5 +2096,6 @@
   "@resultsWeightNone": {"placeholders": {"kg": {"type": "String"}}},
   "resultsWeightAnyNote": "Every traveler, whatever they can carry",
   "resultsWeightAtLeast": "Travelers who can carry {kg} kg or more",
-  "@resultsWeightAtLeast": {"placeholders": {"kg": {"type": "String"}}}
+  "@resultsWeightAtLeast": {"placeholders": {"kg": {"type": "String"}}},
+  "resultsWeightButton": "Weight"
 }
