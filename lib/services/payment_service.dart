@@ -31,6 +31,10 @@ class PaymentMethod {
 
   final String? mobileProvider;
 
+  /// The wallet's pawaPay network (provider code, e.g. MTN_MOMO_COG); null
+  /// for wallets saved before networks came from pawaPay.
+  final String? mobileNetwork;
+
   /// International format, e.g. "+254712345678".
   final String? mobileNumber;
   final String? mobileRegisteredName;
@@ -48,6 +52,7 @@ class PaymentMethod {
     this.cardExpYear,
     this.cardHolderName,
     this.mobileProvider,
+    this.mobileNetwork,
     this.mobileNumber,
     this.mobileRegisteredName,
     this.walletDeviceLabel,
@@ -88,6 +93,7 @@ class PaymentMethod {
     cardExpYear: cardExpYear,
     cardHolderName: cardHolderName,
     mobileProvider: mobileProvider,
+    mobileNetwork: mobileNetwork,
     mobileNumber: mobileNumber,
     mobileRegisteredName: mobileRegisteredName,
     walletDeviceLabel: walletDeviceLabel,
@@ -103,6 +109,7 @@ class PaymentMethod {
     cardExpYear: (j['card_exp_year'] as num?)?.toInt(),
     cardHolderName: j['card_holder_name'] as String?,
     mobileProvider: j['mobile_provider'] as String?,
+    mobileNetwork: j['mobile_network'] as String?,
     mobileNumber: j['mobile_number'] as String?,
     mobileRegisteredName: j['mobile_registered_name'] as String?,
     walletDeviceLabel: j['wallet_device_label'] as String?,
@@ -122,12 +129,56 @@ class PaymentMethod {
     },
     if (kind == PaymentMethodKind.mobileMoney) ...{
       'mobile_provider': mobileProvider,
+      'mobile_network': mobileNetwork,
       'mobile_number': mobileNumber,
       'mobile_registered_name': mobileRegisteredName?.trim(),
     },
     if (kind == PaymentMethodKind.applePay)
       'wallet_device_label': walletDeviceLabel,
   };
+}
+
+/// What a member can save as payment methods, from where they live
+/// (my_payment_options, 20240174): mobile money wallets on their country's
+/// pawaPay networks when they live in such a country, else cards and Apple
+/// Pay.
+class PaymentOptions {
+  final String countryCode;
+  final String countryName;
+
+  /// "+242"
+  final String dialCode;
+  final bool mobileMoney;
+
+  /// (code, name) of the country's networks, in the order to show them.
+  final List<({String code, String name})> networks;
+
+  const PaymentOptions({
+    required this.countryCode,
+    required this.countryName,
+    required this.dialCode,
+    required this.mobileMoney,
+    this.networks = const [],
+  });
+
+  /// Somewhere without mobile money: cards and Apple Pay.
+  static const cards = PaymentOptions(
+    countryCode: '',
+    countryName: '',
+    dialCode: '',
+    mobileMoney: false,
+  );
+
+  factory PaymentOptions.fromJson(Map<String, dynamic> j) => PaymentOptions(
+    countryCode: (j['country_code'] as String? ?? '').trim(),
+    countryName: (j['country_name'] as String? ?? '').trim(),
+    dialCode: (j['dial_code'] as String? ?? '').trim(),
+    mobileMoney: j['mobile_money'] == true,
+    networks: [
+      for (final n in (j['networks'] as List? ?? const []))
+        (code: '${(n as Map)['code']}', name: '${n['name']}'),
+    ],
+  );
 }
 
 /// Where earnings are paid out (`nata.payout_accounts`).
@@ -284,6 +335,16 @@ class PaymentService {
 
   /// Saves [method] (built by the Add Payment Method screen); returns it as
   /// stored. Other methods may change too (the default), so callers reload.
+  /// What the member can save, from where they live; cards and Apple Pay
+  /// for a member without a country of residence.
+  Future<PaymentOptions> paymentOptions() async {
+    final rows = await _client.rpc('my_payment_options') as List;
+    if (rows.isEmpty) return PaymentOptions.cards;
+    return PaymentOptions.fromJson(
+      Map<String, dynamic>.from(rows.first as Map),
+    );
+  }
+
   Future<PaymentMethod> addMethod(PaymentMethod method) async {
     final row = await _table(
       'payment_methods',

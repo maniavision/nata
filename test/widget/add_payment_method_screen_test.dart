@@ -11,7 +11,10 @@ void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
   /// Opens the Add screen on top of a host page; [result] gets what it pops.
-  Future<List<PaymentMethod?>> pumpAdd(WidgetTester tester) async {
+  Future<List<PaymentMethod?>> pumpAdd(
+    WidgetTester tester, {
+    PaymentOptions options = PaymentOptions.cards,
+  }) async {
     tester.view.physicalSize = const Size(900, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -24,8 +27,9 @@ void main() {
               onPressed: () async => results.add(
                 await Navigator.of(context).push<PaymentMethod>(
                   MaterialPageRoute(
-                    builder: (_) => const AddPaymentMethodScreen(
+                    builder: (_) => AddPaymentMethodScreen(
                       holderFirstName: 'Fortune',
+                      loadOptions: () async => options,
                     ),
                   ),
                 ),
@@ -124,27 +128,96 @@ void main() {
       expect(row, isNot(contains('123')));
     });
 
-    testWidgets('mobile money: provider, number and name', (tester) async {
-      final results = await pumpAdd(tester);
-      await tester.tap(
-        find.byKey(const ValueKey('add-payment-kind-mobileMoney')),
+    const congo = PaymentOptions(
+      countryCode: 'CG',
+      countryName: 'Republic of the Congo',
+      dialCode: '+242',
+      mobileMoney: true,
+      networks: [
+        (code: 'MTN_MOMO_COG', name: 'MTN Mobile Money'),
+        (code: 'AIRTEL_COG', name: 'Airtel Money'),
+      ],
+    );
+
+    testWidgets('living where pawaPay takes it: mobile money only', (
+      tester,
+    ) async {
+      final results = await pumpAdd(tester, options: congo);
+
+      expect(
+        find.text(
+          'You live in Republic of the Congo, so you pay by mobile money.',
+        ),
+        findsOneWidget,
       );
-      await tester.pump();
-      expect(find.text('Mobile Money Details'), findsOneWidget);
+      expect(find.byKey(const ValueKey('add-payment-kind-card')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('add-payment-kind-applePay')),
+        findsNothing,
+      );
+      expect(find.text('Airtel Money'), findsOneWidget);
+      expect(find.text('+242  '), findsOneWidget);
 
-      await enter(tester, 'add-payment-mobile-number', '0712');
-      await save(tester);
-      expect(error(tester), startsWith('Enter the mobile number'));
-
-      await enter(tester, 'add-payment-mobile-number', '+254 712 345 678');
+      // The network first, then a whole number, then the name.
+      await enter(tester, 'add-payment-mobile-number', '05 512 3456');
       await enter(tester, 'add-payment-mobile-name', 'Fortune Niama');
       await save(tester);
+      expect(error(tester), 'Choose your network.');
 
+      await tester.tap(
+        find.byKey(const ValueKey('add-payment-network-AIRTEL_COG')),
+      );
+      await enter(tester, 'add-payment-mobile-number', '05');
+      await save(tester);
+      expect(error(tester), 'Enter the whole mobile number.');
+
+      await enter(tester, 'add-payment-mobile-number', '05 512 3456');
+      await save(tester);
       final m = results.single!;
       expect(m.kind, PaymentMethodKind.mobileMoney);
-      expect(m.title, 'M-Pesa •••• 5678');
-      expect(m.mobileNumber, '+254712345678');
-      expect(m.mobileRegisteredName, 'Fortune Niama');
+      expect(m.mobileNetwork, 'AIRTEL_COG');
+      expect(m.mobileProvider, 'Airtel Money');
+      expect(m.mobileNumber, '+242055123456');
+      expect(m.title, 'Airtel Money •••• 3456');
+    });
+
+    testWidgets('living elsewhere: card and Apple Pay only', (tester) async {
+      await pumpAdd(tester);
+      expect(
+        find.byKey(const ValueKey('add-payment-kind-card')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('add-payment-kind-applePay')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('add-payment-kind-mobileMoney')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('add-payment-mobile-only')),
+        findsNothing,
+      );
+    });
+
+    test('a saved wallet keeps its pawaPay network', () {
+      const m = PaymentMethod(
+        kind: PaymentMethodKind.mobileMoney,
+        mobileProvider: 'Airtel Money',
+        mobileNetwork: 'AIRTEL_COG',
+        mobileNumber: '+242055123456',
+        mobileRegisteredName: 'Fortune Niama',
+      );
+      expect(m.toInsertJson('u1')['mobile_network'], 'AIRTEL_COG');
+      final back = PaymentMethod.fromJson({
+        'id': 'pm1',
+        'kind': 'mobile_money',
+        'mobile_provider': 'Airtel Money',
+        'mobile_network': 'AIRTEL_COG',
+        'mobile_number': '+242055123456',
+      });
+      expect(back.mobileNetwork, 'AIRTEL_COG');
     });
 
     testWidgets('Apple Pay needs nothing to fill', (tester) async {
