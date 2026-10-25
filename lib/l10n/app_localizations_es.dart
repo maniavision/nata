@@ -4428,6 +4428,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Pago seguro con Stripe. Los datos de tu tarjeta nunca llegan a Nata.';
 
   @override
+  String get checkoutMobileOnlyNote =>
+      'Tú y el viajero viven en África, así que esta entrega se paga con dinero móvil.';
+
+  @override
+  String get errMethodNotOffered =>
+      'Esta forma de pago no está disponible para esta entrega. Elige otra.';
+
+  @override
   String get confirmingPayment => 'Confirmando tu pago';
 
   @override
