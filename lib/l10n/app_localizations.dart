@@ -8084,18 +8084,6 @@ abstract class AppLocalizations {
   /// **'Any'**
   String get resultsWeightAny;
 
-  /// No description provided for @resultsWeightOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get resultsWeightOther;
-
-  /// No description provided for @resultsWeightErr.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a weight in kg, e.g. 5'**
-  String get resultsWeightErr;
-
   /// No description provided for @resultsWeightNone.
   ///
   /// In en, this message translates to:
@@ -8113,6 +8101,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show all travelers'**
   String get resultsWeightClear;
+
+  /// No description provided for @resultsWeightAnyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Every traveler, whatever they can carry'**
+  String get resultsWeightAnyNote;
+
+  /// No description provided for @resultsWeightAtLeast.
+  ///
+  /// In en, this message translates to:
+  /// **'Travelers who can carry {kg} kg or more'**
+  String resultsWeightAtLeast(String kg);
 }
 
 class _AppLocalizationsDelegate

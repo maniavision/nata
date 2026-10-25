@@ -147,6 +147,10 @@ void main() {
       await pumpResults(tester);
 
       expect(find.text('Weight to send'), findsOneWidget);
+      expect(
+        find.text('Every traveler, whatever they can carry'),
+        findsOneWidget,
+      );
       expect(selected(tester, 'weight-any'), isTrue);
       expect(selected(tester, 'weight-5'), isFalse);
       expect(find.text('3 available'), findsOneWidget);
@@ -162,7 +166,7 @@ void main() {
       expect(shown('Amara Kalu'), isFalse);
       expect(shown('Maya Tariq'), isFalse);
       expect(find.text('1 available'), findsOneWidget);
-      expect(find.text('5'), findsOneWidget); // in the field too
+      expect(find.text('Travelers who can carry 5 kg or more'), findsOneWidget);
       expect(selected(tester, 'weight-5'), isTrue);
 
       await tester.tap(find.byKey(const ValueKey('weight-any')));
@@ -170,19 +174,18 @@ void main() {
       expect(find.text('3 available'), findsOneWidget);
     });
 
-    testWidgets('a typed weight filters, at least that much', (tester) async {
+    testWidgets('2 kg keeps everyone who can carry 2 kg or more', (
+      tester,
+    ) async {
       await pumpResults(tester);
 
-      await tester.enterText(
-        find.byKey(const ValueKey('results-weight')),
-        '2,5',
-      );
+      await tester.tap(find.byKey(const ValueKey('weight-2')));
       await tester.pumpAndSettle();
 
       expect(shown('Amara Kalu'), isTrue);
       expect(shown('Daniel Okafor'), isTrue);
-      expect(shown('Maya Tariq'), isFalse);
-      expect(find.text('2 available'), findsOneWidget);
+      expect(shown('Maya Tariq'), isTrue);
+      expect(find.text('3 available'), findsOneWidget);
     });
 
     testWidgets('a trip without a capacity stays', (tester) async {
@@ -204,19 +207,6 @@ void main() {
       expect(find.text('Capacity not specified'), findsOneWidget);
     });
 
-    testWidgets('not a weight: says so and shows everyone', (tester) async {
-      await pumpResults(tester);
-
-      await tester.enterText(
-        find.byKey(const ValueKey('results-weight')),
-        'heavy',
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Enter a weight in kg, e.g. 5'), findsOneWidget);
-      expect(find.text('3 available'), findsOneWidget);
-    });
-
     testWidgets('nobody can carry it: says so, and shows all again', (
       tester,
     ) async {
@@ -232,7 +222,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('weight-clear')));
       await tester.pumpAndSettle();
       expect(find.text('3 available'), findsOneWidget);
-      expect(find.byKey(const ValueKey('results-weight')), findsOneWidget);
+      expect(selected(tester, 'weight-any'), isTrue);
     });
 
     testWidgets('is translated', (tester) async {

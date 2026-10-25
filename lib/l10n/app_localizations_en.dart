@@ -4619,12 +4619,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsWeightAny => 'Any';
 
   @override
-  String get resultsWeightOther => 'Other';
-
-  @override
-  String get resultsWeightErr => 'Enter a weight in kg, e.g. 5';
-
-  @override
   String resultsWeightNone(String kg) {
     return 'No traveler here can carry $kg kg';
   }
@@ -4635,4 +4629,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resultsWeightClear => 'Show all travelers';
+
+  @override
+  String get resultsWeightAnyNote => 'Every traveler, whatever they can carry';
+
+  @override
+  String resultsWeightAtLeast(String kg) {
+    return 'Travelers who can carry $kg kg or more';
+  }
 }

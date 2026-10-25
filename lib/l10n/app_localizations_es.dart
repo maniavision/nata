@@ -4667,12 +4667,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get resultsWeightAny => 'Todos';
 
   @override
-  String get resultsWeightOther => 'Otro';
-
-  @override
-  String get resultsWeightErr => 'Escribe un peso en kg, p. ej. 5';
-
-  @override
   String resultsWeightNone(String kg) {
     return 'Ningún viajero aquí puede llevar $kg kg';
   }
@@ -4683,4 +4677,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get resultsWeightClear => 'Ver todos los viajeros';
+
+  @override
+  String get resultsWeightAnyNote => 'Todos los viajeros, sea cual sea el peso';
+
+  @override
+  String resultsWeightAtLeast(String kg) {
+    return 'Viajeros que pueden llevar $kg kg o más';
+  }
 }

@@ -4,7 +4,6 @@ import '../l10n/l10n_ext.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
-import '../services/request_service.dart' show RequestInput;
 import '../services/traveler_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
@@ -43,15 +42,11 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   /// Earliest departure first (the default), or latest first.
   bool _latestFirst = false;
 
-  /// The weights offered as chips; any other is typed in [_weight].
+  /// The weights to pick from, after Any.
   static const _weightChoices = <double>[2, 5, 10, 20];
 
   /// Only travelers who can carry at least this much (kg), or everyone.
   double? _minKg;
-  final _weight = TextEditingController();
-
-  /// What's in [_weight] isn't a weight.
-  bool _weightInvalid = false;
 
   /// [_results] the traveler can carry [_minKg] for. A trip with no capacity
   /// set is kept, as for route alerts: the traveler may still take it.
@@ -82,29 +77,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
     _load();
   }
 
-  @override
-  void dispose() {
-    _weight.dispose();
-    super.dispose();
-  }
-
-  /// A chip: that weight, or everyone (null). Shown in the field too.
-  void _pickWeight(double? kg) {
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _minKg = kg;
-      _weightInvalid = false;
-      _weight.text = kg == null ? '' : formatKg(kg);
-    });
-  }
-
-  void _typedWeight(String text) {
-    final kg = text.trim().isEmpty ? null : RequestInput.parseWeightKg(text);
-    setState(() {
-      _weightInvalid = text.trim().isNotEmpty && kg == null;
-      _minKg = kg;
-    });
-  }
+  void _pickWeight(double? kg) => setState(() => _minKg = kg);
 
   Future<void> _load() async {
     setState(() {
@@ -263,10 +236,12 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   }
 
   // ── Weight filter ──────────────────────────────────────────────────────────
+  /// A card: what is filtered, then a pill for Any and for each weight.
   Widget _buildWeightFilter() {
     final l = context.l10n;
-    Widget chip(String label, double? kg, Key key) {
-      final selected = _minKg == kg && !_weightInvalid;
+    final min = _minKg;
+    Widget pill(String label, double? kg, Key key) {
+      final selected = _minKg == kg;
       return Semantics(
         button: true,
         selected: selected,
@@ -275,9 +250,9 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
           onTap: () => _pickWeight(kg),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? AppColors.primary : AppColors.card,
+              color: selected ? AppColors.primary : AppColors.secondary,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
                 color: selected ? AppColors.primary : AppColors.border,
@@ -290,7 +265,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
                 fontSize: 12,
                 color: selected
                     ? AppColors.primaryForeground
-                    : AppColors.foreground,
+                    : AppColors.mutedForeground,
               ),
             ),
           ),
@@ -298,105 +273,66 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
       );
     }
 
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(999),
-      borderSide: BorderSide(
-        color: _weightInvalid ? AppColors.destructive : AppColors.border,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-    );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               const Icon(
-                Icons.scale_rounded,
-                size: 14,
-                color: AppColors.mutedForeground,
+                Icons.scale_outlined,
+                size: 16,
+                color: AppColors.accent,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Text(
                 l.resultsWeight,
                 style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                  color: AppColors.mutedForeground,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: AppColors.foreground,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
+          Text(
+            min == null
+                ? l.resultsWeightAnyNote
+                : l.resultsWeightAtLeast(formatKg(min)),
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              chip(l.resultsWeightAny, null, const ValueKey('weight-any')),
+              pill(l.resultsWeightAny, null, const ValueKey('weight-any')),
               for (final kg in _weightChoices)
-                chip(
+                pill(
                   l.routeAlertsWeightChip(formatKg(kg)),
                   kg,
                   ValueKey('weight-${formatKg(kg)}'),
                 ),
-              SizedBox(
-                width: 92,
-                child: TextField(
-                  key: const ValueKey('results-weight'),
-                  controller: _weight,
-                  onChanged: _typedWeight,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  textInputAction: TextInputAction.done,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.foreground,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: l.resultsWeightOther,
-                    hintStyle: GoogleFonts.dmSans(
-                      fontSize: 12,
-                      color: AppColors.mutedForeground,
-                    ),
-                    suffixText: 'kg',
-                    suffixStyle: GoogleFonts.dmSans(
-                      fontSize: 12,
-                      color: AppColors.mutedForeground,
-                    ),
-                    filled: true,
-                    fillColor: AppColors.card,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    border: border,
-                    enabledBorder: border,
-                    focusedBorder: border.copyWith(
-                      borderSide: BorderSide(
-                        color: _weightInvalid
-                            ? AppColors.destructive
-                            : AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
-          if (_weightInvalid) ...[
-            const SizedBox(height: 6),
-            Text(
-              l.resultsWeightErr,
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                color: AppColors.destructive,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -405,16 +341,30 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   /// Travelers go this way, but none can carry [_minKg].
   Widget _buildNoneCanCarry() {
     final l = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 12, 0, 24),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
       child: Column(
         children: [
-          const Icon(
-            Icons.scale_rounded,
-            size: 36,
-            color: AppColors.mutedForeground,
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.scale_outlined,
+              size: 20,
+              color: AppColors.accent,
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             l.resultsWeightNone(formatKg(_minKg!)),
             textAlign: TextAlign.center,
@@ -430,14 +380,30 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(
               fontSize: 12,
+              height: 1.4,
               color: AppColors.mutedForeground,
             ),
           ),
-          const SizedBox(height: 8),
-          TextButton(
-            key: const ValueKey('weight-clear'),
-            onPressed: () => _pickWeight(null),
-            child: Text(l.resultsWeightClear),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              key: const ValueKey('weight-clear'),
+              onPressed: () => _pickWeight(null),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: const StadiumBorder(),
+              ),
+              child: Text(
+                l.resultsWeightClear,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
           ),
         ],
       ),

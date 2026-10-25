@@ -2090,10 +2090,11 @@
   "@routeAlertsErrWeight": {"placeholders": {"max": {"type": "String"}}},
   "resultsWeight": "Weight to send",
   "resultsWeightAny": "Any",
-  "resultsWeightOther": "Other",
-  "resultsWeightErr": "Enter a weight in kg, e.g. 5",
   "resultsWeightNone": "No traveler here can carry {kg} kg",
   "resultsWeightNoneHint": "Try a lighter weight, or see everyone going your way.",
   "resultsWeightClear": "Show all travelers",
-  "@resultsWeightNone": {"placeholders": {"kg": {"type": "String"}}}
+  "@resultsWeightNone": {"placeholders": {"kg": {"type": "String"}}},
+  "resultsWeightAnyNote": "Every traveler, whatever they can carry",
+  "resultsWeightAtLeast": "Travelers who can carry {kg} kg or more",
+  "@resultsWeightAtLeast": {"placeholders": {"kg": {"type": "String"}}}
 }
