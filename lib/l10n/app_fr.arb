@@ -1980,5 +1980,12 @@
   "resultsWeightClear": "Voir tous les voyageurs",
   "resultsWeightAnyNote": "Tous les voyageurs, quel que soit le poids",
   "resultsWeightAtLeast": "Voyageurs qui peuvent porter {kg} kg ou plus",
-  "resultsWeightButton": "Poids"
+  "resultsWeightButton": "Poids",
+  "ecRequiredTitle": "Un contact d'urgence est obligatoire pour terminer la vérification",
+  "ecRequiredBody": "Il reste privé et ne sert que si un problème survient pendant une livraison.",
+  "verifyContactTitle": "Presque vérifié",
+  "verifyContactBody": "Ajoutez un contact d'urgence pour terminer la vérification de votre identité.",
+  "verifyAddContact": "Ajouter un contact d'urgence",
+  "identityNeedsContact": "Ajoutez un contact d'urgence pour terminer",
+  "ecProfileRequired": "Obligatoire pour être vérifié"
 }

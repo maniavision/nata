@@ -1775,11 +1775,11 @@ class _StepEmergency extends StatefulWidget {
   final EmergencyContactService service;
   final VoidCallback onBack;
 
-  /// Called once the contact is saved, or when the user chooses to skip.
+  /// Called once the contact is saved.
   final VoidCallback onDone;
 
   /// Opened from Profile rather than during verification: a plain page
-  /// header, no Skip or progress, "Save contact", and [initial] filled in.
+  /// header, no progress, "Save contact", and [initial] filled in.
   final bool standalone;
   final EmergencyContact? initial;
 
@@ -1969,6 +1969,10 @@ class _StepEmergencyState extends State<_StepEmergency> {
                     color: AppColors.mutedForeground,
                   ),
                 ),
+                if (!widget.standalone) ...[
+                  const SizedBox(height: 14),
+                  _requiredNote(l),
+                ],
                 const SizedBox(height: 16),
                 _formCard(l),
                 const SizedBox(height: 16),
@@ -2030,19 +2034,8 @@ class _StepEmergencyState extends State<_StepEmergency> {
                   ),
                 ],
               ),
-              GestureDetector(
-                key: const ValueKey('contact-skip'),
-                behavior: HitTestBehavior.opaque,
-                onTap: _saving ? null : widget.onDone,
-                child: Text(
-                  l.skipForNowId,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-              ),
+              // No skip: being verified needs the contact (20240178).
+              const SizedBox(width: 40),
             ],
           ),
           const SizedBox(height: 12),
@@ -2240,6 +2233,64 @@ class _StepEmergencyState extends State<_StepEmergency> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Verification isn't finished without the contact.
+  Widget _requiredNote(AppLocalizations l) {
+    return Container(
+      key: const ValueKey('contact-required-note'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF1ED),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            margin: const EdgeInsets.only(top: 2),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.gpp_maybe_rounded,
+              size: 18,
+              color: AppColors.accent,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.ecRequiredTitle,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l.ecRequiredBody,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.5,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

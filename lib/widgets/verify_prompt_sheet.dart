@@ -8,33 +8,43 @@ import '../screens/identity_verification_screen.dart';
 /// Shown when an unverified user tries to post a trip or send a request.
 /// [message] says what they were trying to do. While their check is
 /// [pending] they can only wait; otherwise they can start it from here.
+/// When only the emergency contact is missing ([needsContact]: their ID
+/// check passed), they add it from here.
 Future<void> showVerifyPrompt(
   BuildContext context, {
   required String message,
   required bool pending,
+  bool needsContact = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.foreground.withValues(alpha: 0.45),
-    builder: (_) => VerifyPromptSheet(message: message, pending: pending),
+    builder: (_) => VerifyPromptSheet(
+      message: message,
+      pending: pending,
+      needsContact: needsContact,
+    ),
   );
 }
 
 class VerifyPromptSheet extends StatelessWidget {
   final String message;
   final bool pending;
+  final bool needsContact;
 
   const VerifyPromptSheet({
     super.key,
     required this.message,
     required this.pending,
+    this.needsContact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final pending = this.pending && !needsContact;
     final bottom = MediaQuery.of(context).padding.bottom;
     final buttonText = GoogleFonts.dmSans(
       fontWeight: FontWeight.w700,
@@ -69,7 +79,9 @@ class VerifyPromptSheet extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                pending
+                needsContact
+                    ? Icons.gpp_maybe_rounded
+                    : pending
                     ? Icons.hourglass_top_rounded
                     : Icons.verified_user_rounded,
                 color: AppColors.accent,
@@ -78,7 +90,11 @@ class VerifyPromptSheet extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              pending ? l.verifyPendingTitle : l.verifyPromptTitle,
+              needsContact
+                  ? l.verifyContactTitle
+                  : pending
+                  ? l.verifyPendingTitle
+                  : l.verifyPromptTitle,
               textAlign: TextAlign.center,
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w800,
@@ -88,7 +104,11 @@ class VerifyPromptSheet extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              pending ? l.verifyPendingBody : message,
+              needsContact
+                  ? l.verifyContactBody
+                  : pending
+                  ? l.verifyPendingBody
+                  : message,
               textAlign: TextAlign.center,
               style: GoogleFonts.dmSans(
                 fontSize: 14,
@@ -97,7 +117,32 @@ class VerifyPromptSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            if (!pending) ...[
+            if (needsContact) ...[
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  key: const ValueKey('verify-prompt-contact'),
+                  onPressed: () {
+                    final navigator = Navigator.of(context);
+                    navigator.pop();
+                    navigator.push(
+                      MaterialPageRoute(
+                        builder: (_) => const EmergencyContactScreen(),
+                      ),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.primaryForeground,
+                    shape: const StadiumBorder(),
+                    textStyle: buttonText,
+                  ),
+                  child: Text(l.verifyAddContact),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ] else if (!pending) ...[
               SizedBox(
                 width: double.infinity,
                 height: 52,

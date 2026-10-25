@@ -8119,6 +8119,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weight'**
   String get resultsWeightButton;
+
+  /// No description provided for @ecRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'An emergency contact is required to finish verification'**
+  String get ecRequiredTitle;
+
+  /// No description provided for @ecRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It stays private and is only used if something goes wrong during a delivery.'**
+  String get ecRequiredBody;
+
+  /// No description provided for @verifyContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost verified'**
+  String get verifyContactTitle;
+
+  /// No description provided for @verifyContactBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an emergency contact to finish verifying your identity.'**
+  String get verifyContactBody;
+
+  /// No description provided for @verifyAddContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add emergency contact'**
+  String get verifyAddContact;
+
+  /// No description provided for @identityNeedsContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an emergency contact to finish'**
+  String get identityNeedsContact;
+
+  /// No description provided for @ecProfileRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required to be verified'**
+  String get ecProfileRequired;
 }
 
 class _AppLocalizationsDelegate
