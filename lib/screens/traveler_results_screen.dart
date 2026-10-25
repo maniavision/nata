@@ -4,10 +4,12 @@ import '../l10n/l10n_ext.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
+import '../services/request_service.dart' show RequestInput;
 import '../services/traveler_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/location_search_sheet.dart';
+import 'route_alerts_screen.dart' show formatKg;
 import 'traveler_profile_screen.dart';
 
 class TravelerResultsScreen extends StatefulWidget {
@@ -41,10 +43,31 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   /// Earliest departure first (the default), or latest first.
   bool _latestFirst = false;
 
-  /// [_results] by departure date; trips on the same day keep the order the
+  /// The weights offered as chips; any other is typed in [_weight].
+  static const _weightChoices = <double>[2, 5, 10, 20];
+
+  /// Only travelers who can carry at least this much (kg), or everyone.
+  double? _minKg;
+  final _weight = TextEditingController();
+
+  /// What's in [_weight] isn't a weight.
+  bool _weightInvalid = false;
+
+  /// [_results] the traveler can carry [_minKg] for. A trip with no capacity
+  /// set is kept, as for route alerts: the traveler may still take it.
+  List<TravelerTrip> get _matching {
+    final min = _minKg;
+    if (min == null) return _results;
+    return [
+      for (final r in _results)
+        if (r.maxWeightKg == null || r.maxWeightKg! >= min) r,
+    ];
+  }
+
+  /// [_matching] by departure date; trips on the same day keep the order the
   /// search returned them in.
   List<TravelerTrip> get _sorted {
-    final indexed = _results.indexed.toList()
+    final indexed = _matching.indexed.toList()
       ..sort((a, b) {
         final byDate = a.$2.departureDate.compareTo(b.$2.departureDate);
         if (byDate != 0) return _latestFirst ? -byDate : byDate;
@@ -57,6 +80,30 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _weight.dispose();
+    super.dispose();
+  }
+
+  /// A chip: that weight, or everyone (null). Shown in the field too.
+  void _pickWeight(double? kg) {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _minKg = kg;
+      _weightInvalid = false;
+      _weight.text = kg == null ? '' : formatKg(kg);
+    });
+  }
+
+  void _typedWeight(String text) {
+    final kg = text.trim().isEmpty ? null : RequestInput.parseWeightKg(text);
+    setState(() {
+      _weightInvalid = text.trim().isNotEmpty && kg == null;
+      _minKg = kg;
+    });
   }
 
   Future<void> _load() async {
@@ -199,7 +246,10 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
                 ],
               ),
             ),
-          if (_results.isNotEmpty) _buildSortBar(),
+          if (_results.isNotEmpty) ...[
+            _buildWeightFilter(),
+            if (_matching.isEmpty) _buildNoneCanCarry() else _buildSortBar(),
+          ],
           ..._sorted.map(
             (r) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -207,6 +257,188 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
             ),
           ),
           _buildNotifyBanner(),
+        ],
+      ),
+    );
+  }
+
+  // ── Weight filter ──────────────────────────────────────────────────────────
+  Widget _buildWeightFilter() {
+    final l = context.l10n;
+    Widget chip(String label, double? kg, Key key) {
+      final selected = _minKg == kg && !_weightInvalid;
+      return Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
+          key: key,
+          onTap: () => _pickWeight(kg),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: selected ? AppColors.primary : AppColors.card,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: selected ? AppColors.primary : AppColors.border,
+              ),
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: selected
+                    ? AppColors.primaryForeground
+                    : AppColors.foreground,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(999),
+      borderSide: BorderSide(
+        color: _weightInvalid ? AppColors.destructive : AppColors.border,
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.scale_rounded,
+                size: 14,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l.resultsWeight,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              chip(l.resultsWeightAny, null, const ValueKey('weight-any')),
+              for (final kg in _weightChoices)
+                chip(
+                  l.routeAlertsWeightChip(formatKg(kg)),
+                  kg,
+                  ValueKey('weight-${formatKg(kg)}'),
+                ),
+              SizedBox(
+                width: 92,
+                child: TextField(
+                  key: const ValueKey('results-weight'),
+                  controller: _weight,
+                  onChanged: _typedWeight,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textInputAction: TextInputAction.done,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.foreground,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l.resultsWeightOther,
+                    hintStyle: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      color: AppColors.mutedForeground,
+                    ),
+                    suffixText: 'kg',
+                    suffixStyle: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      color: AppColors.mutedForeground,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.card,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    border: border,
+                    enabledBorder: border,
+                    focusedBorder: border.copyWith(
+                      borderSide: BorderSide(
+                        color: _weightInvalid
+                            ? AppColors.destructive
+                            : AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_weightInvalid) ...[
+            const SizedBox(height: 6),
+            Text(
+              l.resultsWeightErr,
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.destructive,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Travelers go this way, but none can carry [_minKg].
+  Widget _buildNoneCanCarry() {
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 24),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.scale_rounded,
+            size: 36,
+            color: AppColors.mutedForeground,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l.resultsWeightNone(formatKg(_minKg!)),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: AppColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l.resultsWeightNoneHint,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            key: const ValueKey('weight-clear'),
+            onPressed: () => _pickWeight(null),
+            child: Text(l.resultsWeightClear),
+          ),
         ],
       ),
     );
@@ -338,7 +570,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              _loading ? '…' : context.l10n.availableCount(_results.length),
+              _loading ? '…' : context.l10n.availableCount(_matching.length),
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w600,
                 fontSize: 12,

@@ -128,6 +128,131 @@ void main() {
     });
   });
 
+  // Amara carries 3 kg, Daniel 5 kg, Maya 2 kg.
+  group('weight filter', () {
+    bool shown(String name) => find.text(name).evaluate().isNotEmpty;
+    bool selected(WidgetTester tester, String key) => tester
+        .widget<Semantics>(
+          find
+              .ancestor(
+                of: find.byKey(ValueKey(key)),
+                matching: find.byType(Semantics),
+              )
+              .first,
+        )
+        .properties
+        .selected!;
+
+    testWidgets('everyone by default, with Any selected', (tester) async {
+      await pumpResults(tester);
+
+      expect(find.text('Weight to send'), findsOneWidget);
+      expect(selected(tester, 'weight-any'), isTrue);
+      expect(selected(tester, 'weight-5'), isFalse);
+      expect(find.text('3 available'), findsOneWidget);
+    });
+
+    testWidgets('a chip keeps only travelers who can carry it', (tester) async {
+      await pumpResults(tester);
+
+      await tester.tap(find.byKey(const ValueKey('weight-5')));
+      await tester.pumpAndSettle();
+
+      expect(shown('Daniel Okafor'), isTrue);
+      expect(shown('Amara Kalu'), isFalse);
+      expect(shown('Maya Tariq'), isFalse);
+      expect(find.text('1 available'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget); // in the field too
+      expect(selected(tester, 'weight-5'), isTrue);
+
+      await tester.tap(find.byKey(const ValueKey('weight-any')));
+      await tester.pumpAndSettle();
+      expect(find.text('3 available'), findsOneWidget);
+    });
+
+    testWidgets('a typed weight filters, at least that much', (tester) async {
+      await pumpResults(tester);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('results-weight')),
+        '2,5',
+      );
+      await tester.pumpAndSettle();
+
+      expect(shown('Amara Kalu'), isTrue);
+      expect(shown('Daniel Okafor'), isTrue);
+      expect(shown('Maya Tariq'), isFalse);
+      expect(find.text('2 available'), findsOneWidget);
+    });
+
+    testWidgets('a trip without a capacity stays', (tester) async {
+      service.trips = [
+        ...sampleTravelers(),
+        sampleTrip(
+          tripId: 'z',
+          travelerId: 'traveler-9',
+          firstName: 'Zoe',
+          maxWeightKg: null,
+        ),
+      ];
+      await pumpResults(tester);
+
+      await tester.tap(find.byKey(const ValueKey('weight-20')));
+      await tester.pumpAndSettle();
+
+      expect(shown('Zoe Kalu'), isTrue);
+      expect(find.text('Capacity not specified'), findsOneWidget);
+    });
+
+    testWidgets('not a weight: says so and shows everyone', (tester) async {
+      await pumpResults(tester);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('results-weight')),
+        'heavy',
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enter a weight in kg, e.g. 5'), findsOneWidget);
+      expect(find.text('3 available'), findsOneWidget);
+    });
+
+    testWidgets('nobody can carry it: says so, and shows all again', (
+      tester,
+    ) async {
+      await pumpResults(tester);
+
+      await tester.tap(find.byKey(const ValueKey('weight-10')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No traveler here can carry 10 kg'), findsOneWidget);
+      expect(find.text('Sort by date'), findsNothing);
+      expect(find.text('0 available'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('weight-clear')));
+      await tester.pumpAndSettle();
+      expect(find.text('3 available'), findsOneWidget);
+      expect(find.byKey(const ValueKey('results-weight')), findsOneWidget);
+    });
+
+    testWidgets('is translated', (tester) async {
+      tester.view.physicalSize = const Size(900, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          TravelerResultsScreen(service: service),
+          locale: const Locale('fr'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Poids à envoyer'), findsOneWidget);
+      expect(find.text('Tous'), findsOneWidget);
+      expect(find.text('5 kg+'), findsOneWidget);
+    });
+  });
+
   group('TravelerResultsScreen', () {
     testWidgets('sends the search criteria to the service', (tester) async {
       await pumpResults(

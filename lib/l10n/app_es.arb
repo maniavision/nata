@@ -1972,5 +1972,12 @@
   "routeAlertsWeightHint": "p. ej. 5",
   "routeAlertsWeightNote": "Solo viajeros que puedan llevar al menos este peso. Déjalo vacío para cualquier viajero.",
   "routeAlertsWeightChip": "{kg} kg+",
-  "routeAlertsErrWeight": "Escribe un peso entre 0,1 y {max} kg, o déjalo vacío."
+  "routeAlertsErrWeight": "Escribe un peso entre 0,1 y {max} kg, o déjalo vacío.",
+  "resultsWeight": "Peso a enviar",
+  "resultsWeightAny": "Todos",
+  "resultsWeightOther": "Otro",
+  "resultsWeightErr": "Escribe un peso en kg, p. ej. 5",
+  "resultsWeightNone": "Ningún viajero aquí puede llevar {kg} kg",
+  "resultsWeightNoneHint": "Prueba un peso menor, o mira a todos los viajeros.",
+  "resultsWeightClear": "Ver todos los viajeros"
 }

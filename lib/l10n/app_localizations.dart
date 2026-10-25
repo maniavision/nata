@@ -8071,6 +8071,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a weight between 0.1 and {max} kg, or leave it empty.'**
   String routeAlertsErrWeight(String max);
+
+  /// No description provided for @resultsWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight to send'**
+  String get resultsWeight;
+
+  /// No description provided for @resultsWeightAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get resultsWeightAny;
+
+  /// No description provided for @resultsWeightOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get resultsWeightOther;
+
+  /// No description provided for @resultsWeightErr.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a weight in kg, e.g. 5'**
+  String get resultsWeightErr;
+
+  /// No description provided for @resultsWeightNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No traveler here can carry {kg} kg'**
+  String resultsWeightNone(String kg);
+
+  /// No description provided for @resultsWeightNoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a lighter weight, or see everyone going your way.'**
+  String get resultsWeightNoneHint;
+
+  /// No description provided for @resultsWeightClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all travelers'**
+  String get resultsWeightClear;
 }
 
 class _AppLocalizationsDelegate

@@ -4692,4 +4692,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String routeAlertsErrWeight(String max) {
     return 'Saisissez un poids entre 0,1 et $max kg, ou laissez vide.';
   }
+
+  @override
+  String get resultsWeight => 'Poids à envoyer';
+
+  @override
+  String get resultsWeightAny => 'Tous';
+
+  @override
+  String get resultsWeightOther => 'Autre';
+
+  @override
+  String get resultsWeightErr => 'Saisissez un poids en kg, ex. 5';
+
+  @override
+  String resultsWeightNone(String kg) {
+    return 'Aucun voyageur ici ne peut porter $kg kg';
+  }
+
+  @override
+  String get resultsWeightNoneHint =>
+      'Essayez un poids plus léger, ou voyez tous les voyageurs.';
+
+  @override
+  String get resultsWeightClear => 'Voir tous les voyageurs';
 }

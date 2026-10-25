@@ -4611,4 +4611,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String routeAlertsErrWeight(String max) {
     return 'Enter a weight between 0.1 and $max kg, or leave it empty.';
   }
+
+  @override
+  String get resultsWeight => 'Weight to send';
+
+  @override
+  String get resultsWeightAny => 'Any';
+
+  @override
+  String get resultsWeightOther => 'Other';
+
+  @override
+  String get resultsWeightErr => 'Enter a weight in kg, e.g. 5';
+
+  @override
+  String resultsWeightNone(String kg) {
+    return 'No traveler here can carry $kg kg';
+  }
+
+  @override
+  String get resultsWeightNoneHint =>
+      'Try a lighter weight, or see everyone going your way.';
+
+  @override
+  String get resultsWeightClear => 'Show all travelers';
 }

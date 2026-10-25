@@ -2087,5 +2087,13 @@
   "routeAlertsWeightChip": "{kg} kg+",
   "routeAlertsErrWeight": "Enter a weight between 0.1 and {max} kg, or leave it empty.",
   "@routeAlertsWeightChip": {"placeholders": {"kg": {"type": "String"}}},
-  "@routeAlertsErrWeight": {"placeholders": {"max": {"type": "String"}}}
+  "@routeAlertsErrWeight": {"placeholders": {"max": {"type": "String"}}},
+  "resultsWeight": "Weight to send",
+  "resultsWeightAny": "Any",
+  "resultsWeightOther": "Other",
+  "resultsWeightErr": "Enter a weight in kg, e.g. 5",
+  "resultsWeightNone": "No traveler here can carry {kg} kg",
+  "resultsWeightNoneHint": "Try a lighter weight, or see everyone going your way.",
+  "resultsWeightClear": "Show all travelers",
+  "@resultsWeightNone": {"placeholders": {"kg": {"type": "String"}}}
 }
