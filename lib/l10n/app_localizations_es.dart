@@ -4623,4 +4623,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tapToMakeDefault => 'Toca para hacerla predeterminada';
+
+  @override
+  String get notifPaymentReceivedTitle => 'Pago recibido';
+
+  @override
+  String notifPaymentReceivedBody(String name) {
+    return 'Tu pago se guarda de forma segura hasta la entrega. Ya puedes chatear con $name.';
+  }
+
+  @override
+  String get notifDeliveryConfirmedTitle => 'Entrega confirmada';
+
+  @override
+  String notifDeliveryConfirmedBody(String name) {
+    return 'Entregaste el artículo de $name. Tu pago está en camino.';
+  }
 }

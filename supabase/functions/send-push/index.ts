@@ -119,6 +119,8 @@ const NAME_FROM: Record<string, "sender" | "traveler" | "author"> = {
   request_cancelled_by_traveler: "traveler",
   request_cancelled_by_sender: "sender",
   request_paid: "sender",
+  payment_received: "traveler",
+  delivery_confirmed: "sender",
   item_picked_up: "traveler",
   item_delivered: "traveler",
   trip_match: "traveler",

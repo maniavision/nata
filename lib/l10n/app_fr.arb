@@ -1963,5 +1963,9 @@
   "removePaymentMethodBody": "{name} sera retiré de vos moyens de paiement.",
   "removeDefaultPaymentMethodBody": "{name} est votre moyen de paiement par défaut. Le moyen ajouté le plus récemment deviendra celui par défaut.",
   "payoutAccountLimitNote": "Vous pouvez avoir jusqu'à {count} comptes de paiement. Supprimez-en un pour en ajouter un autre.",
-  "tapToMakeDefault": "Toucher pour définir par défaut"
+  "tapToMakeDefault": "Toucher pour définir par défaut",
+  "notifPaymentReceivedTitle": "Paiement reçu",
+  "notifPaymentReceivedBody": "Votre paiement est conservé en sécurité jusqu’à la livraison. Vous pouvez maintenant discuter avec {name}.",
+  "notifDeliveryConfirmedTitle": "Livraison confirmée",
+  "notifDeliveryConfirmedBody": "Vous avez livré l’objet de {name}. Votre paiement est en route."
 }
