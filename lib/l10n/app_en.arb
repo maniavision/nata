@@ -2071,5 +2071,8 @@
   "removePaymentMethodBody": "{name} will be removed from your payment methods.",
   "removeDefaultPaymentMethodBody": "{name} is your default payment method. Your most recently added method becomes the default.",
   "@removePaymentMethodBody": {"placeholders": {"name": {"type": "String"}}},
-  "@removeDefaultPaymentMethodBody": {"placeholders": {"name": {"type": "String"}}}
+  "@removeDefaultPaymentMethodBody": {"placeholders": {"name": {"type": "String"}}},
+  "payoutAccountLimitNote": "You can have up to {count} payout accounts. Remove one to add another.",
+  "tapToMakeDefault": "Tap to make default",
+  "@payoutAccountLimitNote": {"placeholders": {"count": {"type": "int"}}}
 }

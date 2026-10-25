@@ -4567,4 +4567,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String removeDefaultPaymentMethodBody(String name) {
     return '$name is your default payment method. Your most recently added method becomes the default.';
   }
+
+  @override
+  String payoutAccountLimitNote(int count) {
+    return 'You can have up to $count payout accounts. Remove one to add another.';
+  }
+
+  @override
+  String get tapToMakeDefault => 'Tap to make default';
 }

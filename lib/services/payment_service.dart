@@ -265,6 +265,9 @@ class PayoutOptions {
 }
 
 /// Why saving a payout account failed.
+/// How many payout accounts a traveler can have (20240175).
+const maxPayoutAccounts = 2;
+
 enum PayoutAccountFailure {
   invalid,
   notSupported,
@@ -274,6 +277,9 @@ enum PayoutAccountFailure {
 
   /// Stripe needs an email for the account, and Nata has none.
   emailRequired,
+
+  /// Already [maxPayoutAccounts] payout accounts.
+  limitReached,
   unavailable,
   other,
 }
@@ -428,6 +434,12 @@ class PaymentService {
     await _table('payout_accounts').delete().eq('id', id);
   }
 
+  /// Makes [id] the account payouts go to; the other stops being the
+  /// default (keep_single_default, 20240124).
+  Future<void> setDefaultPayoutAccount(String id) async {
+    await _table('payout_accounts').update({'is_default': true}).eq('id', id);
+  }
+
   /// The user's payout accounts, oldest first.
   Future<List<PayoutAccount>> payoutAccounts() async {
     final rows = await _table(
@@ -480,6 +492,7 @@ class PaymentService {
         'invalid' => PayoutAccountFailure.invalid,
         'not_supported' => PayoutAccountFailure.notSupported,
         'country_mismatch' => PayoutAccountFailure.countryMismatch,
+        'limit_reached' => PayoutAccountFailure.limitReached,
         'payments_unavailable' => PayoutAccountFailure.unavailable,
         _ => PayoutAccountFailure.other,
       });
@@ -552,6 +565,7 @@ class PaymentService {
       throw PayoutAccountException(switch (code) {
         'not_supported' => PayoutAccountFailure.notSupported,
         'email_required' => PayoutAccountFailure.emailRequired,
+        'limit_reached' => PayoutAccountFailure.limitReached,
         'invalid' || 'bad_request' => PayoutAccountFailure.invalid,
         'payments_unavailable' => PayoutAccountFailure.unavailable,
         _ => PayoutAccountFailure.other,

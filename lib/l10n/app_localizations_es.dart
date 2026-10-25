@@ -4615,4 +4615,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String removeDefaultPaymentMethodBody(String name) {
     return '$name es tu método de pago predeterminado. El método añadido más recientemente pasará a ser el predeterminado.';
   }
+
+  @override
+  String payoutAccountLimitNote(int count) {
+    return 'Puedes tener hasta $count cuentas de cobro. Elimina una para añadir otra.';
+  }
+
+  @override
+  String get tapToMakeDefault => 'Toca para hacerla predeterminada';
 }

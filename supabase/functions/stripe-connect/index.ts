@@ -37,7 +37,8 @@
  * Errors: 401 unauthorized, 400 bad_request / invalid ({ message }: what
  * Stripe refused, such as a routing number), 409 not_supported (no country
  * of residence, or one Stripe can't pay out to) / email_required /
- * tos_required, 503 payments_unavailable, 502 provider_error.
+ * tos_required / limit_reached (already two payout accounts, and this bank
+ * isn't one of them: 20240175), 503 payments_unavailable, 502 provider_error.
  */
 
 // ── Stripe and Supabase helpers (the same in each payment function, so each
@@ -383,7 +384,27 @@ Deno.serve(async (req: Request) => {
     });
   };
 
-  if (action === "status") return answer(body.save === true);
+  /** Two payout accounts already, and none is this Stripe bank. */
+  const full = async () => {
+    const { data: accounts } = await db.from("payout_accounts")
+      .select("id")
+      .eq("user_id", user.id);
+    if ((accounts ?? []).length < 2) return false;
+    if (!accountId) return true;
+    const { data: dest } = await db.from("payout_destinations")
+      .select("account_id")
+      .eq("account_bank", "STRIPE")
+      .eq("account_number", accountId)
+      .maybeSingle();
+    return !dest;
+  };
+
+  if (action === "status") {
+    if (body.save === true && await full()) {
+      return json({ error: "limit_reached" }, 409);
+    }
+    return answer(body.save === true);
+  }
 
   if (action === "finish") {
     if (!accountId) return json({ error: "bad_request" }, 400);
@@ -407,6 +428,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // submit: the traveler's details and bank account, from Nata's form.
+  if (await full()) return json({ error: "limit_reached" }, 409);
   const { data: profile } = await db.from("profiles")
     .select("country_of_residence")
     .eq("id", user.id)

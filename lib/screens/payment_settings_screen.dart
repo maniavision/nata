@@ -110,6 +110,10 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     if (added != null && mounted) _load();
   }
 
+  /// With two payout accounts, the traveler picks which one is paid.
+  Future<void> _makeDefaultPayout(PayoutAccount account) =>
+      _change(() => _service.setDefaultPayoutAccount(account.id));
+
   Future<void> _addMethod() async {
     final added = await Navigator.of(context).push<PaymentMethod>(
       MaterialPageRoute(
@@ -518,69 +522,134 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             ),
             for (final a in _payoutAccounts) ...[
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.input,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    _iconBox(
-                      Icons.account_balance_rounded,
-                      bg: _green.withValues(alpha: 0.15),
-                      color: _green,
-                      radius: 8,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: _titled(a.institutionName, a.summary)),
-                    if (a.isDefault) ...[
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        size: 18,
-                        color: _green,
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-                    GestureDetector(
-                      key: ValueKey('payout-account-remove-${a.id}'),
-                      onTap: () => _removePayoutAccount(a),
-                      child: Text(
-                        l.remove,
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _payoutAccountRow(l, a, choosing: _payoutAccounts.length > 1),
             ],
             if (!_loading && _payoutAccounts.isEmpty) ...[
               const SizedBox(height: 12),
               _empty(l.noPayoutAccount),
             ],
             const SizedBox(height: 12),
-            OutlinedButton.icon(
-              key: const ValueKey('payout-account-add'),
-              onPressed: _addPayoutAccount,
-              icon: const Icon(Icons.add_circle_rounded, size: 16),
-              label: Text(
-                l.addPayoutAccount,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
+            if (_payoutAccounts.length >= maxPayoutAccounts)
+              Row(
+                key: const ValueKey('payout-account-limit'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.info_rounded,
+                    size: 14,
+                    color: AppColors.mutedForeground,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l.payoutAccountLimitNote(maxPayoutAccounts),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        height: 1.5,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else
+              OutlinedButton.icon(
+                key: const ValueKey('payout-account-add'),
+                onPressed: _addPayoutAccount,
+                icon: const Icon(Icons.add_circle_rounded, size: 16),
+                label: Text(
+                  l.addPayoutAccount,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  backgroundColor: AppColors.card,
+                  side: const BorderSide(color: AppColors.border),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: const StadiumBorder(),
                 ),
               ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                backgroundColor: AppColors.card,
-                side: const BorderSide(color: AppColors.border),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: const StadiumBorder(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// A payout account. With more than one ([choosing]), the default shows a
+  /// Default chip and a filled check; another is made the default with a
+  /// tap.
+  Widget _payoutAccountRow(
+    AppLocalizations l,
+    PayoutAccount a, {
+    required bool choosing,
+  }) {
+    final pick = choosing && !a.isDefault;
+    return GestureDetector(
+      key: ValueKey('payout-account-${a.id}'),
+      behavior: HitTestBehavior.opaque,
+      onTap: pick ? () => _makeDefaultPayout(a) : null,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.input,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: choosing && a.isDefault ? _green : AppColors.border,
+          ),
+        ),
+        child: Row(
+          children: [
+            _iconBox(
+              Icons.account_balance_rounded,
+              bg: _green.withValues(alpha: 0.15),
+              color: _green,
+              radius: 8,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _titled(a.institutionName, a.summary),
+                  if (choosing) ...[
+                    const SizedBox(height: 6),
+                    if (a.isDefault)
+                      _chip(l.defaultLabel)
+                    else
+                      Text(
+                        l.tapToMakeDefault,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: AppColors.accent,
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+            if (a.isDefault)
+              const Icon(Icons.check_circle_rounded, size: 18, color: _green)
+            else if (choosing)
+              const Icon(
+                Icons.radio_button_unchecked_rounded,
+                size: 18,
+                color: AppColors.mutedForeground,
+              ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              key: ValueKey('payout-account-remove-${a.id}'),
+              onTap: () => _removePayoutAccount(a),
+              child: Text(
+                l.remove,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: AppColors.mutedForeground,
+                ),
               ),
             ),
           ],
