@@ -151,6 +151,11 @@ enum RequestFailure {
   /// Mobile money isn't available in that country.
   mobileMoneyUnavailable,
 
+  /// That way to pay isn't offered for this request (mobile money only when
+  /// the sender and the traveler both live where pawaPay takes it, card or
+  /// Apple Pay otherwise).
+  methodNotOffered,
+
   /// The payment provider refused the mobile money number or network.
   phoneRejected,
 
@@ -254,6 +259,10 @@ class MobileMoneyNetwork {
         (j['name'] as String? ?? '').trim(),
       );
 }
+
+/// How a request is paid: mobile money (pawaPay) or card and Apple Pay
+/// (Stripe), from where the sender and the traveler live.
+enum CheckoutKind { mobileMoney, card }
 
 /// Where a payment stands.
 enum PaymentStatus { pending, successful, failed }
@@ -1158,6 +1167,7 @@ class RequestService {
         'not_allowed' => RequestFailure.notPayable,
         'payments_unavailable' => RequestFailure.paymentsUnavailable,
         'mobile_money_unavailable' => RequestFailure.mobileMoneyUnavailable,
+        'method_not_offered' => RequestFailure.methodNotOffered,
         'phone_rejected' => RequestFailure.phoneRejected,
         'amount_out_of_bounds' => RequestFailure.amountOutOfBounds,
         'network_unavailable' => RequestFailure.networkUnavailable,
@@ -1166,6 +1176,19 @@ class RequestService {
         _ => RequestFailure.other,
       }, e);
     }
+  }
+
+  /// How [requestId] is paid (checkout_kind, 20240173): mobile money when
+  /// the sender and the traveler both live where pawaPay takes it, card or
+  /// Apple Pay through Stripe otherwise.
+  Future<CheckoutKind> checkoutKind(String requestId) async {
+    final kind = await _client.rpc(
+      'checkout_kind',
+      params: {'p_request_id': requestId},
+    );
+    return kind == 'mobile_money'
+        ? CheckoutKind.mobileMoney
+        : CheckoutKind.card;
   }
 
   /// The countries whose mobile money can pay [requestId], each with the

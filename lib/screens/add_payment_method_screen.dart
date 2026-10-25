@@ -5,7 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
-import '../services/request_service.dart' show RequestInput;
+import '../services/phone_number.dart';
 import '../widgets/one_line_text.dart';
 
 /// Card checks, kept apart from the screen so they can be tested.
@@ -94,26 +94,33 @@ class _ExpiryFormatter extends TextInputFormatter {
   }
 }
 
-/// Add Payment Method, opened from Payment Settings: a card, a mobile money
-/// wallet or Apple Pay. Pops with the new (unsaved) [PaymentMethod] once it
-/// is valid; Payment Settings saves it.
+/// Add Payment Method, opened from Payment Settings. What can be saved
+/// follows where the member lives (my_payment_options, 20240174): a mobile
+/// money wallet on their country's pawaPay networks when they live in such a
+/// country, else a card or Apple Pay. Pops with the new (unsaved)
+/// [PaymentMethod] once it is valid; Payment Settings saves it.
 class AddPaymentMethodScreen extends StatefulWidget {
   /// The account holder's first name, for "Fortune's iPhone".
   final String holderFirstName;
 
-  const AddPaymentMethodScreen({super.key, required this.holderFirstName});
+  /// Override for tests; defaults to [PaymentService.paymentOptions].
+  final Future<PaymentOptions> Function()? loadOptions;
+
+  const AddPaymentMethodScreen({
+    super.key,
+    required this.holderFirstName,
+    this.loadOptions,
+  });
 
   @override
   State<AddPaymentMethodScreen> createState() => _AddPaymentMethodScreenState();
 }
 
 class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
-  static const _providers = [
-    'M-Pesa',
-    'MTN Mobile Money',
-    'Airtel Money',
-    'Orange Money',
-  ];
+  /// What the member can save; null while loading (cards and Apple Pay if it
+  /// can't be had: the database refuses what doesn't fit anyway).
+  PaymentOptions? _options;
+  String? _network;
 
   PaymentMethodKind _kind = PaymentMethodKind.card;
   bool _setAsDefault = false;
@@ -123,9 +130,35 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
   final _cardNumberCtrl = TextEditingController();
   final _expiryCtrl = TextEditingController();
   final _cvvCtrl = TextEditingController();
-  String _provider = _providers.first;
   final _mobileNumberCtrl = TextEditingController();
   final _mobileNameCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOptions();
+  }
+
+  Future<void> _loadOptions() async {
+    PaymentOptions options;
+    try {
+      options =
+          await (widget.loadOptions ??
+              () => PaymentService().paymentOptions())();
+    } catch (e) {
+      debugPrint('[AddPaymentMethod] options: $e');
+      options = PaymentOptions.cards;
+    }
+    if (!mounted) return;
+    setState(() {
+      _options = options;
+      _kind = options.mobileMoney
+          ? PaymentMethodKind.mobileMoney
+          : PaymentMethodKind.card;
+      // A country's only network is chosen already.
+      if (options.networks.length == 1) _network = options.networks.single.code;
+    });
+  }
 
   @override
   void dispose() {
@@ -174,15 +207,22 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
           );
         }
       case PaymentMethodKind.mobileMoney:
-        final phone = RequestInput.normalizePhone(_mobileNumberCtrl.text);
-        if (phone == null) {
-          error = l.errMobileNumber;
+        final options = _options ?? PaymentOptions.cards;
+        final network = options.networks
+            .where((n) => n.code == _network)
+            .firstOrNull;
+        final phone = _walletNumber(options);
+        if (network == null) {
+          error = l.errChooseNetwork;
+        } else if (phone == null) {
+          error = l.errWholeMobileNumber;
         } else if (_mobileNameCtrl.text.trim().length < 2) {
           error = l.errRegisteredName;
         } else {
           method = PaymentMethod(
             kind: PaymentMethodKind.mobileMoney,
-            mobileProvider: _provider,
+            mobileProvider: network.name,
+            mobileNetwork: network.code,
             mobileNumber: phone,
             mobileRegisteredName: _mobileNameCtrl.text.trim(),
           );
@@ -198,6 +238,25 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
       return;
     }
     Navigator.of(context).pop(method.copyWith(isDefault: _setAsDefault));
+  }
+
+  /// The wallet's number with the country's calling code (+ code and
+  /// number), or null while it isn't a whole one.
+  String? _walletNumber(PaymentOptions options) {
+    final phone = internationalPhoneNumber(
+      dialCode: options.dialCode,
+      input: _mobileNumberCtrl.text,
+      isoCode: options.countryCode,
+    );
+    final digits = (phone ?? '').replaceAll(RegExp(r'\D'), '');
+    final code = options.dialCode.replaceAll(RegExp(r'\D'), '');
+    if (code.isEmpty ||
+        !digits.startsWith(code) ||
+        digits.length < 10 ||
+        digits.length > 15) {
+      return null;
+    }
+    return '+$digits';
   }
 
   void _clearError() {
@@ -223,13 +282,31 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
                 children: [
                   _securityNote(l),
                   const SizedBox(height: 16),
-                  _kindTabs(l),
-                  const SizedBox(height: 16),
-                  switch (_kind) {
-                    PaymentMethodKind.card => _cardForm(l),
-                    PaymentMethodKind.mobileMoney => _mobileForm(l),
-                    PaymentMethodKind.applePay => _appleNote(l),
-                  },
+                  if (_options == null)
+                    const Padding(
+                      key: ValueKey('add-payment-loading'),
+                      padding: EdgeInsets.all(24),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accent,
+                        ),
+                      ),
+                    )
+                  else if (_options!.mobileMoney) ...[
+                    // Mobile money only: no tabs, and why.
+                    _mobileOnlyNote(l, _options!),
+                    const SizedBox(height: 12),
+                    _mobileForm(l),
+                  ] else ...[
+                    _kindTabs(l),
+                    const SizedBox(height: 16),
+                    switch (_kind) {
+                      PaymentMethodKind.card => _cardForm(l),
+                      PaymentMethodKind.mobileMoney => _cardForm(l),
+                      PaymentMethodKind.applePay => _appleNote(l),
+                    },
+                  ],
                   const SizedBox(height: 16),
                   _defaultToggle(l),
                   if (_error != null) ...[
@@ -415,13 +492,6 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
           ),
           const SizedBox(width: 8),
           tab(
-            PaymentMethodKind.mobileMoney,
-            Icons.smartphone_rounded,
-            l.paymentKindMobile,
-            'M-Pesa, MTN, Airtel',
-          ),
-          const SizedBox(width: 8),
-          tab(
             PaymentMethodKind.applePay,
             Icons.apple,
             'Apple Pay',
@@ -526,46 +596,51 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     );
   }
 
+  /// "You live in …, so you pay by mobile money."
+  Widget _mobileOnlyNote(AppLocalizations l, PaymentOptions options) {
+    return Row(
+      key: const ValueKey('add-payment-mobile-only'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 1),
+          child: Icon(
+            Icons.info_outline_rounded,
+            size: 14,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            l.paymentMobileOnlyNote(options.countryName),
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              height: 1.4,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _mobileForm(AppLocalizations l) {
+    final options = _options ?? PaymentOptions.cards;
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _title(l.mobileMoneyDetails),
           const SizedBox(height: 14),
-          _label(l.provider),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: _fieldDecoration(),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.smartphone_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      key: const ValueKey('add-payment-provider'),
-                      value: _provider,
-                      isExpanded: true,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: AppColors.foreground,
-                      ),
-                      items: [
-                        for (final p in _providers)
-                          DropdownMenuItem(value: p, child: Text(p)),
-                      ],
-                      onChanged: (p) => setState(() => _provider = p!),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _label(l.mobileMoneyNetwork),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final n in options.networks)
+                _networkPill(n.code, n.name, selected: _network == n.code),
+            ],
           ),
           const SizedBox(height: 14),
           _label(l.mobileNumber),
@@ -573,8 +648,11 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
             fieldKey: 'add-payment-mobile-number',
             icon: Icons.phone_rounded,
             controller: _mobileNumberCtrl,
-            hint: '+254 7XX XXX XXX',
+            hint: '',
             keyboardType: TextInputType.phone,
+            prefixText: options.dialCode.isEmpty
+                ? null
+                : '${options.dialCode}  ',
             formatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-().\s]')),
             ],
@@ -589,6 +667,37 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
             capitalization: TextCapitalization.words,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _networkPill(String code, String name, {required bool selected}) {
+    return GestureDetector(
+      key: ValueKey('add-payment-network-$code'),
+      onTap: () => setState(() {
+        _network = code;
+        _error = null;
+      }),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.card,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          name,
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: selected
+                ? AppColors.primaryForeground
+                : AppColors.foreground,
+          ),
+        ),
       ),
     );
   }
@@ -714,6 +823,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     List<TextInputFormatter>? formatters,
     bool obscure = false,
     bool compact = false,
+    String? prefixText,
   }) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 14),
@@ -740,6 +850,12 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
               decoration: InputDecoration(
                 hintText: hint,
+                prefixText: prefixText,
+                prefixStyle: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: compact ? 12 : 14,
+                  color: AppColors.mutedForeground,
+                ),
                 hintStyle: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w500,
                   fontSize: compact ? 12 : 14,

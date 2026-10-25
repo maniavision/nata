@@ -964,6 +964,16 @@ class FakeRequestService extends Fake implements RequestService {
     return nextPayment;
   }
 
+  /// How checkout lets this request be paid; null fails (every way shown).
+  CheckoutKind? kind;
+
+  @override
+  Future<CheckoutKind> checkoutKind(String requestId) async {
+    final k = kind;
+    if (k == null) throw StateError('checkout kind failed');
+    return k;
+  }
+
   /// Mobile money countries offered at checkout; [failMobileOptions] makes
   /// loading them fail.
   List<MobileMoneyOption> mobileOptions = const [

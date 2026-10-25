@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/payment_service.dart';
 import '../services/phone_number.dart';
 import '../services/request_service.dart';
 import '../services/stripe_sheet.dart';
@@ -29,6 +30,10 @@ class CheckoutEscrowScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RequestService].
   final RequestService? service;
 
+  /// Override for tests: the saved payment methods (a saved mobile money
+  /// wallet fills in checkout); defaults to the real [PaymentService].
+  final PaymentService? paymentService;
+
   /// Override for tests; defaults to [DateTime.now].
   final DateTime Function()? now;
 
@@ -46,6 +51,7 @@ class CheckoutEscrowScreen extends StatefulWidget {
     required this.request,
     this.money = PriceFormatter.usd,
     this.service,
+    this.paymentService,
     this.now,
     this.openPaymentPage,
     this.closePaymentPage,
@@ -81,6 +87,34 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   bool _mobileFailed = false;
   MobileMoneyOption? _mobileChoice;
   bool get _payingByMobile => _paymentMethod == 2;
+
+  /// How this request is paid, from where the sender and the traveler live:
+  /// mobile money only, or card and Apple Pay only. Every way is shown when
+  /// it can't be had (create-payment still refuses the wrong one).
+  CheckoutKind? _kind;
+  bool _kindFailed = false;
+
+  /// The ways to pay shown (indexes of [_payMethods]).
+  List<int> get _offered => switch (_kind) {
+    CheckoutKind.mobileMoney => const [2],
+    CheckoutKind.card => const [0, 1],
+    null => _kindFailed ? const [0, 1, 2] : const [],
+  };
+
+  Future<void> _loadKind() async {
+    try {
+      final kind = await _service.checkoutKind(_r.id);
+      if (!mounted) return;
+      setState(() {
+        _kind = kind;
+        _paymentMethod = kind == CheckoutKind.mobileMoney ? 2 : 0;
+      });
+      if (kind == CheckoutKind.mobileMoney) _loadMobileOptions();
+    } catch (e) {
+      debugPrint('[Checkout] checkout kind: $e');
+      if (mounted) setState(() => _kindFailed = true);
+    }
+  }
 
   /// Mobile money is charged with no page: the wallet's country (with its
   /// calling code and networks), network and number.
@@ -140,11 +174,50 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         _mobileOptions = options;
         _mobileChoice ??= options.where((o) => o.suggested).firstOrNull;
       });
+      unawaited(_prefillWallet(options));
     } catch (e) {
       debugPrint('[Checkout] mobile money options: $e');
       if (mounted) setState(() => _mobileFailed = true);
     } finally {
       if (mounted) setState(() => _mobileLoading = false);
+    }
+  }
+
+  /// The member's saved mobile money wallet (the default first) fills in the
+  /// country, network and number, unless they started typing one.
+  Future<void> _prefillWallet(List<MobileMoneyOption> options) async {
+    try {
+      final methods = await (widget.paymentService ?? PaymentService())
+          .methods();
+      final wallets =
+          methods
+              .where(
+                (m) =>
+                    m.kind == PaymentMethodKind.mobileMoney &&
+                    m.mobileNetwork != null &&
+                    m.mobileNumber != null,
+              )
+              .toList()
+            ..sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      for (final w in wallets) {
+        final option = options
+            .where((o) => o.networks.any((n) => n.code == w.mobileNetwork))
+            .firstOrNull;
+        if (option == null) continue;
+        final code = option.dialCode.replaceAll(RegExp(r'\D'), '');
+        final digits = w.mobileNumber!.replaceAll(RegExp(r'\D'), '');
+        if (!mounted || _mobilePhoneCtrl.text.isNotEmpty) return;
+        setState(() {
+          _mobileChoice = option;
+          _pickedNetwork = w.mobileNetwork;
+          _mobilePhoneCtrl.text = digits.startsWith(code)
+              ? digits.substring(code.length)
+              : digits;
+        });
+        return;
+      }
+    } catch (e) {
+      debugPrint('[Checkout] saved wallet: $e');
     }
   }
 
@@ -188,6 +261,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       });
     }
     if (_hasTicketImage) _loadTicket();
+    _loadKind();
   }
 
   // ── Paying ─────────────────────────────────────────────────────────────────
@@ -233,6 +307,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           RequestFailure.notPayable => l.errRequestNotPayable,
           RequestFailure.paymentsUnavailable => l.errPaymentsUnavailable,
           RequestFailure.mobileMoneyUnavailable => l.errMobileMoneyUnavailable,
+          RequestFailure.methodNotOffered => l.errMethodNotOffered,
           RequestFailure.phoneRejected => l.errPhoneRejected,
           RequestFailure.amountOutOfBounds => l.errMobileAmountOutOfBounds,
           RequestFailure.networkUnavailable => l.errMobileNetworkUnavailable,
@@ -934,115 +1009,166 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          ...methods.asMap().entries.map((e) {
-            final m = e.value;
-            final selected = _paymentMethod == e.key;
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: e.key < methods.length - 1 ? 8 : 0,
-              ),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() => _paymentMethod = e.key);
-                  if (e.key == 2) _loadMobileOptions();
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.accent.withValues(alpha: 0.05)
-                        : AppColors.input.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: selected ? AppColors.accent : AppColors.border,
-                      width: selected ? 2 : 1,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: m.iconBg.withValues(
-                            alpha: m.iconBg == const Color(0xFF00A859)
-                                ? 0.15
-                                : 1.0,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          border: m.iconBorder == true
-                              ? Border.all(color: AppColors.border)
-                              : null,
-                        ),
-                        child: m.icon != null
-                            ? Icon(m.icon!, size: 20, color: m.iconColor)
-                            : Center(
-                                child: Text(
-                                  m.iconLabel ?? '',
-                                  style: GoogleFonts.dmSans(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 14,
-                                    color: const Color(0xFF00A859),
-                                  ),
-                                ),
-                              ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              m.title,
-                              style: GoogleFonts.dmSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                                color: AppColors.foreground,
-                              ),
-                            ),
-                            Text(
-                              m.subtitle,
-                              style: GoogleFonts.dmSans(
-                                fontSize: 11,
-                                color: AppColors.mutedForeground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: selected
-                              ? AppColors.accent
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: selected
-                                ? AppColors.accent
-                                : AppColors.border,
-                            width: selected ? 0 : 1.5,
-                          ),
-                        ),
-                        child: selected
-                            ? const Icon(
-                                Icons.check,
-                                size: 10,
-                                color: Colors.white,
-                              )
-                            : null,
-                      ),
-                    ],
+          if (_offered.isEmpty)
+            const Padding(
+              key: ValueKey('checkout-methods-loading'),
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.accent,
                   ),
                 ),
               ),
-            );
-          }),
+            ),
+          ...methods.asMap().entries.where((e) => _offered.contains(e.key)).map(
+            (e) {
+              final m = e.value;
+              final selected = _paymentMethod == e.key;
+              return Padding(
+                key: ValueKey('checkout-method-${e.key}'),
+                padding: EdgeInsets.only(
+                  bottom: e.key != _offered.last ? 8 : 0,
+                ),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() => _paymentMethod = e.key);
+                    if (e.key == 2) _loadMobileOptions();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.accent.withValues(alpha: 0.05)
+                          : AppColors.input.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selected ? AppColors.accent : AppColors.border,
+                        width: selected ? 2 : 1,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: m.iconBg.withValues(
+                              alpha: m.iconBg == const Color(0xFF00A859)
+                                  ? 0.15
+                                  : 1.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            border: m.iconBorder == true
+                                ? Border.all(color: AppColors.border)
+                                : null,
+                          ),
+                          child: m.icon != null
+                              ? Icon(m.icon!, size: 20, color: m.iconColor)
+                              : Center(
+                                  child: Text(
+                                    m.iconLabel ?? '',
+                                    style: GoogleFonts.dmSans(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 14,
+                                      color: const Color(0xFF00A859),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                m.title,
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.foreground,
+                                ),
+                              ),
+                              Text(
+                                m.subtitle,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 11,
+                                  color: AppColors.mutedForeground,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: selected
+                                ? AppColors.accent
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.accent
+                                  : AppColors.border,
+                              width: selected ? 0 : 1.5,
+                            ),
+                          ),
+                          child: selected
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 10,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          if (_kind == CheckoutKind.mobileMoney) _buildMobileOnlyNote(),
           if (_payingByMobile) _buildMobileMoneyPanel(),
           if (_payingByCard) _buildStripeNote(),
+        ],
+      ),
+    );
+  }
+
+  /// Both live in Africa: mobile money only, and why.
+  Widget _buildMobileOnlyNote() {
+    return Padding(
+      key: const ValueKey('checkout-mobile-only-note'),
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 14,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              context.l10n.checkoutMobileOnlyNote,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                height: 1.4,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1477,7 +1603,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     final checked = _ticketChecked && !_expired;
     final countryChosen = !_payingByMobile || _mobileChoice != null;
     final walletGiven = _directReady;
-    final unlocked = checked && countryChosen && walletGiven;
+    // Wait to know how this request is paid.
+    final methodKnown = _offered.contains(_paymentMethod);
+    final unlocked = checked && countryChosen && walletGiven && methodKnown;
     // Mobile money is charged in the wallet's currency.
     final amount = _payingByMobile && _mobileChoice != null
         ? _mobileChoice!.amountText

@@ -75,6 +75,7 @@ void main() {
         kind: PaymentMethodKind.mobileMoney,
         isDefault: true,
         mobileProvider: 'Orange Money',
+        mobileNetwork: 'ORANGE_SEN',
         mobileNumber: '+221771234567',
         mobileRegisteredName: 'Awa Diop',
       );
@@ -83,6 +84,7 @@ void main() {
         'kind': 'mobile_money',
         'is_default': true,
         'mobile_provider': 'Orange Money',
+        'mobile_network': 'ORANGE_SEN',
         'mobile_number': '+221771234567',
         'mobile_registered_name': 'Awa Diop',
       });

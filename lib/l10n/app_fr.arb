@@ -1904,6 +1904,12 @@
   "tipRouteAlertsBody": "Enregistrez les trajets sur lesquels vous envoyez et soyez averti quand un voyageur les fait.",
 
   "paidSecurelyThroughStripe": "Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.",
+  "paymentMobileOnlyNote": "Pays de résidence : {country}. Vous payez par mobile money.",
+  "errChooseNetwork": "Choisissez votre réseau.",
+  "errPaymentMethodNotOffered": "Ce moyen de paiement n'est pas proposé là où vous vivez.",
+  "errWholeMobileNumber": "Saisissez le numéro mobile en entier.",
+  "checkoutMobileOnlyNote": "Vous et le voyageur vivez tous deux en Afrique : cette livraison se paie par mobile money.",
+  "errMethodNotOffered": "Ce moyen de paiement n'est pas proposé pour cette livraison. Choisissez-en un autre.",
   "confirmingPayment": "Confirmation du paiement",
   "confirmingPaymentSub": "Paiement effectué. Nous le confirmons avec Stripe, cela prend quelques secondes.",
 
@@ -1952,5 +1958,8 @@
   "stripeMoreBody": "Pour terminer, Stripe a besoin d'un élément que le formulaire de Nata ne demande pas, comme une photo de votre pièce d'identité.",
   "stripeFinish": "Terminer avec Stripe",
   "removePayoutAccountTitle": "Supprimer ce compte de paiement ?",
-  "removePayoutAccountBody": "{name} {summary} ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut."
+  "removePayoutAccountBody": "{name} {summary} ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut.",
+  "removePaymentMethodTitle": "Supprimer ce moyen de paiement ?",
+  "removePaymentMethodBody": "{name} sera retiré de vos moyens de paiement.",
+  "removeDefaultPaymentMethodBody": "{name} est votre moyen de paiement par défaut. Le moyen ajouté le plus récemment deviendra celui par défaut."
 }

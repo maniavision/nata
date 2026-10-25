@@ -4,6 +4,7 @@ import 'package:carrywise_app/services/request_service.dart';
 import 'package:carrywise_app/services/stripe_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:carrywise_app/services/payment_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
 import '../helpers/fakes.dart';
@@ -142,7 +143,10 @@ void main() {
 
     /// Checkout over a host page, with both checks done, so leaving it can
     /// be seen.
-    Future<void> pumpPayable(WidgetTester tester) async {
+    Future<void> pumpPayable(
+      WidgetTester tester, {
+      PaymentService? payments,
+    }) async {
       opened.clear();
       sheets.clear();
       sheetResult = CardSheetResult.paid;
@@ -162,6 +166,7 @@ void main() {
                       builder: (_) => CheckoutEscrowScreen(
                         request: accepted(checkedAt: DateTime(2030, 6, 21, 9)),
                         service: service,
+                        paymentService: payments,
                         now: () => now,
                         openPaymentPage: (link) async {
                           opened.add(link);
@@ -194,6 +199,84 @@ void main() {
       await tester.pump();
       await tester.pump();
     }
+
+    group('by where the sender and the traveler live', () {
+      Finder method(int i) => find.byKey(ValueKey('checkout-method-$i'));
+
+      testWidgets('both in Africa: mobile money only, already chosen', (
+        tester,
+      ) async {
+        service.kind = CheckoutKind.mobileMoney;
+        await pumpPayable(tester);
+
+        expect(method(2), findsOneWidget);
+        expect(method(0), findsNothing);
+        expect(method(1), findsNothing);
+        expect(find.text('Credit or Debit Card'), findsNothing);
+        expect(find.textContaining('both live in Africa'), findsOneWidget);
+        // Chosen without a tap: its countries are there.
+        expect(find.text('Kenya · KES'), findsOneWidget);
+      });
+
+      testWidgets('otherwise: card and Apple Pay only', (tester) async {
+        service.kind = CheckoutKind.card;
+        await pumpPayable(tester);
+
+        expect(method(0), findsOneWidget);
+        expect(method(1), findsOneWidget);
+        expect(method(2), findsNothing);
+        expect(find.text('Mobile Money'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('checkout-mobile-only-note')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('checkout-stripe-note')),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('the saved mobile money wallet is filled in', (tester) async {
+        service.kind = CheckoutKind.mobileMoney;
+        await pumpPayable(
+          tester,
+          payments: FakePaymentService(
+            methods: const [
+              PaymentMethod(
+                id: 'pm1',
+                kind: PaymentMethodKind.mobileMoney,
+                mobileProvider: 'Telecel Cash',
+                mobileNetwork: 'VODAFONE_GHA',
+                mobileNumber: '+233201234567',
+                isDefault: true,
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        // Ghana instead of the suggested Kenya, its network and the number.
+        expect(find.text('Ghana · GHS'), findsOneWidget);
+        final phone = tester.widget<TextField>(
+          find.byKey(const ValueKey('mobile-money-phone')),
+        );
+        expect(phone.controller!.text, '201234567');
+      });
+
+      testWidgets('a way the server refuses is explained', (tester) async {
+        service.kind = CheckoutKind.card;
+        service.failStartPayment = const RequestException(
+          RequestFailure.methodNotOffered,
+        );
+        await pumpPayable(tester);
+        await pay(tester);
+        await tester.pump();
+        expect(
+          find.textContaining("isn't offered for this delivery"),
+          findsOneWidget,
+        );
+      });
+    });
 
     // A provider answering with a payment page (none does now) still works:
     // the page opens and checkout watches it. Apple Pay is picked first.

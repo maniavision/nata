@@ -4459,6 +4459,29 @@ class AppLocalizationsFr extends AppLocalizations {
       'Paiement sécurisé par Stripe. Vos données de carte ne passent jamais par Nata.';
 
   @override
+  String paymentMobileOnlyNote(String country) {
+    return 'Pays de résidence : $country. Vous payez par mobile money.';
+  }
+
+  @override
+  String get errChooseNetwork => 'Choisissez votre réseau.';
+
+  @override
+  String get errPaymentMethodNotOffered =>
+      'Ce moyen de paiement n\'est pas proposé là où vous vivez.';
+
+  @override
+  String get errWholeMobileNumber => 'Saisissez le numéro mobile en entier.';
+
+  @override
+  String get checkoutMobileOnlyNote =>
+      'Vous et le voyageur vivez tous deux en Afrique : cette livraison se paie par mobile money.';
+
+  @override
+  String get errMethodNotOffered =>
+      'Ce moyen de paiement n\'est pas proposé pour cette livraison. Choisissez-en un autre.';
+
+  @override
   String get confirmingPayment => 'Confirmation du paiement';
 
   @override
@@ -4611,5 +4634,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String removePayoutAccountBody(String name, String summary) {
     return '$name $summary ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut.';
+  }
+
+  @override
+  String get removePaymentMethodTitle => 'Supprimer ce moyen de paiement ?';
+
+  @override
+  String removePaymentMethodBody(String name) {
+    return '$name sera retiré de vos moyens de paiement.';
+  }
+
+  @override
+  String removeDefaultPaymentMethodBody(String name) {
+    return '$name est votre moyen de paiement par défaut. Le moyen ajouté le plus récemment deviendra celui par défaut.';
   }
 }

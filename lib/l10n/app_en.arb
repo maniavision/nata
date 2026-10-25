@@ -1993,6 +1993,19 @@
   "tipRouteAlertsBody": "Save the routes you send on and hear when a traveler is flying them.",
 
   "paidSecurelyThroughStripe": "Paid securely through Stripe. Your card details never reach Nata.",
+  "paymentMobileOnlyNote": "You live in {country}, so you pay by mobile money.",
+  "@paymentMobileOnlyNote": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "errChooseNetwork": "Choose your network.",
+  "errPaymentMethodNotOffered": "This way to pay isn't offered where you live.",
+  "errWholeMobileNumber": "Enter the whole mobile number.",
+  "checkoutMobileOnlyNote": "You and the traveler both live in Africa, so this delivery is paid by mobile money.",
+  "errMethodNotOffered": "This way to pay isn't offered for this delivery. Please choose another.",
   "confirmingPayment": "Confirming your payment",
   "confirmingPaymentSub": "Payment made. We're confirming it with Stripe, which takes a few seconds.",
 
@@ -2053,5 +2066,10 @@
   "stripeFinish": "Finish with Stripe",
   "removePayoutAccountTitle": "Remove this payout account?",
   "removePayoutAccountBody": "{name} {summary} will no longer be paid. Payouts waiting for it go to your default payout account.",
-  "@removePayoutAccountBody": {"placeholders": {"name": {"type": "String"}, "summary": {"type": "String"}}}
+  "@removePayoutAccountBody": {"placeholders": {"name": {"type": "String"}, "summary": {"type": "String"}}},
+  "removePaymentMethodTitle": "Remove this payment method?",
+  "removePaymentMethodBody": "{name} will be removed from your payment methods.",
+  "removeDefaultPaymentMethodBody": "{name} is your default payment method. Your most recently added method becomes the default.",
+  "@removePaymentMethodBody": {"placeholders": {"name": {"type": "String"}}},
+  "@removeDefaultPaymentMethodBody": {"placeholders": {"name": {"type": "String"}}}
 }

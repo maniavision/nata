@@ -150,8 +150,37 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     await _change(() => _service.removePayoutAccount(account.id));
   }
 
-  Future<void> _removeMethod(PaymentMethod method) =>
-      _change(() => _service.removeMethod(method.id));
+  /// Asks first: removing the default makes the latest other method the
+  /// default.
+  Future<void> _removeMethod(PaymentMethod method) async {
+    final l = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const ValueKey('payment-method-remove-dialog'),
+        title: Text(l.removePaymentMethodTitle),
+        content: Text(
+          method.isDefault && _methods.length > 1
+              ? l.removeDefaultPaymentMethodBody(method.title)
+              : l.removePaymentMethodBody(method.title),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const ValueKey('payment-method-remove-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: Text(l.remove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _change(() => _service.removeMethod(method.id));
+  }
 
   /// Saves a change, then reloads: the database also moves the default.
   Future<void> _change(Future<void> Function() save) async {
@@ -160,7 +189,15 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       await _load();
     } catch (e) {
       debugPrint('[PaymentSettings] save error: $e');
-      if (mounted) setState(() => _error = (l) => l.errPaymentSettingsSave);
+      // Not what fits where the member lives (20240174).
+      final notOffered = '$e'.contains('_not_offered');
+      if (mounted) {
+        setState(
+          () => _error = (l) => notOffered
+              ? l.errPaymentMethodNotOffered
+              : l.errPaymentSettingsSave,
+        );
+      }
     }
   }
 
@@ -433,20 +470,27 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                         ),
                         title: m.title,
                         subtitle: m.subtitle(l),
-                        trailing: m.isDefault
-                            ? _chip(l.defaultLabel)
-                            : GestureDetector(
-                                key: ValueKey('payment-method-remove-${m.id}'),
-                                onTap: () => _removeMethod(m),
-                                child: Text(
-                                  l.remove,
-                                  style: GoogleFonts.dmSans(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: AppColors.mutedForeground,
-                                  ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (m.isDefault) ...[
+                              _chip(l.defaultLabel),
+                              const SizedBox(width: 10),
+                            ],
+                            GestureDetector(
+                              key: ValueKey('payment-method-remove-${m.id}'),
+                              onTap: () => _removeMethod(m),
+                              child: Text(
+                                l.remove,
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                  color: AppColors.mutedForeground,
                                 ),
                               ),
+                            ),
+                          ],
+                        ),
                       ),
                   ]),
               ],

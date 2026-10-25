@@ -581,6 +581,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       case RequestFailure.reportWindowClosed:
         return l.errRequestFailed;
       case RequestFailure.mobileMoneyUnavailable:
+      case RequestFailure.methodNotOffered:
         return l.errMobileMoneyUnavailable;
       case RequestFailure.paymentsUnavailable:
         return l.errPaymentsUnavailable;
