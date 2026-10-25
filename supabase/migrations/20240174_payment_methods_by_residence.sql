@@ -8,8 +8,8 @@
 -- only cards and Apple Pay. Checkout fills in the saved wallet.
 --
 --   * nata.payment_methods.mobile_network: the wallet's pawaPay network
---     (its provider code); mobile_provider keeps the network's name, and is
---     no longer limited to the four names of 20240124.
+--     (its provider code), saved by the app; mobile_provider keeps the
+--     network's name, and is no longer limited to the four names of 20240124.
 --   * nata.payment_methods_by_residence(): refuses a method that doesn't fit
 --     (nata:method_not_offered, nata:network_not_offered).
 --   * public.my_payment_options(): the member's country, its calling code,
@@ -20,6 +20,8 @@ alter table nata.payment_methods
 alter table nata.payment_methods
   add column if not exists mobile_network text
     references nata.mobile_money_networks (provider) on delete set null;
+-- The app saves it with the wallet (20240124 grants insert column by column).
+grant insert (mobile_network) on nata.payment_methods to authenticated;
 
 -- -----------------------------------------------------------------------------
 -- 1. Only what fits where the member lives
