@@ -4478,4 +4478,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String removePayoutAccountBody(String name, String summary) {
     return '$name $summary will no longer be paid. Payouts waiting for it go to your default payout account.';
   }
+
+  @override
+  String get removePaymentMethodTitle => 'Remove this payment method?';
+
+  @override
+  String removePaymentMethodBody(String name) {
+    return '$name will be removed from your payment methods.';
+  }
+
+  @override
+  String removeDefaultPaymentMethodBody(String name) {
+    return '$name is your default payment method. Your most recently added method becomes the default.';
+  }
 }

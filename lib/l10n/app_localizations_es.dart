@@ -4527,4 +4527,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String removePayoutAccountBody(String name, String summary) {
     return '$name $summary ya no recibirá pagos. Los pagos pendientes irán a tu cuenta de cobro predeterminada.';
   }
+
+  @override
+  String get removePaymentMethodTitle => '¿Eliminar este método de pago?';
+
+  @override
+  String removePaymentMethodBody(String name) {
+    return '$name se eliminará de tus métodos de pago.';
+  }
+
+  @override
+  String removeDefaultPaymentMethodBody(String name) {
+    return '$name es tu método de pago predeterminado. El método añadido más recientemente pasará a ser el predeterminado.';
+  }
 }

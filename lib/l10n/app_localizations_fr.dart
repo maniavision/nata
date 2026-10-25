@@ -4560,4 +4560,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String removePayoutAccountBody(String name, String summary) {
     return '$name $summary ne sera plus payé. Les versements en attente pour ce compte iront à votre compte de paiement par défaut.';
   }
+
+  @override
+  String get removePaymentMethodTitle => 'Supprimer ce moyen de paiement ?';
+
+  @override
+  String removePaymentMethodBody(String name) {
+    return '$name sera retiré de vos moyens de paiement.';
+  }
+
+  @override
+  String removeDefaultPaymentMethodBody(String name) {
+    return '$name est votre moyen de paiement par défaut. Le moyen ajouté le plus récemment deviendra celui par défaut.';
+  }
 }

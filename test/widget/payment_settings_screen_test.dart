@@ -117,17 +117,61 @@ void main() {
       expect(find.text('EUR (€)'), findsOneWidget);
     });
 
-    testWidgets('Remove deletes the card', (tester) async {
+    testWidgets('Remove deletes the card after confirming', (tester) async {
       await pump(tester);
 
       await tester.tap(
         find.byKey(const ValueKey('payment-method-remove-visa-4242')),
       );
       await tester.pumpAndSettle();
+      expect(find.text('Remove this payment method?'), findsOneWidget);
+      expect(
+        find.text('Visa •••• 4242 will be removed from your payment methods.'),
+        findsOneWidget,
+      );
+
+      // Cancel keeps it.
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(payments.saved, hasLength(2));
+
+      await tester.tap(
+        find.byKey(const ValueKey('payment-method-remove-visa-4242')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('payment-method-remove-confirm')),
+      );
+      await tester.pumpAndSettle();
 
       expect(payments.saved.map((m) => m.id), ['apple-pay']);
       expect(find.text('Visa •••• 4242'), findsNothing);
       expect(find.text('Apple Pay'), findsOneWidget);
+    });
+
+    testWidgets('the default can be removed too; another takes its place', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('payment-method-remove-apple-pay')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Apple Pay is your default payment method.'),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('payment-method-remove-confirm')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(payments.saved.map((m) => m.id), ['visa-4242']);
+      expect(payments.saved.single.isDefault, isTrue);
+      expect(find.text('Apple Pay'), findsNothing);
+      expect(find.text('Default'), findsOneWidget);
     });
 
     testWidgets('a payout account is removed after confirming', (tester) async {
@@ -184,6 +228,10 @@ void main() {
 
       await tester.tap(
         find.byKey(const ValueKey('payment-method-remove-visa-4242')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('payment-method-remove-confirm')),
       );
       await tester.pumpAndSettle();
 
