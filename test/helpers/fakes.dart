@@ -1331,10 +1331,17 @@ class FakeExchangeRateService extends Fake implements ExchangeRateService {
   Completer<void>? gate;
   int calls = 0;
 
+  /// [result] once [rates] has answered, as the real one keeps it.
+  bool _answered = false;
+
+  @override
+  ExchangeRates? get latest => _answered ? result : null;
+
   @override
   Future<ExchangeRates?> rates() async {
     calls++;
     if (gate != null) await gate!.future;
+    _answered = true;
     return result;
   }
 }
