@@ -2128,5 +2128,8 @@
   "@homeWalletBalance": {
     "description": "Screen-reader label of the balance pill on Home.",
     "placeholders": {"amount": {"type": "String"}}
-  }
+  },
+  "homeWalletBalanceHidden": "Wallet balance hidden",
+  "homeShowBalance": "Show balance",
+  "homeHideBalance": "Hide balance"
 }

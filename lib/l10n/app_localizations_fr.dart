@@ -4811,4 +4811,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String homeWalletBalance(String amount) {
     return 'Solde du portefeuille : $amount';
   }
+
+  @override
+  String get homeWalletBalanceHidden => 'Solde du portefeuille masqué';
+
+  @override
+  String get homeShowBalance => 'Afficher le solde';
+
+  @override
+  String get homeHideBalance => 'Masquer le solde';
 }

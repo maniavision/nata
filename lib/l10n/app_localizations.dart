@@ -8275,6 +8275,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wallet balance: {amount}'**
   String homeWalletBalance(String amount);
+
+  /// No description provided for @homeWalletBalanceHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet balance hidden'**
+  String get homeWalletBalanceHidden;
+
+  /// No description provided for @homeShowBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Show balance'**
+  String get homeShowBalance;
+
+  /// No description provided for @homeHideBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide balance'**
+  String get homeHideBalance;
 }
 
 class _AppLocalizationsDelegate

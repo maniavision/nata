@@ -10,6 +10,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../l10n/l10n_ext.dart';
@@ -20,6 +21,7 @@ import '../services/city_service.dart';
 import '../services/country_service.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/notification_service.dart';
+import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
 import '../services/traveler_ranking.dart';
 import '../services/traveler_service.dart';
@@ -34,6 +36,7 @@ import 'add_trip_screen.dart';
 import 'notifications_screen.dart';
 import 'traveler_profile_screen.dart';
 import 'traveler_results_screen.dart';
+import 'wallet_history_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'requests_screen.dart';
@@ -48,6 +51,7 @@ class HomeScreen extends StatefulWidget {
   final TravelerService? travelerService;
   final NotificationService? notificationService;
   final RouteAlertService? routeAlertService;
+  final PaymentService? paymentService;
 
   /// Source of randomness for the "Available Travelers" picks (tests pass a
   /// seeded one).
@@ -63,6 +67,7 @@ class HomeScreen extends StatefulWidget {
     this.travelerService,
     this.notificationService,
     this.routeAlertService,
+    this.paymentService,
     this.random,
     this.capitalLookup,
   });
@@ -124,8 +129,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String? _verificationStatus;
   String? _userId;
 
-  /// The wallet's available balance in US dollars; null until it's known.
+  /// The wallet's available and in-escrow balances in US dollars; null until
+  /// they're known.
   double? _available;
+  double? _escrow;
+
+  /// Whether the member hid the balance (remembered on this phone, and in
+  /// memory so a cached balance never flashes before the choice is read).
+  static bool? _hiddenMemory;
+  bool _balanceHidden = _hiddenMemory ?? false;
+  static const _kBalanceHidden = 'home_balance_hidden';
 
   /// What the first-visit tips point at.
   final _addTripKey = GlobalKey();
@@ -204,6 +217,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _verificationStatus = header['verificationStatus'] as String?;
       _userId = header['userId'] as String?;
       _available = header['available'] as double?;
+      _escrow = header['escrow'] as double?;
     }
     final travelers = ScreenCache.read<(String, List<TravelerTrip>)>(
       _kTravelers,
@@ -369,6 +383,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         'verificationStatus': _verificationStatus,
         'userId': _userId,
         'available': _available,
+        'escrow': _escrow,
       });
       _showTips();
       _loadBalance(auth);
@@ -378,15 +393,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// The wallet balance next to the bell, in the member's currency.
   Future<void> _loadBalance(AuthService auth) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final hidden = prefs.getBool(_kBalanceHidden) ?? false;
+      _hiddenMemory = hidden;
+      if (mounted && hidden != _balanceHidden) {
+        setState(() => _balanceHidden = hidden);
+      }
+    } catch (_) {}
+    try {
       final balances = await auth.getWalletBalances();
       if (!mounted) return;
-      setState(() => _available = balances['available'] ?? 0.0);
+      setState(() {
+        _available = balances['available'] ?? 0.0;
+        _escrow = balances['escrow'] ?? 0.0;
+      });
       ScreenCache.write(_kHeader, {
         'avatarPath': _avatarPath,
         'displayName': _displayName,
         'verificationStatus': _verificationStatus,
         'userId': _userId,
         'available': _available,
+        'escrow': _escrow,
       });
     } catch (e) {
       debugPrint('[Home] wallet balance: $e');
@@ -605,54 +632,111 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _loadProfile();
   }
 
-  /// A small pill with the wallet's available balance; it opens Profile,
-  /// where the wallet is.
-  Widget _buildBalance(double usd) {
-    final money = WalletMoney.format(
-      usd,
-      PreferencesService().currency.code,
-      ExchangeRateService.shared.latest,
+  String _money(double usd) => WalletMoney.format(
+    usd,
+    PreferencesService().currency.code,
+    ExchangeRateService.shared.latest,
+  );
+
+  Future<void> _toggleBalance() async {
+    setState(() => _balanceHidden = !_balanceHidden);
+    _hiddenMemory = _balanceHidden;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_kBalanceHidden, _balanceHidden);
+    } catch (_) {}
+  }
+
+  Future<void> _openWallet() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => WalletHistoryScreen(
+          available: _money(_available ?? 0),
+          inEscrow: _money(_escrow ?? 0),
+          service: widget.paymentService,
+        ),
+      ),
     );
-    return Semantics(
-      button: true,
-      label: context.l10n.homeWalletBalance(money),
-      excludeSemantics: true,
-      child: GestureDetector(
-        key: const ValueKey('home-wallet'),
-        onTap: _openProfile,
-        child: Container(
-          height: 40,
-          constraints: const BoxConstraints(maxWidth: 140),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: AppColors.secondary.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.account_balance_wallet_rounded,
-                color: AppColors.primary,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    money,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: AppColors.foreground,
-                    ),
+    _loadProfile();
+  }
+
+  /// A small pill with the wallet's available balance: it opens the wallet's
+  /// history, and its eye hides the amount.
+  Widget _buildBalance() {
+    final l = context.l10n;
+    final money = _money(_available ?? 0);
+    return Container(
+      height: 40,
+      constraints: const BoxConstraints(maxWidth: 160),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Semantics(
+              button: true,
+              label: _balanceHidden
+                  ? l.homeWalletBalanceHidden
+                  : l.homeWalletBalance(money),
+              excludeSemantics: true,
+              child: GestureDetector(
+                key: const ValueKey('home-wallet'),
+                behavior: HitTestBehavior.opaque,
+                onTap: _openWallet,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _balanceHidden ? '••••' : money,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          Semantics(
+            button: true,
+            label: _balanceHidden ? l.homeShowBalance : l.homeHideBalance,
+            excludeSemantics: true,
+            child: GestureDetector(
+              key: const ValueKey('home-wallet-eye'),
+              behavior: HitTestBehavior.opaque,
+              onTap: _toggleBalance,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(6, 0, 12, 0),
+                child: Icon(
+                  _balanceHidden
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: AppColors.mutedForeground,
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -728,8 +812,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
-          if (_available != null) ...[
-            _buildBalance(_available!),
+          // Only once there's money: most senders never have any.
+          if ((_available ?? 0) > 0 || (_escrow ?? 0) > 0) ...[
+            _buildBalance(),
             const SizedBox(width: 8),
           ],
           GestureDetector(

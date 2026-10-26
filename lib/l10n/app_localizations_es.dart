@@ -4777,4 +4777,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String homeWalletBalance(String amount) {
     return 'Saldo de la billetera: $amount';
   }
+
+  @override
+  String get homeWalletBalanceHidden => 'Saldo de la billetera oculto';
+
+  @override
+  String get homeShowBalance => 'Mostrar saldo';
+
+  @override
+  String get homeHideBalance => 'Ocultar saldo';
 }

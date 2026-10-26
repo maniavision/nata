@@ -4728,4 +4728,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String homeWalletBalance(String amount) {
     return 'Wallet balance: $amount';
   }
+
+  @override
+  String get homeWalletBalanceHidden => 'Wallet balance hidden';
+
+  @override
+  String get homeShowBalance => 'Show balance';
+
+  @override
+  String get homeHideBalance => 'Hide balance';
 }
