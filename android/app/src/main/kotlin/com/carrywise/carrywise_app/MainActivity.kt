@@ -1,11 +1,15 @@
 package com.carrywise.carrywise_app
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.media.ExifInterface
 import android.net.Uri
+import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -44,6 +48,31 @@ class MainActivity : FlutterFragmentActivity() {
     /// sensor orientation Flutter passes in; the others are tried once if no
     /// face is found.
     private var frameRotation: Int? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        createPushChannel()
+    }
+
+    /// Pushes go to this channel (AndroidManifest's default channel). High
+    /// importance: they pop up on screen with a sound, even when the app is
+    /// closed, rather than only sitting quietly in the notification tray.
+    private fun createPushChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val channel = NotificationChannel(
+            PUSH_CHANNEL,
+            "Nata updates",
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = "Requests, payments, deliveries and messages"
+        }
+        getSystemService(NotificationManager::class.java)
+            .createNotificationChannel(channel)
+    }
+
+    companion object {
+        const val PUSH_CHANNEL = "nata_updates"
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
