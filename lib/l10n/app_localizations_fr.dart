@@ -4799,4 +4799,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get senderNoReviewsSub =>
       'Les avis apparaissent ici après la première livraison terminée de cet expéditeur.';
+
+  @override
+  String get tipProfileTitle => 'Votre profil';
+
+  @override
+  String get tipProfileBody =>
+      'Touchez votre photo ou votre nom pour ouvrir votre profil et vos réglages.';
 }

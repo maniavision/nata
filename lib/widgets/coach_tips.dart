@@ -37,11 +37,12 @@ class CoachTips {
 
   /// A page's tips for the signed-in member, once the page has settled and
   /// only while it is the screen on top. [tips] is called then, so the
-  /// targets are built.
+  /// targets are built. Ending them also marks the sets in [alsoSeen] seen.
   static void showWhenSettled(
     BuildContext context, {
     required String name,
     required List<CoachTip> Function() tips,
+    List<String> alsoSeen = const [],
   }) {
     if (!enabled) return;
     Future.delayed(const Duration(milliseconds: 600), () {
@@ -49,17 +50,24 @@ class CoachTips {
       if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
       final userId = ScreenCache.userId();
       if (userId == null) return;
-      showOnce(context, name: name, userId: userId, tips: tips());
+      showOnce(
+        context,
+        name: name,
+        userId: userId,
+        tips: tips(),
+        alsoSeen: alsoSeen,
+      );
     });
   }
 
   /// Shows [tips] unless they were seen. Tips whose target isn't on screen
-  /// are left out.
+  /// are left out. Ending them also marks the sets in [alsoSeen] seen.
   static Future<void> showOnce(
     BuildContext context, {
     required String name,
     required String userId,
     required List<CoachTip> tips,
+    List<String> alsoSeen = const [],
   }) async {
     if (!enabled || _showing) return;
     final key = seenKey(name, userId);
@@ -83,6 +91,9 @@ class CoachTips {
           try {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool(key, true);
+            for (final other in alsoSeen) {
+              await prefs.setBool(seenKey(other, userId), true);
+            }
           } catch (_) {}
         },
       ),

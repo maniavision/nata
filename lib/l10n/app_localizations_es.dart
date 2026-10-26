@@ -4765,4 +4765,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get senderNoReviewsSub =>
       'Las reseñas aparecen aquí tras la primera entrega completada de este remitente.';
+
+  @override
+  String get tipProfileTitle => 'Tu perfil';
+
+  @override
+  String get tipProfileBody =>
+      'Toca tu foto o tu nombre para abrir tu perfil y tus ajustes.';
 }

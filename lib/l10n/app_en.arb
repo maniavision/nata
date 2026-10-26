@@ -2121,5 +2121,7 @@
   "senderReviewsTitle": "Reviews from travelers",
   "senderRatingLabel": "Rating as a sender",
   "senderNoReviews": "No reviews from travelers yet",
-  "senderNoReviewsSub": "Reviews appear here after this sender's first completed delivery."
+  "senderNoReviewsSub": "Reviews appear here after this sender's first completed delivery.",
+  "tipProfileTitle": "Your profile",
+  "tipProfileBody": "Tap your photo or name to open your profile and settings."
 }

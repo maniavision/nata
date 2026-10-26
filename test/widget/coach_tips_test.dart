@@ -53,11 +53,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('a first visit to Home starts with the Add a Trip tip', (
+  testWidgets('a first visit to Home starts with the profile tip', (
     tester,
   ) async {
     await pumpHome(tester);
-    expect(find.text('Do you have an upcoming trip?'), findsOneWidget);
+    expect(find.text('Your profile'), findsOneWidget);
+    expect(
+      find.text('Tap your photo or name to open your profile and settings.'),
+      findsOneWidget,
+    );
     expect(find.text('Skip'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
   });
@@ -66,6 +70,10 @@ void main() {
     tester,
   ) async {
     await pumpHome(tester);
+    expect(find.text('Your profile'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Do you have an upcoming trip?'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
     await tester.pumpAndSettle();
     expect(find.text('Need to send something?'), findsOneWidget);
@@ -81,6 +89,34 @@ void main() {
     expect(find.byType(CoachTipsOverlay), findsNothing);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool(CoachTips.seenKey('home', 'test-user')), isTrue);
+    expect(
+      prefs.getBool(CoachTips.seenKey('home-profile', 'test-user')),
+      isTrue,
+    );
+
+    // The profile tip doesn't come back on its own afterwards.
+    await tester.pumpWidget(const SizedBox());
+    await pumpHome(tester);
+    expect(find.byType(CoachTipsOverlay), findsNothing);
+  });
+
+  testWidgets('members who saw the tour before get the profile tip alone', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      CoachTips.seenKey('home', 'test-user'): true,
+    });
+    await pumpHome(tester);
+    expect(find.text('Your profile'), findsOneWidget);
+    expect(find.text('Skip'), findsNothing);
+
+    await tester.tap(find.text('Got it'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CoachTipsOverlay), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await pumpHome(tester);
+    expect(find.byType(CoachTipsOverlay), findsNothing);
   });
 
   testWidgets('Skip ends the tips and they are not shown again', (
@@ -116,7 +152,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pumpAndSettle();
-    expect(find.text('Vous avez un voyage prévu ?'), findsOneWidget);
+    expect(find.text('Votre profil'), findsOneWidget);
     expect(find.text('Passer'), findsOneWidget);
   });
 

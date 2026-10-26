@@ -8257,6 +8257,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reviews appear here after this sender\'s first completed delivery.'**
   String get senderNoReviewsSub;
+
+  /// No description provided for @tipProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile'**
+  String get tipProfileTitle;
+
+  /// No description provided for @tipProfileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap your photo or name to open your profile and settings.'**
+  String get tipProfileBody;
 }
 
 class _AppLocalizationsDelegate

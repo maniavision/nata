@@ -2003,5 +2003,7 @@
   "senderReviewsTitle": "Avis des voyageurs",
   "senderRatingLabel": "Note comme expéditeur",
   "senderNoReviews": "Aucun avis de voyageurs pour l'instant",
-  "senderNoReviewsSub": "Les avis apparaissent ici après la première livraison terminée de cet expéditeur."
+  "senderNoReviewsSub": "Les avis apparaissent ici après la première livraison terminée de cet expéditeur.",
+  "tipProfileTitle": "Votre profil",
+  "tipProfileBody": "Touchez votre photo ou votre nom pour ouvrir votre profil et vos réglages."
 }

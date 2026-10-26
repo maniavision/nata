@@ -127,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _searchKey = GlobalKey();
   final _bellKey = GlobalKey();
   final _navKey = GlobalKey();
+  final _profileKey = GlobalKey();
 
   bool _loadingTravelers = true;
   bool _travelersFailed = false;
@@ -367,14 +368,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   /// The first time a member opens Home: what the main parts are for (once
-  /// they've ended them, this does nothing).
+  /// they've ended them, this does nothing). Members who saw them before the
+  /// profile tip was added get that tip on its own, once.
   void _showTips() {
     if (!AuthGate.isSignedIn()) return;
     final l = context.l10n;
+    CoachTip profileTip() => CoachTip(
+      target: _profileKey,
+      icon: Icons.account_circle_outlined,
+      title: l.tipProfileTitle,
+      body: l.tipProfileBody,
+    );
+    // One set shows at a time, the first asked for first.
     CoachTips.showWhenSettled(
       context,
       name: 'home',
+      alsoSeen: const ['home-profile'],
       tips: () => [
+        profileTip(),
         CoachTip(
           target: _addTripKey,
           icon: Icons.flight_takeoff_rounded,
@@ -400,6 +411,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           body: l.tipNavBody,
         ),
       ],
+    );
+    CoachTips.showWhenSettled(
+      context,
+      name: 'home-profile',
+      tips: () => [profileTip()],
     );
   }
 
@@ -567,6 +583,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Row(
                 children: [
                   Container(
+                    key: _profileKey,
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
