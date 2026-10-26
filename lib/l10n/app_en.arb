@@ -2175,5 +2175,7 @@
   "publicNameSave": "Save",
   "publicNameSaved": "Public name saved",
   "publicNameInvalid": "Use 2 to 20 letters or numbers (spaces and . _ - are fine).",
-  "publicNameReserved": "This name can't be used. Please choose another."
+  "publicNameReserved": "This name can't be used. Please choose another.",
+  "tipPublicNameTitle": "Travel under a pseudonym",
+  "tipPublicNameBody": "Choose whether people who find you as a traveler see your name or a pseudonym. Your verified badge always shows."
 }

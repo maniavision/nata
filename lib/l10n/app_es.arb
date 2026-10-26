@@ -2042,5 +2042,7 @@
   "publicNameSave": "Guardar",
   "publicNameSaved": "Nombre público guardado",
   "publicNameInvalid": "Usa de 2 a 20 letras o números (se permiten espacios y . _ -).",
-  "publicNameReserved": "Este nombre no se puede usar. Elige otro."
+  "publicNameReserved": "Este nombre no se puede usar. Elige otro.",
+  "tipPublicNameTitle": "Viaja con un seudónimo",
+  "tipPublicNameBody": "Elige si las personas que te encuentran como viajero ven tu nombre o un seudónimo. Tu insignia de verificado siempre se muestra."
 }

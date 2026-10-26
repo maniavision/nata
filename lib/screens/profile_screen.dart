@@ -91,6 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// What the first-visit tips point at.
   final _walletTipKey = GlobalKey();
   final _routesTipKey = GlobalKey();
+  final _publicNameTipKey = GlobalKey();
 
   AuthService get _auth => widget.authService ?? AuthService();
 
@@ -205,9 +206,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _setupStreams();
     _loadEmergencyContact();
     _loadAdmin();
+    CoachTip publicNameTip() => CoachTip(
+      target: _publicNameTipKey,
+      icon: Icons.badge_outlined,
+      title: context.l10n.tipPublicNameTitle,
+      body: context.l10n.tipPublicNameBody,
+    );
+    // One set shows at a time, the first asked for first. Members who saw
+    // the tour before the pseudonym tip was added get that tip on its own.
     CoachTips.showWhenSettled(
       context,
       name: 'profile',
+      alsoSeen: const ['profile-public-name'],
       tips: () => [
         CoachTip(
           target: _walletTipKey,
@@ -215,6 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: context.l10n.tipWalletTitle,
           body: context.l10n.tipWalletRowBody,
         ),
+        publicNameTip(),
         CoachTip(
           target: _routesTipKey,
           icon: Icons.notification_add_outlined,
@@ -222,6 +233,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           body: context.l10n.tipRouteAlertsBody,
         ),
       ],
+    );
+    CoachTips.showWhenSettled(
+      context,
+      name: 'profile-public-name',
+      tips: () => [publicNameTip()],
     );
   }
 
@@ -936,6 +952,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// The settings rows the first-visit tips point at.
   GlobalKey? _tipKeyFor(Key? row) => switch (row) {
     ValueKey(value: 'profile-wallet') => _walletTipKey,
+    ValueKey(value: 'profile-public-name') => _publicNameTipKey,
     ValueKey(value: 'profile-route-alerts') => _routesTipKey,
     _ => null,
   };

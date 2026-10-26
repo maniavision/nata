@@ -4912,4 +4912,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get publicNameReserved => 'Este nombre no se puede usar. Elige otro.';
+
+  @override
+  String get tipPublicNameTitle => 'Viaja con un seudónimo';
+
+  @override
+  String get tipPublicNameBody =>
+      'Elige si las personas que te encuentran como viajero ven tu nombre o un seudónimo. Tu insignia de verificado siempre se muestra.';
 }

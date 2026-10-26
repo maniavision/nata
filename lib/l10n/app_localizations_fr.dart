@@ -4948,4 +4948,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get publicNameReserved =>
       'Ce nom ne peut pas être utilisé. Choisissez-en un autre.';
+
+  @override
+  String get tipPublicNameTitle => 'Voyagez sous un pseudonyme';
+
+  @override
+  String get tipPublicNameBody =>
+      'Choisissez si les personnes qui vous trouvent en tant que voyageur voient votre nom ou un pseudonyme. Votre badge vérifié s\'affiche toujours.';
 }

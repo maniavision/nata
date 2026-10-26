@@ -8491,6 +8491,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This name can\'t be used. Please choose another.'**
   String get publicNameReserved;
+
+  /// No description provided for @tipPublicNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel under a pseudonym'**
+  String get tipPublicNameTitle;
+
+  /// No description provided for @tipPublicNameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether people who find you as a traveler see your name or a pseudonym. Your verified badge always shows.'**
+  String get tipPublicNameBody;
 }
 
 class _AppLocalizationsDelegate
