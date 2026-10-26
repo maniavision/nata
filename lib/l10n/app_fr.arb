@@ -2027,5 +2027,20 @@
   "recipientSeenNever": "N'a pas encore ouvert le lien",
   "recipientSeenAt": "A ouvert le lien {when}",
   "recipientChatClosed": "La discussion est fermée après la livraison.",
-  "recipientSendFailed": "Votre message n'a pas été envoyé. Réessayez."
+  "recipientSendFailed": "Votre message n'a pas été envoyé. Réessayez.",
+  "publicNameRow": "Nom public",
+  "publicNameIntro": "Choisissez comment les personnes qui vous trouvent en tant que voyageur voient votre nom.",
+  "publicNameReal": "Mon nom",
+  "publicNameRealSub": "Votre prénom et l'initiale de votre nom",
+  "publicNamePseudo": "Un pseudonyme",
+  "publicNamePseudoSub": "Seulement ce nom, sans initiale",
+  "publicNameField": "Pseudonyme",
+  "publicNameHint": "ex. SkyCourier",
+  "publicNameHelper": "2 à 20 lettres ou chiffres",
+  "publicNameInfo": "Affiché dans la recherche, sur votre profil et dans les alertes trajets. Quand vous acceptez une demande, l'expéditeur et le destinataire voient votre prénom pour la remise. Votre badge vérifié s'affiche toujours.",
+  "publicNamePreview": "Ce que les autres verront",
+  "publicNameSave": "Enregistrer",
+  "publicNameSaved": "Nom public enregistré",
+  "publicNameInvalid": "Utilisez 2 à 20 lettres ou chiffres (espaces et . _ - acceptés).",
+  "publicNameReserved": "Ce nom ne peut pas être utilisé. Choisissez-en un autre."
 }

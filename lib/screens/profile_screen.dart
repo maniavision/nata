@@ -24,6 +24,7 @@ import 'sealed_box_policy_screen.dart';
 import 'support_screens.dart';
 import '../services/support_service.dart';
 import 'wallet_screen.dart';
+import 'public_name_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
@@ -73,6 +74,8 @@ class ProfileScreen extends StatefulWidget {
       'verificationStatus': profile['verification_status'] ?? 'unverified',
       'awaitingContact': profile['awaiting_emergency_contact'] == true,
       'avgRating': (profile['avg_rating'] as num?)?.toDouble(),
+      'usePseudonym': profile['use_pseudonym'] == true,
+      'pseudonym': profile['pseudonym'] as String?,
       'available': balances['available'] ?? 0.0,
       'escrow': balances['escrow'] ?? 0.0,
       'trips': stats['trips'] ?? 0,
@@ -126,6 +129,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _tripsCount = 0;
   int _parcelsCount = 0;
   double? _avgRating;
+
+  /// How people browsing travelers see this member (PublicNameScreen).
+  bool _usePseudonym = false;
+  String? _pseudonym;
   int? _reviewCount;
   EmergencyContact? _emergencyContact;
   bool _isUploading = false;
@@ -152,6 +159,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'verificationStatus': _verificationStatus,
     'awaitingContact': _awaitingContact,
     'avgRating': _avgRating,
+    'usePseudonym': _usePseudonym,
+    'pseudonym': _pseudonym,
     'reviewCount': _reviewCount,
     'available': _availableBalance,
     'escrow': _escrowBalance,
@@ -170,6 +179,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _verificationStatus = s['verificationStatus'] as String? ?? 'unverified';
     _awaitingContact = s['awaitingContact'] as bool? ?? false;
     _avgRating = s['avgRating'] as double?;
+    _usePseudonym = s['usePseudonym'] == true;
+    _pseudonym = s['pseudonym'] as String?;
     _reviewCount = s['reviewCount'] as int?;
     _availableBalance = s['available'] as double? ?? 0.0;
     _escrowBalance = s['escrow'] as double? ?? 0.0;
@@ -276,6 +287,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _verificationStatus = profile['verification_status'] ?? 'unverified';
           _awaitingContact = profile['awaiting_emergency_contact'] == true;
           _avgRating = (profile['avg_rating'] as num?)?.toDouble();
+          _usePseudonym = profile['use_pseudonym'] == true;
+          _pseudonym = profile['pseudonym'] as String?;
         });
         _saveSnapshot();
       }
@@ -330,6 +343,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _verificationStatus = profile['verification_status'] ?? 'unverified';
           _awaitingContact = profile['awaiting_emergency_contact'] == true;
           _avgRating = (profile['avg_rating'] as num?)?.toDouble();
+          _usePseudonym = profile['use_pseudonym'] == true;
+          _pseudonym = profile['pseudonym'] as String?;
 
           _availableBalance = balances['available'] ?? 0.0;
           _escrowBalance = balances['escrow'] ?? 0.0;
@@ -925,6 +940,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _ => null,
   };
 
+  /// The name people browsing travelers see: "Daniel O." or the pseudonym.
+  String get _publicName {
+    final pseudonym = _pseudonym?.trim() ?? '';
+    if (_usePseudonym && pseudonym.isNotEmpty) return pseudonym;
+    final last = _lastName.trim();
+    return last.isEmpty
+        ? _firstName.trim()
+        : '${_firstName.trim()} ${last[0].toUpperCase()}.';
+  }
+
   Widget _buildSettingsList() {
     final prefs = PreferencesService();
     final items = [
@@ -955,6 +980,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
           if (mounted) _loadProfile();
+        },
+      ),
+      _SettingsItem(
+        key: const ValueKey('profile-public-name'),
+        icon: Icons.badge_outlined,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.publicNameRow,
+        subtitle: _publicName,
+        onTap: () async {
+          final saved = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => PublicNameScreen(
+                firstName: _firstName,
+                lastName: _lastName,
+                avatarPath: _avatarPath,
+                verified: _verificationStatus == 'verified',
+                rating: _avgRating,
+                usePseudonym: _usePseudonym,
+                pseudonym: _pseudonym,
+                authService: widget.authService,
+              ),
+            ),
+          );
+          if (saved == true && mounted) _loadProfile();
         },
       ),
       _SettingsItem(

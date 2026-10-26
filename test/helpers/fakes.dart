@@ -251,6 +251,19 @@ class FakeAuthService extends Fake implements AuthService {
   @override
   Future<Map<String, double>> getWalletBalances() async => balances;
 
+  /// What setPublicName was called with; [publicNameError] makes it throw.
+  final List<({bool use, String? pseudonym})> publicNames = [];
+  Object? publicNameError;
+
+  @override
+  Future<void> setPublicName({
+    required bool usePseudonym,
+    String? pseudonym,
+  }) async {
+    if (publicNameError != null) throw publicNameError!;
+    publicNames.add((use: usePseudonym, pseudonym: pseudonym));
+  }
+
   @override
   Future<Map<String, int>> getStats() async => stats;
 

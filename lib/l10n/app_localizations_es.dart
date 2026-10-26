@@ -4864,4 +4864,52 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get recipientSendFailed =>
       'Tu mensaje no se envió. Inténtalo de nuevo.';
+
+  @override
+  String get publicNameRow => 'Nombre público';
+
+  @override
+  String get publicNameIntro =>
+      'Elige cómo ven tu nombre las personas que te encuentran como viajero.';
+
+  @override
+  String get publicNameReal => 'Mi nombre';
+
+  @override
+  String get publicNameRealSub => 'Tu nombre y la inicial de tu apellido';
+
+  @override
+  String get publicNamePseudo => 'Un seudónimo';
+
+  @override
+  String get publicNamePseudoSub => 'Solo este nombre, sin inicial';
+
+  @override
+  String get publicNameField => 'Seudónimo';
+
+  @override
+  String get publicNameHint => 'p. ej. SkyCourier';
+
+  @override
+  String get publicNameHelper => 'De 2 a 20 letras o números';
+
+  @override
+  String get publicNameInfo =>
+      'Se muestra en la búsqueda, en tu perfil y en las alertas de ruta. Cuando aceptas una solicitud, el remitente y el destinatario ven tu nombre para la entrega. Tu insignia de verificado siempre se muestra.';
+
+  @override
+  String get publicNamePreview => 'Lo que verán los demás';
+
+  @override
+  String get publicNameSave => 'Guardar';
+
+  @override
+  String get publicNameSaved => 'Nombre público guardado';
+
+  @override
+  String get publicNameInvalid =>
+      'Usa de 2 a 20 letras o números (se permiten espacios y . _ -).';
+
+  @override
+  String get publicNameReserved => 'Este nombre no se puede usar. Elige otro.';
 }

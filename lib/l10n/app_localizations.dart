@@ -8401,6 +8401,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your message wasn\'t sent. Please try again.'**
   String get recipientSendFailed;
+
+  /// No description provided for @publicNameRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Public name'**
+  String get publicNameRow;
+
+  /// No description provided for @publicNameIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how people who find you as a traveler see your name.'**
+  String get publicNameIntro;
+
+  /// No description provided for @publicNameReal.
+  ///
+  /// In en, this message translates to:
+  /// **'My name'**
+  String get publicNameReal;
+
+  /// No description provided for @publicNameRealSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first name and last initial'**
+  String get publicNameRealSub;
+
+  /// No description provided for @publicNamePseudo.
+  ///
+  /// In en, this message translates to:
+  /// **'A pseudonym'**
+  String get publicNamePseudo;
+
+  /// No description provided for @publicNamePseudoSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Only this name, no initial'**
+  String get publicNamePseudoSub;
+
+  /// No description provided for @publicNameField.
+  ///
+  /// In en, this message translates to:
+  /// **'Pseudonym'**
+  String get publicNameField;
+
+  /// No description provided for @publicNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. SkyCourier'**
+  String get publicNameHint;
+
+  /// No description provided for @publicNameHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'2 to 20 letters or numbers'**
+  String get publicNameHelper;
+
+  /// No description provided for @publicNameInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown in search, on your profile and in route alerts. Once you accept a request, that sender and the recipient see your first name for the handover. Your verified badge always shows.'**
+  String get publicNameInfo;
+
+  /// No description provided for @publicNamePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'People will see'**
+  String get publicNamePreview;
+
+  /// No description provided for @publicNameSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get publicNameSave;
+
+  /// No description provided for @publicNameSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Public name saved'**
+  String get publicNameSaved;
+
+  /// No description provided for @publicNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 2 to 20 letters or numbers (spaces and . _ - are fine).'**
+  String get publicNameInvalid;
+
+  /// No description provided for @publicNameReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'This name can\'t be used. Please choose another.'**
+  String get publicNameReserved;
 }
 
 class _AppLocalizationsDelegate
