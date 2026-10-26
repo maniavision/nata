@@ -2097,5 +2097,12 @@
   "resultsWeightAnyNote": "Every traveler, whatever they can carry",
   "resultsWeightAtLeast": "Travelers who can carry {kg} kg or more",
   "@resultsWeightAtLeast": {"placeholders": {"kg": {"type": "String"}}},
-  "resultsWeightButton": "Weight"
+  "resultsWeightButton": "Weight",
+  "ecRequiredTitle": "An emergency contact is required to finish verification",
+  "ecRequiredBody": "It stays private and is only used if something goes wrong during a delivery.",
+  "verifyContactTitle": "Almost verified",
+  "verifyContactBody": "Add an emergency contact to finish verifying your identity.",
+  "verifyAddContact": "Add emergency contact",
+  "identityNeedsContact": "Add an emergency contact to finish",
+  "ecProfileRequired": "Required to be verified"
 }

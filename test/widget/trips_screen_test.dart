@@ -434,6 +434,31 @@ void main() {
       expect(find.byKey(const ValueKey('verify-prompt-start')), findsNothing);
     });
 
+    testWidgets('ID passed but no emergency contact: asked to add one', (
+      tester,
+    ) async {
+      VerifyGate.status = () async => 'needs_contact';
+      await pump(tester);
+
+      await tapKey(tester, 'trips-add');
+
+      expect(find.byType(AddTripScreen), findsNothing);
+      expect(find.text('Almost verified'), findsOneWidget);
+      expect(
+        find.text(
+          'Add an emergency contact to finish verifying your identity.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('verify-prompt-contact')),
+        findsOneWidget,
+      );
+      expect(find.text('Add emergency contact'), findsOneWidget);
+      expect(find.byKey(const ValueKey('verify-prompt-start')), findsNothing);
+      expect(find.text('Not now'), findsOneWidget);
+    });
+
     testWidgets('editing a trip is not gated', (tester) async {
       VerifyGate.status = () async => 'unverified';
       service.trips = [sampleMyTrip(id: 'live', departureDate: inDays(7))];

@@ -70,7 +70,8 @@ void main() {
 
       for (final t in [
         'REQUIRED',
-        'Skip for now',
+        'An emergency contact is required to finish verification',
+        'It stays private and is only used if something goes wrong during a delivery.',
         'EMERGENCY CONTACT',
         'Step 2 of 2',
         'Add an emergency contact',
@@ -347,13 +348,17 @@ void main() {
   });
 
   group('leaving', () {
-    testWidgets('"Skip for now" goes on without saving', (tester) async {
+    testWidgets('it can\'t be skipped: being verified needs it', (
+      tester,
+    ) async {
       await pump(tester);
 
-      await tapKey(tester, 'contact-skip');
-
-      expect(service.attempts, 0);
-      expect(find.byKey(const ValueKey('contact-finish')), findsNothing);
+      expect(find.text('Skip for now'), findsNothing);
+      expect(find.byKey(const ValueKey('contact-skip')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('contact-required-note')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('back returns to the ID step', (tester) async {

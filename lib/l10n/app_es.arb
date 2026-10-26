@@ -1980,5 +1980,12 @@
   "resultsWeightClear": "Ver todos los viajeros",
   "resultsWeightAnyNote": "Todos los viajeros, sea cual sea el peso",
   "resultsWeightAtLeast": "Viajeros que pueden llevar {kg} kg o más",
-  "resultsWeightButton": "Peso"
+  "resultsWeightButton": "Peso",
+  "ecRequiredTitle": "Se necesita un contacto de emergencia para terminar la verificación",
+  "ecRequiredBody": "Es privado y solo se usa si algo sale mal durante una entrega.",
+  "verifyContactTitle": "Casi verificado",
+  "verifyContactBody": "Añade un contacto de emergencia para terminar de verificar tu identidad.",
+  "verifyAddContact": "Añadir contacto de emergencia",
+  "identityNeedsContact": "Añade un contacto de emergencia para terminar",
+  "ecProfileRequired": "Obligatorio para estar verificado"
 }
