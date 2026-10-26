@@ -1,1 +1,76 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"nata-app-a03de","appId":"1:646360492290:android:3fc97dd5a8cf16e838ba1b","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"nata-app-a03de","appId":"1:646360492290:ios:bf27da80e7fc5f9938ba1b","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"nata-app-a03de","configurations":{"android":"1:646360492290:android:3fc97dd5a8cf16e838ba1b","ios":"1:646360492290:ios:bf27da80e7fc5f9938ba1b"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "nata-app-a03de",
+          "appId": "1:646360492290:android:3fc97dd5a8cf16e838ba1b",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "nata-app-a03de",
+          "appId": "1:646360492290:ios:bf27da80e7fc5f9938ba1b",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "nata-app-a03de",
+          "configurations": {
+            "android": "1:646360492290:android:3fc97dd5a8cf16e838ba1b",
+            "ios": "1:646360492290:ios:bf27da80e7fc5f9938ba1b"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "hosting/public",
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/app",
+        "type": 302
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/r/**",
+        "destination": "/r/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/r/**",
+        "headers": [
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(html|js)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  }
+}

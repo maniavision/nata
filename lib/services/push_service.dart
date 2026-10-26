@@ -14,6 +14,7 @@ import '../screens/chat_thread_screen.dart';
 import '../screens/traveler_results_screen.dart';
 import 'app_badge.dart';
 import 'push_registrar.dart';
+import '../screens/recipient_chat_screen.dart';
 
 /// Push notifications (20240155_push_notifications.sql, send-push).
 ///
@@ -138,6 +139,15 @@ class PushService {
       navigator.push(
         MaterialPageRoute(
           builder: (_) => results ?? const NotificationsScreen(),
+        ),
+      );
+      return;
+    }
+    final request = message.data['related_id'] as String?;
+    if (event == 'recipient_message' && request != null && request.isNotEmpty) {
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => RecipientChatScreen(requestId: request),
         ),
       );
       return;

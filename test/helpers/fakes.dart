@@ -1146,6 +1146,48 @@ class FakeRequestService extends Fake implements RequestService {
         (reviews: const <TravelerReview>[], total: 0);
   }
 
+  /// The traveler's chats with recipients, by request id.
+  final Map<String, RecipientChat> recipientChats = {};
+  bool failRecipientChat = false;
+  bool failRecipientSend = false;
+  final List<({String requestId, String body})> recipientSent = [];
+
+  @override
+  Future<RecipientChat> recipientChat(String requestId) async {
+    if (failRecipientChat) throw Exception('chat failed');
+    return recipientChats[requestId] ??
+        const RecipientChat(
+          recipientName: 'Amara',
+          senderName: 'Sarah',
+          item: 'iPad Mini',
+          open: true,
+          messages: [],
+        );
+  }
+
+  @override
+  Future<void> sendRecipientMessage(String requestId, String body) async {
+    if (failRecipientSend) throw Exception('send failed');
+    recipientSent.add((requestId: requestId, body: body));
+    final chat = await recipientChat(requestId);
+    recipientChats[requestId] = RecipientChat(
+      recipientName: chat.recipientName,
+      senderName: chat.senderName,
+      item: chat.item,
+      seenAt: chat.seenAt,
+      open: chat.open,
+      messages: [
+        ...chat.messages,
+        RecipientMessage(
+          id: 'sent-${recipientSent.length}',
+          fromRecipient: false,
+          body: body,
+          at: DateTime(2030, 6, 15, 12),
+        ),
+      ],
+    );
+  }
+
   /// Sender reviews sent by the traveler; [failReview] and [reviewGate]
   /// apply to them too.
   final List<({String id, int rating, List<String> tags, String comment})>
@@ -1236,7 +1278,6 @@ IncomingRequest sampleIncoming({
   List<String> photoPaths = const ['sender-1/in-1/0.jpg'],
   DateTime? expiresAt,
   String? recipientName,
-  String? recipientPhone,
   double? senderRating,
   bool senderReviewed = false,
   DateTime? pickedUpAt,
@@ -1269,8 +1310,6 @@ IncomingRequest sampleIncoming({
   senderDeliveries: senderDeliveries,
   recipientName:
       recipientName ?? (status == 'pending' ? null : 'David Adeleke'),
-  recipientPhone:
-      recipientPhone ?? (status == 'pending' ? null : '+447700900456'),
   tripId: 'trip-1',
   departureCity: 'Lagos',
   departureCountry: 'NG',
@@ -1466,7 +1505,6 @@ AcceptedDelivery sampleDelivery() => const AcceptedDelivery(
   itemName: 'iPad Mini 64GB (Space Gray)',
   itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
   recipientName: 'David Adeleke (London)',
-  recipientPhone: '+44 7700 900456',
   meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
   requestId: 'req-1',
 );
@@ -1487,7 +1525,6 @@ AcceptedDelivery samplePickedUpDelivery() => AcceptedDelivery(
   itemName: 'iPad Mini 64GB (Space Gray)',
   itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
   recipientName: 'David Adeleke (London)',
-  recipientPhone: '+44 7700 900456',
   requestId: 'req-1',
   pickedUpAt: DateTime(2030, 6, 22, 10, 14),
 );

@@ -1681,9 +1681,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipientNameLabel => 'Nom du destinataire :';
 
   @override
-  String get recipientPhoneLabel => 'Téléphone du destinataire :';
-
-  @override
   String get meetingSpotLabel => 'Lieu de rendez-vous :';
 
   @override
@@ -4861,4 +4858,45 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tipWalletRowBody =>
       'Votre solde, vos retraits, vos paramètres de paiement et votre historique sont dans Portefeuille.';
+
+  @override
+  String recipientMessageButton(String name) {
+    return 'Écrire à $name';
+  }
+
+  @override
+  String recipientChatTitle(String name) {
+    return '$name (destinataire)';
+  }
+
+  @override
+  String recipientChatSubtitle(String sender, String item) {
+    return 'Colis de $sender · $item';
+  }
+
+  @override
+  String recipientChatBanner(String name) {
+    return '$name n\'est pas sur Nata et lit vos messages depuis un lien privé reçu par SMS.';
+  }
+
+  @override
+  String recipientChatEmpty(String name) {
+    return 'Écrivez à $name pour organiser la remise.';
+  }
+
+  @override
+  String get recipientSeenNever => 'N\'a pas encore ouvert le lien';
+
+  @override
+  String recipientSeenAt(String when) {
+    return 'A ouvert le lien $when';
+  }
+
+  @override
+  String get recipientChatClosed =>
+      'La discussion est fermée après la livraison.';
+
+  @override
+  String get recipientSendFailed =>
+      'Votre message n\'a pas été envoyé. Réessayez.';
 }

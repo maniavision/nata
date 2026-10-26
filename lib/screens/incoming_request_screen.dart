@@ -502,8 +502,6 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
                         : Column(
                             children: [
                               _row(l.recipientNameLabel, _r.recipientName!),
-                              if (_r.recipientPhone != null)
-                                _row(l.recipientPhoneLabel, _r.recipientPhone!),
                             ],
                           ),
                   ),

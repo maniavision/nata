@@ -14,6 +14,7 @@ import 'delivery_confirm_screen.dart';
 import 'review_screen.dart';
 import 'messages_screen.dart';
 import '../widgets/camera_denied_sheet.dart';
+import 'recipient_chat_screen.dart';
 
 /// A request the traveler accepted and is now carrying, as Requests >
 /// Incoming shows it.
@@ -41,7 +42,6 @@ class AcceptedDelivery {
   final String itemDetails;
 
   final String recipientName;
-  final String recipientPhone;
 
   /// Where to meet the recipient, when agreed.
   final String? meetingSpot;
@@ -73,7 +73,6 @@ class AcceptedDelivery {
     required this.itemName,
     required this.itemDetails,
     required this.recipientName,
-    required this.recipientPhone,
     this.meetingSpot,
     required this.requestId,
     this.senderAvatarPath,
@@ -114,7 +113,6 @@ class AcceptedDelivery {
         if ((r.dimensions ?? '').trim().isNotEmpty) '${r.dimensions} cm',
       ].join(' · '),
       recipientName: r.recipientName ?? '',
-      recipientPhone: r.recipientPhone ?? '',
       pickedUpAt: r.isPickedUp ? (r.pickedUpAt ?? DateTime.now()) : null,
     );
   }
@@ -820,34 +818,6 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                   l.recipientNameLabel,
                   Text(d.recipientName, style: _value),
                 ),
-                const SizedBox(height: 4),
-                _infoRow(
-                  l.recipientPhoneLabel,
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(child: Text(d.recipientPhone, style: _value)),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        key: const ValueKey('delivery-task-call-recipient'),
-                        onTap: () => _call(d.recipientPhone),
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.phone_rounded,
-                            size: 12,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 if ((d.meetingSpot ?? '').isNotEmpty) ...[
                   const SizedBox(height: 4),
                   _infoRow(
@@ -856,6 +826,41 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                   ),
                 ],
               ],
+            ),
+          ),
+          // The recipient isn't on Nata: they answer from the link texted
+          // to them.
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: const ValueKey('delivery-task-message-recipient'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RecipientChatScreen(
+                    requestId: d.requestId,
+                    recipientName: d.recipientName,
+                    service: widget.requestService,
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+              label: Text(
+                l.recipientMessageButton(
+                  d.recipientName.trim().isEmpty
+                      ? l.recipientNameLabel
+                      : d.recipientName.trim().split(RegExp(r'\s+')).first,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                shape: const StadiumBorder(),
+                textStyle: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
             ),
           ),
           if (_pickedUpAt != null) ...[

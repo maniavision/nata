@@ -3104,12 +3104,6 @@ abstract class AppLocalizations {
   /// **'Recipient Name:'**
   String get recipientNameLabel;
 
-  /// No description provided for @recipientPhoneLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Recipient Phone:'**
-  String get recipientPhoneLabel;
-
   /// No description provided for @meetingSpotLabel.
   ///
   /// In en, this message translates to:
@@ -8353,6 +8347,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your balance, withdrawals, payment settings and history are all in Wallet.'**
   String get tipWalletRowBody;
+
+  /// No description provided for @recipientMessageButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Message {name}'**
+  String recipientMessageButton(String name);
+
+  /// No description provided for @recipientChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (recipient)'**
+  String recipientChatTitle(String name);
+
+  /// No description provided for @recipientChatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parcel from {sender} · {item}'**
+  String recipientChatSubtitle(String sender, String item);
+
+  /// No description provided for @recipientChatBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} isn\'t on Nata. They read and reply from a private link we texted them.'**
+  String recipientChatBanner(String name);
+
+  /// No description provided for @recipientChatEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hello to {name} to arrange the handover.'**
+  String recipientChatEmpty(String name);
+
+  /// No description provided for @recipientSeenNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Hasn\'t opened the link yet'**
+  String get recipientSeenNever;
+
+  /// No description provided for @recipientSeenAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened the link {when}'**
+  String recipientSeenAt(String when);
+
+  /// No description provided for @recipientChatClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The chat closed after the delivery.'**
+  String get recipientChatClosed;
+
+  /// No description provided for @recipientSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message wasn\'t sent. Please try again.'**
+  String get recipientSendFailed;
 }
 
 class _AppLocalizationsDelegate
