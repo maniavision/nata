@@ -2160,5 +2160,20 @@
   "recipientSeenAt": "Opened the link {when}",
   "@recipientSeenAt": {"placeholders": {"when": {"type": "String"}}},
   "recipientChatClosed": "The chat closed after the delivery.",
-  "recipientSendFailed": "Your message wasn't sent. Please try again."
+  "recipientSendFailed": "Your message wasn't sent. Please try again.",
+  "publicNameRow": "Public name",
+  "publicNameIntro": "Choose how people who find you as a traveler see your name.",
+  "publicNameReal": "My name",
+  "publicNameRealSub": "Your first name and last initial",
+  "publicNamePseudo": "A pseudonym",
+  "publicNamePseudoSub": "Only this name, no initial",
+  "publicNameField": "Pseudonym",
+  "publicNameHint": "e.g. SkyCourier",
+  "publicNameHelper": "2 to 20 letters or numbers",
+  "publicNameInfo": "Shown in search, on your profile and in route alerts. Once you accept a request, that sender and the recipient see your first name for the handover. Your verified badge always shows.",
+  "publicNamePreview": "People will see",
+  "publicNameSave": "Save",
+  "publicNameSaved": "Public name saved",
+  "publicNameInvalid": "Use 2 to 20 letters or numbers (spaces and . _ - are fine).",
+  "publicNameReserved": "This name can't be used. Please choose another."
 }

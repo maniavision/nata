@@ -4899,4 +4899,53 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipientSendFailed =>
       'Votre message n\'a pas été envoyé. Réessayez.';
+
+  @override
+  String get publicNameRow => 'Nom public';
+
+  @override
+  String get publicNameIntro =>
+      'Choisissez comment les personnes qui vous trouvent en tant que voyageur voient votre nom.';
+
+  @override
+  String get publicNameReal => 'Mon nom';
+
+  @override
+  String get publicNameRealSub => 'Votre prénom et l\'initiale de votre nom';
+
+  @override
+  String get publicNamePseudo => 'Un pseudonyme';
+
+  @override
+  String get publicNamePseudoSub => 'Seulement ce nom, sans initiale';
+
+  @override
+  String get publicNameField => 'Pseudonyme';
+
+  @override
+  String get publicNameHint => 'ex. SkyCourier';
+
+  @override
+  String get publicNameHelper => '2 à 20 lettres ou chiffres';
+
+  @override
+  String get publicNameInfo =>
+      'Affiché dans la recherche, sur votre profil et dans les alertes trajets. Quand vous acceptez une demande, l\'expéditeur et le destinataire voient votre prénom pour la remise. Votre badge vérifié s\'affiche toujours.';
+
+  @override
+  String get publicNamePreview => 'Ce que les autres verront';
+
+  @override
+  String get publicNameSave => 'Enregistrer';
+
+  @override
+  String get publicNameSaved => 'Nom public enregistré';
+
+  @override
+  String get publicNameInvalid =>
+      'Utilisez 2 à 20 lettres ou chiffres (espaces et . _ - acceptés).';
+
+  @override
+  String get publicNameReserved =>
+      'Ce nom ne peut pas être utilisé. Choisissez-en un autre.';
 }

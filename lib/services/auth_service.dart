@@ -165,6 +165,28 @@ class AuthService {
   }
 
   /// Fetches the user's profile from nata.profiles.
+  /// How people browsing travelers see this member: their real name, or
+  /// [pseudonym] when [usePseudonym] (20240183_traveler_pseudonym.sql).
+  Future<void> setPublicName({
+    required bool usePseudonym,
+    String? pseudonym,
+  }) async {
+    try {
+      await _client.rpc(
+        'set_public_name',
+        params: {'p_use_pseudonym': usePseudonym, 'p_pseudonym': pseudonym},
+      );
+    } on PostgrestException catch (e) {
+      if (e.message.contains('pseudonym_reserved')) {
+        throw const PseudonymException(reserved: true);
+      }
+      if (e.message.contains('pseudonym_invalid')) {
+        throw const PseudonymException();
+      }
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>?> getProfile() async {
     final userId = currentUser?.id;
     if (userId == null) return null;
@@ -489,4 +511,11 @@ class AuthService {
 /// The name can't be changed once the identity check has started.
 class NameLockedException implements Exception {
   const NameLockedException();
+}
+
+/// The pseudonym wasn't accepted: not 2 to 20 letters or numbers, or a
+/// name kept for Nata ([reserved]).
+class PseudonymException implements Exception {
+  final bool reserved;
+  const PseudonymException({this.reserved = false});
 }

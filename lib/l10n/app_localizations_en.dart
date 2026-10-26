@@ -4815,4 +4815,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recipientSendFailed =>
       'Your message wasn\'t sent. Please try again.';
+
+  @override
+  String get publicNameRow => 'Public name';
+
+  @override
+  String get publicNameIntro =>
+      'Choose how people who find you as a traveler see your name.';
+
+  @override
+  String get publicNameReal => 'My name';
+
+  @override
+  String get publicNameRealSub => 'Your first name and last initial';
+
+  @override
+  String get publicNamePseudo => 'A pseudonym';
+
+  @override
+  String get publicNamePseudoSub => 'Only this name, no initial';
+
+  @override
+  String get publicNameField => 'Pseudonym';
+
+  @override
+  String get publicNameHint => 'e.g. SkyCourier';
+
+  @override
+  String get publicNameHelper => '2 to 20 letters or numbers';
+
+  @override
+  String get publicNameInfo =>
+      'Shown in search, on your profile and in route alerts. Once you accept a request, that sender and the recipient see your first name for the handover. Your verified badge always shows.';
+
+  @override
+  String get publicNamePreview => 'People will see';
+
+  @override
+  String get publicNameSave => 'Save';
+
+  @override
+  String get publicNameSaved => 'Public name saved';
+
+  @override
+  String get publicNameInvalid =>
+      'Use 2 to 20 letters or numbers (spaces and . _ - are fine).';
+
+  @override
+  String get publicNameReserved =>
+      'This name can\'t be used. Please choose another.';
 }

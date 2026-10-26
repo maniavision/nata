@@ -2027,5 +2027,20 @@
   "recipientSeenNever": "Aún no abrió el enlace",
   "recipientSeenAt": "Abrió el enlace {when}",
   "recipientChatClosed": "El chat se cerró tras la entrega.",
-  "recipientSendFailed": "Tu mensaje no se envió. Inténtalo de nuevo."
+  "recipientSendFailed": "Tu mensaje no se envió. Inténtalo de nuevo.",
+  "publicNameRow": "Nombre público",
+  "publicNameIntro": "Elige cómo ven tu nombre las personas que te encuentran como viajero.",
+  "publicNameReal": "Mi nombre",
+  "publicNameRealSub": "Tu nombre y la inicial de tu apellido",
+  "publicNamePseudo": "Un seudónimo",
+  "publicNamePseudoSub": "Solo este nombre, sin inicial",
+  "publicNameField": "Seudónimo",
+  "publicNameHint": "p. ej. SkyCourier",
+  "publicNameHelper": "De 2 a 20 letras o números",
+  "publicNameInfo": "Se muestra en la búsqueda, en tu perfil y en las alertas de ruta. Cuando aceptas una solicitud, el remitente y el destinatario ven tu nombre para la entrega. Tu insignia de verificado siempre se muestra.",
+  "publicNamePreview": "Lo que verán los demás",
+  "publicNameSave": "Guardar",
+  "publicNameSaved": "Nombre público guardado",
+  "publicNameInvalid": "Usa de 2 a 20 letras o números (se permiten espacios y . _ -).",
+  "publicNameReserved": "Este nombre no se puede usar. Elige otro."
 }
