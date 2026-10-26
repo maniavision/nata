@@ -2019,5 +2019,14 @@
   "wallet": "Portefeuille",
   "walletActivity": "Activité",
   "walletRowAvailable": "{amount} disponible",
-  "tipWalletRowBody": "Votre solde, vos retraits, vos paramètres de paiement et votre historique sont dans Portefeuille."
+  "tipWalletRowBody": "Votre solde, vos retraits, vos paramètres de paiement et votre historique sont dans Portefeuille.",
+  "recipientMessageButton": "Écrire à {name}",
+  "recipientChatTitle": "{name} (destinataire)",
+  "recipientChatSubtitle": "Colis de {sender} · {item}",
+  "recipientChatBanner": "{name} n'est pas sur Nata et lit vos messages depuis un lien privé reçu par SMS.",
+  "recipientChatEmpty": "Écrivez à {name} pour organiser la remise.",
+  "recipientSeenNever": "N'a pas encore ouvert le lien",
+  "recipientSeenAt": "A ouvert le lien {when}",
+  "recipientChatClosed": "La discussion est fermée après la livraison.",
+  "recipientSendFailed": "Votre message n'a pas été envoyé. Réessayez."
 }

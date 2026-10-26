@@ -4827,4 +4827,44 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tipWalletRowBody =>
       'Tu saldo, tus retiros, tu configuración de pagos y tu historial están en Billetera.';
+
+  @override
+  String recipientMessageButton(String name) {
+    return 'Escribir a $name';
+  }
+
+  @override
+  String recipientChatTitle(String name) {
+    return '$name (recibe el paquete)';
+  }
+
+  @override
+  String recipientChatSubtitle(String sender, String item) {
+    return 'Paquete de $sender · $item';
+  }
+
+  @override
+  String recipientChatBanner(String name) {
+    return '$name no está en Nata y lee tus mensajes desde un enlace privado que le enviamos por SMS.';
+  }
+
+  @override
+  String recipientChatEmpty(String name) {
+    return 'Escribe a $name para organizar la entrega.';
+  }
+
+  @override
+  String get recipientSeenNever => 'Aún no abrió el enlace';
+
+  @override
+  String recipientSeenAt(String when) {
+    return 'Abrió el enlace $when';
+  }
+
+  @override
+  String get recipientChatClosed => 'El chat se cerró tras la entrega.';
+
+  @override
+  String get recipientSendFailed =>
+      'Tu mensaje no se envió. Inténtalo de nuevo.';
 }

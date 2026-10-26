@@ -1,5 +1,6 @@
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
+import 'package:carrywise_app/screens/recipient_chat_screen.dart';
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -92,6 +93,20 @@ void main() {
     expect(find.text('iPad Mini 64GB (Space Gray)'), findsOneWidget);
     expect(find.text('David Adeleke (London)'), findsOneWidget);
     expect(find.text('LHR Terminal 4 Arrivals Lounge'), findsOneWidget);
+  });
+
+  testWidgets('Message David opens the chat with the recipient', (
+    tester,
+  ) async {
+    await pump(tester, sampleDelivery());
+
+    expect(find.text('Message David'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('delivery-task-message-recipient')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RecipientChatScreen), findsOneWidget);
   });
 
   testWidgets('before pickup: confirming delivery is locked', (tester) async {

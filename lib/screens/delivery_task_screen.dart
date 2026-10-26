@@ -14,6 +14,7 @@ import 'delivery_confirm_screen.dart';
 import 'review_screen.dart';
 import 'messages_screen.dart';
 import '../widgets/camera_denied_sheet.dart';
+import 'recipient_chat_screen.dart';
 
 /// A request the traveler accepted and is now carrying, as Requests >
 /// Incoming shows it.
@@ -856,6 +857,41 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                   ),
                 ],
               ],
+            ),
+          ),
+          // The recipient isn't on Nata: they answer from the link texted
+          // to them.
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: const ValueKey('delivery-task-message-recipient'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RecipientChatScreen(
+                    requestId: d.requestId,
+                    recipientName: d.recipientName,
+                    service: widget.requestService,
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+              label: Text(
+                l.recipientMessageButton(
+                  d.recipientName.trim().isEmpty
+                      ? l.recipientNameLabel
+                      : d.recipientName.trim().split(RegExp(r'\s+')).first,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                shape: const StadiumBorder(),
+                textStyle: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
             ),
           ),
           if (_pickedUpAt != null) ...[

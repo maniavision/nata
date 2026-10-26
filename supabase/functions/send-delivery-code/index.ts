@@ -13,6 +13,8 @@
  *
  * Sent as free text: Bird's built-in templates don't fit this message, and
  * both free text and workspace templates need a sender of our own anyway.
+ * It carries the link to the recipient's page (20240181_recipient_link.sql),
+ * in the sender's language.
  *
  * Secrets: BIRD_API_KEY (as for the sign-in SMS), BIRD_SENDER, a sender
  * held by the Bird workspace (SMS > Senders) such as the sender ID "Nata",
@@ -22,8 +24,8 @@
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { pageLink, sendSms, smsText } from "../_shared/recipient_sms.ts";
 
-const BIRD_API_URL = "https://us1.platform.bird.com/v1/sms/messages";
 const RESEND_AFTER_MS = 2 * 60 * 1000;
 
 const admin = createClient(
@@ -42,10 +44,9 @@ function json(body: unknown, status = 200): Response {
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  const apiKey = Deno.env.get("BIRD_API_KEY")?.trim();
-  const senderId = Deno.env.get("BIRD_SENDER")?.trim();
-  const senderUs = Deno.env.get("BIRD_SENDER_US")?.trim();
-  if (!apiKey || !senderId) return json({ error: "sms_unavailable" }, 503);
+  if (!Deno.env.get("BIRD_API_KEY")?.trim() || !Deno.env.get("BIRD_SENDER")?.trim()) {
+    return json({ error: "sms_unavailable" }, 503);
+  }
 
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   const { data: { user } } = token
@@ -95,35 +96,21 @@ Deno.serve(async (req: Request) => {
   const phone = String(recipient?.phone ?? "").trim();
   if (!phone) return json({ error: "not_allowed" }, 403);
 
-  const { data: sender } = await db
-    .from("profiles")
-    .select("first_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: sender }, { data: lang }, { data: token }] = await Promise.all([
+    db.from("profiles").select("first_name").eq("id", user.id).maybeSingle(),
+    db.from("user_settings").select("language").eq("user_id", user.id)
+      .maybeSingle(),
+    db.rpc("recipient_token", { p_request_id: requestId }),
+  ]);
 
-  const senderName = String(sender?.first_name ?? "").trim() || "Someone";
-  const to = phone.startsWith("+") ? phone : `+${phone}`;
-  // +1 (US, Canada) only accepts numbers as senders.
-  const from = to.startsWith("+1") ? senderUs : senderId;
-  if (!from) return json({ error: "sms_unavailable" }, 503);
-  const res = await fetch(BIRD_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      text: `${senderName} sent you a parcel with Nata. Give this code ` +
-        `to the traveler when you receive it: ${code.code}`,
-      category: "transactional",
-    }),
+  const text = smsText(lang?.language, "code", {
+    sender: String(sender?.first_name ?? "").trim() || "Someone",
+    link: pageLink(String(token ?? "")),
+    code: String(code.code),
   });
-  if (!res.ok) {
-    console.error("[send-delivery-code] bird", res.status, await res.text());
-    return json({ error: "sms_failed" }, 502);
-  }
+  const result = await sendSms(phone, text);
+  if (result === "unavailable") return json({ error: "sms_unavailable" }, 503);
+  if (result === "failed") return json({ error: "sms_failed" }, 502);
 
   await db.rpc("mark_code_sent", { p_request_id: requestId });
   return json({ sent_at: new Date().toISOString() });

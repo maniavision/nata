@@ -2019,5 +2019,14 @@
   "wallet": "Billetera",
   "walletActivity": "Actividad",
   "walletRowAvailable": "{amount} disponible",
-  "tipWalletRowBody": "Tu saldo, tus retiros, tu configuración de pagos y tu historial están en Billetera."
+  "tipWalletRowBody": "Tu saldo, tus retiros, tu configuración de pagos y tu historial están en Billetera.",
+  "recipientMessageButton": "Escribir a {name}",
+  "recipientChatTitle": "{name} (recibe el paquete)",
+  "recipientChatSubtitle": "Paquete de {sender} · {item}",
+  "recipientChatBanner": "{name} no está en Nata y lee tus mensajes desde un enlace privado que le enviamos por SMS.",
+  "recipientChatEmpty": "Escribe a {name} para organizar la entrega.",
+  "recipientSeenNever": "Aún no abrió el enlace",
+  "recipientSeenAt": "Abrió el enlace {when}",
+  "recipientChatClosed": "El chat se cerró tras la entrega.",
+  "recipientSendFailed": "Tu mensaje no se envió. Inténtalo de nuevo."
 }

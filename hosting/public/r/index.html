@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<!-- The link's token is private: never sent to other sites. -->
+<meta name="referrer" content="no-referrer">
+<title>Your parcel · Nata</title>
+<link rel="icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<!--
+  The recipient's page (designed in Sleek, "Recipient Tracking (Web)"):
+  where the parcel is, who carries it, the handover code and a chat with
+  the traveler, from the private link texted to them. Everything comes
+  from public.recipient_view / recipient_send (20240181_recipient_link.sql).
+-->
+<style>
+  :root {
+    --bg: #FFF9F3; --fg: #102F35; --primary: #123F46; --primary-fg: #FFF9F3;
+    --secondary: #F2E8DE; --muted-fg: #6D7D7D; --accent: #F26F5B;
+    --card: #FFFFFF; --border: #E8DED4; --input: #FFFDF9; --green: #168A68;
+    --green-bg: #E4F4EE; --star: #E5A83B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  body { font: 14px/1.45 "DM Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  h1, h2, .heading { font-family: Manrope, system-ui, sans-serif; margin: 0; }
+  p { margin: 0; }
+  .page { max-width: 448px; margin: 0 auto; padding: 24px 20px 40px; }
+  .stack > * + * { margin-top: 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 8px; font: 800 18px Manrope, sans-serif; }
+  .brand img { width: 36px; height: 36px; border-radius: 12px; }
+  .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-fg); }
+  h1 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .sub { font-size: 12px; color: var(--muted-fg); margin-top: 4px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .steps { list-style: none; margin: 12px 0 0; padding: 0; }
+  .step { display: flex; gap: 12px; }
+  .rail { display: flex; flex-direction: column; align-items: center; }
+  .dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--secondary); border: 1px solid var(--border); color: var(--muted-fg); }
+  .dot svg { width: 14px; height: 14px; }
+  .done .dot { background: var(--green); border-color: var(--green); color: #fff; }
+  .now .dot { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(242,111,91,.2); }
+  .line { width: 2px; flex: 1; min-height: 24px; background: var(--border); }
+  .done .line { background: var(--green); }
+  .step-body { padding-bottom: 16px; }
+  .step:last-child .step-body { padding-bottom: 0; }
+  .step-title { font-weight: 700; font-size: 14px; color: var(--muted-fg); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .done .step-title { color: var(--fg); }
+  .now .step-title { color: var(--accent); }
+  .tag { font-size: 10px; font-weight: 700; color: var(--muted-fg); }
+  .now .tag { color: var(--accent); background: rgba(242,111,91,.1); padding: 2px 6px; border-radius: 4px; }
+  .step-note { font-size: 11px; color: var(--muted-fg); }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .avatar { position: relative; flex-shrink: 0; }
+  .avatar .pic { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--border); background: var(--secondary); display: flex; align-items: center; justify-content: center; font: 800 18px Manrope, sans-serif; color: var(--primary); }
+  .avatar .tick { position: absolute; right: -2px; bottom: -2px; width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--card); }
+  .avatar .tick svg { width: 12px; height: 12px; }
+  .name-row { display: flex; align-items: center; gap: 6px; }
+  .name { font: 800 14px Manrope, sans-serif; }
+  .badge { font-size: 10px; font-weight: 700; color: var(--green); background: var(--green-bg); padding: 2px 6px; border-radius: 4px; }
+  .meta { font-size: 11px; font-weight: 600; color: var(--muted-fg); margin-top: 2px; }
+  .meta .star { color: var(--star); }
+  .split { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; }
+  .split .big { font: 800 16px Manrope, sans-serif; }
+  .split .small { font-size: 12px; font-weight: 700; }
+  .right { text-align: right; }
+  .code { text-align: center; padding: 20px; border-radius: 20px; }
+  .digits { display: flex; justify-content: center; gap: 10px; margin: 12px 0; }
+  .digits span { width: 48px; height: 48px; border-radius: 12px; background: var(--primary); color: var(--primary-fg); font: 800 24px Manrope, sans-serif; display: flex; align-items: center; justify-content: center; }
+  .note { font-size: 12px; color: var(--muted-fg); }
+  .item { display: flex; align-items: center; gap: 12px; }
+  .item-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--secondary); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .item-icon svg { width: 20px; height: 20px; }
+  .item-name { font-size: 12px; font-weight: 700; }
+  h2 { font-size: 16px; font-weight: 800; }
+  .chat { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .chat .empty { font-size: 12px; color: var(--muted-fg); text-align: center; padding: 8px 0; }
+  .msg { display: flex; align-items: flex-end; gap: 8px; }
+  .msg.mine { justify-content: flex-end; }
+  .msg .mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--secondary); display: flex; align-items: center; justify-content: center; font: 800 11px Manrope, sans-serif; color: var(--primary); }
+  .bubble-wrap { max-width: 75%; }
+  .bubble { border-radius: 16px 16px 16px 4px; background: var(--secondary); padding: 8px 12px; font-size: 13px; white-space: pre-wrap; word-wrap: break-word; }
+  .mine .bubble { border-radius: 16px 16px 4px 16px; background: var(--primary); color: var(--primary-fg); }
+  .time { font-size: 10px; color: var(--muted-fg); margin: 4px 4px 0; }
+  .mine .time { text-align: right; }
+  .composer { display: flex; gap: 8px; align-items: flex-end; }
+  .composer textarea { flex: 1; min-width: 0; resize: none; padding: 10px 16px; border-radius: 22px; background: var(--input); border: 1px solid var(--border); font: 14px "DM Sans", sans-serif; color: var(--fg); max-height: 120px; }
+  .composer textarea:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+  .send { width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+  .send:disabled { opacity: .5; cursor: default; }
+  .send svg { width: 18px; height: 18px; }
+  .kept { font-size: 11px; color: var(--muted-fg); text-align: center; }
+  .error { font-size: 12px; color: #C94B45; text-align: center; }
+  .promo { background: #FFF6EE; border: 1px solid rgba(242,111,91,.3); border-radius: 16px; padding: 20px; }
+  .promo-head { display: flex; gap: 12px; align-items: flex-start; }
+  .promo-icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(242,111,91,.15); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .promo-icon svg { width: 20px; height: 20px; }
+  .promo p { font-size: 12px; color: var(--muted-fg); margin-top: 4px; }
+  .cta { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; width: 100%; border-radius: 999px; background: var(--primary); color: var(--primary-fg); padding: 12px; font-weight: 700; text-decoration: none; }
+  .stores { display: flex; justify-content: center; gap: 16px; font-size: 11px; font-weight: 600; color: var(--muted-fg); margin-top: 10px; }
+  .center { text-align: center; padding: 48px 8px; }
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--accent); margin: 0 auto; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .banner { background: var(--secondary); border-radius: 12px; padding: 12px; font-size: 12px; }
+  [hidden] { display: none !important; }
+</style>
+<script src="/config.js"></script>
+</head>
+<body>
+<main class="page stack" id="app">
+  <header>
+    <div class="brand"><img src="/logo.png" alt="">Nata</div>
+    <span class="eyebrow" data-t="tracking"></span>
+  </header>
+  <div class="center" id="loading"><div class="spinner"></div></div>
+  <div class="center" id="invalid" hidden>
+    <h1 data-t="invalidTitle"></h1>
+    <p class="sub" data-t="invalidBody"></p>
+  </div>
+  <div id="content" class="stack" hidden></div>
+</main>
+
+<script>
+(() => {
+  // ── Language ──────────────────────────────────────────────────────────────
+  const T = {
+    en: {
+      tracking: 'Parcel tracking', title: 'Your parcel from {sender}',
+      sentBy: 'Sent by {sender}', status: 'Delivery status',
+      paid: 'Paid and confirmed', paidNote: 'The payment is held safely by Nata',
+      picked: 'Picked up by {traveler}', pickedNote: 'Your parcel is with the traveler',
+      onWay: 'On the way', arrives: 'Arrives {date}',
+      delivered: 'Delivered', deliveredNote: 'Confirmed with the handover code',
+      cancelled: 'This delivery was cancelled.',
+      verified: 'Verified', deliveries: '{n} deliveries', oneDelivery: '1 delivery',
+      noRating: 'New traveler', flight: 'Trip', dates: 'Dates',
+      code: 'Handover code',
+      codeNote: 'Give this code to {traveler} only when you have your parcel in hand.',
+      chat: 'Chat with {traveler}', write: 'Write a message…', send: 'Send',
+      noMessages: 'No messages yet. Say hello to {traveler} to arrange the handover.',
+      kept: 'Messages are kept by Nata until the delivery is complete',
+      closed: 'The chat closed after the delivery.',
+      sendFailed: "Your message wasn't sent. Please try again.",
+      tooMany: 'Too many messages. Please wait a few minutes.',
+      promoTitle: 'Send or carry parcels with Nata',
+      promoBody: 'Find trusted travelers heading your way, or earn by carrying items for others.',
+      getApp: 'Get the app',
+      invalidTitle: 'This link has expired',
+      invalidBody: 'It works until a week after the delivery. Ask the sender if you need help.',
+      today: 'Today',
+    },
+    fr: {
+      tracking: 'Suivi du colis', title: 'Votre colis de {sender}',
+      sentBy: 'Envoyé par {sender}', status: 'État de la livraison',
+      paid: 'Payé et confirmé', paidNote: 'Le paiement est gardé en sécurité par Nata',
+      picked: 'Récupéré par {traveler}', pickedNote: 'Votre colis est avec le voyageur',
+      onWay: 'En route', arrives: 'Arrive le {date}',
+      delivered: 'Livré', deliveredNote: 'Confirmé avec le code de remise',
+      cancelled: 'Cette livraison a été annulée.',
+      verified: 'Vérifié', deliveries: '{n} livraisons', oneDelivery: '1 livraison',
+      noRating: 'Nouveau voyageur', flight: 'Trajet', dates: 'Dates',
+      code: 'Code de remise',
+      codeNote: 'Donnez ce code à {traveler} seulement quand vous avez votre colis en main.',
+      chat: 'Écrire à {traveler}', write: 'Écrire un message…', send: 'Envoyer',
+      noMessages: 'Pas encore de messages. Écrivez à {traveler} pour organiser la remise.',
+      kept: 'Les messages sont conservés par Nata jusqu’à la livraison',
+      closed: 'La discussion est fermée après la livraison.',
+      sendFailed: "Votre message n'a pas été envoyé. Réessayez.",
+      tooMany: 'Trop de messages. Patientez quelques minutes.',
+      promoTitle: 'Envoyez ou transportez des colis avec Nata',
+      promoBody: 'Trouvez des voyageurs de confiance sur votre trajet, ou gagnez de l’argent en transportant des colis.',
+      getApp: "Télécharger l'app",
+      invalidTitle: 'Ce lien a expiré',
+      invalidBody: "Il fonctionne jusqu'à une semaine après la livraison. Demandez à l'expéditeur si besoin.",
+      today: "Aujourd'hui",
+    },
+    es: {
+      tracking: 'Seguimiento', title: 'Tu paquete de {sender}',
+      sentBy: 'Enviado por {sender}', status: 'Estado de la entrega',
+      paid: 'Pagado y confirmado', paidNote: 'Nata guarda el pago de forma segura',
+      picked: 'Recogido por {traveler}', pickedNote: 'Tu paquete está con el viajero',
+      onWay: 'En camino', arrives: 'Llega el {date}',
+      delivered: 'Entregado', deliveredNote: 'Confirmado con el código de entrega',
+      cancelled: 'Esta entrega fue cancelada.',
+      verified: 'Verificado', deliveries: '{n} entregas', oneDelivery: '1 entrega',
+      noRating: 'Viajero nuevo', flight: 'Viaje', dates: 'Fechas',
+      code: 'Código de entrega',
+      codeNote: 'Da este código a {traveler} solo cuando tengas tu paquete en la mano.',
+      chat: 'Chatea con {traveler}', write: 'Escribe un mensaje…', send: 'Enviar',
+      noMessages: 'Aún no hay mensajes. Escribe a {traveler} para organizar la entrega.',
+      kept: 'Nata guarda los mensajes hasta que se complete la entrega',
+      closed: 'El chat se cerró tras la entrega.',
+      sendFailed: 'Tu mensaje no se envió. Inténtalo de nuevo.',
+      tooMany: 'Demasiados mensajes. Espera unos minutos.',
+      promoTitle: 'Envía o lleva paquetes con Nata',
+      promoBody: 'Encuentra viajeros de confianza en tu ruta, o gana dinero llevando paquetes.',
+      getApp: 'Descargar la app',
+      invalidTitle: 'Este enlace ha caducado',
+      invalidBody: 'Funciona hasta una semana después de la entrega. Pregunta al remitente si necesitas ayuda.',
+      today: 'Hoy',
+    },
+  };
+  const lang = (navigator.languages || [navigator.language || 'en'])
+    .map((l) => String(l).slice(0, 2).toLowerCase())
+    .find((l) => T[l]) || 'en';
+  document.documentElement.lang = lang;
+  const t = (key, values = {}) =>
+    T[lang][key].replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
+  document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+  const day = (iso) => {
+    if (!iso) return '';
+    const d = new Date(String(iso).length === 10 ? iso + 'T12:00:00' : iso);
+    return d.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
+  };
+  const time = (iso) => {
+    const d = new Date(iso);
+    const sameDay = d.toDateString() === new Date().toDateString();
+    const hm = d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+    return sameDay ? hm : `${day(iso)}, ${hm}`;
+  };
+  const ICON = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>',
+    plane: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>',
+    box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.21L4.5 12l-2.49 7.19a1 1 0 0 0 1.39 1.21z"/></svg>',
+    gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
+  };
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+  const token = decodeURIComponent((location.pathname.split('/r/')[1] || '').split('/')[0]);
+  const rpc = async (fn, body) => {
+    const res = await fetch(`${NATA.url}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: {
+        apikey: NATA.key,
+        Authorization: `Bearer ${NATA.key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(text);
+    return text ? JSON.parse(text) : null;
+  };
+
+  let view = null;
+  let draft = '';
+  let sending = false;
+  let sendError = '';
+  let lastMessages = '';
+
+  const avatarUrl = (path) => {
+    if (!path) return '';
+    let p = String(path).trim();
+    if (p.startsWith('http')) return p.split('?t=')[0];
+    p = p.replace(/^\//, '').replace(/^avatar\//, 'avatars/');
+    return `${NATA.url}/storage/v1/object/public/user-assets/${p}`;
+  };
+  const face = (tr, cls) => {
+    const url = avatarUrl(tr.avatar_path);
+    return url
+      ? `<img class="${cls}" src="${esc(url)}" alt="">`
+      : `<div class="${cls}">${esc((tr.first_name || '?').slice(0, 1))}</div>`;
+  };
+
+  // ── Rendering ─────────────────────────────────────────────────────────────
+  function steps(v) {
+    const traveler = v.traveler.first_name;
+    const s = v.status;
+    const picked = !!v.picked_up_at || s === 'handed_off' || s === 'delivered';
+    const delivered = s === 'delivered';
+    const rows = [
+      { title: t('paid'), note: t('paidNote'), tag: day(v.paid_at), state: 'done' },
+      { title: t('picked', { traveler }), note: t('pickedNote'), tag: day(v.picked_up_at),
+        state: picked ? 'done' : 'now' },
+      { title: t('onWay'), note: `${v.from_city || ''} → ${v.to_city || ''}`,
+        tag: v.arrival_date ? t('arrives', { date: day(v.arrival_date) }) : '',
+        state: delivered ? 'done' : picked ? 'now' : '' },
+      { title: t('delivered'), note: t('deliveredNote'), tag: day(v.delivered_at),
+        state: delivered ? 'done' : '' },
+    ];
+    return rows.map((r, i) => `
+      <li class="step ${r.state}">
+        <div class="rail"><div class="dot">${r.state === 'done' ? ICON.check : r.state === 'now' ? ICON.plane : ''}</div>
+          ${i < rows.length - 1 ? '<div class="line"></div>' : ''}</div>
+        <div class="step-body">
+          <p class="step-title">${esc(r.title)}${r.tag ? ` <span class="tag">${esc(r.tag)}</span>` : ''}</p>
+          <p class="step-note">${esc(r.note)}</p>
+        </div>
+      </li>`).join('');
+  }
+
+  function messages(v) {
+    if (!v.messages.length) {
+      return `<p class="empty">${esc(t('noMessages', { traveler: v.traveler.first_name }))}</p>`;
+    }
+    return v.messages.map((m) => {
+      const mine = m.author === 'recipient';
+      return `<div class="msg ${mine ? 'mine' : ''}">
+        ${mine ? '' : face(v.traveler, 'mini')}
+        <div class="bubble-wrap"><div class="bubble">${esc(m.body)}</div>
+        <p class="time">${esc(time(m.at))}</p></div></div>`;
+    }).join('');
+  }
+
+  function render() {
+    const v = view;
+    const tr = v.traveler;
+    const traveler = tr.first_name;
+    const items = (v.items || []).filter(Boolean);
+    const rating = tr.rating != null
+      ? `<span class="star">★</span> ${Number(tr.rating).toFixed(1)} · `
+      : `${esc(t('noRating'))} · `;
+    const count = tr.deliveries === 1 ? t('oneDelivery') : t('deliveries', { n: tr.deliveries || 0 });
+    const html = `
+      <div>
+        <h1>${esc(t('title', { sender: v.sender }))}</h1>
+        ${items.length ? `<p class="sub">${esc(items.join(', '))}</p>` : ''}
+      </div>
+      ${v.status === 'cancelled' ? `<p class="banner">${esc(t('cancelled'))}</p>` : `
+      <section class="card">
+        <p class="eyebrow">${esc(t('status'))}</p>
+        <ol class="steps">${steps(v)}</ol>
+      </section>`}
+      <section class="card">
+        <div class="who">
+          <div class="avatar">${face(tr, 'pic')}${tr.verified ? `<div class="tick">${ICON.check}</div>` : ''}</div>
+          <div>
+            <div class="name-row"><span class="name">${esc(traveler)}${tr.initial ? ' ' + esc(tr.initial) + '.' : ''}</span>
+              ${tr.verified ? `<span class="badge">${esc(t('verified'))}</span>` : ''}</div>
+            <p class="meta">${rating}${esc(count)}</p>
+          </div>
+        </div>
+        <div class="split">
+          <div><p class="eyebrow">${esc(t('flight'))}</p>
+            <p class="big">${esc(v.from_city || '')} → ${esc(v.to_city || '')}</p></div>
+          <div class="right"><p class="eyebrow">${esc(t('dates'))}</p>
+            <p class="small">${esc(day(v.departure_date))} → ${esc(day(v.arrival_date))}</p></div>
+        </div>
+      </section>
+      ${v.code ? `
+      <section class="card code">
+        <p class="eyebrow">${esc(t('code'))}</p>
+        <div class="digits">${String(v.code).split('').map((c) => `<span>${esc(c)}</span>`).join('')}</div>
+        <p class="note">${esc(t('codeNote', { traveler }))}</p>
+      </section>` : ''}
+      ${items.length ? `
+      <section class="card item">
+        <div class="item-icon">${ICON.box}</div>
+        <div><p class="item-name">${esc(items.join(', '))}</p>
+          <p class="step-note">${esc(t('sentBy', { sender: v.sender }))}</p></div>
+      </section>` : ''}
+      <section class="stack" style="--gap:12px">
+        <h2>${esc(t('chat', { traveler }))}</h2>
+        <div class="card chat" id="thread">${messages(v)}</div>
+        ${v.chat_open ? `
+        <form class="composer" id="composer">
+          <textarea id="draft" rows="1" maxlength="1000" placeholder="${esc(t('write'))}"></textarea>
+          <button class="send" id="send" type="submit" aria-label="${esc(t('send'))}">${ICON.send}</button>
+        </form>
+        <p class="error" id="send-error" ${sendError ? '' : 'hidden'}>${esc(sendError)}</p>
+        <p class="kept">${esc(t('kept'))}</p>` : `<p class="kept">${esc(t('closed'))}</p>`}
+      </section>
+      <section class="promo">
+        <div class="promo-head"><div class="promo-icon">${ICON.gift}</div>
+          <div><h2>${esc(t('promoTitle'))}</h2><p>${esc(t('promoBody'))}</p></div></div>
+        <a class="cta" href="/app">${esc(t('getApp'))}</a>
+        <div class="stores"><span>App Store</span><span>Google Play</span></div>
+      </section>`;
+    const content = $('content');
+    const hadFocus = document.activeElement && document.activeElement.id === 'draft';
+    content.innerHTML = html;
+    const box = $('draft');
+    if (box) {
+      box.value = draft;
+      box.addEventListener('input', () => {
+        draft = box.value;
+        box.style.height = 'auto';
+        box.style.height = `${Math.min(box.scrollHeight, 120)}px`;
+      });
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && !('ontouchstart' in window)) {
+          e.preventDefault();
+          send();
+        }
+      });
+      if (hadFocus) box.focus();
+      $('composer').addEventListener('submit', (e) => { e.preventDefault(); send(); });
+      $('send').disabled = sending;
+    }
+    lastMessages = JSON.stringify(v.messages);
+  }
+
+  // Only the chat is redrawn when nothing else changed, so typing isn't lost.
+  function update(next) {
+    const first = !view;
+    const sameExceptChat = view && JSON.stringify({ ...view, messages: 0 }) ===
+      JSON.stringify({ ...next, messages: 0 });
+    view = next;
+    if (!first && sameExceptChat) {
+      if (JSON.stringify(next.messages) !== lastMessages) {
+        $('thread').innerHTML = messages(next);
+        lastMessages = JSON.stringify(next.messages);
+        scrollChat();
+      }
+      return;
+    }
+    render();
+    if (first) {
+      $('loading').hidden = true;
+      $('content').hidden = false;
+    }
+  }
+
+  function scrollChat() {
+    const thread = $('thread');
+    if (thread) thread.lastElementChild?.scrollIntoView({ block: 'nearest' });
+  }
+
+  async function load() {
+    try {
+      const v = await rpc('recipient_view', { p_token: token });
+      if (!v) {
+        $('loading').hidden = true;
+        $('content').hidden = true;
+        $('invalid').hidden = false;
+        return;
+      }
+      update(v);
+    } catch (e) {
+      // Offline for a moment: the next round tries again.
+      console.warn('[recipient] load', e);
+    }
+  }
+
+  async function send() {
+    const body = draft.trim();
+    if (!body || sending) return;
+    sending = true;
+    sendError = '';
+    $('send').disabled = true;
+    try {
+      await rpc('recipient_send', { p_token: token, p_body: body });
+      draft = '';
+      $('draft').value = '';
+      $('draft').style.height = 'auto';
+      $('send-error').hidden = true;
+      await load();
+      scrollChat();
+    } catch (e) {
+      sendError = String(e.message).includes('too_many') ? t('tooMany') : t('sendFailed');
+      $('send-error').textContent = sendError;
+      $('send-error').hidden = false;
+    } finally {
+      sending = false;
+      const button = $('send');
+      if (button) button.disabled = false;
+    }
+  }
+
+  if (!token) {
+    $('loading').hidden = true;
+    $('invalid').hidden = false;
+    return;
+  }
+  load();
+  // New messages and status changes: every 8 s while the page is open.
+  setInterval(() => { if (!document.hidden) load(); }, 8000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>

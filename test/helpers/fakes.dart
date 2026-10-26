@@ -1146,6 +1146,48 @@ class FakeRequestService extends Fake implements RequestService {
         (reviews: const <TravelerReview>[], total: 0);
   }
 
+  /// The traveler's chats with recipients, by request id.
+  final Map<String, RecipientChat> recipientChats = {};
+  bool failRecipientChat = false;
+  bool failRecipientSend = false;
+  final List<({String requestId, String body})> recipientSent = [];
+
+  @override
+  Future<RecipientChat> recipientChat(String requestId) async {
+    if (failRecipientChat) throw Exception('chat failed');
+    return recipientChats[requestId] ??
+        const RecipientChat(
+          recipientName: 'Amara',
+          senderName: 'Sarah',
+          item: 'iPad Mini',
+          open: true,
+          messages: [],
+        );
+  }
+
+  @override
+  Future<void> sendRecipientMessage(String requestId, String body) async {
+    if (failRecipientSend) throw Exception('send failed');
+    recipientSent.add((requestId: requestId, body: body));
+    final chat = await recipientChat(requestId);
+    recipientChats[requestId] = RecipientChat(
+      recipientName: chat.recipientName,
+      senderName: chat.senderName,
+      item: chat.item,
+      seenAt: chat.seenAt,
+      open: chat.open,
+      messages: [
+        ...chat.messages,
+        RecipientMessage(
+          id: 'sent-${recipientSent.length}',
+          fromRecipient: false,
+          body: body,
+          at: DateTime(2030, 6, 15, 12),
+        ),
+      ],
+    );
+  }
+
   /// Sender reviews sent by the traveler; [failReview] and [reviewGate]
   /// apply to them too.
   final List<({String id, int rating, List<String> tags, String comment})>

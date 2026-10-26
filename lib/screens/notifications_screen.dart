@@ -15,6 +15,7 @@ import 'chat_thread_screen.dart';
 import 'traveler_results_screen.dart';
 import '../services/app_badge.dart';
 import '../services/screen_cache.dart';
+import 'recipient_chat_screen.dart';
 
 /// "2 min ago", "1 hr ago", "Yesterday", "Jun 12" ...
 String notificationTimeLabel(AppLocalizations l, DateTime now, DateTime then) {
@@ -161,6 +162,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (results != null) {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => results));
       }
+      return;
+    }
+    final request = n.payload['request_id'] as String?;
+    if (n.event == 'recipient_message' && request != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => RecipientChatScreen(requestId: request),
+        ),
+      );
       return;
     }
     final chat = n.payload['conversation_id'] as String?;

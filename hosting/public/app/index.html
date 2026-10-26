@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get Nata</title>
+<link rel="icon" href="/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Manrope:wght@800&display=swap" rel="stylesheet">
+<!--
+  "Get the app" (the recipient's page and the delivered SMS link here):
+  iPhones go to the App Store, Android phones to Google Play, anything else
+  sees both.
+-->
+<style>
+  body { margin: 0; background: #FFF9F3; color: #102F35; font: 15px/1.5 "DM Sans", system-ui, sans-serif; }
+  .page { max-width: 420px; margin: 0 auto; padding: 56px 24px; text-align: center; }
+  img { width: 72px; height: 72px; border-radius: 20px; }
+  h1 { font: 800 26px Manrope, system-ui, sans-serif; margin: 20px 0 8px; letter-spacing: -.02em; }
+  p { color: #6D7D7D; margin: 0 0 28px; }
+  a { display: block; margin: 12px 0; padding: 14px; border-radius: 999px; background: #123F46; color: #FFF9F3; font-weight: 700; text-decoration: none; }
+  a.alt { background: #F2E8DE; color: #123F46; }
+</style>
+</head>
+<body>
+<main class="page">
+  <img src="/logo.png" alt="Nata">
+  <h1 id="title">Send or carry parcels with Nata</h1>
+  <p id="body">Find trusted travelers heading your way, or earn by carrying items for others.</p>
+  <a id="ios" href="https://apps.apple.com/app/id6824326148">App Store</a>
+  <a id="android" class="alt" href="https://play.google.com/store/apps/details?id=com.nata.nataapp">Google Play</a>
+</main>
+<script>
+  const ua = navigator.userAgent;
+  const store = /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : null;
+  if (store) location.replace(document.getElementById(store).href);
+  const lang = (navigator.language || 'en').slice(0, 2);
+  const text = {
+    fr: ['Envoyez ou transportez des colis avec Nata', 'Trouvez des voyageurs de confiance sur votre trajet, ou gagnez de l’argent en transportant des colis.'],
+    es: ['Envía o lleva paquetes con Nata', 'Encuentra viajeros de confianza en tu ruta, o gana dinero llevando paquetes.'],
+  }[lang];
+  if (text) {
+    document.documentElement.lang = lang;
+    document.getElementById('title').textContent = text[0];
+    document.getElementById('body').textContent = text[1];
+  }
+</script>
+</body>
+</html>

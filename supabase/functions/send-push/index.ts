@@ -110,7 +110,7 @@ async function accessToken(sa: ServiceAccount): Promise<string> {
 // ── Text in the user's language ─────────────────────────────────────────────
 
 /** Whose name {name} is, per event (as notification_text.dart passes it). */
-const NAME_FROM: Record<string, "sender" | "traveler" | "author"> = {
+const NAME_FROM: Record<string, "sender" | "traveler" | "author" | "recipient"> = {
   request_new: "sender",
   request_accepted: "traveler",
   request_declined: "traveler",
@@ -126,6 +126,7 @@ const NAME_FROM: Record<string, "sender" | "traveler" | "author"> = {
   trip_match: "traveler",
   message_new: "author",
   message_photo: "author",
+  recipient_message: "recipient",
 };
 
 const SYMBOLS: Record<string, string> = { USD: "$", EUR: "€", GBP: "£" };

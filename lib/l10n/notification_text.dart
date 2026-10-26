@@ -52,6 +52,10 @@ import 'app_localizations.dart';
       l.notifTripMatchTitle,
       l.notifTripMatchBody(traveler, route),
     ),
+    'recipient_message' => (
+      l.notifMessageTitle(s('recipient')),
+      l.notifMessageBody(s('message')),
+    ),
     'message_new' => (
       l.notifMessageTitle(s('author')),
       s('message').isEmpty && p['photo'] == true

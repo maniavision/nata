@@ -4778,4 +4778,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tipWalletRowBody =>
       'Your balance, withdrawals, payment settings and history are all in Wallet.';
+
+  @override
+  String recipientMessageButton(String name) {
+    return 'Message $name';
+  }
+
+  @override
+  String recipientChatTitle(String name) {
+    return '$name (recipient)';
+  }
+
+  @override
+  String recipientChatSubtitle(String sender, String item) {
+    return 'Parcel from $sender · $item';
+  }
+
+  @override
+  String recipientChatBanner(String name) {
+    return '$name isn\'t on Nata. They read and reply from a private link we texted them.';
+  }
+
+  @override
+  String recipientChatEmpty(String name) {
+    return 'Say hello to $name to arrange the handover.';
+  }
+
+  @override
+  String get recipientSeenNever => 'Hasn\'t opened the link yet';
+
+  @override
+  String recipientSeenAt(String when) {
+    return 'Opened the link $when';
+  }
+
+  @override
+  String get recipientChatClosed => 'The chat closed after the delivery.';
+
+  @override
+  String get recipientSendFailed =>
+      'Your message wasn\'t sent. Please try again.';
 }

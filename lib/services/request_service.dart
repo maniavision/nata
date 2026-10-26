@@ -1328,6 +1328,28 @@ class RequestService {
     return (reviews: list, total: total);
   }
 
+  /// The traveler's chat with the recipient, who replies from the link
+  /// texted to them (20240181_recipient_link.sql). Reading it marks the
+  /// recipient's messages read.
+  Future<RecipientChat> recipientChat(String requestId) async {
+    try {
+      final data = await _client.rpc(
+        'recipient_chat',
+        params: {'p_request_id': requestId},
+      );
+      return RecipientChat.fromJson(Map<String, dynamic>.from(data as Map));
+    } on PostgrestException catch (e) {
+      throw RequestException(reasonFor(e.message), e);
+    }
+  }
+
+  /// The traveler writes to the recipient; they get a text with the link
+  /// when they haven't opened it lately.
+  Future<void> sendRecipientMessage(String requestId, String body) => _call(
+    'send_recipient_message',
+    {'p_request_id': requestId, 'p_body': body},
+  );
+
   Future<void> _call(String fn, Map<String, dynamic> params) async {
     _userId;
     try {
@@ -1593,3 +1615,67 @@ enum ProblemReason {
 
 /// Which delivery photo: the sealed item at pickup, or the handover.
 enum DeliveryPhotoKind { pickup, handover }
+
+/// One message between the traveler and the recipient.
+class RecipientMessage {
+  final String id;
+
+  /// Written by the recipient (from their link), not the traveler.
+  final bool fromRecipient;
+  final String body;
+  final DateTime at;
+  final bool read;
+
+  const RecipientMessage({
+    required this.id,
+    required this.fromRecipient,
+    required this.body,
+    required this.at,
+    this.read = false,
+  });
+
+  factory RecipientMessage.fromJson(Map<String, dynamic> j) => RecipientMessage(
+    id: j['id'] as String,
+    fromRecipient: j['author'] == 'recipient',
+    body: (j['body'] as String?) ?? '',
+    at: DateTime.parse(j['at'] as String).toLocal(),
+    read: j['read'] == true,
+  );
+}
+
+/// The traveler's chat with the recipient of a delivery.
+class RecipientChat {
+  final String recipientName;
+  final String senderName;
+  final String item;
+
+  /// When the recipient last opened their link (null: not yet).
+  final DateTime? seenAt;
+
+  /// Open until a day after the delivery.
+  final bool open;
+  final List<RecipientMessage> messages;
+
+  const RecipientChat({
+    required this.recipientName,
+    required this.senderName,
+    required this.item,
+    required this.open,
+    required this.messages,
+    this.seenAt,
+  });
+
+  factory RecipientChat.fromJson(Map<String, dynamic> j) => RecipientChat(
+    recipientName: (j['recipient'] as String?) ?? '',
+    senderName: (j['sender'] as String?) ?? '',
+    item: (j['item'] as String?) ?? '',
+    seenAt: j['seen_at'] == null
+        ? null
+        : DateTime.parse(j['seen_at'] as String).toLocal(),
+    open: j['chat_open'] == true,
+    messages: [
+      for (final m in (j['messages'] as List? ?? const []))
+        RecipientMessage.fromJson(Map<String, dynamic>.from(m as Map)),
+    ],
+  );
+}
