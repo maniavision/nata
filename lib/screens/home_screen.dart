@@ -540,63 +540,88 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   // ── Header ─────────────────────────────────────────────────────────────────
+  /// The photo, "Hello," and the name open Profile, as the Profile tab does.
+  Future<void> _openProfile() async {
+    if (!AuthGate.check(context)) return;
+    await Navigator.of(context).push(
+      AppBottomNav.tabRoute<void>(
+        ProfileScreen(
+          authService: widget.authService,
+          travelerService: widget.travelerService,
+        ),
+      ),
+    );
+    _loadProfile();
+  }
+
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            // No photo yet (or a visitor): a plain person icon.
-            child: ClipOval(
-              child: AvatarImage(
-                key: const ValueKey('home-avatar'),
-                path: _avatarPath,
-                fallback: Container(
-                  color: AppColors.secondary,
-                  child: const Icon(
-                    Icons.person,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.hello,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: AppColors.mutedForeground,
+            child: GestureDetector(
+              key: const ValueKey('home-open-profile'),
+              behavior: HitTestBehavior.opaque,
+              onTap: _openProfile,
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    // No photo yet (or a visitor): a plain person icon.
+                    child: ClipOval(
+                      child: AvatarImage(
+                        key: const ValueKey('home-avatar'),
+                        path: _avatarPath,
+                        fallback: Container(
+                          color: AppColors.secondary,
+                          child: const Icon(
+                            Icons.person,
+                            color: AppColors.primary,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                Text(
-                  _displayName,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    color: AppColors.foreground,
-                    letterSpacing: -0.3,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.hello,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                        Text(
+                          _displayName,
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            color: AppColors.foreground,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           GestureDetector(
