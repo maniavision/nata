@@ -10,6 +10,7 @@ import '../services/preferences_service.dart';
 import '../services/region_service.dart';
 import 'login_screen.dart';
 import '../widgets/nata_logo.dart';
+import '../widgets/storage_photo.dart';
 
 class SplashScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RegionService].
@@ -169,8 +170,10 @@ class _SplashScreenState extends State<SplashScreen> {
               bottomLeft: Radius.circular(36),
               bottomRight: Radius.circular(36),
             ),
-            child: Image.network(
-              'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/zOWv1gqfkCP.jpeg',
+            child: Image(
+              image: StoragePhoto.provider(
+                'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/zOWv1gqfkCP.jpeg',
+              ),
               fit: BoxFit.cover,
               opacity: const AlwaysStoppedAnimation(0.9),
               errorBuilder: (context, error, stack) =>

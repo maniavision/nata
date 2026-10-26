@@ -13,6 +13,7 @@ import 'otp_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/nata_logo.dart';
 import '../services/phone_number.dart';
+import '../widgets/storage_photo.dart';
 
 class SignUpScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -279,8 +280,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
               bottomLeft: Radius.circular(32),
               bottomRight: Radius.circular(32),
             ),
-            child: Image.network(
-              'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/vkAWPqCOiMQ.jpeg',
+            child: Image(
+              image: StoragePhoto.provider(
+                'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/vkAWPqCOiMQ.jpeg',
+              ),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stack) =>
                   Container(color: AppColors.primary),

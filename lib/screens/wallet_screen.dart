@@ -15,6 +15,7 @@ import '../widgets/nata_toast.dart';
 import '../widgets/page_header.dart';
 import 'payment_settings_screen.dart';
 import 'wallet_history_screen.dart';
+import '../services/screen_cache.dart';
 
 /// The member's wallet (designed in Sleek, "Wallet"): the Nata Wallet card
 /// with what's available and what's held in escrow, Payment Settings, and
@@ -31,9 +32,18 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  double _available = 0;
-  double _escrow = 0;
-  String _holderName = '';
+  /// What the page showed last time (ScreenCache), shown straight away.
+  static const _kWallet = 'wallet';
+  late final _kept = ScreenCache.read<Map<String, Object?>>(_kWallet);
+  late double _available = _kept?['available'] as double? ?? 0;
+  late double _escrow = _kept?['escrow'] as double? ?? 0;
+  late String _holderName = _kept?['holder'] as String? ?? '';
+
+  void _remember() => ScreenCache.write(_kWallet, {
+    'available': _available,
+    'escrow': _escrow,
+    'holder': _holderName,
+  });
   StreamSubscription<Map<String, double>>? _balances;
 
   /// Bumped to reload the activity after Payment Settings.
@@ -85,6 +95,7 @@ class _WalletScreenState extends State<WalletScreen> {
       _available = balances['available'] ?? 0.0;
       _escrow = balances['escrow'] ?? 0.0;
     });
+    _remember();
   }
 
   Future<void> _load() async {
@@ -98,6 +109,7 @@ class _WalletScreenState extends State<WalletScreen> {
         final first = '${profile['first_name'] ?? ''}'.trim();
         final last = '${profile['last_name'] ?? ''}'.trim();
         setState(() => _holderName = '$first $last'.trim());
+        _remember();
       }
     } catch (e) {
       debugPrint('[Wallet] load: $e');

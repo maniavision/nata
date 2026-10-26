@@ -75,13 +75,14 @@ class HomeScreen extends StatefulWidget {
 
   /// The capital in nata.cities (is_capital), named like the location sheet
   /// names its picks ("Abuja, Nigeria").
-  /// What Home loads in the background for the other tabs (each fills
-  /// [ScreenCache]). Replaced in tests.
+  /// What Home loads in the background for the other tabs and the
+  /// notifications (each fills [ScreenCache]). Replaced in tests.
   static List<Future<void> Function()> tabPreloads = [
     RequestsScreen.preload,
     TripsScreen.preload,
     MessagesScreen.preload,
     ProfileScreen.preload,
+    NotificationsScreen.preload,
   ];
 
   static Future<LocationSelection?> defaultCapitalLookup(

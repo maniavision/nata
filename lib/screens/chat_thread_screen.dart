@@ -15,6 +15,8 @@ import '../widgets/camera_denied_sheet.dart';
 import 'messages_screen.dart';
 import '../widgets/nata_toast.dart';
 import '../services/app_badge.dart';
+import '../widgets/storage_photo.dart';
+import '../services/screen_cache.dart';
 
 /// Takes or chooses a photo to send. [camera] true = take one with the camera.
 /// Replaceable in tests.
@@ -66,8 +68,17 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
 
   final _inputCtrl = TextEditingController();
 
-  /// What the server has, oldest first.
-  List<ChatMessage> _server = const [];
+  /// What the server has, oldest first. Kept between visits (ScreenCache),
+  /// so reopening a chat shows its messages at once while they refresh.
+  late List<ChatMessage> _kept =
+      ScreenCache.read<List<ChatMessage>>(_cacheKey) ?? const [];
+  List<ChatMessage> get _server => _kept;
+  set _server(List<ChatMessage> messages) {
+    _kept = messages;
+    ScreenCache.write(_cacheKey, messages);
+  }
+
+  String get _cacheKey => 'chat:${_c.id}';
 
   /// Messages the user just sent that the server has not confirmed yet (or
   /// that failed). Kept apart so a refresh never wipes them.
@@ -76,7 +87,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
   final Map<String, PickedReceipt> _localPhotos = {};
   int _localCounter = 0;
 
-  bool _loading = true;
+  late bool _loading = ScreenCache.read<List<ChatMessage>>(_cacheKey) == null;
   bool _failed = false;
   bool _loadingNow = false;
   String? _notice;
@@ -1194,7 +1205,7 @@ class _AttachmentViewState extends State<_AttachmentView> {
         builder: (context, snap) {
           if (snap.hasError) return _placeholder();
           if (!snap.hasData) return _placeholder(loading: true);
-          final provider = NetworkImage(snap.data!);
+          final provider = StoragePhoto.provider(snap.data!);
           return GestureDetector(
             key: ValueKey('photo-${widget.message.id}'),
             onTap: () => _openFullScreen(provider),

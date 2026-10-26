@@ -8,6 +8,7 @@ import '../main.dart';
 import '../services/payment_service.dart';
 import '../services/request_service.dart';
 import '../widgets/page_header.dart';
+import '../services/screen_cache.dart';
 
 enum _Filter { all, payouts, payments }
 
@@ -136,7 +137,9 @@ class WalletActivity extends StatefulWidget {
 }
 
 class _WalletActivityState extends State<WalletActivity> {
-  List<WalletEntry>? _entries;
+  /// The payouts and payments shown last time (ScreenCache), straight away.
+  static const _kActivity = 'wallet-activity';
+  List<WalletEntry>? _entries = ScreenCache.read<List<WalletEntry>>(_kActivity);
   bool _failed = false;
   _Filter _filter = _Filter.all;
 
@@ -151,6 +154,7 @@ class _WalletActivityState extends State<WalletActivity> {
     try {
       final entries = await (widget.service ?? PaymentService())
           .walletHistory();
+      ScreenCache.write(_kActivity, entries);
       if (mounted) setState(() => _entries = entries);
     } catch (e) {
       debugPrint('[WalletHistory] load error: $e');
