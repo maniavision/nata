@@ -1672,9 +1672,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recipientNameLabel => 'Nombre del destinatario:';
 
   @override
-  String get recipientPhoneLabel => 'Teléfono del destinatario:';
-
-  @override
   String get meetingSpotLabel => 'Punto de encuentro:';
 
   @override

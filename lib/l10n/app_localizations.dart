@@ -3104,12 +3104,6 @@ abstract class AppLocalizations {
   /// **'Recipient Name:'**
   String get recipientNameLabel;
 
-  /// No description provided for @recipientPhoneLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Recipient Phone:'**
-  String get recipientPhoneLabel;
-
   /// No description provided for @meetingSpotLabel.
   ///
   /// In en, this message translates to:

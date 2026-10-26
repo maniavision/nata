@@ -95,6 +95,19 @@ void main() {
     expect(find.text('LHR Terminal 4 Arrivals Lounge'), findsOneWidget);
   });
 
+  testWidgets('the recipient\'s name is shown, never their phone', (
+    tester,
+  ) async {
+    await pump(tester, sampleDelivery());
+
+    expect(find.text('David Adeleke (London)'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('delivery-task-call-recipient')),
+      findsNothing,
+    );
+    expect(find.textContaining('7700 900456'), findsNothing);
+  });
+
   testWidgets('Message David opens the chat with the recipient', (
     tester,
   ) async {

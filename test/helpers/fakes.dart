@@ -1278,7 +1278,6 @@ IncomingRequest sampleIncoming({
   List<String> photoPaths = const ['sender-1/in-1/0.jpg'],
   DateTime? expiresAt,
   String? recipientName,
-  String? recipientPhone,
   double? senderRating,
   bool senderReviewed = false,
   DateTime? pickedUpAt,
@@ -1311,8 +1310,6 @@ IncomingRequest sampleIncoming({
   senderDeliveries: senderDeliveries,
   recipientName:
       recipientName ?? (status == 'pending' ? null : 'David Adeleke'),
-  recipientPhone:
-      recipientPhone ?? (status == 'pending' ? null : '+447700900456'),
   tripId: 'trip-1',
   departureCity: 'Lagos',
   departureCountry: 'NG',
@@ -1508,7 +1505,6 @@ AcceptedDelivery sampleDelivery() => const AcceptedDelivery(
   itemName: 'iPad Mini 64GB (Space Gray)',
   itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
   recipientName: 'David Adeleke (London)',
-  recipientPhone: '+44 7700 900456',
   meetingSpot: 'LHR Terminal 4 Arrivals Lounge',
   requestId: 'req-1',
 );
@@ -1529,7 +1525,6 @@ AcceptedDelivery samplePickedUpDelivery() => AcceptedDelivery(
   itemName: 'iPad Mini 64GB (Space Gray)',
   itemDetails: 'Factory Sealed Box · 0.60 kg · 20 × 14 × 4 cm',
   recipientName: 'David Adeleke (London)',
-  recipientPhone: '+44 7700 900456',
   requestId: 'req-1',
   pickedUpAt: DateTime(2030, 6, 22, 10, 14),
 );

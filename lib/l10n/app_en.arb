@@ -644,7 +644,6 @@
   "handoverPhotoHint": "Attach photo with recipient or at delivery spot",
   "handoverPhotoAttached": "Handover photo attached",
   "recipientNameLabel": "Recipient Name:",
-  "recipientPhoneLabel": "Recipient Phone:",
   "meetingSpotLabel": "Meeting Spot:",
   "confirmDeliveryClaim": "Confirm Delivery & Claim {amount} Payout",
   "escrowReleaseNote": "Funds held safely in escrow will be released immediately to your wallet.",

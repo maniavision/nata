@@ -1681,9 +1681,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipientNameLabel => 'Nom du destinataire :';
 
   @override
-  String get recipientPhoneLabel => 'Téléphone du destinataire :';
-
-  @override
   String get meetingSpotLabel => 'Lieu de rendez-vous :';
 
   @override

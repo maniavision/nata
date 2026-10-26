@@ -775,9 +775,9 @@ class IncomingRequest {
   /// Deliveries the sender has completed before.
   final int senderDeliveries;
 
-  /// Only given once the traveler accepted.
+  /// Only given once the traveler accepted. Never their phone: the
+  /// traveler writes to them from the app (RecipientChatScreen).
   final String? recipientName;
-  final String? recipientPhone;
 
   final String tripId;
   final String departureCity;
@@ -818,7 +818,6 @@ class IncomingRequest {
     this.senderVerified = false,
     this.senderDeliveries = 0,
     this.recipientName,
-    this.recipientPhone,
     required this.tripId,
     required this.departureCity,
     required this.departureCountry,
@@ -888,7 +887,6 @@ class IncomingRequest {
       senderVerified: j['sender_verified'] == true,
       senderDeliveries: (j['sender_deliveries'] as num?)?.toInt() ?? 0,
       recipientName: text(j['recipient_name']),
-      recipientPhone: text(j['recipient_phone']),
       tripId: j['trip_id'] as String,
       departureCity: (j['departure_city'] as String?) ?? '',
       departureCountry: (j['departure_country'] as String?) ?? '',

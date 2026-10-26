@@ -96,13 +96,15 @@ void main() {
     expect(find.text('David Adeleke'), findsNothing);
   });
 
-  testWidgets('once accepted: the recipient, no answer buttons', (
+  testWidgets('once accepted: the recipient\'s name, no answer buttons', (
     tester,
   ) async {
     await pump(tester, sampleIncoming(status: 'paid'));
 
     expect(find.text('David Adeleke'), findsOneWidget);
-    expect(find.text('+447700900456'), findsOneWidget);
+    // Never the recipient's phone number.
+    expect(find.text('Recipient Phone:'), findsNothing);
+    expect(find.textContaining('900456'), findsNothing);
     expect(find.byKey(const ValueKey('incoming-accept')), findsNothing);
     expect(find.byKey(const ValueKey('incoming-decline')), findsNothing);
   });

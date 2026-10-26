@@ -42,7 +42,6 @@ class AcceptedDelivery {
   final String itemDetails;
 
   final String recipientName;
-  final String recipientPhone;
 
   /// Where to meet the recipient, when agreed.
   final String? meetingSpot;
@@ -74,7 +73,6 @@ class AcceptedDelivery {
     required this.itemName,
     required this.itemDetails,
     required this.recipientName,
-    required this.recipientPhone,
     this.meetingSpot,
     required this.requestId,
     this.senderAvatarPath,
@@ -115,7 +113,6 @@ class AcceptedDelivery {
         if ((r.dimensions ?? '').trim().isNotEmpty) '${r.dimensions} cm',
       ].join(' · '),
       recipientName: r.recipientName ?? '',
-      recipientPhone: r.recipientPhone ?? '',
       pickedUpAt: r.isPickedUp ? (r.pickedUpAt ?? DateTime.now()) : null,
     );
   }
@@ -820,34 +817,6 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                 _infoRow(
                   l.recipientNameLabel,
                   Text(d.recipientName, style: _value),
-                ),
-                const SizedBox(height: 4),
-                _infoRow(
-                  l.recipientPhoneLabel,
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(child: Text(d.recipientPhone, style: _value)),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        key: const ValueKey('delivery-task-call-recipient'),
-                        onTap: () => _call(d.recipientPhone),
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.phone_rounded,
-                            size: 12,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
                 if ((d.meetingSpot ?? '').isNotEmpty) ...[
                   const SizedBox(height: 4),

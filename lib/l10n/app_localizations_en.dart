@@ -1654,9 +1654,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipientNameLabel => 'Recipient Name:';
 
   @override
-  String get recipientPhoneLabel => 'Recipient Phone:';
-
-  @override
   String get meetingSpotLabel => 'Meeting Spot:';
 
   @override

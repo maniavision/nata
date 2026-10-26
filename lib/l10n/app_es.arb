@@ -630,7 +630,6 @@
   "handoverPhotoHint": "Foto con el destinatario o en el lugar de entrega",
   "handoverPhotoAttached": "Foto de la entrega adjunta",
   "recipientNameLabel": "Nombre del destinatario:",
-  "recipientPhoneLabel": "Teléfono del destinatario:",
   "meetingSpotLabel": "Punto de encuentro:",
   "confirmDeliveryClaim": "Confirmar entrega y cobrar {amount}",
   "escrowReleaseNote": "Los fondos en depósito se liberarán de inmediato en tu billetera.",

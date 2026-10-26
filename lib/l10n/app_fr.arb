@@ -630,7 +630,6 @@
   "handoverPhotoHint": "Photo avec le destinataire ou sur le lieu de livraison",
   "handoverPhotoAttached": "Photo de remise jointe",
   "recipientNameLabel": "Nom du destinataire :",
-  "recipientPhoneLabel": "Téléphone du destinataire :",
   "meetingSpotLabel": "Lieu de rendez-vous :",
   "confirmDeliveryClaim": "Confirmer et recevoir {amount}",
   "escrowReleaseNote": "Les fonds en séquestre seront versés immédiatement sur votre portefeuille.",
