@@ -72,8 +72,12 @@ class _NataAppState extends State<NataApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Back in the app: the icon badge shows the current unread count.
-    if (state == AppLifecycleState.resumed) AppBadge.refresh();
+    // Back in the app: the icon badge shows the current unread count, and
+    // the phone is registered for pushes if it still isn't.
+    if (state == AppLifecycleState.resumed) {
+      AppBadge.refresh();
+      PushService.instance.resumed();
+    }
   }
 
   void _onPrefsChanged() {
