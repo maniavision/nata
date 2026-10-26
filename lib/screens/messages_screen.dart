@@ -52,8 +52,8 @@ class _MessagesScreenState extends State<MessagesScreen>
   bool _loading = true;
   bool _failed = false;
 
-  /// 0 = All, 1 = Active, 2 = Completed
-  int _filter = 0;
+  /// 0 = All, 1 = Active, 2 = Completed. Opens on the active chats.
+  int _filter = 1;
   final _searchCtrl = TextEditingController();
   String _query = '';
 
