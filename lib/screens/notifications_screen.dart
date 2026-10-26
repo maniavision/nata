@@ -14,6 +14,7 @@ import 'requests_screen.dart';
 import 'chat_thread_screen.dart';
 import 'traveler_results_screen.dart';
 import '../services/app_badge.dart';
+import '../services/screen_cache.dart';
 
 /// "2 min ago", "1 hr ago", "Yesterday", "Jun 12" ...
 String notificationTimeLabel(AppLocalizations l, DateTime now, DateTime then) {
@@ -59,13 +60,35 @@ class NotificationsScreen extends StatefulWidget {
     this.routeResultsBuilder,
   });
 
+  /// Where the notifications are kept between visits (ScreenCache).
+  static const cacheKey = 'notifications';
+
+  /// Loads the notifications ahead of a first visit (from Home).
+  static Future<void> preload([NotificationService? service]) async {
+    if (ScreenCache.read<List<AppNotification>>(cacheKey) != null) return;
+    final items = await (service ?? NotificationService()).list();
+    ScreenCache.write(cacheKey, items);
+  }
+
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  List<AppNotification> _items = const [];
-  bool _loading = true;
+  /// What was shown last time shows straight away; the list is refreshed
+  /// behind it, and every change is kept for the next visit.
+  List<AppNotification> _shown =
+      ScreenCache.read<List<AppNotification>>(NotificationsScreen.cacheKey) ??
+      const [];
+  List<AppNotification> get _items => _shown;
+  set _items(List<AppNotification> items) {
+    _shown = items;
+    ScreenCache.write(NotificationsScreen.cacheKey, items);
+  }
+
+  late bool _loading =
+      ScreenCache.read<List<AppNotification>>(NotificationsScreen.cacheKey) ==
+      null;
   bool _failed = false;
 
   /// Bumped when a delete fails, so the card comes back as a new swipeable.

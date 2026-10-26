@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'trip_service.dart' show PickedReceipt;
+import 'signed_urls.dart';
 
 /// One row of the Messages list (`public.list_conversations`).
 class ConversationSummary {
@@ -181,10 +182,6 @@ class ChatMessage {
 class MessageService {
   final SupabaseClient _client;
 
-  /// Signed links to private photos, kept until shortly before they expire so
-  /// the same photo keeps the same address (which lets images be cached).
-  final Map<String, ({String url, DateTime expires})> _urlCache = {};
-
   static const _bucket = 'chat-attachments';
   static const _signedUrlLifetime = Duration(hours: 1);
 
@@ -336,23 +333,14 @@ class MessageService {
   }
 
   /// A temporary link to a photo in the private bucket.
-  Future<String> attachmentUrl(String path) async {
-    final cached = _urlCache[path];
-    if (cached != null &&
-        cached.expires.isAfter(
-          DateTime.now().add(const Duration(minutes: 5)),
-        )) {
-      return cached.url;
-    }
-    final url = await _client.storage
+  Future<String> attachmentUrl(String path) => SignedUrls.get(
+    _bucket,
+    path,
+    lifetime: _signedUrlLifetime,
+    create: () => _client.storage
         .from(_bucket)
-        .createSignedUrl(path, _signedUrlLifetime.inSeconds);
-    _urlCache[path] = (
-      url: url,
-      expires: DateTime.now().add(_signedUrlLifetime),
-    );
-    return url;
-  }
+        .createSignedUrl(path, _signedUrlLifetime.inSeconds),
+  );
 }
 
 /// An open chat's live connection (see [MessageService.live]).

@@ -10,6 +10,7 @@ import '../services/request_service.dart';
 import '../services/traveler_service.dart' show TravelerReview, TravelerReviews;
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
+import '../widgets/storage_photo.dart';
 
 /// Accepting and declining a request, shared by the Incoming card and the
 /// request details screen. Each returns true when the request changed.
@@ -246,7 +247,11 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
             backgroundColor: Colors.black,
             foregroundColor: Colors.white,
           ),
-          body: Center(child: InteractiveViewer(child: Image.network(url))),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image(image: StoragePhoto.provider(url)),
+            ),
+          ),
         ),
       ),
     );
@@ -539,8 +544,8 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
             child: Container(
               width: 96,
               color: AppColors.secondary,
-              child: Image.network(
-                urls[i],
+              child: Image(
+                image: StoragePhoto.provider(urls[i]),
                 fit: BoxFit.cover,
                 errorBuilder: (c, e, s) => const Icon(
                   Icons.image_not_supported_outlined,

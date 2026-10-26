@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'signed_urls.dart';
 
 /// Whether the signed-in user is staff. Replaced in tests.
 class SupportAccess {
@@ -75,7 +76,13 @@ class SupportService {
     final r = Map<String, dynamic>.from(rows.first as Map);
     Future<String?> url(String? path) async => path == null
         ? null
-        : await _client.storage.from(_photoBucket).createSignedUrl(path, 600);
+        : await SignedUrls.get(
+            _photoBucket,
+            path,
+            lifetime: const Duration(seconds: 600),
+            create: () =>
+                _client.storage.from(_photoBucket).createSignedUrl(path, 600),
+          );
     return (
       pickup: await url(r['pickup_photo_path'] as String?),
       handover: await url(r['handover_photo_path'] as String?),

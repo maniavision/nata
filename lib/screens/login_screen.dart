@@ -18,6 +18,7 @@ import '../l10n/l10n_ext.dart';
 import '../widgets/nata_logo.dart';
 import '../widgets/nata_toast.dart';
 import '../services/phone_number.dart';
+import '../widgets/storage_photo.dart';
 
 class LoginScreen extends StatefulWidget {
   /// Overrides for tests; they default to the real services / Home screen.
@@ -326,8 +327,10 @@ class _LoginScreenState extends State<LoginScreen> {
               bottomLeft: Radius.circular(32),
               bottomRight: Radius.circular(32),
             ),
-            child: Image.network(
-              'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/kMQg4SZXLDu.jpeg',
+            child: Image(
+              image: StoragePhoto.provider(
+                'https://ggrhecslgdflloszjkwl.supabase.co/storage/v1/object/public/user-assets/zQQR13YtUCF/components/kMQg4SZXLDu.jpeg',
+              ),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stack) =>
                   Container(color: AppColors.primary),

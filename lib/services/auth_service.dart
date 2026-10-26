@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'signed_urls.dart';
 
 /// Signing in with a phone number that has no account.
 class AccountNotFoundException implements Exception {
@@ -481,6 +482,7 @@ class AuthService {
     // and none of the pages this one saw.
     HomeSearchMemory.clear();
     ScreenCache.clear();
+    SignedUrls.clear();
   }
 }
 

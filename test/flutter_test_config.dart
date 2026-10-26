@@ -4,9 +4,11 @@ import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/services/auth_gate.dart';
 import 'package:carrywise_app/services/home_search_memory.dart';
 import 'package:carrywise_app/services/screen_cache.dart';
+import 'package:carrywise_app/services/signed_urls.dart';
 import 'package:carrywise_app/services/support_service.dart';
 import 'package:carrywise_app/services/verify_gate.dart';
 import 'package:carrywise_app/widgets/coach_tips.dart';
+import 'package:carrywise_app/widgets/storage_photo.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Runs around every test file (picked up by `flutter test` by name).
@@ -23,6 +25,9 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     HomeScreen.tabPreloads = [];
     // ...nor covers itself with first-visit tips.
     CoachTips.enabled = false;
+    // Tests have no disk for photos, and links start fresh.
+    StoragePhoto.diskCache = false;
+    SignedUrls.clear();
   });
   // Screens are tested as a signed-in user unless a test says otherwise.
   setUp(() => AuthGate.isSignedIn = () => true);

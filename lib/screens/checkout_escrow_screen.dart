@@ -16,6 +16,7 @@ import '../services/stripe_sheet.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 import 'chat_thread_screen.dart';
+import '../widgets/storage_photo.dart';
 
 /// Pays for an accepted request. Step 1: the sender checks the traveler's
 /// flight ticket; step 2: the photo on the traveler's ID and their verified
@@ -534,7 +535,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           ),
           body: Center(
             child: InteractiveViewer(
-              child: Image.network(url, key: const ValueKey('ticket-full')),
+              child: Image(
+                image: StoragePhoto.provider(url),
+                key: const ValueKey('ticket-full'),
+              ),
             ),
           ),
         ),
@@ -2098,8 +2102,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                     ],
                   )
                 else
-                  Image.network(
-                    _ticketUrl!,
+                  Image(
+                    image: StoragePhoto.provider(_ticketUrl!),
                     fit: BoxFit.cover,
                     errorBuilder: (c, e, s) => const Icon(
                       Icons.broken_image_outlined,

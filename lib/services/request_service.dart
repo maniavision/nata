@@ -10,6 +10,7 @@ import 'trip_service.dart' show PickedReceipt;
 import 'traveler_service.dart'
     show TravelerReview, TravelerReviews, TravelerTrip;
 import 'phone_number.dart';
+import 'signed_urls.dart';
 
 /// What kind of item is being sent.
 enum RequestCategory {
@@ -1233,8 +1234,13 @@ class RequestService {
   }
 
   /// A short-lived link to the traveler's ticket (private bucket).
-  Future<String> ticketUrl(String path) =>
-      _client.storage.from('trip-receipts').createSignedUrl(path, 600);
+  Future<String> ticketUrl(String path) => SignedUrls.get(
+    'trip-receipts',
+    path,
+    lifetime: const Duration(seconds: 600),
+    create: () =>
+        _client.storage.from('trip-receipts').createSignedUrl(path, 600),
+  );
 
   /// The sender confirms they received the item.
   Future<void> confirmReceipt(String requestId) =>
@@ -1384,6 +1390,8 @@ class RequestService {
     Uint8List bytes,
   ) async {
     final path = '$requestId/${kind.name}.jpg';
+    // A retake replaces the photo at the same path: a new link from now on.
+    SignedUrls.forget(_deliveryPhotoBucket, path);
     try {
       await _client.storage
           .from(_deliveryPhotoBucket)
@@ -1420,9 +1428,14 @@ class RequestService {
     final r = Map<String, dynamic>.from(rows.first as Map);
     Future<String?> url(String? path) async => path == null
         ? null
-        : await _client.storage
-              .from(_deliveryPhotoBucket)
-              .createSignedUrl(path, 600);
+        : await SignedUrls.get(
+            _deliveryPhotoBucket,
+            path,
+            lifetime: const Duration(seconds: 600),
+            create: () => _client.storage
+                .from(_deliveryPhotoBucket)
+                .createSignedUrl(path, 600),
+          );
     return (
       pickup: await url(r['pickup_photo_path'] as String?),
       handover: await url(r['handover_photo_path'] as String?),
@@ -1491,8 +1504,12 @@ class RequestService {
   }
 
   /// A short-lived link to one of a request's item photos.
-  Future<String> photoUrl(String path) =>
-      _client.storage.from(_bucket).createSignedUrl(path, 600);
+  Future<String> photoUrl(String path) => SignedUrls.get(
+    _bucket,
+    path,
+    lifetime: const Duration(seconds: 600),
+    create: () => _client.storage.from(_bucket).createSignedUrl(path, 600),
+  );
 
   /// The traveler accepts [requestId]. The database fixes the price in the
   /// sender's currency at that day's rate in the same step.
