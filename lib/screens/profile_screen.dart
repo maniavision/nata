@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../services/payment_service.dart';
 import 'dart:io';
 import 'dart:ui';
 
@@ -24,8 +23,7 @@ import 'identity_verification_screen.dart';
 import 'sealed_box_policy_screen.dart';
 import 'support_screens.dart';
 import '../services/support_service.dart';
-import 'wallet_history_screen.dart';
-import 'payment_settings_screen.dart';
+import 'wallet_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
@@ -89,7 +87,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   /// What the first-visit tips point at.
   final _walletTipKey = GlobalKey();
-  final _payoutTipKey = GlobalKey();
   final _routesTipKey = GlobalKey();
 
   AuthService get _auth => widget.authService ?? AuthService();
@@ -205,13 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           target: _walletTipKey,
           icon: Icons.account_balance_wallet_outlined,
           title: context.l10n.tipWalletTitle,
-          body: context.l10n.tipWalletBody,
-        ),
-        CoachTip(
-          target: _payoutTipKey,
-          icon: Icons.payments_outlined,
-          title: context.l10n.tipPayoutTitle,
-          body: context.l10n.tipPayoutBody,
+          body: context.l10n.tipWalletRowBody,
         ),
         CoachTip(
           target: _routesTipKey,
@@ -474,11 +465,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       children: [
                         _buildProfileCard(),
-                        const SizedBox(height: 16),
-                        KeyedSubtree(
-                          key: _walletTipKey,
-                          child: _buildWalletCard(),
-                        ),
                         const SizedBox(height: 16),
                         _buildSettingsList(),
                         const SizedBox(height: 16),
@@ -898,243 +884,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// Sends the payouts waiting for this traveler (they also go out by
-  /// themselves after each delivery).
-  Future<void> _withdraw() async {
-    final l = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final sent = await PaymentService().sendPayouts();
-      messenger.showSnackBar(
-        nataToast(
-          sent > 0 ? l.withdrawSent(sent) : l.withdrawNothing,
-          tone: sent > 0 ? ToastTone.success : ToastTone.info,
-        ),
-      );
-    } catch (e) {
-      debugPrint('[Profile] withdraw: $e');
-      messenger.showSnackBar(
-        nataToast(l.errRequestFailed, tone: ToastTone.error),
-      );
-    }
-  }
-
-  // ── Wallet card ────────────────────────────────────────────────────────────
-  Widget _buildWalletCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      // The blob is cut by the card's rounded edge, not by its padding.
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Decorative blob
-          Positioned(
-            right: -40,
-            bottom: -40,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withValues(alpha: 0.15),
-              ),
-            ),
-          ),
-          Column(
-            children: [
-              // Top row
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      size: 18,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      context.l10n.natawallet,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                        letterSpacing: 1.4,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      context.l10n.escrowProtected,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Balance + withdraw
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.availableForPayout,
-                          style: GoogleFonts.dmSans(
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              _money(_availableBalance),
-                              style: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 28,
-                                color: Colors.white,
-                                letterSpacing: -1.0,
-                              ),
-                            ),
-                            if (WalletMoney.hasSymbol(_shownCurrency)) ...[
-                              const SizedBox(width: 6),
-                              Text(
-                                _shownCurrency,
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 12,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    key: const ValueKey('wallet-withdraw'),
-                    onTap: _withdraw,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.4),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        context.l10n.withdraw,
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Container(height: 1, color: Colors.white.withValues(alpha: 0.1)),
-              const SizedBox(height: 12),
-              // Escrow row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.lock_rounded,
-                          size: 14,
-                          color: AppColors.accent,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            '${_money(_escrowBalance)} ${context.l10n.heldInEscrow}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.dmSans(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    key: const ValueKey('wallet-view-history'),
-                    onTap: _openHistory,
-                    child: Text(
-                      context.l10n.viewHistory,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.accent,
-                        decoration: TextDecoration.underline,
-                        decorationColor: AppColors.accent,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   /// The wallet is shown in the member's currency once the rates are
   /// here (in dollars until then).
   Future<void> _loadRates() async {
@@ -1149,22 +898,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     PreferencesService().currency.code,
     ExchangeRateService.shared.latest,
   );
-
-  String get _shownCurrency => WalletMoney.shown(
-    PreferencesService().currency.code,
-    ExchangeRateService.shared.latest,
-  );
-
-  void _openHistory() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => WalletHistoryScreen(
-          available: _money(_availableBalance),
-          inEscrow: _money(_escrowBalance),
-        ),
-      ),
-    );
-  }
 
   Future<void> _openEmergencyContact() async {
     final saved = await Navigator.of(context).push<bool>(
@@ -1187,7 +920,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ── Settings list ──────────────────────────────────────────────────────────
   /// The settings rows the first-visit tips point at.
   GlobalKey? _tipKeyFor(Key? row) => switch (row) {
-    ValueKey(value: 'profile-payment-settings') => _payoutTipKey,
+    ValueKey(value: 'profile-wallet') => _walletTipKey,
     ValueKey(value: 'profile-route-alerts') => _routesTipKey,
     _ => null,
   };
@@ -1208,6 +941,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             context,
           ).push(MaterialPageRoute(builder: (_) => const SupportScreen())),
         ),
+      _SettingsItem(
+        key: const ValueKey('profile-wallet'),
+        icon: Icons.account_balance_wallet_rounded,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.wallet,
+        subtitle: context.l10n.walletRowAvailable(_money(_availableBalance)),
+        onTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => WalletScreen(authService: widget.authService),
+            ),
+          );
+          if (mounted) _loadProfile();
+        },
+      ),
       _SettingsItem(
         icon: Icons.language_rounded,
         iconBg: AppColors.secondary,
@@ -1284,23 +1033,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // for the next profile poll.
           if (mounted) _loadProfile();
         },
-      ),
-      _SettingsItem(
-        key: const ValueKey('profile-payment-settings'),
-        icon: Icons.account_balance_wallet_rounded,
-        iconBg: AppColors.secondary,
-        iconColor: AppColors.primary,
-        title: context.l10n.paymentSettings,
-        subtitle: context.l10n.paymentSettingsSub,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => PaymentSettingsScreen(
-              availableBalance: _availableBalance,
-              escrowBalance: _escrowBalance,
-              holderName: _displayName,
-            ),
-          ),
-        ),
       ),
       _SettingsItem(
         icon: Icons.inventory_2_outlined,

@@ -4799,4 +4799,66 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get senderNoReviewsSub =>
       'Les avis apparaissent ici après la première livraison terminée de cet expéditeur.';
+
+  @override
+  String get tipProfileTitle => 'Votre profil';
+
+  @override
+  String get tipProfileBody =>
+      'Touchez votre photo ou votre nom pour ouvrir votre profil et vos réglages.';
+
+  @override
+  String homeWalletBalance(String amount) {
+    return 'Solde du portefeuille : $amount';
+  }
+
+  @override
+  String get homeWalletBalanceHidden => 'Solde du portefeuille masqué';
+
+  @override
+  String get homeShowBalance => 'Afficher le solde';
+
+  @override
+  String get homeHideBalance => 'Masquer le solde';
+
+  @override
+  String walletAddedTitle(String amount) {
+    return '$amount ajoutés à votre portefeuille';
+  }
+
+  @override
+  String walletAddedFor(String item, String from, String to) {
+    return 'Pour avoir transporté $item de $from à $to.';
+  }
+
+  @override
+  String walletAddedForName(String item, String from, String to, String name) {
+    return 'Pour avoir transporté $item de $from à $to pour $name.';
+  }
+
+  @override
+  String get walletAddedOne => 'Pour une livraison effectuée.';
+
+  @override
+  String walletAddedMany(int count) {
+    return 'Pour $count livraisons.';
+  }
+
+  @override
+  String get walletAddedView => 'Voir';
+
+  @override
+  String get wallet => 'Portefeuille';
+
+  @override
+  String get walletActivity => 'Activité';
+
+  @override
+  String walletRowAvailable(String amount) {
+    return '$amount disponible';
+  }
+
+  @override
+  String get tipWalletRowBody =>
+      'Votre solde, vos retraits, vos paramètres de paiement et votre historique sont dans Portefeuille.';
 }

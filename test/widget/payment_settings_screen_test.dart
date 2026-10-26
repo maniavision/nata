@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:carrywise_app/screens/wallet_history_screen.dart';
 import 'package:carrywise_app/screens/payment_settings_screen.dart';
-import 'package:carrywise_app/screens/profile_screen.dart';
+import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:carrywise_app/services/exchange_rate_service.dart';
 import 'package:carrywise_app/services/payment_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
@@ -355,20 +355,25 @@ void main() {
     });
   });
 
-  group('from Profile', () {
+  group('from the Wallet page', () {
     testWidgets('the Payment Settings row opens it with the balances', (
       tester,
     ) async {
       bigScreen(tester);
       await tester.pumpWidget(
-        appWrapper(ProfileScreen(authService: FakeAuthService())),
+        appWrapper(
+          WalletScreen(
+            authService: FakeAuthService(),
+            paymentService: FakePaymentService(),
+          ),
+        ),
       );
       await tester.pumpAndSettle();
 
       expect(find.text('Payment Settings'), findsOneWidget);
       expect(find.text('Payment methods & payout account'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('profile-payment-settings')));
+      await tester.tap(find.byKey(const ValueKey('wallet-payment-settings')));
       await tester.pumpAndSettle();
 
       expect(find.byType(PaymentSettingsScreen), findsOneWidget);

@@ -4,6 +4,7 @@ import 'package:carrywise_app/screens/identity_verification_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/sealed_box_policy_screen.dart';
 import 'package:carrywise_app/screens/wallet_history_screen.dart';
+import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:carrywise_app/services/account_service.dart';
 import 'package:carrywise_app/services/emergency_contact_service.dart';
 import 'package:carrywise_app/services/payment_service.dart';
@@ -121,13 +122,13 @@ void main() {
       expect(find.byType(IdentityVerificationScreen), findsOneWidget);
     });
 
-    testWidgets('View History opens the wallet history', (tester) async {
+    testWidgets('Wallet opens the Wallet page', (tester) async {
       await pumpProfile(tester);
 
-      await tester.tap(find.byKey(const ValueKey('wallet-view-history')));
+      await tester.tap(find.byKey(const ValueKey('profile-wallet')));
       await tester.pumpAndSettle();
 
-      expect(find.byType(WalletHistoryScreen), findsOneWidget);
+      expect(find.byType(WalletScreen), findsOneWidget);
     });
 
     testWidgets('Sealed Box Policy opens the policy', (tester) async {

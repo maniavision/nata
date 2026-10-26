@@ -2121,5 +2121,30 @@
   "senderReviewsTitle": "Reviews from travelers",
   "senderRatingLabel": "Rating as a sender",
   "senderNoReviews": "No reviews from travelers yet",
-  "senderNoReviewsSub": "Reviews appear here after this sender's first completed delivery."
+  "senderNoReviewsSub": "Reviews appear here after this sender's first completed delivery.",
+  "tipProfileTitle": "Your profile",
+  "tipProfileBody": "Tap your photo or name to open your profile and settings.",
+  "homeWalletBalance": "Wallet balance: {amount}",
+  "@homeWalletBalance": {
+    "description": "Screen-reader label of the balance pill on Home.",
+    "placeholders": {"amount": {"type": "String"}}
+  },
+  "homeWalletBalanceHidden": "Wallet balance hidden",
+  "homeShowBalance": "Show balance",
+  "homeHideBalance": "Hide balance",
+  "walletAddedTitle": "{amount} added to your wallet",
+  "@walletAddedTitle": {"placeholders": {"amount": {"type": "String"}}},
+  "walletAddedFor": "For carrying {item} from {from} to {to}.",
+  "@walletAddedFor": {"placeholders": {"item": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "walletAddedForName": "For carrying {item} from {from} to {to} for {name}.",
+  "@walletAddedForName": {"placeholders": {"item": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}, "name": {"type": "String"}}},
+  "walletAddedOne": "For a delivery you made.",
+  "walletAddedMany": "From {count} deliveries.",
+  "@walletAddedMany": {"placeholders": {"count": {"type": "int"}}},
+  "walletAddedView": "View",
+  "wallet": "Wallet",
+  "walletActivity": "Activity",
+  "walletRowAvailable": "{amount} available",
+  "@walletRowAvailable": {"placeholders": {"amount": {"type": "String"}}},
+  "tipWalletRowBody": "Your balance, withdrawals, payment settings and history are all in Wallet."
 }

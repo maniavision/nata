@@ -89,6 +89,12 @@ void main() {
 
   Finder tile(String id) => find.byKey(ValueKey('conversation-$id'));
 
+  /// The page opens on Active; these tests look at every conversation.
+  Future<void> pumpAll(WidgetTester tester) async {
+    await pump(tester);
+    await tapKey(tester, 'messages-filter-0');
+  }
+
   group('header', () {
     testWidgets('shows the title, search box and filters', (tester) async {
       await pump(tester);
@@ -208,7 +214,7 @@ void main() {
 
   group('conversation tiles', () {
     testWidgets('one per conversation, in the order given', (tester) async {
-      await pump(tester);
+      await pumpAll(tester);
 
       for (final id in ['amara', 'daniel', 'maya', 'chidi']) {
         expect(tile(id), findsOneWidget);
@@ -229,7 +235,7 @@ void main() {
     });
 
     testWidgets('show the last message and a readable time', (tester) async {
-      await pump(tester);
+      await pumpAll(tester);
 
       expect(find.text('I received your sealed iPhone box!'), findsOneWidget);
       expect(find.text('2 min ago'), findsOneWidget);
@@ -320,7 +326,7 @@ void main() {
     });
 
     testWidgets('no messages yet: an invitation to say hello', (tester) async {
-      await pump(tester);
+      await pumpAll(tester);
 
       expect(
         find.descendant(
@@ -332,7 +338,7 @@ void main() {
     });
 
     testWidgets('a completed delivery is marked Completed ✓', (tester) async {
-      await pump(tester);
+      await pumpAll(tester);
 
       expect(
         find.descendant(of: tile('maya'), matching: find.text('Completed ✓')),
@@ -407,11 +413,21 @@ void main() {
 
     testWidgets('declined ones only appear under All', (tester) async {
       await pump(tester);
-      expect(tile('chidi'), findsOneWidget);
-
-      await tapKey(tester, 'messages-filter-1');
       expect(tile('chidi'), findsNothing);
+
       await tapKey(tester, 'messages-filter-2');
+      expect(tile('chidi'), findsNothing);
+      await tapKey(tester, 'messages-filter-0');
+      expect(tile('chidi'), findsOneWidget);
+    });
+
+    testWidgets('the page opens on the active conversations', (tester) async {
+      await pump(tester);
+
+      // amara and daniel are active; the delivered and declined ones aren't.
+      expect(tile('amara'), findsOneWidget);
+      expect(tile('daniel'), findsOneWidget);
+      expect(tile('maya'), findsNothing);
       expect(tile('chidi'), findsNothing);
     });
 
@@ -488,7 +504,7 @@ void main() {
     });
 
     testWidgets('by something in the last message', (tester) async {
-      await pump(tester);
+      await pumpAll(tester);
 
       await search(tester, 'payout');
 

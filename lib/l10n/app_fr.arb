@@ -2003,5 +2003,21 @@
   "senderReviewsTitle": "Avis des voyageurs",
   "senderRatingLabel": "Note comme expéditeur",
   "senderNoReviews": "Aucun avis de voyageurs pour l'instant",
-  "senderNoReviewsSub": "Les avis apparaissent ici après la première livraison terminée de cet expéditeur."
+  "senderNoReviewsSub": "Les avis apparaissent ici après la première livraison terminée de cet expéditeur.",
+  "tipProfileTitle": "Votre profil",
+  "tipProfileBody": "Touchez votre photo ou votre nom pour ouvrir votre profil et vos réglages.",
+  "homeWalletBalance": "Solde du portefeuille : {amount}",
+  "homeWalletBalanceHidden": "Solde du portefeuille masqué",
+  "homeShowBalance": "Afficher le solde",
+  "homeHideBalance": "Masquer le solde",
+  "walletAddedTitle": "{amount} ajoutés à votre portefeuille",
+  "walletAddedFor": "Pour avoir transporté {item} de {from} à {to}.",
+  "walletAddedForName": "Pour avoir transporté {item} de {from} à {to} pour {name}.",
+  "walletAddedOne": "Pour une livraison effectuée.",
+  "walletAddedMany": "Pour {count} livraisons.",
+  "walletAddedView": "Voir",
+  "wallet": "Portefeuille",
+  "walletActivity": "Activité",
+  "walletRowAvailable": "{amount} disponible",
+  "tipWalletRowBody": "Votre solde, vos retraits, vos paramètres de paiement et votre historique sont dans Portefeuille."
 }

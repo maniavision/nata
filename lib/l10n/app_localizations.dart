@@ -8257,6 +8257,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reviews appear here after this sender\'s first completed delivery.'**
   String get senderNoReviewsSub;
+
+  /// No description provided for @tipProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile'**
+  String get tipProfileTitle;
+
+  /// No description provided for @tipProfileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap your photo or name to open your profile and settings.'**
+  String get tipProfileBody;
+
+  /// Screen-reader label of the balance pill on Home.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet balance: {amount}'**
+  String homeWalletBalance(String amount);
+
+  /// No description provided for @homeWalletBalanceHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet balance hidden'**
+  String get homeWalletBalanceHidden;
+
+  /// No description provided for @homeShowBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Show balance'**
+  String get homeShowBalance;
+
+  /// No description provided for @homeHideBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide balance'**
+  String get homeHideBalance;
+
+  /// No description provided for @walletAddedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} added to your wallet'**
+  String walletAddedTitle(String amount);
+
+  /// No description provided for @walletAddedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'For carrying {item} from {from} to {to}.'**
+  String walletAddedFor(String item, String from, String to);
+
+  /// No description provided for @walletAddedForName.
+  ///
+  /// In en, this message translates to:
+  /// **'For carrying {item} from {from} to {to} for {name}.'**
+  String walletAddedForName(String item, String from, String to, String name);
+
+  /// No description provided for @walletAddedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'For a delivery you made.'**
+  String get walletAddedOne;
+
+  /// No description provided for @walletAddedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'From {count} deliveries.'**
+  String walletAddedMany(int count);
+
+  /// No description provided for @walletAddedView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get walletAddedView;
+
+  /// No description provided for @wallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get wallet;
+
+  /// No description provided for @walletActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get walletActivity;
+
+  /// No description provided for @walletRowAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} available'**
+  String walletRowAvailable(String amount);
+
+  /// No description provided for @tipWalletRowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance, withdrawals, payment settings and history are all in Wallet.'**
+  String get tipWalletRowBody;
 }
 
 class _AppLocalizationsDelegate

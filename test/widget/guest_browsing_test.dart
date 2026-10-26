@@ -304,7 +304,7 @@ void main() {
     testWidgets('signed in: the name, notifications and tabs', (tester) async {
       await pumpHome(tester);
 
-      expect(find.text('Fortune Niama'), findsOneWidget);
+      expect(find.text('Fortune'), findsOneWidget);
       expect(find.byKey(const ValueKey('home-notifications')), findsOneWidget);
       expect(find.byKey(const ValueKey('home-sign-in')), findsNothing);
       expect(find.byKey(const ValueKey('home-guest-hero')), findsNothing);

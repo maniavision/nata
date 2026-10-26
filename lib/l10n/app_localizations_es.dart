@@ -4765,4 +4765,66 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get senderNoReviewsSub =>
       'Las reseñas aparecen aquí tras la primera entrega completada de este remitente.';
+
+  @override
+  String get tipProfileTitle => 'Tu perfil';
+
+  @override
+  String get tipProfileBody =>
+      'Toca tu foto o tu nombre para abrir tu perfil y tus ajustes.';
+
+  @override
+  String homeWalletBalance(String amount) {
+    return 'Saldo de la billetera: $amount';
+  }
+
+  @override
+  String get homeWalletBalanceHidden => 'Saldo de la billetera oculto';
+
+  @override
+  String get homeShowBalance => 'Mostrar saldo';
+
+  @override
+  String get homeHideBalance => 'Ocultar saldo';
+
+  @override
+  String walletAddedTitle(String amount) {
+    return '$amount añadidos a tu billetera';
+  }
+
+  @override
+  String walletAddedFor(String item, String from, String to) {
+    return 'Por llevar $item de $from a $to.';
+  }
+
+  @override
+  String walletAddedForName(String item, String from, String to, String name) {
+    return 'Por llevar $item de $from a $to para $name.';
+  }
+
+  @override
+  String get walletAddedOne => 'Por una entrega que hiciste.';
+
+  @override
+  String walletAddedMany(int count) {
+    return 'Por $count entregas.';
+  }
+
+  @override
+  String get walletAddedView => 'Ver';
+
+  @override
+  String get wallet => 'Billetera';
+
+  @override
+  String get walletActivity => 'Actividad';
+
+  @override
+  String walletRowAvailable(String amount) {
+    return '$amount disponible';
+  }
+
+  @override
+  String get tipWalletRowBody =>
+      'Tu saldo, tus retiros, tu configuración de pagos y tu historial están en Billetera.';
 }

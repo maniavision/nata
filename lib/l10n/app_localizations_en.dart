@@ -4716,4 +4716,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get senderNoReviewsSub =>
       'Reviews appear here after this sender\'s first completed delivery.';
+
+  @override
+  String get tipProfileTitle => 'Your profile';
+
+  @override
+  String get tipProfileBody =>
+      'Tap your photo or name to open your profile and settings.';
+
+  @override
+  String homeWalletBalance(String amount) {
+    return 'Wallet balance: $amount';
+  }
+
+  @override
+  String get homeWalletBalanceHidden => 'Wallet balance hidden';
+
+  @override
+  String get homeShowBalance => 'Show balance';
+
+  @override
+  String get homeHideBalance => 'Hide balance';
+
+  @override
+  String walletAddedTitle(String amount) {
+    return '$amount added to your wallet';
+  }
+
+  @override
+  String walletAddedFor(String item, String from, String to) {
+    return 'For carrying $item from $from to $to.';
+  }
+
+  @override
+  String walletAddedForName(String item, String from, String to, String name) {
+    return 'For carrying $item from $from to $to for $name.';
+  }
+
+  @override
+  String get walletAddedOne => 'For a delivery you made.';
+
+  @override
+  String walletAddedMany(int count) {
+    return 'From $count deliveries.';
+  }
+
+  @override
+  String get walletAddedView => 'View';
+
+  @override
+  String get wallet => 'Wallet';
+
+  @override
+  String get walletActivity => 'Activity';
+
+  @override
+  String walletRowAvailable(String amount) {
+    return '$amount available';
+  }
+
+  @override
+  String get tipWalletRowBody =>
+      'Your balance, withdrawals, payment settings and history are all in Wallet.';
 }

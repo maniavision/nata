@@ -3,6 +3,7 @@ import 'package:carrywise_app/screens/messages_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
+import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:carrywise_app/services/route_alert_service.dart';
 import 'package:carrywise_app/widgets/app_bottom_nav.dart';
 import 'package:carrywise_app/widgets/coach_tips.dart';
@@ -53,11 +54,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('a first visit to Home starts with the Add a Trip tip', (
+  testWidgets('a first visit to Home starts with the profile tip', (
     tester,
   ) async {
     await pumpHome(tester);
-    expect(find.text('Do you have an upcoming trip?'), findsOneWidget);
+    expect(find.text('Your profile'), findsOneWidget);
+    expect(
+      find.text('Tap your photo or name to open your profile and settings.'),
+      findsOneWidget,
+    );
     expect(find.text('Skip'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
   });
@@ -66,6 +71,10 @@ void main() {
     tester,
   ) async {
     await pumpHome(tester);
+    expect(find.text('Your profile'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Do you have an upcoming trip?'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
     await tester.pumpAndSettle();
     expect(find.text('Need to send something?'), findsOneWidget);
@@ -81,6 +90,34 @@ void main() {
     expect(find.byType(CoachTipsOverlay), findsNothing);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool(CoachTips.seenKey('home', 'test-user')), isTrue);
+    expect(
+      prefs.getBool(CoachTips.seenKey('home-profile', 'test-user')),
+      isTrue,
+    );
+
+    // The profile tip doesn't come back on its own afterwards.
+    await tester.pumpWidget(const SizedBox());
+    await pumpHome(tester);
+    expect(find.byType(CoachTipsOverlay), findsNothing);
+  });
+
+  testWidgets('members who saw the tour before get the profile tip alone', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      CoachTips.seenKey('home', 'test-user'): true,
+    });
+    await pumpHome(tester);
+    expect(find.text('Your profile'), findsOneWidget);
+    expect(find.text('Skip'), findsNothing);
+
+    await tester.tap(find.text('Got it'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CoachTipsOverlay), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await pumpHome(tester);
+    expect(find.byType(CoachTipsOverlay), findsNothing);
   });
 
   testWidgets('Skip ends the tips and they are not shown again', (
@@ -116,7 +153,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pumpAndSettle();
-    expect(find.text('Vous avez un voyage prévu ?'), findsOneWidget);
+    expect(find.text('Votre profil'), findsOneWidget);
     expect(find.text('Passer'), findsOneWidget);
   });
 
@@ -198,13 +235,24 @@ void main() {
 
     testWidgets('Profile', (tester) async {
       await show(tester, ProfileScreen(authService: FakeAuthService()));
-      await walk(tester, ['Your Nata Wallet', 'Get paid', 'Route alerts']);
+      await walk(tester, ['Your Nata Wallet', 'Route alerts']);
+    });
+
+    testWidgets('Wallet', (tester) async {
+      await show(
+        tester,
+        WalletScreen(
+          authService: FakeAuthService(),
+          paymentService: FakePaymentService(),
+        ),
+      );
+      await walk(tester, ['Your Nata Wallet', 'Get paid']);
     });
 
     testWidgets('a tip further down scrolls its row into view first', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(600, 760);
+      tester.view.physicalSize = const Size(600, 440);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
@@ -213,7 +261,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 700));
       await tester.pumpAndSettle();
-      final row = find.byKey(const ValueKey('profile-payment-settings'));
+      final row = find.byKey(const ValueKey('profile-route-alerts'));
       final nav = tester.getRect(find.byType(AppBottomNav));
       // Behind the tab bar or off screen before.
       expect(tester.getRect(row).bottom, greaterThan(nav.top));
