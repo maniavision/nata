@@ -2015,5 +2015,9 @@
   "walletAddedForName": "Pour avoir transporté {item} de {from} à {to} pour {name}.",
   "walletAddedOne": "Pour une livraison effectuée.",
   "walletAddedMany": "Pour {count} livraisons.",
-  "walletAddedView": "Voir"
+  "walletAddedView": "Voir",
+  "wallet": "Portefeuille",
+  "walletActivity": "Activité",
+  "walletRowAvailable": "{amount} disponible",
+  "tipWalletRowBody": "Votre solde, vos retraits, vos paramètres de paiement et votre historique sont dans Portefeuille."
 }

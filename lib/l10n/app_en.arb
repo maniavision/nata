@@ -2141,5 +2141,10 @@
   "walletAddedOne": "For a delivery you made.",
   "walletAddedMany": "From {count} deliveries.",
   "@walletAddedMany": {"placeholders": {"count": {"type": "int"}}},
-  "walletAddedView": "View"
+  "walletAddedView": "View",
+  "wallet": "Wallet",
+  "walletActivity": "Activity",
+  "walletRowAvailable": "{amount} available",
+  "@walletRowAvailable": {"placeholders": {"amount": {"type": "String"}}},
+  "tipWalletRowBody": "Your balance, withdrawals, payment settings and history are all in Wallet."
 }

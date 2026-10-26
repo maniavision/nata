@@ -8329,6 +8329,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View'**
   String get walletAddedView;
+
+  /// No description provided for @wallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get wallet;
+
+  /// No description provided for @walletActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get walletActivity;
+
+  /// No description provided for @walletRowAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} available'**
+  String walletRowAvailable(String amount);
+
+  /// No description provided for @tipWalletRowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance, withdrawals, payment settings and history are all in Wallet.'**
+  String get tipWalletRowBody;
 }
 
 class _AppLocalizationsDelegate

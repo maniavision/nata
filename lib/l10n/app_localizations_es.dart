@@ -4812,4 +4812,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get walletAddedView => 'Ver';
+
+  @override
+  String get wallet => 'Billetera';
+
+  @override
+  String get walletActivity => 'Actividad';
+
+  @override
+  String walletRowAvailable(String amount) {
+    return '$amount disponible';
+  }
+
+  @override
+  String get tipWalletRowBody =>
+      'Tu saldo, tus retiros, tu configuración de pagos y tu historial están en Billetera.';
 }

@@ -1,6 +1,6 @@
 import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
-import 'package:carrywise_app/screens/wallet_history_screen.dart';
+import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -74,13 +74,13 @@ void main() {
     expect(tester.getCenter(wallet()).dx, lessThan(tester.getCenter(bell).dx));
   });
 
-  testWidgets('tapping the balance opens the wallet history', (tester) async {
+  testWidgets('tapping the balance opens the Wallet page', (tester) async {
     await pumpHome(tester);
 
     await tester.tap(wallet());
     await tester.pumpAndSettle();
 
-    expect(find.byType(WalletHistoryScreen), findsOneWidget);
+    expect(find.byType(WalletScreen), findsOneWidget);
     expect(find.byType(ProfileScreen), findsNothing);
   });
 
@@ -114,7 +114,7 @@ void main() {
 
     expect(find.text(r'$320.00'), findsNothing);
     expect(find.text('••••'), findsOneWidget);
-    expect(find.byType(WalletHistoryScreen), findsNothing);
+    expect(find.byType(WalletScreen), findsNothing);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('home_balance_hidden'), isTrue);
 

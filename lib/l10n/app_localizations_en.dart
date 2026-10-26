@@ -4763,4 +4763,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletAddedView => 'View';
+
+  @override
+  String get wallet => 'Wallet';
+
+  @override
+  String get walletActivity => 'Activity';
+
+  @override
+  String walletRowAvailable(String amount) {
+    return '$amount available';
+  }
+
+  @override
+  String get tipWalletRowBody =>
+      'Your balance, withdrawals, payment settings and history are all in Wallet.';
 }

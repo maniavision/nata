@@ -37,7 +37,7 @@ import 'add_trip_screen.dart';
 import 'notifications_screen.dart';
 import 'traveler_profile_screen.dart';
 import 'traveler_results_screen.dart';
-import 'wallet_history_screen.dart';
+import 'wallet_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'requests_screen.dart';
@@ -657,18 +657,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _openWallet() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => WalletHistoryScreen(
-          available: _money(_available ?? 0),
-          inEscrow: _money(_escrow ?? 0),
-          service: widget.paymentService,
+        builder: (_) => WalletScreen(
+          authService: widget.authService,
+          paymentService: widget.paymentService,
         ),
       ),
     );
     _loadProfile();
   }
 
-  /// A small pill with the wallet's available balance: it opens the wallet's
-  /// history, and its eye hides the amount.
+  /// A small pill with the wallet's available balance: it opens the Wallet
+  /// page, and its eye hides the amount.
   Widget _buildBalance() {
     final l = context.l10n;
     final money = _money(_available ?? 0);

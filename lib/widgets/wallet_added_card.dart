@@ -19,7 +19,7 @@ class WalletAddedCard extends StatefulWidget {
   final String? userId;
   final PaymentService? service;
 
-  /// Opens the wallet history.
+  /// Opens the Wallet page.
   final VoidCallback onView;
 
   /// Lets tests fix "now".

@@ -4846,4 +4846,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletAddedView => 'Voir';
+
+  @override
+  String get wallet => 'Portefeuille';
+
+  @override
+  String get walletActivity => 'Activité';
+
+  @override
+  String walletRowAvailable(String amount) {
+    return '$amount disponible';
+  }
+
+  @override
+  String get tipWalletRowBody =>
+      'Votre solde, vos retraits, vos paramètres de paiement et votre historique sont dans Portefeuille.';
 }

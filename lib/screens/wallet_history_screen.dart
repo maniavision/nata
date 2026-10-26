@@ -12,7 +12,7 @@ import '../widgets/page_header.dart';
 enum _Filter { all, payouts, payments }
 
 /// The user's payouts and payments, newest first, grouped by month. Opened
-/// from "View History" on the Profile wallet card.
+/// from Payment Settings (the Wallet page shows the same list).
 class WalletHistoryScreen extends StatefulWidget {
   /// The wallet card's figures, already formatted.
   final String available;
@@ -33,35 +33,6 @@ class WalletHistoryScreen extends StatefulWidget {
 }
 
 class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
-  List<WalletEntry>? _entries;
-  bool _failed = false;
-  _Filter _filter = _Filter.all;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _failed = false);
-    try {
-      final entries = await (widget.service ?? PaymentService())
-          .walletHistory();
-      if (mounted) setState(() => _entries = entries);
-    } catch (e) {
-      debugPrint('[WalletHistory] load error: $e');
-      if (mounted) setState(() => _failed = true);
-    }
-  }
-
-  List<WalletEntry> get _shown => [
-    for (final e in _entries ?? const <WalletEntry>[])
-      if (_filter == _Filter.all ||
-          (_filter == _Filter.payouts) == (e.kind == WalletEntryKind.payout))
-        e,
-  ];
-
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -80,9 +51,7 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
                 children: [
                   _summary(l),
                   const SizedBox(height: 16),
-                  _filters(l),
-                  const SizedBox(height: 8),
-                  ..._list(l),
+                  WalletActivity(service: widget.service),
                 ],
               ),
             ),
@@ -150,6 +119,58 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The payouts and payments with their All / Payouts / Payments filter,
+/// grouped by month (on Wallet History and the Wallet page).
+class WalletActivity extends StatefulWidget {
+  /// Override for tests; defaults to the real [PaymentService].
+  final PaymentService? service;
+
+  const WalletActivity({super.key, this.service});
+
+  @override
+  State<WalletActivity> createState() => _WalletActivityState();
+}
+
+class _WalletActivityState extends State<WalletActivity> {
+  List<WalletEntry>? _entries;
+  bool _failed = false;
+  _Filter _filter = _Filter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _failed = false);
+    try {
+      final entries = await (widget.service ?? PaymentService())
+          .walletHistory();
+      if (mounted) setState(() => _entries = entries);
+    } catch (e) {
+      debugPrint('[WalletHistory] load error: $e');
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  List<WalletEntry> get _shown => [
+    for (final e in _entries ?? const <WalletEntry>[])
+      if (_filter == _Filter.all ||
+          (_filter == _Filter.payouts) == (e.kind == WalletEntryKind.payout))
+        e,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [_filters(l), const SizedBox(height: 8), ..._list(l)],
     );
   }
 

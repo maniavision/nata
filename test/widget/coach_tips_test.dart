@@ -3,6 +3,7 @@ import 'package:carrywise_app/screens/messages_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
+import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:carrywise_app/services/route_alert_service.dart';
 import 'package:carrywise_app/widgets/app_bottom_nav.dart';
 import 'package:carrywise_app/widgets/coach_tips.dart';
@@ -234,13 +235,24 @@ void main() {
 
     testWidgets('Profile', (tester) async {
       await show(tester, ProfileScreen(authService: FakeAuthService()));
-      await walk(tester, ['Your Nata Wallet', 'Get paid', 'Route alerts']);
+      await walk(tester, ['Your Nata Wallet', 'Route alerts']);
+    });
+
+    testWidgets('Wallet', (tester) async {
+      await show(
+        tester,
+        WalletScreen(
+          authService: FakeAuthService(),
+          paymentService: FakePaymentService(),
+        ),
+      );
+      await walk(tester, ['Your Nata Wallet', 'Get paid']);
     });
 
     testWidgets('a tip further down scrolls its row into view first', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(600, 760);
+      tester.view.physicalSize = const Size(600, 440);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
@@ -249,7 +261,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 700));
       await tester.pumpAndSettle();
-      final row = find.byKey(const ValueKey('profile-payment-settings'));
+      final row = find.byKey(const ValueKey('profile-route-alerts'));
       final nav = tester.getRect(find.byType(AppBottomNav));
       // Behind the tab bar or off screen before.
       expect(tester.getRect(row).bottom, greaterThan(nav.top));

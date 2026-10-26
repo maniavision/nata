@@ -1,5 +1,5 @@
 import 'package:carrywise_app/screens/home_screen.dart';
-import 'package:carrywise_app/screens/wallet_history_screen.dart';
+import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:carrywise_app/services/payment_service.dart';
 import 'package:carrywise_app/widgets/wallet_added_card.dart';
 import 'package:flutter/material.dart';
@@ -117,16 +117,16 @@ void main() {
     expect(cardText(tester), contains('NGN 60,000 added to your wallet'));
   });
 
-  testWidgets('View opens the wallet history and the card is gone', (
+  testWidgets('View opens the Wallet page and the card is gone', (
     tester,
   ) async {
     await pumpHome(tester, [payout()]);
 
     await tester.tap(find.byKey(const ValueKey('wallet-added-view')));
     await tester.pumpAndSettle();
-    expect(find.byType(WalletHistoryScreen), findsOneWidget);
+    expect(find.byType(WalletScreen), findsOneWidget);
 
-    Navigator.of(tester.element(find.byType(WalletHistoryScreen))).pop();
+    Navigator.of(tester.element(find.byType(WalletScreen))).pop();
     await tester.pumpAndSettle();
     expect(card(), findsNothing);
   });

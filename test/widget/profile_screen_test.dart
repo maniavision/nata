@@ -45,12 +45,15 @@ void main() {
       expect(find.byIcon(Icons.verified_rounded), findsOneWidget);
     });
 
-    testWidgets('renders wallet card with balance', (tester) async {
+    testWidgets('renders the Wallet row with the balance', (tester) async {
       await tester.pumpWidget(buildProfile());
       await tester.pump();
 
-      expect(find.text('NATA WALLET'), findsOneWidget);
-      expect(find.text('\$320.00'), findsOneWidget);
+      expect(find.text('Wallet'), findsOneWidget);
+      expect(find.text('\$320.00 available'), findsOneWidget);
+      // The wallet card and Payment Settings moved to the Wallet page.
+      expect(find.text('NATA WALLET'), findsNothing);
+      expect(find.text('Payment Settings'), findsNothing);
     });
 
     testWidgets('renders settings list items', (tester) async {
@@ -167,7 +170,7 @@ void main() {
   group('ProfileScreen data and actions', () {
     setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
-    testWidgets('shows the name, wallet and escrow from the account', (
+    testWidgets('shows the name and the available balance from the account', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(900, 3200);
@@ -180,8 +183,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Fortune Niama'), findsOneWidget);
-      expect(find.text('\$1,234.50'), findsOneWidget);
-      expect(find.textContaining('\$99.00'), findsOneWidget);
+      expect(find.text('\$1,234.50 available'), findsOneWidget);
     });
 
     testWidgets('keeps working when the profile cannot be loaded', (

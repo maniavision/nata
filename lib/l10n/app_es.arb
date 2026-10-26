@@ -2015,5 +2015,9 @@
   "walletAddedForName": "Por llevar {item} de {from} a {to} para {name}.",
   "walletAddedOne": "Por una entrega que hiciste.",
   "walletAddedMany": "Por {count} entregas.",
-  "walletAddedView": "Ver"
+  "walletAddedView": "Ver",
+  "wallet": "Billetera",
+  "walletActivity": "Actividad",
+  "walletRowAvailable": "{amount} disponible",
+  "tipWalletRowBody": "Tu saldo, tus retiros, tu configuración de pagos y tu historial están en Billetera."
 }
