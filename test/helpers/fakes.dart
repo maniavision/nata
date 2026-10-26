@@ -1129,6 +1129,28 @@ class FakeRequestService extends Fake implements RequestService {
     reviews.add((id: requestId, rating: rating, tags: tags, comment: comment));
   }
 
+  /// Sender reviews sent by the traveler; [failReview] and [reviewGate]
+  /// apply to them too.
+  final List<({String id, int rating, List<String> tags, String comment})>
+  senderReviews = [];
+
+  @override
+  Future<void> submitSenderReview(
+    String requestId, {
+    required int rating,
+    List<String> tags = const [],
+    String comment = '',
+  }) async {
+    if (reviewGate != null) await reviewGate!.future;
+    if (failReview != null) throw failReview!;
+    senderReviews.add((
+      id: requestId,
+      rating: rating,
+      tags: tags,
+      comment: comment,
+    ));
+  }
+
   /// Ticket checks confirmed (request ids); [failTicket] makes them fail.
   final List<String> ticketChecks = [];
   RequestException? failTicket;
@@ -1198,8 +1220,14 @@ IncomingRequest sampleIncoming({
   DateTime? expiresAt,
   String? recipientName,
   String? recipientPhone,
+  double? senderRating,
+  bool senderReviewed = false,
+  DateTime? pickedUpAt,
 }) => IncomingRequest(
   id: id,
+  pickedUpAt: pickedUpAt,
+  senderRating: senderRating,
+  senderReviewed: senderReviewed,
   status: status,
   createdAt: DateTime(2030, 6, 20, 9),
   expiresAt: expiresAt,

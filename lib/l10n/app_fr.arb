@@ -1980,5 +1980,17 @@
   "resultsWeightClear": "Voir tous les voyageurs",
   "resultsWeightAnyNote": "Tous les voyageurs, quel que soit le poids",
   "resultsWeightAtLeast": "Voyageurs qui peuvent porter {kg} kg ou plus",
-  "resultsWeightButton": "Poids"
+  "resultsWeightButton": "Poids",
+  "rateYourSender": "Notez votre expéditeur",
+  "senderItemDelivered": "Vous avez livré l'article",
+  "senderReviewHelps": "Votre avis aide les autres voyageurs à savoir pour qui ils transportent.",
+  "senderTagInstructions": "Instructions claires",
+  "senderTagPacked": "Bien emballé",
+  "senderTagOnTime": "À l'heure pour la remise",
+  "senderTagFriendly": "Aimable",
+  "senderTagAgain": "Je transporterais encore",
+  "reviewLater": "Plus tard",
+  "nextRateSender": "Notez l'expéditeur",
+  "rateSenderButton": "Noter {name}",
+  "senderReviewSubmitted": "Avis envoyé"
 }

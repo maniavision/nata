@@ -1342,3 +1342,65 @@ class _ChatFromNotificationState extends State<ChatFromNotification> {
     );
   }
 }
+
+/// Opens the chat about request [requestId], e.g. right after the sender
+/// paid for it (paying opens the chat: 20240130). Shows the Messages list
+/// if it can't be found.
+class ChatForRequest extends StatefulWidget {
+  final String requestId;
+
+  /// Override for tests; defaults to the real [MessageService].
+  final MessageService? service;
+
+  /// Pause before looking again, in case the chat isn't listed yet.
+  final Duration retryAfter;
+
+  const ChatForRequest({
+    super.key,
+    required this.requestId,
+    this.service,
+    this.retryAfter = const Duration(seconds: 1),
+  });
+
+  @override
+  State<ChatForRequest> createState() => _ChatForRequestState();
+}
+
+class _ChatForRequestState extends State<ChatForRequest> {
+  late final Future<ConversationSummary?> _found = _find();
+
+  Future<ConversationSummary?> _find() async {
+    final service = widget.service ?? MessageService();
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await Future<void>.delayed(widget.retryAfter);
+      try {
+        for (final c in await service.conversations()) {
+          if (c.requestId == widget.requestId) return c;
+        }
+      } catch (e) {
+        debugPrint('[Chat] open for request: $e');
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ConversationSummary?>(
+      future: _found,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            ),
+          );
+        }
+        final c = snap.data;
+        if (c == null) return MessagesScreen(service: widget.service);
+        return ChatThreadScreen(conversation: c, service: widget.service);
+      },
+    );
+  }
+}

@@ -1980,5 +1980,17 @@
   "resultsWeightClear": "Ver todos los viajeros",
   "resultsWeightAnyNote": "Todos los viajeros, sea cual sea el peso",
   "resultsWeightAtLeast": "Viajeros que pueden llevar {kg} kg o más",
-  "resultsWeightButton": "Peso"
+  "resultsWeightButton": "Peso",
+  "rateYourSender": "Valora a tu remitente",
+  "senderItemDelivered": "Entregaste el artículo",
+  "senderReviewHelps": "Tu reseña ayuda a otros viajeros a saber para quién llevan cosas.",
+  "senderTagInstructions": "Instrucciones claras",
+  "senderTagPacked": "Bien empaquetado",
+  "senderTagOnTime": "Puntual en la recogida",
+  "senderTagFriendly": "Amable",
+  "senderTagAgain": "Volvería a llevarle algo",
+  "reviewLater": "Más tarde",
+  "nextRateSender": "Valora al remitente",
+  "rateSenderButton": "Valorar a {name}",
+  "senderReviewSubmitted": "Reseña enviada"
 }

@@ -4640,4 +4640,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resultsWeightButton => 'Weight';
+
+  @override
+  String get rateYourSender => 'Rate Your Sender';
+
+  @override
+  String get senderItemDelivered => 'You delivered the item';
+
+  @override
+  String get senderReviewHelps =>
+      'Your review helps other travelers know who they carry for.';
+
+  @override
+  String get senderTagInstructions => 'Clear instructions';
+
+  @override
+  String get senderTagPacked => 'Well packed';
+
+  @override
+  String get senderTagOnTime => 'On time for pickup';
+
+  @override
+  String get senderTagFriendly => 'Friendly';
+
+  @override
+  String get senderTagAgain => 'Would carry again';
+
+  @override
+  String get reviewLater => 'Later';
+
+  @override
+  String get nextRateSender => 'Rate the sender';
+
+  @override
+  String rateSenderButton(String name) {
+    return 'Rate $name';
+  }
+
+  @override
+  String get senderReviewSubmitted => 'Review submitted';
 }

@@ -8,12 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/message_service.dart';
 import '../services/payment_service.dart';
 import '../services/phone_number.dart';
 import '../services/request_service.dart';
 import '../services/stripe_sheet.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
+import 'chat_thread_screen.dart';
 
 /// Pays for an accepted request. Step 1: the sender checks the traveler's
 /// flight ticket; step 2: the photo on the traveler's ID and their verified
@@ -46,6 +48,10 @@ class CheckoutEscrowScreen extends StatefulWidget {
   /// Override for tests: Stripe's payment sheet (cards, Apple Pay).
   final Future<CardSheetResult> Function(StripeSheet sheet)? presentCardSheet;
 
+  /// Override for tests; the chat opened once paid uses the real
+  /// [MessageService] by default.
+  final MessageService? messageService;
+
   const CheckoutEscrowScreen({
     super.key,
     required this.request,
@@ -57,6 +63,7 @@ class CheckoutEscrowScreen extends StatefulWidget {
     this.closePaymentPage,
     this.pollInterval = const Duration(seconds: 3),
     this.presentCardSheet,
+    this.messageService,
   });
 
   @override
@@ -419,7 +426,16 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           messenger.showSnackBar(
             nataToast(l.paymentReceived, tone: ToastTone.success),
           );
-          navigator.pop(true);
+          // Paid: on to the chat with the traveler, to arrange the pickup.
+          navigator.pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => ChatForRequest(
+                requestId: _r.id,
+                service: widget.messageService,
+              ),
+            ),
+            result: true,
+          );
         case PaymentStatus.failed:
           _poll?.cancel();
           if (payment.link != null) {

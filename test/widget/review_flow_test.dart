@@ -185,6 +185,155 @@ void main() {
     });
   });
 
+  group('Rate Your Sender', () {
+    bool? popped;
+
+    Future<void> pump(
+      WidgetTester tester, {
+      Locale locale = const Locale('en'),
+    }) async {
+      popped = null;
+      tester.view.physicalSize = const Size(900, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () async {
+                  popped = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => ReviewScreen.sender(
+                        request: sampleIncoming(status: 'delivered'),
+                        service: service,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('open'),
+              ),
+            ),
+          ),
+          locale: locale,
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows the sender, the delivery and sender tags', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      expect(find.text('Rate Your Sender'), findsOneWidget);
+      expect(find.text('You delivered the item'), findsOneWidget);
+      expect(find.text('Chioma E.'), findsOneWidget);
+      expect(find.textContaining('Lagos → London'), findsOneWidget);
+      expect(find.textContaining('Apple Watch Series 9'), findsOneWidget);
+      for (final tag in [
+        'Clear instructions',
+        'Well packed',
+        'On time for pickup',
+        'Friendly',
+        'Would carry again',
+      ]) {
+        expect(find.text(tag), findsOneWidget, reason: tag);
+      }
+      expect(find.text('Later'), findsOneWidget);
+    });
+
+    testWidgets('sends the sender review, then closes', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.byKey(const ValueKey('review-star-4')));
+      await tester.tap(find.byKey(const ValueKey('review-tag-friendly')));
+      await tester.tap(find.byKey(const ValueKey('review-tag-well_packed')));
+      await tester.enterText(
+        find.byKey(const ValueKey('review-comment')),
+        'Ready on time.',
+      );
+      await tester.tap(find.byKey(const ValueKey('review-submit')));
+      await tester.pumpAndSettle();
+
+      expect(service.reviews, isEmpty);
+      final r = service.senderReviews.single;
+      expect(r.id, 'in-1');
+      expect(r.rating, 4);
+      expect(r.tags, ['well_packed', 'friendly']);
+      expect(r.comment, 'Ready on time.');
+      expect(popped, isTrue);
+    });
+
+    testWidgets('Later closes without a review', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.byKey(const ValueKey('review-skip')));
+      await tester.pumpAndSettle();
+
+      expect(service.senderReviews, isEmpty);
+      expect(popped, isFalse);
+    });
+
+    testWidgets('is translated', (tester) async {
+      await pump(tester, locale: const Locale('fr'));
+
+      expect(find.text('Notez votre expéditeur'), findsOneWidget);
+      expect(find.text('Bien emballé'), findsOneWidget);
+      expect(find.text('Plus tard'), findsOneWidget);
+    });
+  });
+
+  group('Incoming delivered card', () {
+    Future<void> pump(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(900, 3600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          RequestsScreen(
+            requestService: service,
+            exchangeRates: FakeExchangeRateService(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('asks to rate the sender, and opens the review', (
+      tester,
+    ) async {
+      service.incoming = [sampleIncoming(status: 'delivered')];
+      await pump(tester);
+
+      expect(find.text('Rate the sender'), findsOneWidget);
+      expect(find.text('Rate Chioma'), findsOneWidget);
+
+      await tester.tap(find.text('Rate Chioma'));
+      await tester.pumpAndSettle();
+      expect(find.text('Rate Your Sender'), findsOneWidget);
+    });
+
+    testWidgets('once reviewed, it says so', (tester) async {
+      service.incoming = [
+        sampleIncoming(status: 'delivered', senderReviewed: true),
+      ];
+      await pump(tester);
+
+      expect(find.text('Review submitted'), findsOneWidget);
+      expect(find.text('Rate Chioma'), findsNothing);
+      expect(find.text('View Request'), findsOneWidget);
+    });
+
+    testWidgets('a pending request shows the sender\'s rating', (tester) async {
+      service.incoming = [sampleIncoming(senderRating: 4.6)];
+      await pump(tester);
+
+      expect(find.textContaining('★ 4.6'), findsOneWidget);
+    });
+  });
+
   group('Outgoing delivered card', () {
     Future<void> pump(WidgetTester tester) async {
       tester.view.physicalSize = const Size(900, 3600);

@@ -8119,6 +8119,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weight'**
   String get resultsWeightButton;
+
+  /// No description provided for @rateYourSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Your Sender'**
+  String get rateYourSender;
+
+  /// No description provided for @senderItemDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'You delivered the item'**
+  String get senderItemDelivered;
+
+  /// No description provided for @senderReviewHelps.
+  ///
+  /// In en, this message translates to:
+  /// **'Your review helps other travelers know who they carry for.'**
+  String get senderReviewHelps;
+
+  /// No description provided for @senderTagInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear instructions'**
+  String get senderTagInstructions;
+
+  /// No description provided for @senderTagPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Well packed'**
+  String get senderTagPacked;
+
+  /// No description provided for @senderTagOnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'On time for pickup'**
+  String get senderTagOnTime;
+
+  /// No description provided for @senderTagFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Friendly'**
+  String get senderTagFriendly;
+
+  /// No description provided for @senderTagAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Would carry again'**
+  String get senderTagAgain;
+
+  /// No description provided for @reviewLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get reviewLater;
+
+  /// No description provided for @nextRateSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the sender'**
+  String get nextRateSender;
+
+  /// No description provided for @rateSenderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate {name}'**
+  String rateSenderButton(String name);
+
+  /// No description provided for @senderReviewSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Review submitted'**
+  String get senderReviewSubmitted;
 }
 
 class _AppLocalizationsDelegate

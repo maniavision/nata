@@ -2097,5 +2097,18 @@
   "resultsWeightAnyNote": "Every traveler, whatever they can carry",
   "resultsWeightAtLeast": "Travelers who can carry {kg} kg or more",
   "@resultsWeightAtLeast": {"placeholders": {"kg": {"type": "String"}}},
-  "resultsWeightButton": "Weight"
+  "resultsWeightButton": "Weight",
+  "rateYourSender": "Rate Your Sender",
+  "senderItemDelivered": "You delivered the item",
+  "senderReviewHelps": "Your review helps other travelers know who they carry for.",
+  "senderTagInstructions": "Clear instructions",
+  "senderTagPacked": "Well packed",
+  "senderTagOnTime": "On time for pickup",
+  "senderTagFriendly": "Friendly",
+  "senderTagAgain": "Would carry again",
+  "reviewLater": "Later",
+  "nextRateSender": "Rate the sender",
+  "rateSenderButton": "Rate {name}",
+  "senderReviewSubmitted": "Review submitted",
+  "@rateSenderButton": {"placeholders": {"name": {"type": "String"}}}
 }

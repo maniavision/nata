@@ -11,6 +11,7 @@ import '../services/payment_service.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
 import 'delivery_confirm_screen.dart';
+import 'review_screen.dart';
 import 'messages_screen.dart';
 import '../widgets/camera_denied_sheet.dart';
 
@@ -54,6 +55,9 @@ class AcceptedDelivery {
   /// When the traveler marked the item picked up; null until then.
   final DateTime? pickedUpAt;
 
+  /// The request this was made from, for rating its sender once delivered.
+  final IncomingRequest? source;
+
   const AcceptedDelivery({
     required this.orderId,
     required this.senderName,
@@ -74,6 +78,7 @@ class AcceptedDelivery {
     required this.requestId,
     this.senderAvatarPath,
     this.pickedUpAt,
+    this.source,
   });
 
   /// The traveler's paid (or picked up) request, ready to show. [payout] is
@@ -85,6 +90,7 @@ class AcceptedDelivery {
   }) {
     final weight = NumberFormat('0.##', locale).format(r.weightKg);
     return AcceptedDelivery(
+      source: r,
       requestId: r.id,
       // The start of the id is enough to tell deliveries apart.
       orderId: r.id
@@ -307,7 +313,22 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
         ),
       ),
     );
-    if (delivered == true && mounted) Navigator.of(context).pop(true);
+    if (delivered != true || !mounted) return;
+    // Delivered: on to rating the sender, in place of this page.
+    final source = d.source;
+    if (source == null) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ReviewScreen.sender(
+          request: source,
+          service: widget.requestService,
+        ),
+      ),
+      result: true,
+    );
   }
 
   @override

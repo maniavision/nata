@@ -792,6 +792,12 @@ class IncomingRequest {
   /// Wrong delivery codes the traveler can still enter (5 at first).
   final int codeAttemptsLeft;
 
+  /// The sender's average rating as a sender, once travelers rated them.
+  final double? senderRating;
+
+  /// The traveler has already rated the sender for this request.
+  final bool senderReviewed;
+
   const IncomingRequest({
     required this.id,
     required this.status,
@@ -821,7 +827,12 @@ class IncomingRequest {
     this.pickedUpAt,
     this.deliveredAt,
     this.codeAttemptsLeft = 5,
+    this.senderRating,
+    this.senderReviewed = false,
   });
+
+  /// Delivered, and the traveler hasn't rated the sender yet.
+  bool get needsSenderReview => status == 'delivered' && !senderReviewed;
 
   /// Waiting for the traveler's answer.
   bool get isPending => status == 'pending';
@@ -886,6 +897,8 @@ class IncomingRequest {
       pickedUpAt: time(j['picked_up_at']),
       deliveredAt: time(j['delivered_at']),
       codeAttemptsLeft: (j['code_attempts_left'] as num?)?.toInt() ?? 5,
+      senderRating: (j['sender_rating'] as num?)?.toDouble(),
+      senderReviewed: j['sender_reviewed'] == true,
     );
   }
 }
@@ -1267,6 +1280,19 @@ class RequestService {
     List<String> tags = const [],
     String comment = '',
   }) => _call('submit_traveler_review', {
+    'p_request_id': requestId,
+    'p_rating': rating,
+    'p_tags': tags,
+    'p_comment': comment.trim(),
+  });
+
+  /// The traveler rates the sender of a delivered request (20240179).
+  Future<void> submitSenderReview(
+    String requestId, {
+    required int rating,
+    List<String> tags = const [],
+    String comment = '',
+  }) => _call('submit_sender_review', {
     'p_request_id': requestId,
     'p_rating': rating,
     'p_tags': tags,
