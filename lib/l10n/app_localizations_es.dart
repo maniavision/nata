@@ -4727,4 +4727,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get senderReviewSubmitted => 'Reseña enviada';
+
+  @override
+  String get senderReviewsTitle => 'Reseñas de viajeros';
+
+  @override
+  String get senderRatingLabel => 'Valoración como remitente';
+
+  @override
+  String get senderNoReviews => 'Aún no hay reseñas de viajeros';
+
+  @override
+  String get senderNoReviewsSub =>
+      'Las reseñas aparecen aquí tras la primera entrega completada de este remitente.';
 }

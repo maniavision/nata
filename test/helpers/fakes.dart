@@ -1129,6 +1129,23 @@ class FakeRequestService extends Fake implements RequestService {
     reviews.add((id: requestId, rating: rating, tags: tags, comment: comment));
   }
 
+  /// What travelers said about senders, by sender id; [failSenderReviews]
+  /// makes loading them fail.
+  Map<String, TravelerReviews> senderReviewsBySender = {};
+  bool failSenderReviews = false;
+  final List<String> senderReviewLoads = [];
+
+  @override
+  Future<TravelerReviews> listSenderReviews(
+    String senderId, {
+    int limit = 3,
+  }) async {
+    senderReviewLoads.add(senderId);
+    if (failSenderReviews) throw Exception('reviews failed');
+    return senderReviewsBySender[senderId] ??
+        (reviews: const <TravelerReview>[], total: 0);
+  }
+
   /// Sender reviews sent by the traveler; [failReview] and [reviewGate]
   /// apply to them too.
   final List<({String id, int rating, List<String> tags, String comment})>

@@ -8191,6 +8191,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review submitted'**
   String get senderReviewSubmitted;
+
+  /// No description provided for @senderReviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews from travelers'**
+  String get senderReviewsTitle;
+
+  /// No description provided for @senderRatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating as a sender'**
+  String get senderRatingLabel;
+
+  /// No description provided for @senderNoReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews from travelers yet'**
+  String get senderNoReviews;
+
+  /// No description provided for @senderNoReviewsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews appear here after this sender\'s first completed delivery.'**
+  String get senderNoReviewsSub;
 }
 
 class _AppLocalizationsDelegate

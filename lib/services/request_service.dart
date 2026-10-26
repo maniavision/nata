@@ -7,7 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'delivery_pricing.dart';
 import 'trip_service.dart' show PickedReceipt;
-import 'traveler_service.dart' show TravelerTrip;
+import 'traveler_service.dart'
+    show TravelerReview, TravelerReviews, TravelerTrip;
 import 'phone_number.dart';
 
 /// What kind of item is being sent.
@@ -1298,6 +1299,28 @@ class RequestService {
     'p_tags': tags,
     'p_comment': comment.trim(),
   });
+
+  /// What travelers said about the sender [senderId], newest first, with
+  /// their total count (20240180: only for travelers they sent a request).
+  Future<TravelerReviews> listSenderReviews(
+    String senderId, {
+    int limit = 3,
+  }) async {
+    final rows =
+        await _client.rpc(
+              'list_sender_reviews',
+              params: {'p_sender_id': senderId, 'p_limit': limit},
+            )
+            as List;
+    final list = [
+      for (final r in rows)
+        TravelerReview.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+    final total = rows.isEmpty
+        ? 0
+        : ((rows.first as Map)['total'] as num?)?.toInt() ?? list.length;
+    return (reviews: list, total: total);
+  }
 
   Future<void> _call(String fn, Map<String, dynamic> params) async {
     _userId;

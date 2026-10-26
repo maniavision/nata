@@ -4679,4 +4679,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get senderReviewSubmitted => 'Review submitted';
+
+  @override
+  String get senderReviewsTitle => 'Reviews from travelers';
+
+  @override
+  String get senderRatingLabel => 'Rating as a sender';
+
+  @override
+  String get senderNoReviews => 'No reviews from travelers yet';
+
+  @override
+  String get senderNoReviewsSub =>
+      'Reviews appear here after this sender\'s first completed delivery.';
 }

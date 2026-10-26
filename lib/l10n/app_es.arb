@@ -1992,5 +1992,9 @@
   "reviewLater": "Más tarde",
   "nextRateSender": "Valora al remitente",
   "rateSenderButton": "Valorar a {name}",
-  "senderReviewSubmitted": "Reseña enviada"
+  "senderReviewSubmitted": "Reseña enviada",
+  "senderReviewsTitle": "Reseñas de viajeros",
+  "senderRatingLabel": "Valoración como remitente",
+  "senderNoReviews": "Aún no hay reseñas de viajeros",
+  "senderNoReviewsSub": "Las reseñas aparecen aquí tras la primera entrega completada de este remitente."
 }

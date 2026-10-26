@@ -1992,5 +1992,9 @@
   "reviewLater": "Plus tard",
   "nextRateSender": "Notez l'expéditeur",
   "rateSenderButton": "Noter {name}",
-  "senderReviewSubmitted": "Avis envoyé"
+  "senderReviewSubmitted": "Avis envoyé",
+  "senderReviewsTitle": "Avis des voyageurs",
+  "senderRatingLabel": "Note comme expéditeur",
+  "senderNoReviews": "Aucun avis de voyageurs pour l'instant",
+  "senderNoReviewsSub": "Les avis apparaissent ici après la première livraison terminée de cet expéditeur."
 }

@@ -4761,4 +4761,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get senderReviewSubmitted => 'Avis envoyé';
+
+  @override
+  String get senderReviewsTitle => 'Avis des voyageurs';
+
+  @override
+  String get senderRatingLabel => 'Note comme expéditeur';
+
+  @override
+  String get senderNoReviews => 'Aucun avis de voyageurs pour l\'instant';
+
+  @override
+  String get senderNoReviewsSub =>
+      'Les avis apparaissent ici après la première livraison terminée de cet expéditeur.';
 }
