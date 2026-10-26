@@ -73,6 +73,7 @@ class ProfileScreen extends StatefulWidget {
       if (createdAt != null)
         'memberSince': DateFormat('MMM yyyy').format(DateTime.parse(createdAt)),
       'verificationStatus': profile['verification_status'] ?? 'unverified',
+      'awaitingContact': profile['awaiting_emergency_contact'] == true,
       'avgRating': (profile['avg_rating'] as num?)?.toDouble(),
       'available': balances['available'] ?? 0.0,
       'escrow': balances['escrow'] ?? 0.0,
@@ -98,6 +99,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _displayName = '...';
   String _memberSinceDate = '...';
   String _verificationStatus = 'unverified'; // unverified, pending, verified
+
+  /// The ID check passed; only the emergency contact is missing to be
+  /// verified (20240178).
+  bool _awaitingContact = false;
   String _firstName = '';
   String _lastName = '';
 
@@ -148,6 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'displayName': _displayName,
     'memberSince': _memberSinceDate,
     'verificationStatus': _verificationStatus,
+    'awaitingContact': _awaitingContact,
     'avgRating': _avgRating,
     'reviewCount': _reviewCount,
     'available': _availableBalance,
@@ -165,6 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _displayName = s['displayName'] as String? ?? _displayName;
     _memberSinceDate = s['memberSince'] as String? ?? _memberSinceDate;
     _verificationStatus = s['verificationStatus'] as String? ?? 'unverified';
+    _awaitingContact = s['awaitingContact'] as bool? ?? false;
     _avgRating = s['avgRating'] as double?;
     _reviewCount = s['reviewCount'] as int?;
     _availableBalance = s['available'] as double? ?? 0.0;
@@ -276,6 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _memberSinceDate = DateFormat('MMM yyyy').format(date);
           }
           _verificationStatus = profile['verification_status'] ?? 'unverified';
+          _awaitingContact = profile['awaiting_emergency_contact'] == true;
           _avgRating = (profile['avg_rating'] as num?)?.toDouble();
         });
         _saveSnapshot();
@@ -329,6 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           _verificationStatus = profile['verification_status'] ?? 'unverified';
+          _awaitingContact = profile['awaiting_emergency_contact'] == true;
           _avgRating = (profile['avg_rating'] as num?)?.toDouble();
 
           _availableBalance = balances['available'] ?? 0.0;
@@ -1171,6 +1180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       nataToast(context.l10n.ecSavedToast, tone: ToastTone.success),
     );
     _loadEmergencyContact();
+    // Saving the contact may have finished verification.
+    _loadProfile();
   }
 
   // ── Settings list ──────────────────────────────────────────────────────────
@@ -1241,6 +1252,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: context.l10n.identityVerification,
         subtitle: _verificationStatus == 'verified'
             ? context.l10n.tier1Verified
+            : _awaitingContact
+            ? context.l10n.identityNeedsContact
             : (_verificationStatus == 'pending'
                   ? context.l10n.identityUnderReview
                   : context.l10n.identityActionRequiredSub),
@@ -1250,10 +1263,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ? Colors.orange
                   : AppColors.destructive),
         verified: _verificationStatus == 'verified',
-        trailing: _verificationStatus == 'pending'
+        trailing: _verificationStatus == 'pending' && !_awaitingContact
             ? context.l10n.verificationReviewing
             : null,
         onTap: () async {
+          if (_awaitingContact) {
+            await _openEmergencyContact();
+            return;
+          }
           await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => _verificationStatus == 'unverified'
@@ -1301,7 +1318,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         iconBg: AppColors.secondary,
         iconColor: AppColors.primary,
         title: context.l10n.emergencyContactLabel,
-        subtitle: _emergencyContact?.fullName ?? context.l10n.ecProfileAdd,
+        subtitle:
+            _emergencyContact?.fullName ??
+            (_verificationStatus == 'verified'
+                ? context.l10n.ecProfileAdd
+                : context.l10n.ecProfileRequired),
+        subtitleColor:
+            _emergencyContact == null && _verificationStatus != 'verified'
+            ? AppColors.destructive
+            : null,
         onTap: _openEmergencyContact,
       ),
       _SettingsItem(

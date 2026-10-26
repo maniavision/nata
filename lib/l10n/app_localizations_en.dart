@@ -4642,6 +4642,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsWeightButton => 'Weight';
 
   @override
+  String get ecRequiredTitle =>
+      'An emergency contact is required to finish verification';
+
+  @override
+  String get ecRequiredBody =>
+      'It stays private and is only used if something goes wrong during a delivery.';
+
+  @override
+  String get verifyContactTitle => 'Almost verified';
+
+  @override
+  String get verifyContactBody =>
+      'Add an emergency contact to finish verifying your identity.';
+
+  @override
+  String get verifyAddContact => 'Add emergency contact';
+
+  @override
+  String get identityNeedsContact => 'Add an emergency contact to finish';
+
+  @override
+  String get ecProfileRequired => 'Required to be verified';
+
+  @override
   String get rateYourSender => 'Rate Your Sender';
 
   @override

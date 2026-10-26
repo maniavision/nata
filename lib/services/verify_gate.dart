@@ -10,7 +10,8 @@ class VerifyGate {
   VerifyGate._();
 
   /// The signed-in user's verification_status: 'verified', 'pending' or
-  /// 'unverified'. Replaced in tests.
+  /// 'unverified'; or 'needs_contact' when their ID check passed and only
+  /// the emergency contact is missing (20240178). Replaced in tests.
   static Future<String> Function() status = _loadStatus;
 
   static Future<String> _loadStatus() async {
@@ -20,9 +21,10 @@ class VerifyGate {
     final row = await client
         .schema('nata')
         .from('profiles')
-        .select('verification_status')
+        .select('verification_status, awaiting_emergency_contact')
         .eq('id', uid)
         .maybeSingle();
+    if (row?['awaiting_emergency_contact'] == true) return 'needs_contact';
     return (row?['verification_status'] as String?) ?? 'unverified';
   }
 
@@ -46,6 +48,7 @@ class VerifyGate {
       context,
       message: message,
       pending: current == 'pending',
+      needsContact: current == 'needs_contact',
     );
     return false;
   }

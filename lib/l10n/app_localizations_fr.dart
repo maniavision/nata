@@ -4724,6 +4724,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get resultsWeightButton => 'Poids';
 
   @override
+  String get ecRequiredTitle =>
+      'Un contact d\'urgence est obligatoire pour terminer la vérification';
+
+  @override
+  String get ecRequiredBody =>
+      'Il reste privé et ne sert que si un problème survient pendant une livraison.';
+
+  @override
+  String get verifyContactTitle => 'Presque vérifié';
+
+  @override
+  String get verifyContactBody =>
+      'Ajoutez un contact d\'urgence pour terminer la vérification de votre identité.';
+
+  @override
+  String get verifyAddContact => 'Ajouter un contact d\'urgence';
+
+  @override
+  String get identityNeedsContact =>
+      'Ajoutez un contact d\'urgence pour terminer';
+
+  @override
+  String get ecProfileRequired => 'Obligatoire pour être vérifié';
+
+  @override
   String get rateYourSender => 'Notez votre expéditeur';
 
   @override

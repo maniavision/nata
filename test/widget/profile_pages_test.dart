@@ -25,11 +25,16 @@ void main() {
     addTearDown(tester.view.reset);
   }
 
-  Map<String, dynamic> profile(String status, {double? rating}) => {
+  Map<String, dynamic> profile(
+    String status, {
+    double? rating,
+    bool awaitingContact = false,
+  }) => {
     'id': 'me',
     'first_name': 'Fortune',
     'last_name': 'Niama',
     'verification_status': status,
+    'awaiting_emergency_contact': awaitingContact,
     'created_at': '2025-03-01T10:00:00+00:00',
     'avg_rating': rating,
   };
@@ -39,6 +44,7 @@ void main() {
       WidgetTester tester, {
       String status = 'verified',
       double? rating,
+      bool awaitingContact = false,
       EmergencyContact? contact,
       FakeTravelerService? travelers,
     }) async {
@@ -48,7 +54,11 @@ void main() {
         appWrapper(
           ProfileScreen(
             authService: FakeAuthService()
-              ..profile = profile(status, rating: rating),
+              ..profile = profile(
+                status,
+                rating: rating,
+                awaitingContact: awaitingContact,
+              ),
             emergencyService: emergency,
             travelerService: travelers ?? FakeTravelerService(),
           ),
@@ -128,6 +138,21 @@ void main() {
 
       expect(find.byType(SealedBoxPolicyScreen), findsOneWidget);
       expect(find.text('Why items travel sealed'), findsOneWidget);
+    });
+
+    testWidgets('ID passed, no emergency contact: both rows say so', (
+      tester,
+    ) async {
+      await pumpProfile(tester, status: 'pending', awaitingContact: true);
+
+      expect(find.text('Add an emergency contact to finish'), findsOneWidget);
+      expect(find.text('Required to be verified'), findsOneWidget);
+      expect(find.text('Reviewing'), findsNothing);
+
+      // The Identity Verification row goes straight to the contact.
+      await tester.tap(find.text('Add an emergency contact to finish'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EmergencyContactScreen), findsOneWidget);
     });
 
     testWidgets('emergency contact: add one from Profile', (tester) async {
