@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/request_service.dart';
+import '../services/traveler_service.dart' show TravelerReview, TravelerReviews;
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 
@@ -185,10 +186,27 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
   List<String>? _photoUrls;
   bool _busy = false;
 
+  /// What other travelers said about the sender; null while loading or if
+  /// they couldn't be loaded.
+  TravelerReviews? _senderReviews;
+  bool _senderReviewsLoading = true;
+
   @override
   void initState() {
     super.initState();
     _loadPhotos();
+    _loadSenderReviews();
+  }
+
+  Future<void> _loadSenderReviews() async {
+    try {
+      final reviews = await _service.listSenderReviews(_r.senderId);
+      if (mounted) setState(() => _senderReviews = reviews);
+    } catch (e) {
+      debugPrint('[IncomingRequest] sender reviews: $e');
+    } finally {
+      if (mounted) setState(() => _senderReviewsLoading = false);
+    }
   }
 
   Future<void> _loadPhotos() async {
@@ -393,6 +411,8 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  _senderReviewsCard(),
                   const SizedBox(height: 12),
                   _card(
                     child: Column(
@@ -620,6 +640,271 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
       ],
     ),
   );
+
+  // ── Reviews from travelers ─────────────────────────────────────────────────
+  static const _amber = Color(0xFFE5A83B);
+
+  Widget _stars(double rating, {double size = 13}) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (var v = 1; v <= 5; v++)
+        Icon(
+          v <= rating.round() ? Icons.star_rounded : Icons.star_border_rounded,
+          size: size,
+          color: v <= rating.round() ? _amber : AppColors.border,
+        ),
+    ],
+  );
+
+  /// The sender's rating as a sender and their latest reviews, or that they
+  /// have none yet.
+  Widget _senderReviewsCard() {
+    final l = context.l10n;
+    final reviews = _senderReviews?.reviews ?? const <TravelerReview>[];
+    final total = _senderReviews?.total ?? 0;
+    final rating =
+        _r.senderRating ??
+        (reviews.isEmpty
+            ? null
+            : reviews.map((r) => r.rating).reduce((a, b) => a + b) /
+                  reviews.length);
+    return Container(
+      key: const ValueKey('sender-reviews'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.star_rounded, size: 14, color: _amber),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l.senderReviewsTitle.toUpperCase(),
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+              if (total > 0)
+                Text(
+                  l.reviewsCount(total),
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.accent,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_senderReviewsLoading)
+            const Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accent,
+                ),
+              ),
+            )
+          else if (reviews.isEmpty)
+            Container(
+              key: const ValueKey('sender-reviews-none'),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: AppColors.secondary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.rate_review_outlined,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.senderNoReviews,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                        Text(
+                          l.senderNoReviewsSub,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            if (rating != null)
+              Container(
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l.senderRatingLabel.toUpperCase(),
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                              letterSpacing: 1,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          _stars(rating, size: 15),
+                        ],
+                      ),
+                    ),
+                    Text.rich(
+                      key: const ValueKey('sender-rating'),
+                      TextSpan(
+                        text: rating.toStringAsFixed(1),
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: AppColors.foreground,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: ' · ${l.reviewsCount(total)}',
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            for (var i = 0; i < reviews.length; i++) ...[
+              if (i > 0) const Divider(height: 24, color: AppColors.border),
+              _senderReviewTile(reviews[i]),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _senderReviewTile(TravelerReview r) {
+    final locale = Localizations.localeOf(context).toString();
+    return Column(
+      key: ValueKey('sender-review-${r.id}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 12,
+              backgroundColor: AppColors.secondary,
+              child: Text(
+                r.initials,
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 10,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                r.reviewerName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+            Text(
+              DateFormat.yMMMd(locale).format(r.createdAt),
+              style: GoogleFonts.dmSans(
+                fontSize: 10,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            _stars(r.rating.toDouble()),
+            const SizedBox(width: 4),
+            Text(
+              r.rating.toStringAsFixed(1),
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: AppColors.foreground,
+              ),
+            ),
+          ],
+        ),
+        if (r.comment.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            r.comment,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              height: 1.5,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 
   Widget _card({required Widget child}) => Container(
     width: double.infinity,

@@ -1987,5 +1987,21 @@
   "verifyContactBody": "Ajoutez un contact d'urgence pour terminer la vérification de votre identité.",
   "verifyAddContact": "Ajouter un contact d'urgence",
   "identityNeedsContact": "Ajoutez un contact d'urgence pour terminer",
-  "ecProfileRequired": "Obligatoire pour être vérifié"
+  "ecProfileRequired": "Obligatoire pour être vérifié",
+  "rateYourSender": "Notez votre expéditeur",
+  "senderItemDelivered": "Vous avez livré l'article",
+  "senderReviewHelps": "Votre avis aide les autres voyageurs à savoir pour qui ils transportent.",
+  "senderTagInstructions": "Instructions claires",
+  "senderTagPacked": "Bien emballé",
+  "senderTagOnTime": "À l'heure pour la remise",
+  "senderTagFriendly": "Aimable",
+  "senderTagAgain": "Je transporterais encore",
+  "reviewLater": "Plus tard",
+  "nextRateSender": "Notez l'expéditeur",
+  "rateSenderButton": "Noter {name}",
+  "senderReviewSubmitted": "Avis envoyé",
+  "senderReviewsTitle": "Avis des voyageurs",
+  "senderRatingLabel": "Note comme expéditeur",
+  "senderNoReviews": "Aucun avis de voyageurs pour l'instant",
+  "senderNoReviewsSub": "Les avis apparaissent ici après la première livraison terminée de cet expéditeur."
 }

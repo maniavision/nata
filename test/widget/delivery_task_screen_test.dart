@@ -3,6 +3,7 @@ import 'package:carrywise_app/screens/delivery_task_screen.dart';
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
@@ -221,6 +222,48 @@ void main() {
     expect(find.byType(DeliveryTaskScreen), findsNothing);
     expect(popped, isTrue);
     expect(find.textContaining('Delivered!'), findsOneWidget);
+  });
+
+  testWidgets('once delivered, the traveler rates the sender', (tester) async {
+    await initializeDateFormatting('en');
+    await pump(
+      tester,
+      AcceptedDelivery.fromIncoming(
+        sampleIncoming(
+          status: 'handed_off',
+          pickedUpAt: DateTime(2030, 6, 22, 8),
+        ),
+        payout: r'$38',
+        locale: 'en',
+      ),
+    );
+    await attachHandover(tester);
+    await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 4; i++) {
+      await tester.enterText(
+        find.byKey(ValueKey('delivery-confirm-pin-$i')),
+        '1234'[i],
+      );
+    }
+    await tester.pump();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('delivery-confirm-release')),
+    );
+    await tester.tap(find.byKey(const ValueKey('delivery-confirm-release')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DeliveryTaskScreen), findsNothing);
+    expect(find.text('Rate Your Sender'), findsOneWidget);
+    expect(popped, isTrue);
+
+    await tester.tap(find.byKey(const ValueKey('review-star-5')));
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const ValueKey('review-submit')));
+    await tester.tap(find.byKey(const ValueKey('review-submit')));
+    await tester.pumpAndSettle();
+    expect(service.senderReviews.single.id, 'in-1');
+    expect(find.text('Rate Your Sender'), findsNothing);
   });
 
   testWidgets('no phone call button without the sender\'s number', (

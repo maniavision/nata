@@ -1,3 +1,4 @@
+import 'package:carrywise_app/screens/chat_thread_screen.dart';
 import 'package:carrywise_app/screens/checkout_escrow_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/services/request_service.dart';
@@ -146,6 +147,7 @@ void main() {
     Future<void> pumpPayable(
       WidgetTester tester, {
       PaymentService? payments,
+      FakeMessageService? messages,
     }) async {
       opened.clear();
       sheets.clear();
@@ -178,6 +180,7 @@ void main() {
                           sheets.add(sheet);
                           return sheetResult;
                         },
+                        messageService: messages ?? FakeMessageService(),
                       ),
                     ),
                   );
@@ -293,6 +296,36 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('checkout-pay')), findsNothing);
+    });
+
+    testWidgets('once paid, the chat with the traveler opens', (tester) async {
+      service.paymentStatuses = [PaymentStatus.successful];
+      await pumpPayable(
+        tester,
+        // The chat about req-1, opened by the payment.
+        messages: FakeMessageService(
+          conversations: [
+            sampleConversation(id: '9'),
+            sampleConversation(
+              id: '1',
+              firstName: 'Daniel',
+              lastName: 'Okafor',
+            ),
+          ],
+        ),
+      );
+      await pay(tester);
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(popped, isTrue);
+      expect(find.byType(CheckoutEscrowScreen), findsNothing);
+      final chat = tester.widget<ChatThreadScreen>(
+        find.byType(ChatThreadScreen),
+      );
+      expect(chat.conversation.requestId, 'req-1');
+      await tester.pumpWidget(const SizedBox());
     });
 
     testWidgets('once paid, it closes the page and goes back', (tester) async {

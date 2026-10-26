@@ -1987,5 +1987,21 @@
   "verifyContactBody": "Añade un contacto de emergencia para terminar de verificar tu identidad.",
   "verifyAddContact": "Añadir contacto de emergencia",
   "identityNeedsContact": "Añade un contacto de emergencia para terminar",
-  "ecProfileRequired": "Obligatorio para estar verificado"
+  "ecProfileRequired": "Obligatorio para estar verificado",
+  "rateYourSender": "Valora a tu remitente",
+  "senderItemDelivered": "Entregaste el artículo",
+  "senderReviewHelps": "Tu reseña ayuda a otros viajeros a saber para quién llevan cosas.",
+  "senderTagInstructions": "Instrucciones claras",
+  "senderTagPacked": "Bien empaquetado",
+  "senderTagOnTime": "Puntual en la recogida",
+  "senderTagFriendly": "Amable",
+  "senderTagAgain": "Volvería a llevarle algo",
+  "reviewLater": "Más tarde",
+  "nextRateSender": "Valora al remitente",
+  "rateSenderButton": "Valorar a {name}",
+  "senderReviewSubmitted": "Reseña enviada",
+  "senderReviewsTitle": "Reseñas de viajeros",
+  "senderRatingLabel": "Valoración como remitente",
+  "senderNoReviews": "Aún no hay reseñas de viajeros",
+  "senderNoReviewsSub": "Las reseñas aparecen aquí tras la primera entrega completada de este remitente."
 }

@@ -1,5 +1,6 @@
 import 'package:carrywise_app/screens/incoming_request_screen.dart';
 import 'package:carrywise_app/services/request_service.dart';
+import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -142,6 +143,57 @@ void main() {
       find.textContaining("exchange rate isn't available"),
       findsOneWidget,
     );
+  });
+
+  group('reviews from travelers', () {
+    testWidgets('shows the sender\'s rating and latest reviews', (
+      tester,
+    ) async {
+      service.senderReviewsBySender['sender-1'] = (
+        reviews: [
+          TravelerReview(
+            id: 'r1',
+            rating: 5,
+            comment: 'Clear pickup instructions.',
+            createdAt: DateTime(2030, 6, 14),
+            reviewerName: 'Kofi M.',
+          ),
+          TravelerReview(
+            id: 'r2',
+            rating: 4,
+            createdAt: DateTime(2030, 5, 30),
+            reviewerName: 'Adaeze O.',
+          ),
+        ],
+        total: 12,
+      );
+      await pump(tester, sampleIncoming(senderRating: 4.8));
+
+      expect(service.senderReviewLoads, ['sender-1']);
+      expect(find.text('REVIEWS FROM TRAVELERS'), findsOneWidget);
+      expect(find.text('RATING AS A SENDER'), findsOneWidget);
+      expect(find.textContaining('4.8'), findsOneWidget);
+      expect(find.text('12 reviews'), findsOneWidget);
+      expect(find.text('Kofi M.'), findsOneWidget);
+      expect(find.text('Clear pickup instructions.'), findsOneWidget);
+      expect(find.text('Adaeze O.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('sender-reviews-none')), findsNothing);
+    });
+
+    testWidgets('none yet says so', (tester) async {
+      await pump(tester, sampleIncoming());
+
+      expect(find.text('No reviews from travelers yet'), findsOneWidget);
+      expect(find.byKey(const ValueKey('sender-rating')), findsNothing);
+    });
+
+    testWidgets('failing to load shows none, not an error', (tester) async {
+      service.failSenderReviews = true;
+      await pump(tester, sampleIncoming());
+
+      expect(find.byKey(const ValueKey('sender-reviews-none')), findsOneWidget);
+      expect(find.text('Accept Request'), findsWidgets);
+    });
   });
 
   testWidgets('is translated', (tester) async {

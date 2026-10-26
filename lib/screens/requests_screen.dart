@@ -538,6 +538,17 @@ class _RequestsScreenState extends State<RequestsScreen> {
       DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(d);
 
   Future<void> _openIncoming(IncomingRequest r) async {
+    // Delivered: rate the sender, until done.
+    if (r.needsSenderReview) {
+      final reviewed = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) =>
+              ReviewScreen.sender(request: r, service: widget.requestService),
+        ),
+      );
+      if (reviewed == true && mounted) _loadIncoming();
+      return;
+    }
     // Paid: the delivery itself (pick up, hand over with the code).
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -598,8 +609,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
       'delivered' => (
         l.statusDelivered,
         l.senderDelivered,
-        l.nextDone,
-        Icons.check_circle_rounded,
+        r.needsSenderReview ? l.nextRateSender : l.senderReviewSubmitted,
+        r.needsSenderReview ? Icons.star_rounded : Icons.check_circle_rounded,
       ),
       _ => (
         l.accepted,
@@ -622,6 +633,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
       // Delivery steps come with the paid / in transit stages.
       buttonLabel: const {'paid', 'handed_off'}.contains(r.status)
           ? l.manageDeliveryAttachProof
+          : r.needsSenderReview
+          ? l.rateSenderButton(r.senderFirstName)
           : l.viewRequest,
     );
   }
@@ -635,7 +648,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
       id: r.id,
       name: r.senderName,
       avatarPath: r.senderAvatarPath,
-      subtitle: context.l10n.senderDeliveries(r.senderDeliveries),
+      // With their rating as a sender, once travelers rated them.
+      subtitle: [
+        context.l10n.senderDeliveries(r.senderDeliveries),
+        if (r.senderRating != null) '★ ${r.senderRating!.toStringAsFixed(1)}',
+      ].join(' · '),
       amount: _payoutText(r),
       trip: r.routeLabel,
       date: _date(r.departureDate),

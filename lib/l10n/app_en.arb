@@ -2104,5 +2104,22 @@
   "verifyContactBody": "Add an emergency contact to finish verifying your identity.",
   "verifyAddContact": "Add emergency contact",
   "identityNeedsContact": "Add an emergency contact to finish",
-  "ecProfileRequired": "Required to be verified"
+  "ecProfileRequired": "Required to be verified",
+  "rateYourSender": "Rate Your Sender",
+  "senderItemDelivered": "You delivered the item",
+  "senderReviewHelps": "Your review helps other travelers know who they carry for.",
+  "senderTagInstructions": "Clear instructions",
+  "senderTagPacked": "Well packed",
+  "senderTagOnTime": "On time for pickup",
+  "senderTagFriendly": "Friendly",
+  "senderTagAgain": "Would carry again",
+  "reviewLater": "Later",
+  "nextRateSender": "Rate the sender",
+  "rateSenderButton": "Rate {name}",
+  "senderReviewSubmitted": "Review submitted",
+  "@rateSenderButton": {"placeholders": {"name": {"type": "String"}}},
+  "senderReviewsTitle": "Reviews from travelers",
+  "senderRatingLabel": "Rating as a sender",
+  "senderNoReviews": "No reviews from travelers yet",
+  "senderNoReviewsSub": "Reviews appear here after this sender's first completed delivery."
 }

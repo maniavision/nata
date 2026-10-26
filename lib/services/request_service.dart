@@ -7,7 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'delivery_pricing.dart';
 import 'trip_service.dart' show PickedReceipt;
-import 'traveler_service.dart' show TravelerTrip;
+import 'traveler_service.dart'
+    show TravelerReview, TravelerReviews, TravelerTrip;
 import 'phone_number.dart';
 
 /// What kind of item is being sent.
@@ -792,6 +793,12 @@ class IncomingRequest {
   /// Wrong delivery codes the traveler can still enter (5 at first).
   final int codeAttemptsLeft;
 
+  /// The sender's average rating as a sender, once travelers rated them.
+  final double? senderRating;
+
+  /// The traveler has already rated the sender for this request.
+  final bool senderReviewed;
+
   const IncomingRequest({
     required this.id,
     required this.status,
@@ -821,7 +828,12 @@ class IncomingRequest {
     this.pickedUpAt,
     this.deliveredAt,
     this.codeAttemptsLeft = 5,
+    this.senderRating,
+    this.senderReviewed = false,
   });
+
+  /// Delivered, and the traveler hasn't rated the sender yet.
+  bool get needsSenderReview => status == 'delivered' && !senderReviewed;
 
   /// Waiting for the traveler's answer.
   bool get isPending => status == 'pending';
@@ -886,6 +898,8 @@ class IncomingRequest {
       pickedUpAt: time(j['picked_up_at']),
       deliveredAt: time(j['delivered_at']),
       codeAttemptsLeft: (j['code_attempts_left'] as num?)?.toInt() ?? 5,
+      senderRating: (j['sender_rating'] as num?)?.toDouble(),
+      senderReviewed: j['sender_reviewed'] == true,
     );
   }
 }
@@ -1272,6 +1286,41 @@ class RequestService {
     'p_tags': tags,
     'p_comment': comment.trim(),
   });
+
+  /// The traveler rates the sender of a delivered request (20240179).
+  Future<void> submitSenderReview(
+    String requestId, {
+    required int rating,
+    List<String> tags = const [],
+    String comment = '',
+  }) => _call('submit_sender_review', {
+    'p_request_id': requestId,
+    'p_rating': rating,
+    'p_tags': tags,
+    'p_comment': comment.trim(),
+  });
+
+  /// What travelers said about the sender [senderId], newest first, with
+  /// their total count (20240180: only for travelers they sent a request).
+  Future<TravelerReviews> listSenderReviews(
+    String senderId, {
+    int limit = 3,
+  }) async {
+    final rows =
+        await _client.rpc(
+              'list_sender_reviews',
+              params: {'p_sender_id': senderId, 'p_limit': limit},
+            )
+            as List;
+    final list = [
+      for (final r in rows)
+        TravelerReview.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+    final total = rows.isEmpty
+        ? 0
+        : ((rows.first as Map)['total'] as num?)?.toInt() ?? list.length;
+    return (reviews: list, total: total);
+  }
 
   Future<void> _call(String fn, Map<String, dynamic> params) async {
     _userId;

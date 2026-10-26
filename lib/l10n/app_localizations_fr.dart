@@ -4747,4 +4747,56 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ecProfileRequired => 'Obligatoire pour être vérifié';
+
+  @override
+  String get rateYourSender => 'Notez votre expéditeur';
+
+  @override
+  String get senderItemDelivered => 'Vous avez livré l\'article';
+
+  @override
+  String get senderReviewHelps =>
+      'Votre avis aide les autres voyageurs à savoir pour qui ils transportent.';
+
+  @override
+  String get senderTagInstructions => 'Instructions claires';
+
+  @override
+  String get senderTagPacked => 'Bien emballé';
+
+  @override
+  String get senderTagOnTime => 'À l\'heure pour la remise';
+
+  @override
+  String get senderTagFriendly => 'Aimable';
+
+  @override
+  String get senderTagAgain => 'Je transporterais encore';
+
+  @override
+  String get reviewLater => 'Plus tard';
+
+  @override
+  String get nextRateSender => 'Notez l\'expéditeur';
+
+  @override
+  String rateSenderButton(String name) {
+    return 'Noter $name';
+  }
+
+  @override
+  String get senderReviewSubmitted => 'Avis envoyé';
+
+  @override
+  String get senderReviewsTitle => 'Avis des voyageurs';
+
+  @override
+  String get senderRatingLabel => 'Note comme expéditeur';
+
+  @override
+  String get senderNoReviews => 'Aucun avis de voyageurs pour l\'instant';
+
+  @override
+  String get senderNoReviewsSub =>
+      'Les avis apparaissent ici après la première livraison terminée de cet expéditeur.';
 }

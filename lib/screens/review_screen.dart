@@ -8,17 +8,42 @@ import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 
-/// The sender rates the traveler once they confirmed they received the item:
-/// stars, what stood out, and a written review. Reviews are public as soon as
-/// they are submitted. Pops true once a review was sent.
+/// The sender rates the traveler once they confirmed they received the item,
+/// or ([ReviewScreen.sender]) the traveler rates the sender once they
+/// delivered it: stars, what stood out, and a written review. Reviews are
+/// public as soon as they are submitted. Pops true once a review was sent.
 class ReviewScreen extends StatefulWidget {
-  /// The delivered request being reviewed.
-  final SentRequest request;
+  /// The delivered request being reviewed, by its sender.
+  final SentRequest? request;
+
+  /// The delivered request being reviewed, by its traveler.
+  final IncomingRequest? incoming;
 
   /// Override for tests; defaults to the real [RequestService].
   final RequestService? service;
 
-  const ReviewScreen({super.key, required this.request, this.service});
+  const ReviewScreen({
+    super.key,
+    required SentRequest this.request,
+    this.service,
+  }) : incoming = null;
+
+  /// The traveler rates the sender of [request] (20240179).
+  const ReviewScreen.sender({
+    super.key,
+    required IncomingRequest request,
+    this.service,
+  }) : request = null,
+       incoming = request;
+
+  /// What stood out about a sender, as the database stores it.
+  static const senderTags = [
+    'clear_instructions',
+    'well_packed',
+    'on_time_pickup',
+    'friendly',
+    'carry_again',
+  ];
 
   /// What stood out, as the database stores it, in display order.
   static const tags = [
@@ -39,7 +64,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
   final _comment = TextEditingController();
   bool _sending = false;
 
-  SentRequest get _r => widget.request;
+  /// The traveler rates the sender.
+  bool get _ofSender => widget.incoming != null;
+  SentRequest get _r => widget.request!;
+  IncomingRequest get _in => widget.incoming!;
+
+  String get _requestId => _ofSender ? _in.id : _r.id;
+  String get _firstName => _ofSender ? _in.senderFirstName : _r.trip.firstName;
+  String get _lastName => _ofSender ? _in.senderLastName : _r.trip.lastName;
+  String? get _avatarPath =>
+      _ofSender ? _in.senderAvatarPath : _r.trip.avatarPath;
+  bool get _verified => _ofSender ? _in.senderVerified : _r.travelerVerified;
+  String get _from => _ofSender ? _in.departureCity : _r.trip.departureCity;
+  String get _to => _ofSender ? _in.arrivalCity : _r.trip.arrivalCity;
+  DateTime get _date => _ofSender ? _in.departureDate : _r.trip.departureDate;
+  String get _items => _ofSender ? _in.itemsSummary : _r.itemsSummary;
+  List<String> get _tagList =>
+      _ofSender ? ReviewScreen.senderTags : ReviewScreen.tags;
 
   static const _green = Color(0xFF168A68);
   static const _greenBg = Color(0xFFE4F4EE);
@@ -54,6 +95,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
   String _tagLabel(String tag) {
     final l = context.l10n;
     return switch (tag) {
+      'clear_instructions' => l.senderTagInstructions,
+      'well_packed' => l.senderTagPacked,
+      'on_time_pickup' => l.senderTagOnTime,
+      'friendly' => l.senderTagFriendly,
+      'carry_again' => l.senderTagAgain,
       'on_time' => l.reviewTagOnTime,
       'communication' => l.tagCommunication,
       'careful' => l.tagCareful,
@@ -76,10 +122,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   /// "Amara K."
   String get _shortName {
-    final last = _r.trip.lastName.trim();
-    return last.isEmpty
-        ? _r.trip.firstName
-        : '${_r.trip.firstName} ${last[0].toUpperCase()}.';
+    final last = _lastName.trim();
+    return last.isEmpty ? _firstName : '$_firstName ${last[0].toUpperCase()}.';
   }
 
   Future<void> _submit() async {
@@ -88,15 +132,26 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await (widget.service ?? RequestService()).submitReview(
-        _r.id,
-        rating: _rating,
-        tags: [
-          for (final t in ReviewScreen.tags)
-            if (_tags.contains(t)) t,
-        ],
-        comment: _comment.text,
-      );
+      final service = widget.service ?? RequestService();
+      final tags = [
+        for (final t in _tagList)
+          if (_tags.contains(t)) t,
+      ];
+      if (_ofSender) {
+        await service.submitSenderReview(
+          _requestId,
+          rating: _rating,
+          tags: tags,
+          comment: _comment.text,
+        );
+      } else {
+        await service.submitReview(
+          _requestId,
+          rating: _rating,
+          tags: tags,
+          comment: _comment.text,
+        );
+      }
       messenger.showSnackBar(
         nataToast(l.reviewThanksName(_shortName), tone: ToastTone.success),
       );
@@ -136,7 +191,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         elevation: 0,
         centerTitle: false,
         title: Text(
-          l.rateYourTraveler,
+          _ofSender ? l.rateYourSender : l.rateYourTraveler,
           style: GoogleFonts.manrope(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         actions: [
@@ -202,7 +257,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          l.itemArrivedSafely,
+                          _ofSender
+                              ? l.senderItemDelivered
+                              : l.itemArrivedSafely,
                           style: GoogleFonts.manrope(
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
@@ -211,7 +268,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          l.reviewHelpsOthers,
+                          _ofSender ? l.senderReviewHelps : l.reviewHelpsOthers,
                           style: GoogleFonts.dmSans(
                             fontSize: 12,
                             height: 1.4,
@@ -234,7 +291,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       width: 48,
                       height: 48,
                       child: AvatarImage(
-                        path: _r.trip.avatarPath,
+                        path: _avatarPath,
                         fallback: Container(
                           color: AppColors.secondary,
                           child: const Icon(
@@ -264,7 +321,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                 ),
                               ),
                             ),
-                            if (_r.travelerVerified) ...[
+                            if (_verified) ...[
                               const SizedBox(width: 6),
                               const Icon(
                                 Icons.verified_rounded,
@@ -276,15 +333,15 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           ],
                         ),
                         Text(
-                          '${_r.trip.departureCity} → ${_r.trip.arrivalCity} · '
-                          '${DateFormat.MMMd(locale).format(_r.trip.departureDate)}',
+                          '$_from → $_to · '
+                          '${DateFormat.MMMd(locale).format(_date)}',
                           style: GoogleFonts.dmSans(
                             fontSize: 11,
                             color: AppColors.mutedForeground,
                           ),
                         ),
                         Text(
-                          _r.itemsSummary,
+                          _items,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.dmSans(
@@ -357,7 +414,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      for (final tag in ReviewScreen.tags)
+                      for (final tag in _tagList)
                         _tagChip(tag, selected: _tags.contains(tag)),
                     ],
                   ),
@@ -437,7 +494,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      l.reviewSharedNote(_r.trip.firstName),
+                      l.reviewSharedNote(_firstName),
                       style: GoogleFonts.dmSans(
                         fontSize: 11,
                         height: 1.4,
@@ -482,7 +539,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     ? null
                     : () => Navigator.of(context).pop(false),
                 child: Text(
-                  l.skipForNow,
+                  _ofSender ? l.reviewLater : l.skipForNow,
                   style: GoogleFonts.dmSans(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
