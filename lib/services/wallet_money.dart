@@ -42,7 +42,14 @@ class WalletMoney {
   /// in dollars while its rate isn't known.
   static String format(double usd, String currency, ExchangeRates? rates) {
     final code = shown(currency, rates);
-    final amount = usd * (code == 'USD' ? 1.0 : rates!.rateFor(code)!);
+    return inCurrency(
+      usd * (code == 'USD' ? 1.0 : rates!.rateFor(code)!),
+      code,
+    );
+  }
+
+  /// [amount] already in [code] ("\$45.00", "NGN 60,000").
+  static String inCurrency(double amount, String code) {
     final symbol = _symbols[code];
     if (symbol != null) {
       return NumberFormat.currency(

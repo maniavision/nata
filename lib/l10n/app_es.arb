@@ -2009,5 +2009,11 @@
   "homeWalletBalance": "Saldo de la billetera: {amount}",
   "homeWalletBalanceHidden": "Saldo de la billetera oculto",
   "homeShowBalance": "Mostrar saldo",
-  "homeHideBalance": "Ocultar saldo"
+  "homeHideBalance": "Ocultar saldo",
+  "walletAddedTitle": "{amount} añadidos a tu billetera",
+  "walletAddedFor": "Por llevar {item} de {from} a {to}.",
+  "walletAddedForName": "Por llevar {item} de {from} a {to} para {name}.",
+  "walletAddedOne": "Por una entrega que hiciste.",
+  "walletAddedMany": "Por {count} entregas.",
+  "walletAddedView": "Ver"
 }

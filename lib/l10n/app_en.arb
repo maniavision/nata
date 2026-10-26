@@ -2131,5 +2131,15 @@
   },
   "homeWalletBalanceHidden": "Wallet balance hidden",
   "homeShowBalance": "Show balance",
-  "homeHideBalance": "Hide balance"
+  "homeHideBalance": "Hide balance",
+  "walletAddedTitle": "{amount} added to your wallet",
+  "@walletAddedTitle": {"placeholders": {"amount": {"type": "String"}}},
+  "walletAddedFor": "For carrying {item} from {from} to {to}.",
+  "@walletAddedFor": {"placeholders": {"item": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "walletAddedForName": "For carrying {item} from {from} to {to} for {name}.",
+  "@walletAddedForName": {"placeholders": {"item": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}, "name": {"type": "String"}}},
+  "walletAddedOne": "For a delivery you made.",
+  "walletAddedMany": "From {count} deliveries.",
+  "@walletAddedMany": {"placeholders": {"count": {"type": "int"}}},
+  "walletAddedView": "View"
 }

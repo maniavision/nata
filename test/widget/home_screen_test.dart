@@ -30,11 +30,29 @@ void main() {
       expect(find.text('Hello,'), findsOneWidget);
     });
 
-    testWidgets('renders user name', (tester) async {
+    testWidgets('greets the member by their first name only', (tester) async {
       await tester.pumpWidget(buildHome());
       await tester.pump();
 
-      expect(find.text('Fortune Niama'), findsOneWidget);
+      expect(find.text('Fortune'), findsOneWidget);
+      expect(find.text('Fortune Niama'), findsNothing);
+    });
+
+    testWidgets('a two-word first name shows its first word', (tester) async {
+      await tester.pumpWidget(
+        appWrapper(
+          HomeScreen(
+            authService: FakeAuthService(
+              profile: const {'first_name': 'Mary Jane', 'last_name': 'Okafor'},
+            ),
+            travelerService: travelers,
+            capitalLookup: fakeCapitalLookup,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Mary'), findsOneWidget);
     });
 
     testWidgets('renders "Where are you sending?" search card heading', (

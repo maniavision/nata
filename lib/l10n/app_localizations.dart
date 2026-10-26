@@ -8293,6 +8293,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide balance'**
   String get homeHideBalance;
+
+  /// No description provided for @walletAddedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} added to your wallet'**
+  String walletAddedTitle(String amount);
+
+  /// No description provided for @walletAddedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'For carrying {item} from {from} to {to}.'**
+  String walletAddedFor(String item, String from, String to);
+
+  /// No description provided for @walletAddedForName.
+  ///
+  /// In en, this message translates to:
+  /// **'For carrying {item} from {from} to {to} for {name}.'**
+  String walletAddedForName(String item, String from, String to, String name);
+
+  /// No description provided for @walletAddedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'For a delivery you made.'**
+  String get walletAddedOne;
+
+  /// No description provided for @walletAddedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'From {count} deliveries.'**
+  String walletAddedMany(int count);
+
+  /// No description provided for @walletAddedView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get walletAddedView;
 }
 
 class _AppLocalizationsDelegate

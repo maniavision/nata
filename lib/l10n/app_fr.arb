@@ -2009,5 +2009,11 @@
   "homeWalletBalance": "Solde du portefeuille : {amount}",
   "homeWalletBalanceHidden": "Solde du portefeuille masqué",
   "homeShowBalance": "Afficher le solde",
-  "homeHideBalance": "Masquer le solde"
+  "homeHideBalance": "Masquer le solde",
+  "walletAddedTitle": "{amount} ajoutés à votre portefeuille",
+  "walletAddedFor": "Pour avoir transporté {item} de {from} à {to}.",
+  "walletAddedForName": "Pour avoir transporté {item} de {from} à {to} pour {name}.",
+  "walletAddedOne": "Pour une livraison effectuée.",
+  "walletAddedMany": "Pour {count} livraisons.",
+  "walletAddedView": "Voir"
 }

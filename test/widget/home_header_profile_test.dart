@@ -35,7 +35,7 @@ void main() {
   for (final (what, target) in [
     ('the photo', find.byKey(const ValueKey('home-avatar'))),
     ('"Hello,"', find.text('Hello,')),
-    ('the name', find.text('Fortune Niama')),
+    ('the name', find.text('Fortune')),
   ]) {
     testWidgets('tapping $what opens Profile', (tester) async {
       await pumpHome(tester);
@@ -49,7 +49,7 @@ void main() {
 
   testWidgets('back from Profile returns to Home', (tester) async {
     await pumpHome(tester);
-    await tester.tap(find.text('Fortune Niama'));
+    await tester.tap(find.text('Fortune'));
     await tester.pumpAndSettle();
 
     Navigator.of(tester.element(find.byType(ProfileScreen))).pop();

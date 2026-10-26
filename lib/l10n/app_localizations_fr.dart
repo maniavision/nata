@@ -4820,4 +4820,30 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeHideBalance => 'Masquer le solde';
+
+  @override
+  String walletAddedTitle(String amount) {
+    return '$amount ajoutés à votre portefeuille';
+  }
+
+  @override
+  String walletAddedFor(String item, String from, String to) {
+    return 'Pour avoir transporté $item de $from à $to.';
+  }
+
+  @override
+  String walletAddedForName(String item, String from, String to, String name) {
+    return 'Pour avoir transporté $item de $from à $to pour $name.';
+  }
+
+  @override
+  String get walletAddedOne => 'Pour une livraison effectuée.';
+
+  @override
+  String walletAddedMany(int count) {
+    return 'Pour $count livraisons.';
+  }
+
+  @override
+  String get walletAddedView => 'Voir';
 }

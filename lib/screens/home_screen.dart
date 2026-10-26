@@ -29,6 +29,7 @@ import '../services/wallet_money.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/coach_tips.dart';
 import '../widgets/home_reminders.dart';
+import '../widgets/wallet_added_card.dart';
 import '../services/route_alert_service.dart';
 import '../widgets/date_picker_sheet.dart';
 import '../widgets/location_search_sheet.dart';
@@ -371,11 +372,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _avatarPath = profile['avatar_path'];
         _verificationStatus = profile['verification_status'] as String?;
         _userId = profile['id'] as String?;
-        final first = profile['first_name'] ?? '';
-        final last = profile['last_name'] ?? '';
-        if (first.isNotEmpty || last.isNotEmpty) {
-          _displayName = '$first $last'.trim();
-        }
+        // "Hello," and one first name ("Mary Jane" → "Mary"); the last name
+        // only when there's no first name.
+        final first = '${profile['first_name'] ?? ''}'.trim();
+        final last = '${profile['last_name'] ?? ''}'.trim();
+        final name = first.isNotEmpty ? first : last;
+        if (name.isNotEmpty) _displayName = name.split(RegExp(r'\s+')).first;
       });
       ScreenCache.write(_kHeader, {
         'avatarPath': _avatarPath,
@@ -578,6 +580,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             ]
                           : [
                               const SizedBox(height: 8),
+                              WalletAddedCard(
+                                userId: _userId,
+                                service: widget.paymentService,
+                                onView: _openWallet,
+                              ),
                               HomeReminders(
                                 verificationStatus: _verificationStatus,
                                 userId: _userId,
