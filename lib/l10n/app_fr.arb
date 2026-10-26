@@ -2042,5 +2042,7 @@
   "publicNameSave": "Enregistrer",
   "publicNameSaved": "Nom public enregistré",
   "publicNameInvalid": "Utilisez 2 à 20 lettres ou chiffres (espaces et . _ - acceptés).",
-  "publicNameReserved": "Ce nom ne peut pas être utilisé. Choisissez-en un autre."
+  "publicNameReserved": "Ce nom ne peut pas être utilisé. Choisissez-en un autre.",
+  "tipPublicNameTitle": "Voyagez sous un pseudonyme",
+  "tipPublicNameBody": "Choisissez si les personnes qui vous trouvent en tant que voyageur voient votre nom ou un pseudonyme. Votre badge vérifié s'affiche toujours."
 }

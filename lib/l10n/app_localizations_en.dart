@@ -4864,4 +4864,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get publicNameReserved =>
       'This name can\'t be used. Please choose another.';
+
+  @override
+  String get tipPublicNameTitle => 'Travel under a pseudonym';
+
+  @override
+  String get tipPublicNameBody =>
+      'Choose whether people who find you as a traveler see your name or a pseudonym. Your verified badge always shows.';
 }

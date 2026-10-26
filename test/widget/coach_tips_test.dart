@@ -235,7 +235,26 @@ void main() {
 
     testWidgets('Profile', (tester) async {
       await show(tester, ProfileScreen(authService: FakeAuthService()));
-      await walk(tester, ['Your Nata Wallet', 'Route alerts']);
+      await walk(tester, [
+        'Your Nata Wallet',
+        'Travel under a pseudonym',
+        'Route alerts',
+      ]);
+    });
+
+    testWidgets('Profile: those who saw it get the pseudonym tip alone', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        CoachTips.seenKey('profile', 'test-user'): true,
+      });
+      await show(tester, ProfileScreen(authService: FakeAuthService()));
+      await walk(tester, ['Travel under a pseudonym']);
+
+      // ...once.
+      await tester.pumpWidget(const SizedBox());
+      await show(tester, ProfileScreen(authService: FakeAuthService()));
+      expect(find.byType(CoachTipsOverlay), findsNothing);
     });
 
     testWidgets('Wallet', (tester) async {
@@ -266,6 +285,9 @@ void main() {
       // Behind the tab bar or off screen before.
       expect(tester.getRect(row).bottom, greaterThan(nav.top));
 
+      // Wallet, then the public name, then route alerts.
+      await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('coach-tip-next')));
       await tester.pumpAndSettle();
       final shown = tester.getRect(row);
