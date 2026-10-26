@@ -96,7 +96,7 @@ Deno.serve(async (req: Request) => {
   const phone = String(recipient?.phone ?? "").trim();
   if (!phone) return json({ error: "not_allowed" }, 403);
 
-  const [{ data: sender }, { data: lang }, { data: token }] = await Promise.all([
+  const [{ data: sender }, { data: lang }, { data: linkToken }] = await Promise.all([
     db.from("profiles").select("first_name").eq("id", user.id).maybeSingle(),
     db.from("user_settings").select("language").eq("user_id", user.id)
       .maybeSingle(),
@@ -105,7 +105,7 @@ Deno.serve(async (req: Request) => {
 
   const text = smsText(lang?.language, "code", {
     sender: String(sender?.first_name ?? "").trim() || "Someone",
-    link: pageLink(String(token ?? "")),
+    link: pageLink(String(linkToken ?? "")),
     code: String(code.code),
   });
   const result = await sendSms(phone, text);

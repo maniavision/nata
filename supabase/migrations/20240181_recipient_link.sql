@@ -56,6 +56,10 @@ create table if not exists nata.recipient_sms (
 );
 alter table nata.recipient_sms enable row level security;
 
+-- Only through the functions below: no direct access, even with RLS.
+revoke all on nata.recipient_links, nata.recipient_messages, nata.recipient_sms
+  from anon, authenticated;
+
 -- -----------------------------------------------------------------------------
 -- 1. The link
 -- -----------------------------------------------------------------------------
