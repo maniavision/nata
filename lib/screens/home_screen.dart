@@ -18,10 +18,12 @@ import '../services/screen_cache.dart';
 import '../services/auth_service.dart';
 import '../services/city_service.dart';
 import '../services/country_service.dart';
+import '../services/exchange_rate_service.dart';
 import '../services/notification_service.dart';
 import '../services/preferences_service.dart';
 import '../services/traveler_ranking.dart';
 import '../services/traveler_service.dart';
+import '../services/wallet_money.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/coach_tips.dart';
 import '../widgets/home_reminders.dart';
@@ -122,6 +124,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String? _verificationStatus;
   String? _userId;
 
+  /// The wallet's available balance in US dollars; null until it's known.
+  double? _available;
+
   /// What the first-visit tips point at.
   final _addTripKey = GlobalKey();
   final _searchKey = GlobalKey();
@@ -198,6 +203,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _displayName = header['displayName'] as String? ?? _displayName;
       _verificationStatus = header['verificationStatus'] as String?;
       _userId = header['userId'] as String?;
+      _available = header['available'] as double?;
     }
     final travelers = ScreenCache.read<(String, List<TravelerTrip>)>(
       _kTravelers,
@@ -362,8 +368,37 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         'displayName': _displayName,
         'verificationStatus': _verificationStatus,
         'userId': _userId,
+        'available': _available,
       });
       _showTips();
+      _loadBalance(auth);
+    }
+  }
+
+  /// The wallet balance next to the bell, in the member's currency.
+  Future<void> _loadBalance(AuthService auth) async {
+    try {
+      final balances = await auth.getWalletBalances();
+      if (!mounted) return;
+      setState(() => _available = balances['available'] ?? 0.0);
+      ScreenCache.write(_kHeader, {
+        'avatarPath': _avatarPath,
+        'displayName': _displayName,
+        'verificationStatus': _verificationStatus,
+        'userId': _userId,
+        'available': _available,
+      });
+    } catch (e) {
+      debugPrint('[Home] wallet balance: $e');
+      return;
+    }
+    // In dollars until the rate for the member's currency is known.
+    if (ExchangeRateService.shared.latest != null) return;
+    try {
+      await ExchangeRateService.shared.rates();
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('[Home] exchange rates: $e');
     }
   }
 
@@ -570,6 +605,58 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _loadProfile();
   }
 
+  /// A small pill with the wallet's available balance; it opens Profile,
+  /// where the wallet is.
+  Widget _buildBalance(double usd) {
+    final money = WalletMoney.format(
+      usd,
+      PreferencesService().currency.code,
+      ExchangeRateService.shared.latest,
+    );
+    return Semantics(
+      button: true,
+      label: context.l10n.homeWalletBalance(money),
+      excludeSemantics: true,
+      child: GestureDetector(
+        key: const ValueKey('home-wallet'),
+        onTap: _openProfile,
+        child: Container(
+          height: 40,
+          constraints: const BoxConstraints(maxWidth: 140),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.account_balance_wallet_rounded,
+                color: AppColors.primary,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    money,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
@@ -641,6 +728,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
+          if (_available != null) ...[
+            _buildBalance(_available!),
+            const SizedBox(width: 8),
+          ],
           GestureDetector(
             key: const ValueKey('home-notifications'),
             onTap: () {

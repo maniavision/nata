@@ -2005,5 +2005,6 @@
   "senderNoReviews": "Aucun avis de voyageurs pour l'instant",
   "senderNoReviewsSub": "Les avis apparaissent ici après la première livraison terminée de cet expéditeur.",
   "tipProfileTitle": "Votre profil",
-  "tipProfileBody": "Touchez votre photo ou votre nom pour ouvrir votre profil et vos réglages."
+  "tipProfileBody": "Touchez votre photo ou votre nom pour ouvrir votre profil et vos réglages.",
+  "homeWalletBalance": "Solde du portefeuille : {amount}"
 }

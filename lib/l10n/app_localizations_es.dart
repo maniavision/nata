@@ -4772,4 +4772,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tipProfileBody =>
       'Toca tu foto o tu nombre para abrir tu perfil y tus ajustes.';
+
+  @override
+  String homeWalletBalance(String amount) {
+    return 'Saldo de la billetera: $amount';
+  }
 }

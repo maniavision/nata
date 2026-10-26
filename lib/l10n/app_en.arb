@@ -2123,5 +2123,10 @@
   "senderNoReviews": "No reviews from travelers yet",
   "senderNoReviewsSub": "Reviews appear here after this sender's first completed delivery.",
   "tipProfileTitle": "Your profile",
-  "tipProfileBody": "Tap your photo or name to open your profile and settings."
+  "tipProfileBody": "Tap your photo or name to open your profile and settings.",
+  "homeWalletBalance": "Wallet balance: {amount}",
+  "@homeWalletBalance": {
+    "description": "Screen-reader label of the balance pill on Home.",
+    "placeholders": {"amount": {"type": "String"}}
+  }
 }

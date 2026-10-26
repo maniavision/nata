@@ -4723,4 +4723,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tipProfileBody =>
       'Tap your photo or name to open your profile and settings.';
+
+  @override
+  String homeWalletBalance(String amount) {
+    return 'Wallet balance: $amount';
+  }
 }

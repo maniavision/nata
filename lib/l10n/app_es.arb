@@ -2005,5 +2005,6 @@
   "senderNoReviews": "Aún no hay reseñas de viajeros",
   "senderNoReviewsSub": "Las reseñas aparecen aquí tras la primera entrega completada de este remitente.",
   "tipProfileTitle": "Tu perfil",
-  "tipProfileBody": "Toca tu foto o tu nombre para abrir tu perfil y tus ajustes."
+  "tipProfileBody": "Toca tu foto o tu nombre para abrir tu perfil y tus ajustes.",
+  "homeWalletBalance": "Saldo de la billetera: {amount}"
 }

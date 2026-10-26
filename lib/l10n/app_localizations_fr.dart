@@ -4806,4 +4806,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tipProfileBody =>
       'Touchez votre photo ou votre nom pour ouvrir votre profil et vos réglages.';
+
+  @override
+  String homeWalletBalance(String amount) {
+    return 'Solde du portefeuille : $amount';
+  }
 }

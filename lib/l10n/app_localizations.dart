@@ -8269,6 +8269,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap your photo or name to open your profile and settings.'**
   String get tipProfileBody;
+
+  /// Screen-reader label of the balance pill on Home.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet balance: {amount}'**
+  String homeWalletBalance(String amount);
 }
 
 class _AppLocalizationsDelegate
