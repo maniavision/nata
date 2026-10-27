@@ -6,10 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
 import '../services/traveler_service.dart';
 import '../widgets/app_bottom_nav.dart';
-import '../widgets/avatar_image.dart';
 import '../widgets/location_search_sheet.dart';
 import 'route_alerts_screen.dart' show formatKg;
 import 'traveler_profile_screen.dart';
+import '../widgets/traveler_photo.dart';
 
 class TravelerResultsScreen extends StatefulWidget {
   /// Search criteria from Home. All optional: with none, every upcoming
@@ -748,23 +748,12 @@ class _TravelerCardState extends State<_TravelerCard> {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: const BoxDecoration(shape: BoxShape.circle),
-                  child: ClipOval(
-                    child: AvatarImage(
-                      path: widget.trip.avatarPath,
-                      fallback: Container(
-                        color: AppColors.secondary,
-                        child: const Icon(
-                          Icons.person,
-                          color: AppColors.primary,
-                          size: 26,
-                        ),
-                      ),
-                    ),
-                  ),
+                TravelerPhoto(
+                  path: widget.trip.avatarPath,
+                  revealed: widget.trip.photoRevealed,
+                  size: 52,
+                  // The verified badge has the bottom-right corner.
+                  lockLeft: true,
                 ),
                 Positioned(
                   bottom: -1,

@@ -22,6 +22,11 @@ class TravelerTrip {
   final double? maxWeightKg;
   final String? maxSize;
 
+  /// The traveler's photo may be shown clearly: they accepted one of the
+  /// viewer's requests (or it's the viewer's own). Blurred otherwise
+  /// (20240188_blur_traveler_photos.sql).
+  final bool photoRevealed;
+
   const TravelerTrip({
     required this.tripId,
     required this.travelerId,
@@ -40,6 +45,7 @@ class TravelerTrip {
     required this.currency,
     required this.maxWeightKg,
     required this.maxSize,
+    this.photoRevealed = false,
   });
 
   String get fullName => '$firstName $lastName'.trim();
@@ -62,6 +68,7 @@ class TravelerTrip {
     currency: ((j['currency'] as String?) ?? 'USD').trim(),
     maxWeightKg: (j['max_weight_kg'] as num?)?.toDouble(),
     maxSize: j['max_size'] as String?,
+    photoRevealed: j['photo_revealed'] == true,
   );
 }
 
@@ -78,6 +85,9 @@ class TravelerProfile {
   final DateTime? memberSince;
   final List<TravelerTrip> trips;
 
+  /// See [TravelerTrip.photoRevealed].
+  final bool photoRevealed;
+
   const TravelerProfile({
     required this.id,
     required this.firstName,
@@ -88,6 +98,7 @@ class TravelerProfile {
     required this.itemsDelivered,
     required this.memberSince,
     required this.trips,
+    this.photoRevealed = false,
   });
 
   String get fullName => '$firstName $lastName'.trim();
@@ -101,6 +112,7 @@ class TravelerProfile {
       'avatar_path': j['avatar_path'],
       'avg_rating': j['avg_rating'],
       'items_delivered_count': j['items_delivered_count'],
+      'photo_revealed': j['photo_revealed'],
     };
     final rawTrips = (j['trips'] as List<dynamic>?) ?? const [];
     return TravelerProfile(
@@ -114,6 +126,7 @@ class TravelerProfile {
       memberSince: j['member_since'] == null
           ? null
           : DateTime.tryParse(j['member_since'] as String),
+      photoRevealed: j['photo_revealed'] == true,
       trips: rawTrips
           .map(
             (t) => TravelerTrip.fromJson({

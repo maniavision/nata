@@ -19,6 +19,7 @@ import 'review_screen.dart';
 import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/nata_toast.dart';
+import '../widgets/traveler_photo.dart';
 
 class RequestsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RequestService].
@@ -1901,17 +1902,11 @@ class _SentRequestCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.border, width: 2),
                     ),
-                    child: ClipOval(
-                      child: AvatarImage(
-                        path: trip.avatarPath,
-                        fallback: Container(
-                          color: AppColors.secondary,
-                          child: const Icon(
-                            Icons.person,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
+                    // Clear once the traveler accepted.
+                    child: TravelerPhoto(
+                      path: trip.avatarPath,
+                      revealed: request.photoRevealed,
+                      size: 40,
                     ),
                   ),
                   const SizedBox(width: 12),

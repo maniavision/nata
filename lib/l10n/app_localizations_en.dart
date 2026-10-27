@@ -4975,4 +4975,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifRefundToBalanceBody(String amount) {
     return '$amount from your cancelled request is in your Nata balance.';
   }
+
+  @override
+  String get photoShownOnceAccepted =>
+      'Photo shown once they accept your request';
 }

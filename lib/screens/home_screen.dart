@@ -42,6 +42,7 @@ import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'requests_screen.dart';
 import 'trips_screen.dart';
+import '../widgets/traveler_photo.dart';
 
 /// The capital of a country (by ISO code) as a departure, or null.
 typedef CapitalLookup = Future<LocationSelection?> Function(String countryCode);
@@ -1598,23 +1599,10 @@ class _TravelerRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(shape: BoxShape.circle),
-              child: ClipOval(
-                child: AvatarImage(
-                  path: trip.avatarPath,
-                  fallback: Container(
-                    color: AppColors.secondary,
-                    child: const Icon(
-                      Icons.person,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
-                  ),
-                ),
-              ),
+            TravelerPhoto(
+              path: trip.avatarPath,
+              revealed: trip.photoRevealed,
+              size: 44,
             ),
             const SizedBox(width: 12),
             Expanded(
