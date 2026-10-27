@@ -317,6 +317,34 @@ void main() {
       expect(service.weights, [2.5]);
     });
 
+    testWidgets('with the keyboard up, the sheet sits above it', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      final before = tester.getRect(
+        find.byKey(const ValueKey('route-add-sheet')),
+      );
+      // A phone keyboard over the lower part of the screen.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 700);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pumpAndSettle();
+
+      final sheet = tester.getRect(
+        find.byKey(const ValueKey('route-add-sheet')),
+      );
+      expect(sheet.bottom, lessThanOrEqualTo(2000 - 700));
+      expect(sheet.bottom, lessThan(before.bottom));
+      // Save can be reached by scrolling inside the sheet.
+      await tester.enterText(find.byKey(const ValueKey('route-weight')), '4');
+      await tester.ensureVisible(find.byKey(const ValueKey('route-save')));
+      await tester.pumpAndSettle();
+      final save = tester.getRect(find.byKey(const ValueKey('route-save')));
+      expect(save.bottom, lessThanOrEqualTo(2000 - 700));
+      await tester.tap(find.byKey(const ValueKey('route-save')));
+      await tester.pumpAndSettle();
+      expect(service.weights, [4.0]);
+    });
+
     testWidgets('a weight that makes no sense is explained', (tester) async {
       await openSheet(tester);
       for (final bad in ['abc', '150']) {
