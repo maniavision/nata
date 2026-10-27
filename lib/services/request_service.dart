@@ -1402,40 +1402,49 @@ class RequestService {
   Future<void> markPickedUp(String requestId) =>
       _call('mark_picked_up', {'p_id': requestId});
 
-  /// Uploads the traveler's photo of the sealed item at pickup, or of the
-  /// handover to the recipient (20240144_handover_photos.sql).
-  Future<void> uploadDeliveryPhoto(
+  /// At most this many photos at pickup, and at handover.
+  static const maxDeliveryPhotos = 3;
+
+  /// Uploads the traveler's photos (1 to 3) of the sealed item at pickup,
+  /// or of the handover to the recipient, and makes them that step's photos
+  /// (20240184_three_delivery_photos.sql). Each upload has its own file, so
+  /// a retake never overwrites a photo someone may be looking at.
+  Future<void> uploadDeliveryPhotos(
     String requestId,
     DeliveryPhotoKind kind,
-    Uint8List bytes,
+    List<Uint8List> photos,
   ) async {
-    final path = '$requestId/${kind.name}.jpg';
-    // A retake replaces the photo at the same path: a new link from now on.
-    SignedUrls.forget(_deliveryPhotoBucket, path);
+    if (photos.isEmpty || photos.length > maxDeliveryPhotos) {
+      throw const RequestException(RequestFailure.other);
+    }
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final paths = [
+      for (var i = 0; i < photos.length; i++)
+        '$requestId/${kind.name}-$stamp-$i.jpg',
+    ];
     try {
-      await _client.storage
-          .from(_deliveryPhotoBucket)
-          .uploadBinary(
-            path,
-            bytes,
-            fileOptions: const FileOptions(
-              contentType: 'image/jpeg',
-              upsert: true,
-            ),
-          );
+      for (var i = 0; i < photos.length; i++) {
+        await _client.storage
+            .from(_deliveryPhotoBucket)
+            .uploadBinary(
+              paths[i],
+              photos[i],
+              fileOptions: const FileOptions(contentType: 'image/jpeg'),
+            );
+      }
     } catch (e) {
       throw RequestException(RequestFailure.other, e);
     }
-    await _call('set_delivery_photo', {
+    await _call('set_delivery_photos', {
       'p_request_id': requestId,
       'p_kind': kind.name,
-      'p_path': path,
+      'p_paths': paths,
     });
   }
 
-  /// Short-lived links to a request's pickup and handover photos; null where
-  /// there is none.
-  Future<({String? pickup, String? handover})> deliveryPhotoUrls(
+  /// Short-lived links to a request's pickup and handover photos, in order
+  /// (empty where there are none).
+  Future<({List<String> pickup, List<String> handover})> deliveryPhotoUrls(
     String requestId,
   ) async {
     final rows =
@@ -1444,21 +1453,29 @@ class RequestService {
               params: {'p_request_id': requestId},
             )
             as List;
-    if (rows.isEmpty) return (pickup: null, handover: null);
+    if (rows.isEmpty) return (pickup: <String>[], handover: <String>[]);
     final r = Map<String, dynamic>.from(rows.first as Map);
-    Future<String?> url(String? path) async => path == null
-        ? null
-        : await SignedUrls.get(
-            _deliveryPhotoBucket,
-            path,
-            lifetime: const Duration(seconds: 600),
-            create: () => _client.storage
-                .from(_deliveryPhotoBucket)
-                .createSignedUrl(path, 600),
-          );
+    Future<String> url(String path) => SignedUrls.get(
+      _deliveryPhotoBucket,
+      path,
+      lifetime: const Duration(seconds: 600),
+      create: () =>
+          _client.storage.from(_deliveryPhotoBucket).createSignedUrl(path, 600),
+    );
+    // The lists, or the single photo of an older app.
+    List<String> paths(String many, String one) {
+      final list = [for (final p in (r[many] as List? ?? const [])) '$p'];
+      final single = r[one] as String?;
+      return list.isNotEmpty ? list : [if (single != null) single];
+    }
+
     return (
-      pickup: await url(r['pickup_photo_path'] as String?),
-      handover: await url(r['handover_photo_path'] as String?),
+      pickup: await Future.wait(
+        paths('pickup_photo_paths', 'pickup_photo_path').map(url),
+      ),
+      handover: await Future.wait(
+        paths('handover_photo_paths', 'handover_photo_path').map(url),
+      ),
     );
   }
 

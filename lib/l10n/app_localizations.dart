@@ -8503,6 +8503,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose whether people who find you as a traveler see your name or a pseudonym. Your verified badge always shows.'**
   String get tipPublicNameBody;
+
+  /// No description provided for @photosUpToThree.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos (up to 3)'**
+  String get photosUpToThree;
 }
 
 class _AppLocalizationsDelegate

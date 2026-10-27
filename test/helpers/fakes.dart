@@ -1057,28 +1057,31 @@ class FakeRequestService extends Fake implements RequestService {
     pickedUp.add(requestId);
   }
 
-  /// Delivery photos uploaded; [failPhoto] makes uploading fail.
-  final List<({String id, DeliveryPhotoKind kind})> photos = [];
+  /// Delivery photos uploaded (one entry per photo, with how many were sent
+  /// together); [failPhoto] makes uploading fail.
+  final List<({String id, DeliveryPhotoKind kind, int count})> photos = [];
   RequestException? failPhoto;
 
   @override
-  Future<void> uploadDeliveryPhoto(
+  Future<void> uploadDeliveryPhotos(
     String requestId,
     DeliveryPhotoKind kind,
-    Uint8List bytes,
+    List<Uint8List> photos,
   ) async {
     if (failPhoto != null) throw failPhoto!;
-    photos.add((id: requestId, kind: kind));
+    for (var i = 0; i < photos.length; i++) {
+      this.photos.add((id: requestId, kind: kind, count: photos.length));
+    }
   }
 
   /// What deliveryPhotoUrls returns.
-  ({String? pickup, String? handover}) photoUrls = (
-    pickup: null,
-    handover: null,
+  ({List<String> pickup, List<String> handover}) photoUrls = (
+    pickup: const [],
+    handover: const [],
   );
 
   @override
-  Future<({String? pickup, String? handover})> deliveryPhotoUrls(
+  Future<({List<String> pickup, List<String> handover})> deliveryPhotoUrls(
     String requestId,
   ) async => photoUrls;
 

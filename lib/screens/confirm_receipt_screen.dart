@@ -29,8 +29,8 @@ class ConfirmReceiptScreen extends StatefulWidget {
 class _ConfirmReceiptScreenState extends State<ConfirmReceiptScreen> {
   bool _confirming = false;
 
-  /// The traveler's photo of the handover, when there is one.
-  String? _handoverUrl;
+  /// The traveler's photos of the handover (up to 3), in order.
+  List<String> _handoverUrls = const [];
 
   RequestService get _service => widget.service ?? RequestService();
 
@@ -43,7 +43,7 @@ class _ConfirmReceiptScreenState extends State<ConfirmReceiptScreen> {
   Future<void> _loadPhoto() async {
     try {
       final urls = await _service.deliveryPhotoUrls(widget.request.id);
-      if (mounted) setState(() => _handoverUrl = urls.handover);
+      if (mounted) setState(() => _handoverUrls = urls.handover);
     } catch (e) {
       debugPrint('[ConfirmReceipt] photo error: $e');
     }
@@ -166,16 +166,43 @@ class _ConfirmReceiptScreenState extends State<ConfirmReceiptScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  if (_handoverUrl != null) ...[
+                  if (_handoverUrls.length == 1) ...[
                     ClipRRect(
                       key: const ValueKey('receipt-handover-photo'),
                       borderRadius: BorderRadius.circular(20),
                       child: Image.network(
-                        _handoverUrl!,
+                        _handoverUrls.single,
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ] else if (_handoverUrls.length > 1) ...[
+                    // Several: side by side.
+                    SizedBox(
+                      key: const ValueKey('receipt-handover-photo'),
+                      height: 140,
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < _handoverUrls.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            Expanded(
+                              child: ClipRRect(
+                                key: ValueKey('receipt-handover-photo-$i'),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.network(
+                                  _handoverUrls[i],
+                                  height: 140,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) =>
+                                      Container(color: AppColors.secondary),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     const SizedBox(height: 12),
