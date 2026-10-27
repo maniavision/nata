@@ -5023,4 +5023,32 @@ class AppLocalizationsEs extends AppLocalizations {
   String notifRefundToBalanceBody(String amount) {
     return '$amount de tu solicitud cancelada están en tu saldo Nata.';
   }
+
+  @override
+  String get customSizeOption => 'Otro tamaño…';
+
+  @override
+  String get customSizeTitle => 'Tamaño máx. del artículo';
+
+  @override
+  String get customSizeBody =>
+      'El paquete más grande que puedes llevar, en centímetros.';
+
+  @override
+  String get lengthCm => 'Largo';
+
+  @override
+  String get widthCm => 'Ancho';
+
+  @override
+  String get heightCm => 'Alto';
+
+  @override
+  String get customSizeInvalid => 'Escribe cada medida en cm, de 1 a 300.';
+
+  @override
+  String get customSizeSave => 'Usar este tamaño';
+
+  @override
+  String get sizeCustom => 'Personalizado';
 }

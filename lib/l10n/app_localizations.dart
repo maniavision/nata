@@ -8671,6 +8671,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} from your cancelled request is in your Nata balance.'**
   String notifRefundToBalanceBody(String amount);
+
+  /// No description provided for @customSizeOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom size…'**
+  String get customSizeOption;
+
+  /// No description provided for @customSizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your max item size'**
+  String get customSizeTitle;
+
+  /// No description provided for @customSizeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The largest parcel you can take, in centimetres.'**
+  String get customSizeBody;
+
+  /// No description provided for @lengthCm.
+  ///
+  /// In en, this message translates to:
+  /// **'Length'**
+  String get lengthCm;
+
+  /// No description provided for @widthCm.
+  ///
+  /// In en, this message translates to:
+  /// **'Width'**
+  String get widthCm;
+
+  /// No description provided for @heightCm.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get heightCm;
+
+  /// No description provided for @customSizeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter each size in cm, from 1 to 300.'**
+  String get customSizeInvalid;
+
+  /// No description provided for @customSizeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this size'**
+  String get customSizeSave;
+
+  /// No description provided for @sizeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get sizeCustom;
 }
 
 class _AppLocalizationsDelegate

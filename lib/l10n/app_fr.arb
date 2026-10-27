@@ -2072,5 +2072,14 @@
   "walletRefundFallback": "Remboursement sur le solde",
   "walletStatusSpent": "Utilisé pour une livraison",
   "notifRefundToBalanceTitle": "Remboursement ajouté à votre solde Nata",
-  "notifRefundToBalanceBody": "{amount} de votre demande annulée sont dans votre solde Nata."
+  "notifRefundToBalanceBody": "{amount} de votre demande annulée sont dans votre solde Nata.",
+  "customSizeOption": "Autre taille…",
+  "customSizeTitle": "Taille max. de l'objet",
+  "customSizeBody": "Le plus grand colis que vous pouvez prendre, en centimètres.",
+  "lengthCm": "Longueur",
+  "widthCm": "Largeur",
+  "heightCm": "Hauteur",
+  "customSizeInvalid": "Saisissez chaque dimension en cm, de 1 à 300.",
+  "customSizeSave": "Utiliser cette taille",
+  "sizeCustom": "Sur mesure"
 }

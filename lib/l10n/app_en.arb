@@ -2212,5 +2212,14 @@
   "walletStatusSpent": "Used for a delivery",
   "notifRefundToBalanceTitle": "Refund added to your Nata balance",
   "notifRefundToBalanceBody": "{amount} from your cancelled request is in your Nata balance.",
-  "@notifRefundToBalanceBody": {"placeholders": {"amount": {"type": "String"}}}
+  "@notifRefundToBalanceBody": {"placeholders": {"amount": {"type": "String"}}},
+  "customSizeOption": "Custom size…",
+  "customSizeTitle": "Your max item size",
+  "customSizeBody": "The largest parcel you can take, in centimetres.",
+  "lengthCm": "Length",
+  "widthCm": "Width",
+  "heightCm": "Height",
+  "customSizeInvalid": "Enter each size in cm, from 1 to 300.",
+  "customSizeSave": "Use this size",
+  "sizeCustom": "Custom"
 }
