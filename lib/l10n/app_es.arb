@@ -2073,5 +2073,14 @@
   "walletStatusSpent": "Usado en una entrega",
   "notifRefundToBalanceTitle": "Reembolso añadido a tu saldo Nata",
   "notifRefundToBalanceBody": "{amount} de tu solicitud cancelada están en tu saldo Nata.",
+  "customSizeOption": "Otro tamaño…",
+  "customSizeTitle": "Tamaño máx. del artículo",
+  "customSizeBody": "El paquete más grande que puedes llevar, en centímetros.",
+  "lengthCm": "Largo",
+  "widthCm": "Ancho",
+  "heightCm": "Alto",
+  "customSizeInvalid": "Escribe cada medida en cm, de 1 a 300.",
+  "customSizeSave": "Usar este tamaño",
+  "sizeCustom": "Personalizado",
   "photoShownOnceAccepted": "La foto se verá cuando acepte tu solicitud"
 }

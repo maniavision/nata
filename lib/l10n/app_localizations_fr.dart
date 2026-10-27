@@ -5062,6 +5062,35 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get customSizeOption => 'Autre taille…';
+
+  @override
+  String get customSizeTitle => 'Taille max. de l\'objet';
+
+  @override
+  String get customSizeBody =>
+      'Le plus grand colis que vous pouvez prendre, en centimètres.';
+
+  @override
+  String get lengthCm => 'Longueur';
+
+  @override
+  String get widthCm => 'Largeur';
+
+  @override
+  String get heightCm => 'Hauteur';
+
+  @override
+  String get customSizeInvalid =>
+      'Saisissez chaque dimension en cm, de 1 à 300.';
+
+  @override
+  String get customSizeSave => 'Utiliser cette taille';
+
+  @override
+  String get sizeCustom => 'Sur mesure';
+
+  @override
   String get photoShownOnceAccepted =>
       'Photo visible une fois votre demande acceptée';
 }

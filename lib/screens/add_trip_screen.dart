@@ -93,12 +93,16 @@ class _AddTripScreenState extends State<AddTripScreen> {
     ('Up to 3.0 kg', 3.0),
     ('Up to 5.0 kg', 5.0),
     ('Up to 10.0 kg', 10.0),
+    ('Up to 25.0 kg', 25.0),
   ];
   static const _baseSizes = <String>[
     'Envelope / Document',
     'Shoebox (30×20×15 cm)',
     'Backpack size',
   ];
+
+  /// The last choice in the size list: opens a box to type the size.
+  static const _customSizeOption = '__custom__';
   static const _maxReceiptBytes = 10 * 1024 * 1024;
 
   bool get _editing => widget.trip != null;
@@ -1193,10 +1197,18 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   fieldKey: 'add-trip-size',
                   label: context.l10n.maxItemSize.toUpperCase(),
                   value: _maxSize,
-                  options: _sizeOptions,
+                  options: [..._sizeOptions, _customSizeOption],
                   // Saved in English (the database reads it), shown translated.
-                  display: context.l10n.tripSize,
-                  onChanged: (v) => setState(() => _maxSize = v ?? _maxSize),
+                  display: (o) => o == _customSizeOption
+                      ? context.l10n.customSizeOption
+                      : context.l10n.tripSize(o),
+                  onChanged: (v) {
+                    if (v == _customSizeOption) {
+                      _pickCustomSize();
+                    } else {
+                      setState(() => _maxSize = v ?? _maxSize);
+                    }
+                  },
                 ),
               ),
             ],
@@ -1204,6 +1216,20 @@ class _AddTripScreenState extends State<AddTripScreen> {
         ],
       ),
     );
+  }
+
+  /// The traveler types the largest size they take, in cm. Saved as
+  /// "Custom (50×40×20 cm)": no size class, so senders are not limited by it.
+  Future<void> _pickCustomSize() async {
+    final size = await showDialog<String>(
+      context: context,
+      builder: (_) => const _CustomSizeDialog(),
+    );
+    if (size == null || !mounted) return;
+    setState(() {
+      if (!_sizeOptions.contains(size)) _sizeOptions.add(size);
+      _maxSize = size;
+    });
   }
 
   Widget _buildDropdown({
@@ -1628,6 +1654,105 @@ class _FormCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(16),
       child: child,
+    );
+  }
+}
+
+/// Length, width and height in cm, each 1 to 300.
+class _CustomSizeDialog extends StatefulWidget {
+  const _CustomSizeDialog();
+
+  @override
+  State<_CustomSizeDialog> createState() => _CustomSizeDialogState();
+}
+
+class _CustomSizeDialogState extends State<_CustomSizeDialog> {
+  final _ctrls = List.generate(3, (_) => TextEditingController());
+  bool _invalid = false;
+
+  @override
+  void dispose() {
+    for (final c in _ctrls) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _save() {
+    final dims = _ctrls.map((c) => int.tryParse(c.text.trim())).toList();
+    if (dims.any((d) => d == null || d < 1 || d > 300)) {
+      setState(() => _invalid = true);
+      return;
+    }
+    Navigator.of(context).pop('Custom (${dims.join('×')} cm)');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final labels = [l.lengthCm, l.widthCm, l.heightCm];
+    return AlertDialog(
+      key: const ValueKey('custom-size-dialog'),
+      title: Text(l.customSizeTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.customSizeBody,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              for (var i = 0; i < 3; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    key: ValueKey('custom-size-$i'),
+                    controller: _ctrls[i],
+                    autofocus: i == 0,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textInputAction:
+                        i < 2 ? TextInputAction.next : TextInputAction.done,
+                    onSubmitted: i < 2 ? null : (_) => _save(),
+                    decoration: InputDecoration(
+                      labelText: labels[i],
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (_invalid) ...[
+            const SizedBox(height: 10),
+            Text(
+              l.customSizeInvalid,
+              key: const ValueKey('custom-size-error'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.destructive,
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        TextButton(
+          key: const ValueKey('custom-size-save'),
+          onPressed: _save,
+          child: Text(l.customSizeSave),
+        ),
+      ],
     );
   }
 }
