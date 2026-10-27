@@ -829,84 +829,95 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
     final l = context.l10n;
     final bottom = MediaQuery.of(context).padding.bottom;
     final ready = _from?.cityId != null && _to?.cityId != null && !_saving;
-    return Container(
-      key: const ValueKey('route-add-sheet'),
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 16 + bottom),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 48,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: AppColors.muted,
-                  borderRadius: BorderRadius.circular(999),
+    // Above the keyboard while the weight is typed, so Save stays reachable.
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: Container(
+        key: const ValueKey('route-add-sheet'),
+        decoration: const BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          16 + (keyboard > 0 ? 0 : bottom),
+        ),
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 48,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.muted,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              l.routeAlertsAdd,
-              style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-                color: AppColors.foreground,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _field('route-from', l.routeAlertsFrom, _from, true),
-            const SizedBox(height: 12),
-            _field('route-to', l.routeAlertsTo, _to, false),
-            const SizedBox(height: 18),
-            _weightField(),
-            const SizedBox(height: 18),
-            _limitPicker(),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               Text(
-                _error!,
-                key: const ValueKey('route-add-error'),
-                style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  color: AppColors.destructive,
+                l.routeAlertsAdd,
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  color: AppColors.foreground,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _field('route-from', l.routeAlertsFrom, _from, true),
+              const SizedBox(height: 12),
+              _field('route-to', l.routeAlertsTo, _to, false),
+              const SizedBox(height: 18),
+              _weightField(),
+              const SizedBox(height: 18),
+              _limitPicker(),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  key: const ValueKey('route-add-error'),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: AppColors.destructive,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 52,
+                child: FilledButton(
+                  key: const ValueKey('route-save'),
+                  onPressed: ready ? _save : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.primaryForeground,
+                    shape: const StadiumBorder(),
+                    textStyle: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                  child: _saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primaryForeground,
+                          ),
+                        )
+                      : Text(l.routeAlertsSave),
                 ),
               ),
             ],
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: FilledButton(
-                key: const ValueKey('route-save'),
-                onPressed: ready ? _save : null,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.primaryForeground,
-                  shape: const StadiumBorder(),
-                  textStyle: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                child: _saving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primaryForeground,
-                        ),
-                      )
-                    : Text(l.routeAlertsSave),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
