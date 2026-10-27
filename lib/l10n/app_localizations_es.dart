@@ -4961,4 +4961,66 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get parcelChatsSection => 'Chats de paquetes';
+
+  @override
+  String get balanceTitle => 'Saldo Nata';
+
+  @override
+  String balanceAvailable(String amount) {
+    return '$amount disponible';
+  }
+
+  @override
+  String balanceNotEnough(String amount) {
+    return 'Saldo insuficiente ($amount disponible)';
+  }
+
+  @override
+  String payFromBalance(String amount) {
+    return 'Pagar $amount con el saldo';
+  }
+
+  @override
+  String get errBalanceTooLow =>
+      'Tu saldo Nata ya no cubre este importe. Elige otra forma de pago.';
+
+  @override
+  String get balanceCardNote =>
+      'Las ganancias y reembolsos que guardas en Nata. Úsalos en tus entregas o retíralos.';
+
+  @override
+  String get keepEarningsTitle => 'Guardar mis ganancias en Nata';
+
+  @override
+  String get keepEarningsSub =>
+      'Tus ganancias se quedan en tu saldo hasta que las retires, en lugar de ir a tu cuenta de cobro tras cada entrega';
+
+  @override
+  String get refundsToBalanceTitle => 'Reembolsos a mi saldo Nata';
+
+  @override
+  String get refundsToBalanceSub =>
+      'Al instante, en lugar de volver a tu tarjeta o mobile money';
+
+  @override
+  String get walletPaidFromBalance => 'Pagado con el saldo';
+
+  @override
+  String walletRefundTitle(String item) {
+    return 'Reembolso al saldo · $item';
+  }
+
+  @override
+  String get walletRefundFallback => 'Reembolso al saldo';
+
+  @override
+  String get walletStatusSpent => 'Usado en una entrega';
+
+  @override
+  String get notifRefundToBalanceTitle => 'Reembolso añadido a tu saldo Nata';
+
+  @override
+  String notifRefundToBalanceBody(String amount) {
+    return '$amount de tu solicitud cancelada están en tu saldo Nata.';
+  }
 }

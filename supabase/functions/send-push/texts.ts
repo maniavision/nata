@@ -64,6 +64,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Refund sent",
       "Your refund of {amount} is on its way."
     ],
+    "refund_to_balance": [
+      "Refund added to your Nata balance",
+      "{amount} from your cancelled request is in your Nata balance."
+    ],
     "identity_verified": [
       "Identity verified",
       "You're verified. You can now send and accept delivery requests."
@@ -158,6 +162,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Reembolso enviado",
       "Tu reembolso de {amount} está en camino."
     ],
+    "refund_to_balance": [
+      "Reembolso añadido a tu saldo Nata",
+      "{amount} de tu solicitud cancelada están en tu saldo Nata."
+    ],
     "identity_verified": [
       "Identidad verificada",
       "Estás verificado. Ya puedes enviar y aceptar solicitudes de entrega."
@@ -251,6 +259,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "refund_sent": [
       "Remboursement envoyé",
       "Votre remboursement de {amount} est en route."
+    ],
+    "refund_to_balance": [
+      "Remboursement ajouté à votre solde Nata",
+      "{amount} de votre demande annulée sont dans votre solde Nata."
     ],
     "identity_verified": [
       "Identité vérifiée",

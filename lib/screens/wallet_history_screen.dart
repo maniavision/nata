@@ -165,7 +165,7 @@ class _WalletActivityState extends State<WalletActivity> {
   List<WalletEntry> get _shown => [
     for (final e in _entries ?? const <WalletEntry>[])
       if (_filter == _Filter.all ||
-          (_filter == _Filter.payouts) == (e.kind == WalletEntryKind.payout))
+          (_filter == _Filter.payouts) == (e.kind != WalletEntryKind.payment))
         e,
   ];
 
@@ -316,11 +316,22 @@ class WalletEntryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final payout = entry.kind == WalletEntryKind.payout;
+    // Money in: earnings and refunds to the balance.
+    final payout = entry.kind != WalletEntryKind.payment;
     final item = entry.item?.trim();
-    final title = item == null || item.isEmpty
-        ? (payout ? l.walletPayoutFallback : l.walletPaymentFallback)
-        : (payout ? l.walletPayoutTitle(item) : l.walletPaymentTitle(item));
+    final hasItem = item != null && item.isNotEmpty;
+    final title = switch (entry.kind) {
+      WalletEntryKind.refund =>
+        hasItem ? l.walletRefundTitle(item) : l.walletRefundFallback,
+      WalletEntryKind.payout =>
+        hasItem ? l.walletPayoutTitle(item) : l.walletPayoutFallback,
+      WalletEntryKind.payment when entry.fromBalance =>
+        hasItem
+            ? '${l.walletPaidFromBalance} · $item'
+            : l.walletPaidFromBalance,
+      WalletEntryKind.payment =>
+        hasItem ? l.walletPaymentTitle(item) : l.walletPaymentFallback,
+    };
     final route = entry.fromCity != null && entry.toCity != null
         ? '${entry.fromCity} → ${entry.toCity}'
         : null;
@@ -442,6 +453,10 @@ class WalletEntryRow extends StatelessWidget {
       ),
       WalletEntryStatus.refunded => (
         l.walletStatusRefunded,
+        AppColors.mutedForeground,
+      ),
+      WalletEntryStatus.spent => (
+        l.walletStatusSpent,
         AppColors.mutedForeground,
       ),
     };

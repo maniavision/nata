@@ -2056,5 +2056,21 @@
   "parcelCodeNote": "Donnez ce code seulement quand vous avez votre colis en main.",
   "chipYourParcel": "Votre colis",
   "chipRecipient": "Destinataire",
-  "parcelChatsSection": "Discussions colis"
+  "parcelChatsSection": "Discussions colis",
+  "balanceTitle": "Solde Nata",
+  "balanceAvailable": "{amount} disponible",
+  "balanceNotEnough": "Solde insuffisant ({amount} disponible)",
+  "payFromBalance": "Payer {amount} avec le solde",
+  "errBalanceTooLow": "Votre solde Nata ne couvre plus ce montant. Choisissez un autre moyen de paiement.",
+  "balanceCardNote": "Les gains et remboursements que vous gardez chez Nata. Utilisez-les pour vos livraisons ou retirez-les.",
+  "keepEarningsTitle": "Garder mes gains chez Nata",
+  "keepEarningsSub": "Vos gains restent dans votre solde jusqu'à ce que vous les retiriez, au lieu d'aller sur votre compte de paiement après chaque livraison",
+  "refundsToBalanceTitle": "Rembourser sur mon solde Nata",
+  "refundsToBalanceSub": "Immédiat, au lieu d'un retour sur votre carte ou votre mobile money",
+  "walletPaidFromBalance": "Payé avec le solde",
+  "walletRefundTitle": "Remboursement sur le solde · {item}",
+  "walletRefundFallback": "Remboursement sur le solde",
+  "walletStatusSpent": "Utilisé pour une livraison",
+  "notifRefundToBalanceTitle": "Remboursement ajouté à votre solde Nata",
+  "notifRefundToBalanceBody": "{amount} de votre demande annulée sont dans votre solde Nata."
 }

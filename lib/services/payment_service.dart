@@ -576,9 +576,33 @@ class PaymentService {
   /// Sends the traveler's pending payouts (send-payouts). Returns how many
   /// were sent; the rest wait for a payout account or failed.
   Future<int> sendPayouts() async {
-    final response = await _client.functions.invoke('send-payouts');
+    // Withdraw also sends what the member keeps in their Nata balance.
+    final response = await _client.functions.invoke(
+      'send-payouts',
+      body: {'withdraw': true},
+    );
     return ((response.data as Map?)?['sent'] as num?)?.toInt() ?? 0;
   }
+
+  /// The Nata balance: what can be spent (in US dollars) and the member's
+  /// choices (20240187_nata_balance.sql).
+  Future<NataBalance> myBalance() async {
+    final data = await _client.rpc('my_balance');
+    return NataBalance.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  /// Keep earnings in the balance (instead of sending them after each
+  /// delivery), and refunds into it (instead of the card or mobile money).
+  Future<void> setBalancePreferences({
+    required bool keepEarnings,
+    required bool refundsToBalance,
+  }) => _client.rpc(
+    'set_balance_preferences',
+    params: {
+      'p_keep_earnings': keepEarnings,
+      'p_refunds_to_balance': refundsToBalance,
+    },
+  );
 
   /// The user's payouts and payments, newest first (wallet_history,
   /// 20240141_wallet_history.sql).
@@ -602,7 +626,13 @@ class PaymentService {
 }
 
 /// What a wallet history row is about.
-enum WalletEntryKind { payout, payment }
+enum WalletEntryKind {
+  payout,
+  payment,
+
+  /// A refund kept in the Nata balance (20240187).
+  refund,
+}
 
 /// Where a wallet history row stands, as the app shows it.
 enum WalletEntryStatus {
@@ -626,6 +656,9 @@ enum WalletEntryStatus {
 
   /// Payment: given back to the sender.
   refunded,
+
+  /// Payout: used to pay for a delivery from the Nata balance.
+  spent,
 }
 
 /// One payout (as a traveler) or payment (as a sender).
@@ -643,6 +676,9 @@ class WalletEntry {
   /// The sender (payout) or traveler (payment).
   final String? otherName;
 
+  /// A payment made from the Nata balance.
+  final bool fromBalance;
+
   const WalletEntry({
     required this.kind,
     required this.id,
@@ -654,18 +690,22 @@ class WalletEntry {
     this.fromCity,
     this.toCity,
     this.otherName,
+    this.fromBalance = false,
   });
 
   factory WalletEntry.fromJson(Map<String, dynamic> j) {
-    final kind = j['kind'] == 'payment'
-        ? WalletEntryKind.payment
-        : WalletEntryKind.payout;
+    final kind = switch (j['kind']) {
+      'payment' => WalletEntryKind.payment,
+      'refund' => WalletEntryKind.refund,
+      _ => WalletEntryKind.payout,
+    };
     final raw = j['status'] as String?;
-    final status = kind == WalletEntryKind.payout
+    final status = kind != WalletEntryKind.payment
         ? switch (raw) {
             'paid' => WalletEntryStatus.paid,
             'processing' => WalletEntryStatus.sending,
             'failed' => WalletEntryStatus.failed,
+            'spent' => WalletEntryStatus.spent,
             _ => WalletEntryStatus.pending,
           }
         : switch (raw) {
@@ -684,6 +724,26 @@ class WalletEntry {
       fromCity: j['from_city'] as String?,
       toCity: j['to_city'] as String?,
       otherName: j['other_name'] as String?,
+      fromBalance: j['method'] == 'balance',
     );
   }
+}
+
+/// The member's Nata balance: earnings and refunds kept in Nata.
+class NataBalance {
+  final double availableUsd;
+  final bool keepEarnings;
+  final bool refundsToBalance;
+
+  const NataBalance({
+    required this.availableUsd,
+    this.keepEarnings = false,
+    this.refundsToBalance = false,
+  });
+
+  factory NataBalance.fromJson(Map<String, dynamic> j) => NataBalance(
+    availableUsd: (j['available_usd'] as num?)?.toDouble() ?? 0,
+    keepEarnings: j['keep_earnings'] == true,
+    refundsToBalance: j['refunds_to_balance'] == true,
+  );
 }

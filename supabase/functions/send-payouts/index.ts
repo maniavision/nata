@@ -5,8 +5,9 @@
  * pays out to their bank.
  *
  * Called by the app (with the traveler's JWT) right after a delivery is
- * confirmed, after adding a payout account, and from Withdraw, which sends
- * that traveler's payouts; or with the x-job-secret header (matching
+ * confirmed, after adding a payout account, and from Withdraw
+ * ({ withdraw: true }), which sends that traveler's payouts, including what
+ * they keep in their Nata balance (20240187); or with the x-job-secret header (matching
  * PAYMENT_JOBS_SECRET) from the payment-jobs schedule
  * (nata.call_send_payouts), with { traveler } or for everyone's.
  *
@@ -243,19 +244,27 @@ Deno.serve(async (req: Request) => {
   if (!job && !user) return json({ error: "unauthorized" }, 401);
 
   // The schedule may name one traveler; the app always sends its own.
+  // Withdraw ({ withdraw: true }, from the app) also sends what the member
+  // keeps in their Nata balance (20240187).
   let traveler: string | null = user?.id ?? null;
+  let withdraw = false;
+  let body: Record<string, unknown> = {};
+  try {
+    body = (await req.json()) ?? {};
+  } catch (_) {
+    body = {};
+  }
   if (job) {
-    try {
-      const t = String((await req.json())?.traveler ?? "");
-      traveler = UUID.test(t) ? t : null;
-    } catch (_) {
-      traveler = null;
-    }
+    const t = String(body.traveler ?? "");
+    traveler = UUID.test(t) ? t : null;
+  } else {
+    withdraw = body.withdraw === true;
   }
 
   const db = admin.schema("nata");
   const { data: claimed, error } = await db.rpc("claim_payouts", {
     p_traveler: traveler,
+    p_withdraw: withdraw,
   });
   if (error) {
     console.error("[send-payouts] claim", error);

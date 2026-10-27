@@ -86,6 +86,15 @@ import 'app_localizations.dart';
         ),
       ),
     ),
+    'refund_to_balance' => (
+      l.notifRefundToBalanceTitle,
+      l.notifRefundToBalanceBody(
+        PriceFormatter.write(
+          (p['amount'] as num?)?.toDouble() ?? 0,
+          s('currency').toUpperCase(),
+        ),
+      ),
+    ),
     'identity_verified' => (l.notifVerifiedTitle, l.notifVerifiedBody),
     'identity_rejected' => (l.notifRejectedTitle, l.notifRejectedBody),
     'problem_reported' => (l.notifProblemTitle, l.notifProblemBody),
