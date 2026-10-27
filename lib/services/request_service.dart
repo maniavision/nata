@@ -173,6 +173,9 @@ enum RequestFailure {
   /// The sender already reviewed this delivery.
   alreadyReviewed,
 
+  /// The Nata balance doesn't cover the price (any more).
+  balanceTooLow,
+
   /// The database priced the request differently from what the sender was
   /// shown (the flight got a day closer, or the app and the database price
   /// differently because a pricing migration has not been run).
@@ -1380,6 +1383,22 @@ class RequestService {
   Future<void> sendAsRecipient(String requestId, String body) =>
       _call('send_as_recipient', {'p_request_id': requestId, 'p_body': body});
 
+  /// What the sender's Nata balance holds in the request's currency, and
+  /// whether it covers the whole price (null when it can't be told).
+  Future<BalanceCheckout?> balanceCheckout(String requestId) async {
+    final data = await _client.rpc(
+      'balance_checkout',
+      params: {'p_request_id': requestId},
+    );
+    if (data == null) return null;
+    return BalanceCheckout.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  /// Pays [requestId] from the Nata balance: into escrow at once, as a
+  /// card payment would (20240187_nata_balance.sql).
+  Future<void> payWithBalance(String requestId) =>
+      _call('pay_with_balance', {'p_request_id': requestId});
+
   /// The traveler/recipient chats for Messages, newest first.
   Future<List<RecipientChatSummary>> recipientChats() async {
     final rows = await _client.rpc('list_recipient_chats') as List;
@@ -1637,6 +1656,7 @@ class RequestService {
     if (has('request_not_paid')) return RequestFailure.notPaid;
     if (has('request_not_delivered')) return RequestFailure.notDelivered;
     if (has('already_reviewed')) return RequestFailure.alreadyReviewed;
+    if (has('balance_too_low')) return RequestFailure.balanceTooLow;
     if (has('price_changed')) return RequestFailure.priceChanged;
     if (has('size_too_big')) return RequestFailure.sizeTooBig;
     if (has('request_not_found')) return RequestFailure.requestNotFound;
@@ -1844,4 +1864,26 @@ enum RecipientLinkProblem { invalid, taken, notRecipient }
 class RecipientLinkException implements Exception {
   final RecipientLinkProblem problem;
   const RecipientLinkException(this.problem);
+}
+
+/// The Nata balance at checkout, in the request's currency.
+class BalanceCheckout {
+  final double total;
+  final String currency;
+  final double available;
+  final bool covers;
+
+  const BalanceCheckout({
+    required this.total,
+    required this.currency,
+    required this.available,
+    required this.covers,
+  });
+
+  factory BalanceCheckout.fromJson(Map<String, dynamic> j) => BalanceCheckout(
+    total: (j['total'] as num?)?.toDouble() ?? 0,
+    currency: (j['currency'] as String?) ?? 'USD',
+    available: (j['available'] as num?)?.toDouble() ?? 0,
+    covers: j['covers'] == true,
+  );
 }

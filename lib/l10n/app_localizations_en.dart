@@ -4913,4 +4913,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parcelChatsSection => 'Parcel chats';
+
+  @override
+  String get balanceTitle => 'Nata balance';
+
+  @override
+  String balanceAvailable(String amount) {
+    return '$amount available';
+  }
+
+  @override
+  String balanceNotEnough(String amount) {
+    return 'Not enough balance ($amount available)';
+  }
+
+  @override
+  String payFromBalance(String amount) {
+    return 'Pay $amount from balance';
+  }
+
+  @override
+  String get errBalanceTooLow =>
+      'Your Nata balance no longer covers this. Choose another way to pay.';
+
+  @override
+  String get balanceCardNote =>
+      'Earnings and refunds you keep in Nata. Spend them on deliveries or withdraw them.';
+
+  @override
+  String get keepEarningsTitle => 'Keep my earnings in Nata';
+
+  @override
+  String get keepEarningsSub =>
+      'Earnings stay in your balance until you withdraw them, instead of going to your payout account after each delivery';
+
+  @override
+  String get refundsToBalanceTitle => 'Refunds go to my Nata balance';
+
+  @override
+  String get refundsToBalanceSub =>
+      'Instant, instead of back to your card or mobile money';
+
+  @override
+  String get walletPaidFromBalance => 'Paid from balance';
+
+  @override
+  String walletRefundTitle(String item) {
+    return 'Refund to balance · $item';
+  }
+
+  @override
+  String get walletRefundFallback => 'Refund to balance';
+
+  @override
+  String get walletStatusSpent => 'Used for a delivery';
+
+  @override
+  String get notifRefundToBalanceTitle => 'Refund added to your Nata balance';
+
+  @override
+  String notifRefundToBalanceBody(String amount) {
+    return '$amount from your cancelled request is in your Nata balance.';
+  }
 }

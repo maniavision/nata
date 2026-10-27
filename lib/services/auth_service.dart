@@ -286,13 +286,23 @@ class AuthService {
     if (userId == null) return {'available': 0.0, 'escrow': 0.0};
 
     try {
-      // Fetch Available for Payout
-      final payoutsResponse = await _client
+      // Available: payouts not sent yet (earnings, and refunds kept in the
+      // Nata balance), less what was spent from the balance (20240187).
+      final payoutRows = await _client
           .schema('nata')
           .from('payouts')
-          .select('amount, currency')
+          .select('amount, spent_amount, currency')
           .eq('traveler_id', userId)
-          .neq('status', 'paid');
+          .inFilter('status', ['pending', 'processing', 'failed']);
+      final payoutsResponse = [
+        for (final r in payoutRows)
+          {
+            'amount':
+                ((r['amount'] as num?) ?? 0) -
+                ((r['spent_amount'] as num?) ?? 0),
+            'currency': r['currency'],
+          },
+      ];
 
       // Fetch Held in Escrow
       final paymentsResponse = await _client

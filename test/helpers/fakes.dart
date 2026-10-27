@@ -980,6 +980,20 @@ class FakeRequestService extends Fake implements RequestService {
   /// How checkout lets this request be paid; null fails (every way shown).
   CheckoutKind? kind;
 
+  /// The Nata balance at checkout (null: nothing to offer).
+  BalanceCheckout? balance;
+  final List<String> paidWithBalance = [];
+  RequestException? failBalancePay;
+
+  @override
+  Future<BalanceCheckout?> balanceCheckout(String requestId) async => balance;
+
+  @override
+  Future<void> payWithBalance(String requestId) async {
+    if (failBalancePay != null) throw failBalancePay!;
+    paidWithBalance.add(requestId);
+  }
+
   @override
   Future<CheckoutKind> checkoutKind(String requestId) async {
     final k = kind;
@@ -1650,6 +1664,28 @@ class FakePaymentService extends Fake implements PaymentService {
   Future<List<WalletEntry>> walletHistory({int limit = 100}) async {
     if (failHistory) throw StateError('history failed');
     return history;
+  }
+
+  /// The Nata balance; [failBalancePreferences] makes saving fail.
+  NataBalance balance = const NataBalance(availableUsd: 320);
+  bool failBalancePreferences = false;
+  final List<({bool keep, bool refunds})> balancePreferences = [];
+
+  @override
+  Future<NataBalance> myBalance() async => balance;
+
+  @override
+  Future<void> setBalancePreferences({
+    required bool keepEarnings,
+    required bool refundsToBalance,
+  }) async {
+    if (failBalancePreferences) throw Exception('save failed');
+    balancePreferences.add((keep: keepEarnings, refunds: refundsToBalance));
+    balance = NataBalance(
+      availableUsd: balance.availableUsd,
+      keepEarnings: keepEarnings,
+      refundsToBalance: refundsToBalance,
+    );
   }
 
   FakePaymentService({

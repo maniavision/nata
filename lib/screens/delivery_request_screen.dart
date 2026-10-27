@@ -616,6 +616,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errNotDelivered;
       case RequestFailure.alreadyReviewed:
         return l.errAlreadyReviewed;
+      case RequestFailure.balanceTooLow:
       case RequestFailure.other:
         return l.errRequestFailed;
     }

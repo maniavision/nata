@@ -10,6 +10,7 @@ import '../services/preferences_service.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/wallet_money.dart';
 import 'add_payment_method_screen.dart';
+import '../widgets/nata_toast.dart';
 
 const _green = Color(0xFF168A68);
 const _greenBg = Color(0xFFE4F4EE);
@@ -53,6 +54,9 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
   List<PaymentMethod> _methods = const [];
   List<PayoutAccount> _payoutAccounts = const [];
   PayoutSchedule _schedule = PayoutSchedule.automatic;
+
+  /// The Nata balance and its two switches (20240187).
+  NataBalance? _balance;
   bool _loading = true;
 
   /// A load or save failed: shown above the payment methods. (A message
@@ -103,8 +107,53 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     }
   }
 
+  Future<void> _loadBalance() async {
+    try {
+      final balance = await _service.myBalance();
+      if (mounted) setState(() => _balance = balance);
+    } catch (e) {
+      debugPrint('[PaymentSettings] balance: $e');
+    }
+  }
+
+  /// Saves the balance switches; puts them back if that fails.
+  Future<void> _setBalance({bool? keepEarnings, bool? refundsToBalance}) async {
+    final before = _balance;
+    if (before == null) return;
+    final next = NataBalance(
+      availableUsd: before.availableUsd,
+      keepEarnings: keepEarnings ?? before.keepEarnings,
+      refundsToBalance: refundsToBalance ?? before.refundsToBalance,
+    );
+    setState(() {
+      _balance = next;
+      _schedule = next.keepEarnings
+          ? PayoutSchedule.manual
+          : PayoutSchedule.automatic;
+    });
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = context.l10n.errRequestFailed;
+    try {
+      await _service.setBalancePreferences(
+        keepEarnings: next.keepEarnings,
+        refundsToBalance: next.refundsToBalance,
+      );
+    } catch (e) {
+      debugPrint('[PaymentSettings] balance preferences: $e');
+      if (!mounted) return;
+      setState(() {
+        _balance = before;
+        _schedule = before.keepEarnings
+            ? PayoutSchedule.manual
+            : PayoutSchedule.automatic;
+      });
+      messenger.showSnackBar(nataToast(failed, tone: ToastTone.error));
+    }
+  }
+
   Future<void> _load() async {
     _loadRecent();
+    _loadBalance();
     try {
       final results = await Future.wait([
         _service.methods(),
@@ -279,6 +328,10 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                 children: [
                   _walletCard(l),
                   const SizedBox(height: 16),
+                  if (_balance != null) ...[
+                    _balanceSection(l, _balance!),
+                    const SizedBox(height: 16),
+                  ],
                   _paymentMethods(l),
                   const SizedBox(height: 16),
                   _payoutAccount(l),
@@ -691,6 +744,58 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Nata balance ───────────────────────────────────────────────────────────
+  /// What the member keeps in Nata (designed in Sleek, "Payment Settings"):
+  /// what can be spent, and whether earnings and refunds stay in it.
+  Widget _balanceSection(AppLocalizations l, NataBalance b) {
+    return _section(
+      title: l.balanceTitle,
+      child: Column(
+        key: const ValueKey('payment-settings-balance'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+            child: Text(
+              '${l.balanceAvailable(_money(b.availableUsd))} · '
+              '${l.balanceCardNote}',
+              key: const ValueKey('payment-settings-balance-available'),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                height: 1.4,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ),
+          _list([
+            _row(
+              leading: _iconBox(Icons.savings_outlined),
+              title: l.keepEarningsTitle,
+              subtitle: l.keepEarningsSub,
+              trailing: Switch.adaptive(
+                key: const ValueKey('payment-settings-keep-earnings'),
+                value: b.keepEarnings,
+                activeTrackColor: AppColors.primary,
+                onChanged: (v) => _setBalance(keepEarnings: v),
+              ),
+            ),
+            _row(
+              leading: _iconBox(Icons.replay_rounded),
+              title: l.refundsToBalanceTitle,
+              subtitle: l.refundsToBalanceSub,
+              trailing: Switch.adaptive(
+                key: const ValueKey('payment-settings-refunds-to-balance'),
+                value: b.refundsToBalance,
+                activeTrackColor: AppColors.primary,
+                onChanged: (v) => _setBalance(refundsToBalance: v),
+              ),
+            ),
+          ]),
+        ],
       ),
     );
   }

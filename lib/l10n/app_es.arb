@@ -2056,5 +2056,21 @@
   "parcelCodeNote": "Da este código solo cuando tengas tu paquete en la mano.",
   "chipYourParcel": "Tu paquete",
   "chipRecipient": "Recibe el paquete",
-  "parcelChatsSection": "Chats de paquetes"
+  "parcelChatsSection": "Chats de paquetes",
+  "balanceTitle": "Saldo Nata",
+  "balanceAvailable": "{amount} disponible",
+  "balanceNotEnough": "Saldo insuficiente ({amount} disponible)",
+  "payFromBalance": "Pagar {amount} con el saldo",
+  "errBalanceTooLow": "Tu saldo Nata ya no cubre este importe. Elige otra forma de pago.",
+  "balanceCardNote": "Las ganancias y reembolsos que guardas en Nata. Úsalos en tus entregas o retíralos.",
+  "keepEarningsTitle": "Guardar mis ganancias en Nata",
+  "keepEarningsSub": "Tus ganancias se quedan en tu saldo hasta que las retires, en lugar de ir a tu cuenta de cobro tras cada entrega",
+  "refundsToBalanceTitle": "Reembolsos a mi saldo Nata",
+  "refundsToBalanceSub": "Al instante, en lugar de volver a tu tarjeta o mobile money",
+  "walletPaidFromBalance": "Pagado con el saldo",
+  "walletRefundTitle": "Reembolso al saldo · {item}",
+  "walletRefundFallback": "Reembolso al saldo",
+  "walletStatusSpent": "Usado en una entrega",
+  "notifRefundToBalanceTitle": "Reembolso añadido a tu saldo Nata",
+  "notifRefundToBalanceBody": "{amount} de tu solicitud cancelada están en tu saldo Nata."
 }

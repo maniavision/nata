@@ -8575,6 +8575,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Parcel chats'**
   String get parcelChatsSection;
+
+  /// No description provided for @balanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata balance'**
+  String get balanceTitle;
+
+  /// No description provided for @balanceAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} available'**
+  String balanceAvailable(String amount);
+
+  /// No description provided for @balanceNotEnough.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough balance ({amount} available)'**
+  String balanceNotEnough(String amount);
+
+  /// No description provided for @payFromBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount} from balance'**
+  String payFromBalance(String amount);
+
+  /// No description provided for @errBalanceTooLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Nata balance no longer covers this. Choose another way to pay.'**
+  String get errBalanceTooLow;
+
+  /// No description provided for @balanceCardNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings and refunds you keep in Nata. Spend them on deliveries or withdraw them.'**
+  String get balanceCardNote;
+
+  /// No description provided for @keepEarningsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my earnings in Nata'**
+  String get keepEarningsTitle;
+
+  /// No description provided for @keepEarningsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings stay in your balance until you withdraw them, instead of going to your payout account after each delivery'**
+  String get keepEarningsSub;
+
+  /// No description provided for @refundsToBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunds go to my Nata balance'**
+  String get refundsToBalanceTitle;
+
+  /// No description provided for @refundsToBalanceSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant, instead of back to your card or mobile money'**
+  String get refundsToBalanceSub;
+
+  /// No description provided for @walletPaidFromBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from balance'**
+  String get walletPaidFromBalance;
+
+  /// No description provided for @walletRefundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund to balance · {item}'**
+  String walletRefundTitle(String item);
+
+  /// No description provided for @walletRefundFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund to balance'**
+  String get walletRefundFallback;
+
+  /// No description provided for @walletStatusSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for a delivery'**
+  String get walletStatusSpent;
+
+  /// No description provided for @notifRefundToBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund added to your Nata balance'**
+  String get notifRefundToBalanceTitle;
+
+  /// No description provided for @notifRefundToBalanceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} from your cancelled request is in your Nata balance.'**
+  String notifRefundToBalanceBody(String amount);
 }
 
 class _AppLocalizationsDelegate

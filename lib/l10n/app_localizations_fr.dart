@@ -4997,4 +4997,67 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get parcelChatsSection => 'Discussions colis';
+
+  @override
+  String get balanceTitle => 'Solde Nata';
+
+  @override
+  String balanceAvailable(String amount) {
+    return '$amount disponible';
+  }
+
+  @override
+  String balanceNotEnough(String amount) {
+    return 'Solde insuffisant ($amount disponible)';
+  }
+
+  @override
+  String payFromBalance(String amount) {
+    return 'Payer $amount avec le solde';
+  }
+
+  @override
+  String get errBalanceTooLow =>
+      'Votre solde Nata ne couvre plus ce montant. Choisissez un autre moyen de paiement.';
+
+  @override
+  String get balanceCardNote =>
+      'Les gains et remboursements que vous gardez chez Nata. Utilisez-les pour vos livraisons ou retirez-les.';
+
+  @override
+  String get keepEarningsTitle => 'Garder mes gains chez Nata';
+
+  @override
+  String get keepEarningsSub =>
+      'Vos gains restent dans votre solde jusqu\'à ce que vous les retiriez, au lieu d\'aller sur votre compte de paiement après chaque livraison';
+
+  @override
+  String get refundsToBalanceTitle => 'Rembourser sur mon solde Nata';
+
+  @override
+  String get refundsToBalanceSub =>
+      'Immédiat, au lieu d\'un retour sur votre carte ou votre mobile money';
+
+  @override
+  String get walletPaidFromBalance => 'Payé avec le solde';
+
+  @override
+  String walletRefundTitle(String item) {
+    return 'Remboursement sur le solde · $item';
+  }
+
+  @override
+  String get walletRefundFallback => 'Remboursement sur le solde';
+
+  @override
+  String get walletStatusSpent => 'Utilisé pour une livraison';
+
+  @override
+  String get notifRefundToBalanceTitle =>
+      'Remboursement ajouté à votre solde Nata';
+
+  @override
+  String notifRefundToBalanceBody(String amount) {
+    return '$amount de votre demande annulée sont dans votre solde Nata.';
+  }
 }

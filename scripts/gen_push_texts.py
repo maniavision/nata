@@ -25,6 +25,7 @@ EVENTS = {
     "item_delivered": ("notifDeliveredTitle", "notifDeliveredBody"),
     "payout_paid": ("notifPayoutTitle", "notifPayoutBody"),
     "refund_sent": ("notifRefundTitle", "notifRefundBody"),
+    "refund_to_balance": ("notifRefundToBalanceTitle", "notifRefundToBalanceBody"),
     "identity_verified": ("notifVerifiedTitle", "notifVerifiedBody"),
     "identity_rejected": ("notifRejectedTitle", "notifRejectedBody"),
     "problem_reported": ("notifProblemTitle", "notifProblemBody"),
