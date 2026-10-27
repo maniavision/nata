@@ -4955,4 +4955,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tipPublicNameBody =>
       'Choisissez si les personnes qui vous trouvent en tant que voyageur voient votre nom ou un pseudonyme. Votre badge vérifié s\'affiche toujours.';
+
+  @override
+  String get photosUpToThree => 'Photos (jusqu\'à 3)';
 }

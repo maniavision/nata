@@ -4919,4 +4919,7 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tipPublicNameBody =>
       'Elige si las personas que te encuentran como viajero ven tu nombre o un seudónimo. Tu insignia de verificado siempre se muestra.';
+
+  @override
+  String get photosUpToThree => 'Fotos (hasta 3)';
 }

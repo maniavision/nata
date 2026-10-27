@@ -143,9 +143,11 @@ void main() {
 
     // The sealed box is photographed first.
     expect(photosTaken, 1);
-    expect(service.photos, [(id: 'req-1', kind: DeliveryPhotoKind.pickup)]);
+    expect(service.photos, [
+      (id: 'req-1', kind: DeliveryPhotoKind.pickup, count: 1),
+    ]);
     expect(
-      find.byKey(const ValueKey('delivery-task-pickup-photo')),
+      find.byKey(const ValueKey('delivery-task-pickup-photo-0')),
       findsOneWidget,
     );
     expect(service.pickedUp, ['req-1']);
@@ -209,8 +211,84 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
     await tester.pumpAndSettle();
 
-    expect(service.photos, [(id: 'req-1', kind: DeliveryPhotoKind.handover)]);
+    expect(service.photos, [
+      (id: 'req-1', kind: DeliveryPhotoKind.handover, count: 1),
+    ]);
     expect(find.byType(DeliveryConfirmScreen), findsOneWidget);
+  });
+
+  testWidgets('up to 3 photos of the sealed box go with the pickup', (
+    tester,
+  ) async {
+    await pump(tester, sampleDelivery());
+    Finder add() =>
+        find.byKey(const ValueKey('delivery-task-add-pickup-photo'));
+
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(add());
+      await tester.pumpAndSettle();
+    }
+    expect(photosTaken, 3);
+    expect(find.text('3/3'), findsOneWidget);
+    // Full: no more room.
+    expect(add(), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-picked-up')));
+    await tester.pumpAndSettle();
+
+    // No extra photo: the three already taken are sent together.
+    expect(photosTaken, 3);
+    expect(service.photos.length, 3);
+    expect(service.photos.every((p) => p.count == 3), isTrue);
+    expect(service.pickedUp, ['req-1']);
+    // Sent: they can't be removed any more.
+    expect(
+      find.byKey(const ValueKey('delivery-task-remove-pickup-0')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('a photo can be removed before it is sent', (tester) async {
+    await pump(tester, sampleDelivery());
+    final add = find.byKey(const ValueKey('delivery-task-add-pickup-photo'));
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    expect(find.text('2/3'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('delivery-task-remove-pickup-1')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1/3'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('delivery-task-pickup-photo-1')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('several handover photos are sent together', (tester) async {
+    await pump(tester, samplePickedUpDelivery());
+
+    await attachHandover(tester);
+    await tester.tap(
+      find.byKey(const ValueKey('delivery-task-add-handover-photo')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('2/3'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(service.photos.length, 2);
+    expect(
+      service.photos.every(
+        (p) => p.kind == DeliveryPhotoKind.handover && p.count == 2,
+      ),
+      isTrue,
+    );
   });
 
   testWidgets('a failed handover upload is explained', (tester) async {

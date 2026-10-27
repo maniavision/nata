@@ -4871,4 +4871,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tipPublicNameBody =>
       'Choose whether people who find you as a traveler see your name or a pseudonym. Your verified badge always shows.';
+
+  @override
+  String get photosUpToThree => 'Photos (up to 3)';
 }

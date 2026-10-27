@@ -207,10 +207,11 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
   late DateTime? _pickedUpAt = widget.delivery.pickedUpAt;
   bool _markingPickedUp = false;
 
-  /// The photos taken on this visit: the sealed box at pickup, and the
-  /// handover (uploaded when the traveler goes on to the code).
-  Uint8List? _pickupPhoto;
-  Uint8List? _handoverPhoto;
+  /// The photos taken on this visit (up to 3 each): the sealed box at
+  /// pickup, and the handover (uploaded when the traveler goes on to the
+  /// code).
+  final List<Uint8List> _pickupPhotos = [];
+  final List<Uint8List> _handoverPhotos = [];
   bool _handoverUploaded = false;
   bool _uploadingHandover = false;
 
@@ -223,21 +224,35 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
   AcceptedDelivery get d => widget.delivery;
   RequestService get _service => widget.requestService ?? RequestService();
 
-  /// A photo of the sealed box first, then the pickup is recorded.
-  Future<void> _markPickedUp() async {
-    if (_markingPickedUp || _pickedUpAt != null) return;
-    final photo = _pickupPhoto ?? await _takePhoto();
+  /// Adds a photo of the sealed box (up to 3) before the pickup.
+  Future<void> _addPickupPhoto() async {
+    if (_pickupPhotos.length >= RequestService.maxDeliveryPhotos) return;
+    final photo = await _takePhoto();
     if (photo == null || !mounted) return;
     setState(() {
-      _pickupPhoto = photo;
+      _pickupPhotos.add(photo);
+      _error = null;
+    });
+  }
+
+  /// At least one photo of the sealed box (taken now if there's none yet),
+  /// then the pickup is recorded.
+  Future<void> _markPickedUp() async {
+    if (_markingPickedUp || _pickedUpAt != null) return;
+    if (_pickupPhotos.isEmpty) {
+      final photo = await _takePhoto();
+      if (photo == null || !mounted) return;
+      _pickupPhotos.add(photo);
+    }
+    setState(() {
       _markingPickedUp = true;
       _error = null;
     });
     try {
-      await _service.uploadDeliveryPhoto(
+      await _service.uploadDeliveryPhotos(
         d.requestId,
         DeliveryPhotoKind.pickup,
-        photo,
+        List.of(_pickupPhotos),
       );
       await _service.markPickedUp(d.requestId);
       if (!mounted) return;
@@ -260,10 +275,11 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
   /// Opens Delivery & Payout Release, where the recipient's code is
   /// entered. Back here once delivered, then back to Requests.
   Future<void> _attachHandover() async {
+    if (_handoverPhotos.length >= RequestService.maxDeliveryPhotos) return;
     final photo = await _takePhoto();
     if (photo == null || !mounted) return;
     setState(() {
-      _handoverPhoto = photo;
+      _handoverPhotos.add(photo);
       _handoverUploaded = false;
       _error = null;
     });
@@ -275,8 +291,7 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
       setState(() => _error = l.pickUpFirst);
       return;
     }
-    final photo = _handoverPhoto;
-    if (photo == null) {
+    if (_handoverPhotos.isEmpty) {
       setState(() => _error = l.attachHandoverFirst);
       return;
     }
@@ -286,10 +301,10 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
         _error = null;
       });
       try {
-        await _service.uploadDeliveryPhoto(
+        await _service.uploadDeliveryPhotos(
           d.requestId,
           DeliveryPhotoKind.handover,
-          photo,
+          List.of(_handoverPhotos),
         );
         _handoverUploaded = true;
       } catch (e) {
@@ -731,8 +746,14 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
             _note(l.pickupPhotoHint),
           ],
           const SizedBox(height: 12),
-          if (_pickupPhoto != null) ...[
-            _thumbnail(_pickupPhoto!, key: 'delivery-task-pickup-photo'),
+          if (pickedUpAt == null || _pickupPhotos.isNotEmpty) ...[
+            _photoRow(
+              l,
+              photos: _pickupPhotos,
+              kind: 'pickup',
+              locked: pickedUpAt != null || _markingPickedUp,
+              onAdd: _addPickupPhoto,
+            ),
             const SizedBox(height: 12),
           ],
           if (pickedUpAt != null)
@@ -865,8 +886,15 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
           ),
           if (_pickedUpAt != null) ...[
             const SizedBox(height: 12),
-            if (_handoverPhoto != null) ...[
-              _thumbnail(_handoverPhoto!, key: 'delivery-task-handover-photo'),
+            _photoRow(
+              l,
+              photos: _handoverPhotos,
+              kind: 'handover',
+              locked: _uploadingHandover,
+              onAdd: _attachHandover,
+              addLabel: l.takeOrUploadHandoverPhoto,
+            ),
+            if (_handoverPhotos.isNotEmpty) ...[
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -886,58 +914,182 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                       ),
                     ),
                   ),
-                  TextButton(
-                    key: const ValueKey('delivery-task-retake-handover'),
-                    onPressed: _uploadingHandover ? null : _attachHandover,
-                    child: Text(l.retake),
-                  ),
                 ],
               ),
-            ] else
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  key: const ValueKey('delivery-task-attach-handover'),
-                  onPressed: _attachHandover,
-                  icon: const Icon(Icons.photo_camera_rounded, size: 16),
-                  label: Text(
-                    l.takeOrUploadHandoverPhoto,
-                    style: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
+            ],
           ],
         ],
       ),
     );
   }
 
-  Widget _thumbnail(Uint8List bytes, {required String key}) => ClipRRect(
-    key: ValueKey(key),
-    borderRadius: BorderRadius.circular(12),
-    child: Image.memory(
-      bytes,
-      height: 140,
-      width: double.infinity,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => Container(
-        height: 140,
-        color: AppColors.secondary,
-        child: const Icon(Icons.image_rounded, color: AppColors.primary),
-      ),
-    ),
-  );
+  /// A step's photos (up to 3) as square tiles, each with ✕ to remove it
+  /// until it's sent, then an "Add photo" tile while there's room.
+  Widget _photoRow(
+    AppLocalizations l, {
+    required List<Uint8List> photos,
+    required String kind,
+    required bool locked,
+    required VoidCallback onAdd,
+    String? addLabel,
+  }) {
+    const max = RequestService.maxDeliveryPhotos;
+    final canAdd = !locked && photos.length < max;
+    if (photos.isEmpty && canAdd && addLabel != null) {
+      // No photo yet: one clear button, as before.
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          key: ValueKey(
+            kind == 'handover'
+                ? 'delivery-task-attach-handover'
+                : 'delivery-task-add-$kind-photo',
+          ),
+          onPressed: onAdd,
+          icon: const Icon(Icons.photo_camera_rounded, size: 16),
+          label: Text(
+            addLabel,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: const BorderSide(color: AppColors.primary),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      );
+    }
+    Widget tile(Widget child) =>
+        Expanded(child: AspectRatio(aspectRatio: 1, child: child));
+    return Column(
+      key: ValueKey('delivery-task-$kind-photos'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l.photosUpToThree,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+            Text(
+              '${photos.length}/$max',
+              key: ValueKey('delivery-task-$kind-photo-count'),
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: AppColors.accent,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            for (var i = 0; i < max; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              if (i < photos.length)
+                tile(
+                  Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClipRRect(
+                        key: ValueKey('delivery-task-$kind-photo-$i'),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          photos[i],
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Container(
+                            color: AppColors.secondary,
+                            child: const Icon(
+                              Icons.image_rounded,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (!locked)
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            key: ValueKey('delivery-task-remove-$kind-$i'),
+                            onTap: () => setState(() {
+                              photos.removeAt(i);
+                              if (kind == 'handover') {
+                                _handoverUploaded = false;
+                              }
+                            }),
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.55),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                )
+              else if (i == photos.length && canAdd)
+                tile(
+                  GestureDetector(
+                    key: ValueKey('delivery-task-add-$kind-photo'),
+                    onTap: onAdd,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 20,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l.addPhoto,
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                const Expanded(child: SizedBox()),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
 
   // ── Confirm ────────────────────────────────────────────────────────────────
   Widget _confirm(AppLocalizations l) {
@@ -963,7 +1115,7 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
             key: const ValueKey('delivery-task-confirm'),
             onPressed:
                 _pickedUpAt == null ||
-                    _handoverPhoto == null ||
+                    _handoverPhotos.isEmpty ||
                     _uploadingHandover
                 ? null
                 : _confirmDelivery,

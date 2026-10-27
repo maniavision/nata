@@ -379,18 +379,26 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     if (camera == null || !mounted) return;
 
     try {
-      final picked = await (widget.photoPicker ?? _defaultPhotoPicker)(
-        camera: camera,
-      );
-      if (picked == null || !mounted) return;
-      if (picked.sizeBytes > _maxPhotoBytes) {
-        setState(() => _error = context.l10n.errPhotoTooBig);
-        return;
-      }
+      final room = _maxPhotos - _photos.length;
+      // From the library, several at once (up to the room left).
+      final picked = widget.photoPicker == null && !camera && room > 1
+          ? await _defaultMultiPicker(room)
+          : [
+              ?await (widget.photoPicker ?? _defaultPhotoPicker)(
+                camera: camera,
+              ),
+            ];
+      if (picked.isEmpty || !mounted) return;
+      final fits = [
+        for (final p in picked.take(room))
+          if (p.sizeBytes <= _maxPhotoBytes) p,
+      ];
       setState(() {
-        _photos.add(picked);
-        _photosChanged = true;
-        _error = null;
+        _photos.addAll(fits);
+        if (fits.isNotEmpty) _photosChanged = true;
+        _error = fits.length < picked.take(room).length
+            ? context.l10n.errPhotoTooBig
+            : null;
       });
     } catch (e) {
       if (mounted && isCameraDenied(e)) {
@@ -399,6 +407,25 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         setState(() => _error = context.l10n.chatCameraFailed);
       }
     }
+  }
+
+  static Future<List<PickedReceipt>> _defaultMultiPicker(int limit) async {
+    final photos = await ImagePicker().pickMultiImage(
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 80,
+      limit: limit,
+    );
+    return [
+      for (final photo in photos)
+        PickedReceipt(
+          bytes: await photo.readAsBytes(),
+          name: photo.name.isEmpty ? 'photo.jpg' : photo.name,
+          extension: photo.name.contains('.')
+              ? photo.name.split('.').last.toLowerCase()
+              : 'jpg',
+        ),
+    ];
   }
 
   static Future<PickedReceipt?> _defaultPhotoPicker({
