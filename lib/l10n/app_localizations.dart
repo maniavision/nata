@@ -8671,6 +8671,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} from your cancelled request is in your Nata balance.'**
   String notifRefundToBalanceBody(String amount);
+
+  /// No description provided for @photoShownOnceAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo shown once they accept your request'**
+  String get photoShownOnceAccepted;
 }
 
 class _AppLocalizationsDelegate

@@ -5023,4 +5023,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String notifRefundToBalanceBody(String amount) {
     return '$amount de tu solicitud cancelada están en tu saldo Nata.';
   }
+
+  @override
+  String get photoShownOnceAccepted =>
+      'La foto se verá cuando acepte tu solicitud';
 }

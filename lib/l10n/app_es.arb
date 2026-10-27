@@ -2072,5 +2072,6 @@
   "walletRefundFallback": "Reembolso al saldo",
   "walletStatusSpent": "Usado en una entrega",
   "notifRefundToBalanceTitle": "Reembolso añadido a tu saldo Nata",
-  "notifRefundToBalanceBody": "{amount} de tu solicitud cancelada están en tu saldo Nata."
+  "notifRefundToBalanceBody": "{amount} de tu solicitud cancelada están en tu saldo Nata.",
+  "photoShownOnceAccepted": "La foto se verá cuando acepte tu solicitud"
 }

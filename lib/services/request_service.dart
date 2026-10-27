@@ -657,6 +657,10 @@ class SentRequest {
   /// Paid, and not delivered yet: the delivery code is in use.
   bool get isPaid => status == 'paid' || status == 'handed_off';
 
+  /// The traveler accepted: their photo shows clearly (blurred before).
+  bool get photoRevealed =>
+      const {'accepted', 'paid', 'handed_off', 'delivered'}.contains(status);
+
   /// The fee for cancelling now, in US dollars, or null when it can no longer
   /// be cancelled. Free until the traveler accepts, then 10% of the total,
   /// rounded up to whole dollars.

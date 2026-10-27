@@ -2212,5 +2212,6 @@
   "walletStatusSpent": "Used for a delivery",
   "notifRefundToBalanceTitle": "Refund added to your Nata balance",
   "notifRefundToBalanceBody": "{amount} from your cancelled request is in your Nata balance.",
-  "@notifRefundToBalanceBody": {"placeholders": {"amount": {"type": "String"}}}
+  "@notifRefundToBalanceBody": {"placeholders": {"amount": {"type": "String"}}},
+  "photoShownOnceAccepted": "Photo shown once they accept your request"
 }
