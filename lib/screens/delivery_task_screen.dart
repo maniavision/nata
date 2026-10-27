@@ -327,21 +327,21 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
       ),
     );
     if (delivered != true || !mounted) return;
-    // Delivered: on to rating the sender, in place of this page.
+    // Delivered: on to rating the sender, then back to Requests, which
+    // reloads only now, so the card shows the review as done (not "Rate
+    // the sender" again).
     final source = d.source;
-    if (source == null) {
-      Navigator.of(context).pop(true);
-      return;
-    }
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ReviewScreen.sender(
-          request: source,
-          service: widget.requestService,
+    if (source != null) {
+      await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => ReviewScreen.sender(
+            request: source,
+            service: widget.requestService,
+          ),
         ),
-      ),
-      result: true,
-    );
+      );
+    }
+    if (mounted) Navigator.of(context).pop(true);
   }
 
   @override

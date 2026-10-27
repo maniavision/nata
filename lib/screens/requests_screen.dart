@@ -538,15 +538,16 @@ class _RequestsScreenState extends State<RequestsScreen> {
       DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(d);
 
   Future<void> _openIncoming(IncomingRequest r) async {
-    // Delivered: rate the sender, until done.
+    // Delivered: rate the sender, once. Reloaded either way, so a review
+    // just sent (or already sent from another phone) shows as done.
     if (r.needsSenderReview) {
-      final reviewed = await Navigator.of(context).push<bool>(
+      await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           builder: (_) =>
               ReviewScreen.sender(request: r, service: widget.requestService),
         ),
       );
-      if (reviewed == true && mounted) _loadIncoming();
+      if (mounted) _loadIncoming();
       return;
     }
     // Paid: the delivery itself (pick up, hand over with the code).

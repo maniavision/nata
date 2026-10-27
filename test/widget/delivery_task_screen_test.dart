@@ -359,9 +359,9 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('delivery-confirm-release')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(DeliveryTaskScreen), findsNothing);
     expect(find.text('Rate Your Sender'), findsOneWidget);
-    expect(popped, isTrue);
+    // Requests isn't told yet: reloading now would still offer the review.
+    expect(popped, isNull);
 
     await tester.tap(find.byKey(const ValueKey('review-star-5')));
     await tester.pump();
@@ -370,6 +370,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(service.senderReviews.single.id, 'in-1');
     expect(find.text('Rate Your Sender'), findsNothing);
+    // Back to Requests only after the review, which then reloads.
+    expect(find.byType(DeliveryTaskScreen), findsNothing);
+    expect(popped, isTrue);
+  });
+
+  testWidgets('skipping the review still goes back to Requests', (
+    tester,
+  ) async {
+    await initializeDateFormatting('en');
+    await pump(
+      tester,
+      AcceptedDelivery.fromIncoming(
+        sampleIncoming(
+          status: 'handed_off',
+          pickedUpAt: DateTime(2030, 6, 22, 8),
+        ),
+        payout: r'$38',
+        locale: 'en',
+      ),
+    );
+    await attachHandover(tester);
+    await tester.tap(find.byKey(const ValueKey('delivery-task-confirm')));
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 4; i++) {
+      await tester.enterText(
+        find.byKey(ValueKey('delivery-confirm-pin-$i')),
+        '1234'[i],
+      );
+    }
+    await tester.pump();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('delivery-confirm-release')),
+    );
+    await tester.tap(find.byKey(const ValueKey('delivery-confirm-release')));
+    await tester.pumpAndSettle();
+
+    Navigator.of(tester.element(find.text('Rate Your Sender'))).pop();
+    await tester.pumpAndSettle();
+
+    expect(service.senderReviews, isEmpty);
+    expect(find.byType(DeliveryTaskScreen), findsNothing);
+    expect(popped, isTrue);
   });
 
   testWidgets('no phone call button without the sender\'s number', (
