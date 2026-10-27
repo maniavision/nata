@@ -20,6 +20,9 @@ import 'home_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/camera_denied_sheet.dart';
 import '../widgets/nata_toast.dart';
+import '../widgets/verified_route_nudge.dart';
+import '../services/route_alert_service.dart';
+import '../services/trip_service.dart';
 
 class IdentityVerificationScreen extends StatefulWidget {
   /// Which step to open on: 0 = ID upload, 1 = face scan (not part of the flow
@@ -41,6 +44,10 @@ class IdentityVerificationScreen extends StatefulWidget {
   /// (verification opened right after sign-up). Replaced in tests.
   final WidgetBuilder? homeBuilder;
 
+  /// Overrides for tests of the route alert card on the last step.
+  final RouteAlertService? routeAlertService;
+  final TripService? tripService;
+
   const IdentityVerificationScreen({
     super.key,
     this.initialStep = 0,
@@ -48,6 +55,8 @@ class IdentityVerificationScreen extends StatefulWidget {
     this.idCheck,
     this.faceService,
     this.homeBuilder,
+    this.routeAlertService,
+    this.tripService,
   });
 
   @override
@@ -239,6 +248,11 @@ class _IdentityVerificationScreenState
                 )
               : _Step3(
                   key: const ValueKey(3),
+                  // Likely senders: get alerts for their route.
+                  routeNudge: VerifiedRouteNudge(
+                    routeService: widget.routeAlertService,
+                    tripService: widget.tripService,
+                  ),
                   onContinue: () {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
@@ -1176,10 +1190,12 @@ class _Step1 extends StatelessWidget {
 class _Step3 extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback onViewProfile;
+  final Widget routeNudge;
   const _Step3({
     super.key,
     required this.onContinue,
     required this.onViewProfile,
+    required this.routeNudge,
   });
 
   @override
@@ -1322,6 +1338,7 @@ class _Step3 extends StatelessWidget {
                     height: 1.5,
                   ),
                 ),
+                routeNudge,
                 const SizedBox(height: 24),
                 // Verification report card
                 _reportCard(context),

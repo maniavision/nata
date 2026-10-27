@@ -368,6 +368,9 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('review-submit')));
     await tester.tap(find.byKey(const ValueKey('review-submit')));
     await tester.pumpAndSettle();
+    // The optional suggestion comes next; skip it.
+    await tester.tap(find.byKey(const ValueKey('app-feedback-skip')));
+    await tester.pumpAndSettle();
     expect(service.senderReviews.single.id, 'in-1');
     expect(find.text('Rate Your Sender'), findsNothing);
     // Back to Requests only after the review, which then reloads.

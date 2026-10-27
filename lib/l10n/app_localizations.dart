@@ -8737,6 +8737,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photo shown once they accept your request'**
   String get photoShownOnceAccepted;
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks! One more thing'**
+  String get feedbackTitle;
+
+  /// No description provided for @feedbackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Any ideas to make Nata better? This is optional and goes only to the Nata team.'**
+  String get feedbackBody;
+
+  /// No description provided for @feedbackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Something that was confusing, missing or could be easier…'**
+  String get feedbackHint;
+
+  /// No description provided for @feedbackSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send suggestion'**
+  String get feedbackSend;
+
+  /// No description provided for @feedbackThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you! The Nata team will read it.'**
+  String get feedbackThanks;
+
+  /// No description provided for @feedbackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your suggestion wasn\'t sent. Please try again later.'**
+  String get feedbackFailed;
+
+  /// No description provided for @verifiedRoutesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending something soon?'**
+  String get verifiedRoutesTitle;
+
+  /// No description provided for @verifiedRoutesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a notification as soon as a traveler posts a trip on your route.'**
+  String get verifiedRoutesBody;
+
+  /// No description provided for @verifiedRoutesAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a route alert'**
+  String get verifiedRoutesAction;
+
+  /// No description provided for @maybeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get maybeLater;
 }
 
 class _AppLocalizationsDelegate
