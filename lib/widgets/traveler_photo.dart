@@ -47,8 +47,8 @@ class TravelerPhoto extends StatelessWidget {
                   ? ImageFiltered(
                       key: const ValueKey('traveler-photo-blurred'),
                       imageFilter: ImageFilter.blur(
-                        sigmaX: size / 6,
-                        sigmaY: size / 6,
+                        sigmaX: size / 20,
+                        sigmaY: size / 20,
                       ),
                       child: photo,
                     )
