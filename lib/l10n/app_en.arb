@@ -2221,5 +2221,6 @@
   "heightCm": "Height",
   "customSizeInvalid": "Enter each size in cm, from 1 to 300.",
   "customSizeSave": "Use this size",
-  "sizeCustom": "Custom"
+  "sizeCustom": "Custom",
+  "photoShownOnceAccepted": "Photo shown once they accept your request"
 }

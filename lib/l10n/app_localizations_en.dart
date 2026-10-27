@@ -5003,4 +5003,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sizeCustom => 'Custom';
+
+  @override
+  String get photoShownOnceAccepted =>
+      'Photo shown once they accept your request';
 }

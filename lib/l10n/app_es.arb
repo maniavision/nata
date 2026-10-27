@@ -2081,5 +2081,6 @@
   "heightCm": "Alto",
   "customSizeInvalid": "Escribe cada medida en cm, de 1 a 300.",
   "customSizeSave": "Usar este tamaño",
-  "sizeCustom": "Personalizado"
+  "sizeCustom": "Personalizado",
+  "photoShownOnceAccepted": "La foto se verá cuando acepte tu solicitud"
 }

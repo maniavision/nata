@@ -2081,5 +2081,6 @@
   "heightCm": "Hauteur",
   "customSizeInvalid": "Saisissez chaque dimension en cm, de 1 à 300.",
   "customSizeSave": "Utiliser cette taille",
-  "sizeCustom": "Sur mesure"
+  "sizeCustom": "Sur mesure",
+  "photoShownOnceAccepted": "Photo visible une fois votre demande acceptée"
 }

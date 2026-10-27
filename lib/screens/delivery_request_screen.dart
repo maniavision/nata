@@ -15,11 +15,11 @@ import '../services/preferences_service.dart';
 import '../services/request_service.dart';
 import '../services/traveler_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
-import '../widgets/avatar_image.dart';
 import '../widgets/country_code_picker_sheet.dart' show flagEmoji;
 import '../widgets/camera_denied_sheet.dart';
 import '../widgets/one_line_text.dart';
 import '../widgets/nata_toast.dart';
+import '../widgets/traveler_photo.dart';
 
 /// Takes or chooses an item photo. [camera] true = take it with the camera.
 /// Replaceable in tests.
@@ -729,14 +729,10 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.border, width: 2),
             ),
-            child: ClipOval(
-              child: AvatarImage(
-                path: _trip.avatarPath,
-                fallback: Container(
-                  color: AppColors.secondary,
-                  child: const Icon(Icons.person, color: AppColors.primary),
-                ),
-              ),
+            child: TravelerPhoto(
+              path: _trip.avatarPath,
+              revealed: _trip.photoRevealed,
+              size: 44,
             ),
           ),
           const SizedBox(width: 12),

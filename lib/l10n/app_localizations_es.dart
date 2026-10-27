@@ -5051,4 +5051,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sizeCustom => 'Personalizado';
+
+  @override
+  String get photoShownOnceAccepted =>
+      'La foto se verá cuando acepte tu solicitud';
 }

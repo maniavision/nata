@@ -5089,4 +5089,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sizeCustom => 'Sur mesure';
+
+  @override
+  String get photoShownOnceAccepted =>
+      'Photo visible une fois votre demande acceptée';
 }
