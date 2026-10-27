@@ -315,6 +315,44 @@ void main() {
       expect(find.text('Rate Your Sender'), findsOneWidget);
     });
 
+    testWidgets('after reviewing, the card can\'t open the review again', (
+      tester,
+    ) async {
+      service.incoming = [sampleIncoming(status: 'delivered')];
+      await pump(tester);
+      await tester.tap(find.text('Rate Chioma'));
+      await tester.pumpAndSettle();
+
+      // The database now has the review.
+      service.incoming = [
+        sampleIncoming(status: 'delivered', senderReviewed: true),
+      ];
+      await tester.tap(find.byKey(const ValueKey('review-star-5')));
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const ValueKey('review-submit')));
+      await tester.tap(find.byKey(const ValueKey('review-submit')));
+      await tester.pumpAndSettle();
+
+      expect(service.senderReviews.length, 1);
+      expect(find.text('Review submitted'), findsOneWidget);
+      expect(find.text('Rate Chioma'), findsNothing);
+    });
+
+    testWidgets('leaving the review without sending still refreshes', (
+      tester,
+    ) async {
+      service.incoming = [sampleIncoming(status: 'delivered')];
+      await pump(tester);
+      final before = service.incomingCalls;
+      await tester.tap(find.text('Rate Chioma'));
+      await tester.pumpAndSettle();
+
+      Navigator.of(tester.element(find.text('Rate Your Sender'))).pop();
+      await tester.pumpAndSettle();
+
+      expect(service.incomingCalls, greaterThan(before));
+    });
+
     testWidgets('once reviewed, it says so', (tester) async {
       service.incoming = [
         sampleIncoming(status: 'delivered', senderReviewed: true),
