@@ -6,12 +6,12 @@ import 'package:intl/intl.dart';
 import '../main.dart';
 import '../services/verify_gate.dart';
 import '../services/traveler_service.dart';
-import '../widgets/avatar_image.dart';
 import 'delivery_request_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
 import '../widgets/nata_toast.dart';
+import '../widgets/traveler_photo.dart';
 
 /// Shows a traveler's profile and the trip the user picked.
 ///
@@ -39,6 +39,8 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
       ? _profile!.fullName
       : widget.trip.fullName;
   String? get _avatarPath => _profile?.avatarPath ?? widget.trip.avatarPath;
+  bool get _photoRevealed =>
+      _profile?.photoRevealed ?? widget.trip.photoRevealed;
   double? get _rating => _profile?.avgRating ?? widget.trip.avgRating;
   int get _delivered => _profile?.itemsDelivered ?? widget.trip.itemsDelivered;
 
@@ -236,7 +238,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Avatar with a 2px ring
+          // Avatar with a 2px ring, blurred until they accept a request.
           Container(
             width: 80,
             height: 80,
@@ -244,18 +246,10 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.border, width: 2),
             ),
-            child: ClipOval(
-              child: AvatarImage(
-                path: _avatarPath,
-                fallback: Container(
-                  color: AppColors.secondary,
-                  child: const Icon(
-                    Icons.person,
-                    size: 40,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
+            child: TravelerPhoto(
+              path: _avatarPath,
+              revealed: _photoRevealed,
+              size: 76,
             ),
           ),
           const SizedBox(height: 12),
@@ -268,6 +262,18 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               color: AppColors.foreground,
             ),
           ),
+          if (!_photoRevealed && (_avatarPath ?? '').isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              l.photoShownOnceAccepted,
+              key: const ValueKey('traveler-photo-note'),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ],
           const SizedBox(height: 4),
           Text(
             subtitle,

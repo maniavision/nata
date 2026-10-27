@@ -799,6 +799,59 @@ void main() {
       expect(d.toInsertJson('u')['status'], 'live');
     });
 
+    testWidgets('a traveler can take up to 25 kg and type their own size', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tapKey(tester, 'add-trip-departure-country');
+      await tapKey(tester, 'add-trip-arrival-country');
+      await pickDate(tester, 'add-trip-departure-date', today.day);
+      await pickDate(tester, 'add-trip-arrival-date', 20, monthsAhead: 1);
+      await tapKey(tester, 'add-trip-upload-receipt');
+      await tester.tap(find.byKey(const ValueKey('add-trip-weight')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Up to 25.0 kg').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('add-trip-size')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Custom size…').last);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('custom-size-dialog')), findsOneWidget);
+
+      // Every side is needed.
+      await tester.enterText(find.byKey(const ValueKey('custom-size-0')), '50');
+      await tester.tap(find.byKey(const ValueKey('custom-size-save')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('custom-size-error')), findsOneWidget);
+
+      await tester.enterText(find.byKey(const ValueKey('custom-size-1')), '40');
+      await tester.enterText(find.byKey(const ValueKey('custom-size-2')), '20');
+      await tester.tap(find.byKey(const ValueKey('custom-size-save')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('custom-size-dialog')), findsNothing);
+      expect(find.text('Custom (50×40×20 cm)'), findsOneWidget);
+
+      await save(tester);
+
+      final d = service.created.single;
+      expect(d.maxWeightKg, 25.0);
+      expect(d.maxSize, 'Custom (50×40×20 cm)');
+    });
+
+    testWidgets('cancelling the custom size keeps the size chosen before', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.byKey(const ValueKey('add-trip-size')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Custom size…').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Shoebox (30×20×15 cm)'), findsOneWidget);
+    });
+
     testWidgets('uses the user\'s preferred currency', (tester) async {
       PreferencesService().setCurrency(AppCurrency.eur);
       await pump(tester);

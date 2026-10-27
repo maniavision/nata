@@ -5028,4 +5028,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String recipientSafetyNote(String name) {
     return 'No compartas tu código de entrega en el chat ni antes de tener el paquete en tus manos. Reúnete siempre con $name en un lugar público.';
   }
+
+  @override
+  String get customSizeOption => 'Otro tamaño…';
+
+  @override
+  String get customSizeTitle => 'Tamaño máx. del artículo';
+
+  @override
+  String get customSizeBody =>
+      'El paquete más grande que puedes llevar, en centímetros.';
+
+  @override
+  String get lengthCm => 'Largo';
+
+  @override
+  String get widthCm => 'Ancho';
+
+  @override
+  String get heightCm => 'Alto';
+
+  @override
+  String get customSizeInvalid => 'Escribe cada medida en cm, de 1 a 300.';
+
+  @override
+  String get customSizeSave => 'Usar este tamaño';
+
+  @override
+  String get sizeCustom => 'Personalizado';
+
+  @override
+  String get photoShownOnceAccepted =>
+      'La foto se verá cuando acepte tu solicitud';
 }

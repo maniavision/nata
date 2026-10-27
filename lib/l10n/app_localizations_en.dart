@@ -4980,4 +4980,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String recipientSafetyNote(String name) {
     return 'Don\'t share your handover code in the chat or before the parcel is in your hands. Always meet $name in a public place.';
   }
+
+  @override
+  String get customSizeOption => 'Custom size…';
+
+  @override
+  String get customSizeTitle => 'Your max item size';
+
+  @override
+  String get customSizeBody =>
+      'The largest parcel you can take, in centimetres.';
+
+  @override
+  String get lengthCm => 'Length';
+
+  @override
+  String get widthCm => 'Width';
+
+  @override
+  String get heightCm => 'Height';
+
+  @override
+  String get customSizeInvalid => 'Enter each size in cm, from 1 to 300.';
+
+  @override
+  String get customSizeSave => 'Use this size';
+
+  @override
+  String get sizeCustom => 'Custom';
+
+  @override
+  String get photoShownOnceAccepted =>
+      'Photo shown once they accept your request';
 }

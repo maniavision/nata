@@ -15,6 +15,7 @@ extension TripSizeLabels on AppLocalizations {
     if (t.startsWith('envelope')) return sizeEnvelope;
     if (t.startsWith('shoebox')) return sizeShoebox;
     if (t.startsWith('backpack')) return sizeBackpack;
+    if (t.startsWith('custom')) return sizeCustom;
     return null;
   }
 

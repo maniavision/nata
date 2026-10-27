@@ -2073,5 +2073,15 @@
   "walletStatusSpent": "Utilisé pour une livraison",
   "notifRefundToBalanceTitle": "Remboursement ajouté à votre solde Nata",
   "notifRefundToBalanceBody": "{amount} de votre demande annulée sont dans votre solde Nata.",
-  "recipientSafetyNote": "Ne partagez pas votre code de remise dans le chat ni avant d'avoir le colis en main. Retrouvez toujours {name} dans un lieu public."
+  "recipientSafetyNote": "Ne partagez pas votre code de remise dans le chat ni avant d'avoir le colis en main. Retrouvez toujours {name} dans un lieu public.",
+  "customSizeOption": "Autre taille…",
+  "customSizeTitle": "Taille max. de l'objet",
+  "customSizeBody": "Le plus grand colis que vous pouvez prendre, en centimètres.",
+  "lengthCm": "Longueur",
+  "widthCm": "Largeur",
+  "heightCm": "Hauteur",
+  "customSizeInvalid": "Saisissez chaque dimension en cm, de 1 à 300.",
+  "customSizeSave": "Utiliser cette taille",
+  "sizeCustom": "Sur mesure",
+  "photoShownOnceAccepted": "Photo visible une fois votre demande acceptée"
 }
