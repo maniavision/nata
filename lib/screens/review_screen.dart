@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/request_service.dart';
+import '../widgets/app_feedback_sheet.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 
@@ -154,6 +155,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
       }
       messenger.showSnackBar(
         nataToast(l.reviewThanksName(_shortName), tone: ToastTone.success),
+      );
+      if (!mounted) return;
+      // Then, optionally, how Nata could be better.
+      await showAppFeedbackSheet(
+        context,
+        send: (message) => service.sendAppFeedback(
+          message,
+          source: _ofSender ? 'review_sender' : 'review_traveler',
+          requestId: _requestId,
+        ),
       );
       if (mounted) Navigator.of(context).pop(true);
     } on RequestException catch (e) {

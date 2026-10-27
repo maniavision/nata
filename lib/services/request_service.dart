@@ -1311,6 +1311,19 @@ class RequestService {
     'p_comment': comment.trim(),
   });
 
+  /// A suggestion to improve Nata, after reviewing [requestId] (20240189).
+  /// [source] is 'review_traveler' (a sender reviewed their traveler) or
+  /// 'review_sender' (a traveler reviewed their sender).
+  Future<void> sendAppFeedback(
+    String message, {
+    required String source,
+    String? requestId,
+  }) => _call('send_app_feedback', {
+    'p_message': message.trim(),
+    'p_source': source,
+    'p_request_id': requestId,
+  });
+
   /// What travelers said about the sender [senderId], newest first, with
   /// their total count (20240180: only for travelers they sent a request).
   Future<TravelerReviews> listSenderReviews(

@@ -2083,5 +2083,15 @@
   "customSizeInvalid": "Escribe cada medida en cm, de 1 a 300.",
   "customSizeSave": "Usar este tamaño",
   "sizeCustom": "Personalizado",
-  "photoShownOnceAccepted": "La foto se verá cuando acepte tu solicitud"
+  "photoShownOnceAccepted": "La foto se verá cuando acepte tu solicitud",
+  "feedbackTitle": "¡Gracias! Una cosa más",
+  "feedbackBody": "¿Ideas para mejorar Nata? Es opcional y solo lo leerá el equipo de Nata.",
+  "feedbackHint": "Algo confuso, que falta o que podría ser más fácil…",
+  "feedbackSend": "Enviar sugerencia",
+  "feedbackThanks": "¡Gracias! El equipo de Nata la leerá.",
+  "feedbackFailed": "Tu sugerencia no se envió. Inténtalo más tarde.",
+  "verifiedRoutesTitle": "¿Vas a enviar algo pronto?",
+  "verifiedRoutesBody": "Recibe una notificación en cuanto un viajero publique un viaje en tu ruta.",
+  "verifiedRoutesAction": "Crear una alerta de ruta",
+  "maybeLater": "Más tarde"
 }

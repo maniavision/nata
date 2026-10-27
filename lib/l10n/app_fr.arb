@@ -2083,5 +2083,15 @@
   "customSizeInvalid": "Saisissez chaque dimension en cm, de 1 à 300.",
   "customSizeSave": "Utiliser cette taille",
   "sizeCustom": "Sur mesure",
-  "photoShownOnceAccepted": "Photo visible une fois votre demande acceptée"
+  "photoShownOnceAccepted": "Photo visible une fois votre demande acceptée",
+  "feedbackTitle": "Merci ! Encore une chose",
+  "feedbackBody": "Des idées pour améliorer Nata ? C'est facultatif et seule l'équipe Nata le lira.",
+  "feedbackHint": "Quelque chose de confus, de manquant ou qui pourrait être plus simple…",
+  "feedbackSend": "Envoyer la suggestion",
+  "feedbackThanks": "Merci ! L'équipe Nata va la lire.",
+  "feedbackFailed": "Votre suggestion n'a pas été envoyée. Réessayez plus tard.",
+  "verifiedRoutesTitle": "Vous envoyez bientôt quelque chose ?",
+  "verifiedRoutesBody": "Recevez une notification dès qu'un voyageur publie un trajet sur votre route.",
+  "verifiedRoutesAction": "Créer une alerte de route",
+  "maybeLater": "Plus tard"
 }

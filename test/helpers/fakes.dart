@@ -1293,6 +1293,20 @@ class FakeRequestService extends Fake implements RequestService {
   final List<({String id, int rating, List<String> tags, String comment})>
   senderReviews = [];
 
+  /// Suggestions sent after a review; [failFeedback] makes sending fail.
+  final appFeedback = <({String message, String source, String? id})>[];
+  Object? failFeedback;
+
+  @override
+  Future<void> sendAppFeedback(
+    String message, {
+    required String source,
+    String? requestId,
+  }) async {
+    if (failFeedback != null) throw failFeedback!;
+    appFeedback.add((message: message, source: source, id: requestId));
+  }
+
   @override
   Future<void> submitSenderReview(
     String requestId, {

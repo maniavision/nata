@@ -2224,5 +2224,15 @@
   "customSizeInvalid": "Enter each size in cm, from 1 to 300.",
   "customSizeSave": "Use this size",
   "sizeCustom": "Custom",
-  "photoShownOnceAccepted": "Photo shown once they accept your request"
+  "photoShownOnceAccepted": "Photo shown once they accept your request",
+  "feedbackTitle": "Thanks! One more thing",
+  "feedbackBody": "Any ideas to make Nata better? This is optional and goes only to the Nata team.",
+  "feedbackHint": "Something that was confusing, missing or could be easier…",
+  "feedbackSend": "Send suggestion",
+  "feedbackThanks": "Thank you! The Nata team will read it.",
+  "feedbackFailed": "Your suggestion wasn't sent. Please try again later.",
+  "verifiedRoutesTitle": "Sending something soon?",
+  "verifiedRoutesBody": "Get a notification as soon as a traveler posts a trip on your route.",
+  "verifiedRoutesAction": "Create a route alert",
+  "maybeLater": "Maybe later"
 }

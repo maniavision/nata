@@ -116,6 +116,9 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('review-submit')));
       await tester.pumpAndSettle();
+      // The optional suggestion comes next; skip it.
+      await tester.tap(find.byKey(const ValueKey('app-feedback-skip')));
+      await tester.pumpAndSettle();
 
       expect(service.reviews, hasLength(1));
       final r = service.reviews.single;
@@ -128,6 +131,70 @@ void main() {
         find.textContaining('Thanks for reviewing Amara K.'),
         findsOneWidget,
       );
+    });
+
+    group('then a suggestion for the Nata team', () {
+      Future<void> review(WidgetTester tester) async {
+        await pump(tester);
+        await tester.tap(find.byKey(const ValueKey('review-star-5')));
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('review-submit')));
+        await tester.pumpAndSettle();
+      }
+
+      ElevatedButton send(WidgetTester tester) =>
+          tester.widget(find.byKey(const ValueKey('app-feedback-send')));
+
+      testWidgets('is asked after the review, and is optional', (tester) async {
+        await review(tester);
+
+        expect(service.reviews, hasLength(1));
+        expect(find.text('Thanks! One more thing'), findsOneWidget);
+        // Nothing typed: nothing to send.
+        expect(send(tester).onPressed, isNull);
+        // Still open until they send or skip.
+        expect(popped, isNull);
+      });
+
+      testWidgets('sends what was typed, then closes', (tester) async {
+        await review(tester);
+        await tester.enterText(
+          find.byKey(const ValueKey('app-feedback-text')),
+          '  Show the price earlier  ',
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('app-feedback-send')));
+        await tester.pumpAndSettle();
+
+        final f = service.appFeedback.single;
+        expect(f.message, 'Show the price earlier');
+        expect(f.source, 'review_traveler');
+        expect(f.id, 'req-1');
+        expect(popped, isTrue);
+        expect(
+          find.text('Thank you! The Nata team will read it.'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('a failure still lets them leave', (tester) async {
+        service.failFeedback = Exception('offline');
+        await review(tester);
+        await tester.enterText(
+          find.byKey(const ValueKey('app-feedback-text')),
+          'Idea',
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('app-feedback-send')));
+        await tester.pumpAndSettle();
+
+        expect(service.appFeedback, isEmpty);
+        expect(popped, isTrue);
+        expect(
+          find.text("Your suggestion wasn't sent. Please try again later."),
+          findsOneWidget,
+        );
+      });
     });
 
     testWidgets('a failure stays on the page to retry', (tester) async {
@@ -256,6 +323,9 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('review-submit')));
       await tester.pumpAndSettle();
+      // The optional suggestion comes next; skip it.
+      await tester.tap(find.byKey(const ValueKey('app-feedback-skip')));
+      await tester.pumpAndSettle();
 
       expect(service.reviews, isEmpty);
       final r = service.senderReviews.single;
@@ -331,6 +401,9 @@ void main() {
       await tester.pump();
       await tester.ensureVisible(find.byKey(const ValueKey('review-submit')));
       await tester.tap(find.byKey(const ValueKey('review-submit')));
+      await tester.pumpAndSettle();
+      // The optional suggestion comes next; skip it.
+      await tester.tap(find.byKey(const ValueKey('app-feedback-skip')));
       await tester.pumpAndSettle();
 
       expect(service.senderReviews.length, 1);

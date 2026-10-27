@@ -5012,4 +5012,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get photoShownOnceAccepted =>
       'Photo shown once they accept your request';
+
+  @override
+  String get feedbackTitle => 'Thanks! One more thing';
+
+  @override
+  String get feedbackBody =>
+      'Any ideas to make Nata better? This is optional and goes only to the Nata team.';
+
+  @override
+  String get feedbackHint =>
+      'Something that was confusing, missing or could be easier…';
+
+  @override
+  String get feedbackSend => 'Send suggestion';
+
+  @override
+  String get feedbackThanks => 'Thank you! The Nata team will read it.';
+
+  @override
+  String get feedbackFailed =>
+      'Your suggestion wasn\'t sent. Please try again later.';
+
+  @override
+  String get verifiedRoutesTitle => 'Sending something soon?';
+
+  @override
+  String get verifiedRoutesBody =>
+      'Get a notification as soon as a traveler posts a trip on your route.';
+
+  @override
+  String get verifiedRoutesAction => 'Create a route alert';
+
+  @override
+  String get maybeLater => 'Maybe later';
 }
