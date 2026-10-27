@@ -4874,4 +4874,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photosUpToThree => 'Photos (up to 3)';
+
+  @override
+  String get linkForRecipient =>
+      'This link is for the person receiving the parcel.';
+
+  @override
+  String get linkNoLongerWorks => 'This link no longer works.';
+
+  @override
+  String parcelChatSubtitle(String sender) {
+    return 'Bringing your parcel from $sender';
+  }
+
+  @override
+  String get parcelWaitingPickup => 'Waiting for pickup';
+
+  @override
+  String get parcelOnTheWay => 'On the way';
+
+  @override
+  String parcelArrives(String date) {
+    return 'Arrives $date';
+  }
+
+  @override
+  String get parcelCodeLabel => 'Handover code';
+
+  @override
+  String get parcelCodeNote =>
+      'Give this code only when you have your parcel in hand.';
+
+  @override
+  String get chipYourParcel => 'Your parcel';
+
+  @override
+  String get chipRecipient => 'Recipient';
+
+  @override
+  String get parcelChatsSection => 'Parcel chats';
 }

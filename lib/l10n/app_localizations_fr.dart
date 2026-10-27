@@ -4958,4 +4958,43 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get photosUpToThree => 'Photos (jusqu\'à 3)';
+
+  @override
+  String get linkForRecipient =>
+      'Ce lien est destiné à la personne qui reçoit le colis.';
+
+  @override
+  String get linkNoLongerWorks => 'Ce lien ne fonctionne plus.';
+
+  @override
+  String parcelChatSubtitle(String sender) {
+    return 'Apporte votre colis de $sender';
+  }
+
+  @override
+  String get parcelWaitingPickup => 'En attente de récupération';
+
+  @override
+  String get parcelOnTheWay => 'En route';
+
+  @override
+  String parcelArrives(String date) {
+    return 'Arrive le $date';
+  }
+
+  @override
+  String get parcelCodeLabel => 'Code de remise';
+
+  @override
+  String get parcelCodeNote =>
+      'Donnez ce code seulement quand vous avez votre colis en main.';
+
+  @override
+  String get chipYourParcel => 'Votre colis';
+
+  @override
+  String get chipRecipient => 'Destinataire';
+
+  @override
+  String get parcelChatsSection => 'Discussions colis';
 }

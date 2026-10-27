@@ -35,6 +35,20 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- A recipient's link opens the app when it's installed
+                 (hosting/public/.well-known/assetlinks.json). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"
+                      android:host="nata-app-a03de.web.app"
+                      android:pathPrefix="/r/"/>
+            </intent-filter>
+            <!-- Links go to app_links (DeepLinks), not Flutter's router. -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false" />
         </activity>
         <!-- Pushes use the high-importance channel MainActivity creates, so
              they pop up even when the app is closed. -->

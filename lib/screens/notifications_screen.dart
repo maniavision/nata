@@ -165,10 +165,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return;
     }
     final request = n.payload['request_id'] as String?;
-    if (n.event == 'recipient_message' && request != null) {
+    if ((n.event == 'recipient_message' || n.event == 'recipient_message_in') &&
+        request != null) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => RecipientChatScreen(requestId: request),
+          builder: (_) => RecipientChatScreen(
+            requestId: request,
+            asRecipient: n.event == 'recipient_message_in',
+          ),
         ),
       );
       return;

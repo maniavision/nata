@@ -1341,6 +1341,54 @@ class RequestService {
     }
   }
 
+  /// A signed-in member opened the recipient link [token] in the app: they
+  /// take it, and the chat moves into their Messages. Returns the request.
+  /// Throws [RecipientLinkException] when it can't be theirs
+  /// (20240186_recipient_in_app.sql).
+  Future<String> claimRecipientLink(String token) async {
+    try {
+      final id = await _client.rpc(
+        'claim_recipient_link',
+        params: {'p_token': token},
+      );
+      return id as String;
+    } on PostgrestException catch (e) {
+      throw RecipientLinkException(
+        e.message.contains('link_taken')
+            ? RecipientLinkProblem.taken
+            : e.message.contains('not_recipient')
+            ? RecipientLinkProblem.notRecipient
+            : RecipientLinkProblem.invalid,
+      );
+    }
+  }
+
+  /// The member recipient's side of the chat: the parcel and the messages.
+  Future<RecipientChat> myRecipientChat(String requestId) async {
+    try {
+      final data = await _client.rpc(
+        'my_recipient_chat',
+        params: {'p_request_id': requestId},
+      );
+      return RecipientChat.fromView(Map<String, dynamic>.from(data as Map));
+    } on PostgrestException catch (e) {
+      throw RequestException(reasonFor(e.message), e);
+    }
+  }
+
+  /// The member recipient writes to the traveler.
+  Future<void> sendAsRecipient(String requestId, String body) =>
+      _call('send_as_recipient', {'p_request_id': requestId, 'p_body': body});
+
+  /// The traveler/recipient chats for Messages, newest first.
+  Future<List<RecipientChatSummary>> recipientChats() async {
+    final rows = await _client.rpc('list_recipient_chats') as List;
+    return [
+      for (final r in rows)
+        RecipientChatSummary.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
   /// The traveler writes to the recipient; they get a text with the link
   /// when they haven't opened it lately.
   Future<void> sendRecipientMessage(String requestId, String body) => _call(
@@ -1658,11 +1706,23 @@ class RecipientMessage {
   );
 }
 
-/// The traveler's chat with the recipient of a delivery.
+/// The traveler's chat with the recipient of a delivery, or (when
+/// [asRecipient]) the member recipient's chat with the traveler.
 class RecipientChat {
   final String recipientName;
   final String senderName;
   final String item;
+
+  /// The recipient's side ([RecipientChat.fromView]): the traveler and the
+  /// parcel, for the status card.
+  final bool asRecipient;
+  final String travelerName;
+  final String? travelerAvatar;
+  final String status;
+  final String? code;
+  final String fromCity;
+  final String toCity;
+  final DateTime? arrivalDate;
 
   /// When the recipient last opened their link (null: not yet).
   final DateTime? seenAt;
@@ -1678,7 +1738,42 @@ class RecipientChat {
     required this.open,
     required this.messages,
     this.seenAt,
+    this.asRecipient = false,
+    this.travelerName = '',
+    this.travelerAvatar,
+    this.status = '',
+    this.code,
+    this.fromCity = '',
+    this.toCity = '',
+    this.arrivalDate,
   });
+
+  /// From the recipient page's view (public.recipient_view).
+  factory RecipientChat.fromView(Map<String, dynamic> j) {
+    final traveler = Map<String, dynamic>.from(j['traveler'] as Map? ?? {});
+    final first = (traveler['first_name'] as String?)?.trim() ?? '';
+    final initial = (traveler['initial'] as String?)?.trim() ?? '';
+    final items = [for (final i in (j['items'] as List? ?? const [])) '$i'];
+    final arrival = j['arrival_date'] as String?;
+    return RecipientChat(
+      asRecipient: true,
+      recipientName: (j['recipient'] as String?) ?? '',
+      senderName: (j['sender'] as String?) ?? '',
+      item: items.isEmpty ? '' : items.first,
+      travelerName: initial.isEmpty ? first : '$first $initial.',
+      travelerAvatar: traveler['avatar_path'] as String?,
+      status: (j['status'] as String?) ?? '',
+      code: j['code'] as String?,
+      fromCity: (j['from_city'] as String?) ?? '',
+      toCity: (j['to_city'] as String?) ?? '',
+      arrivalDate: arrival == null ? null : DateTime.tryParse(arrival),
+      open: j['chat_open'] == true,
+      messages: [
+        for (final m in (j['messages'] as List? ?? const []))
+          RecipientMessage.fromJson(Map<String, dynamic>.from(m as Map)),
+      ],
+    );
+  }
 
   factory RecipientChat.fromJson(Map<String, dynamic> j) => RecipientChat(
     recipientName: (j['recipient'] as String?) ?? '',
@@ -1693,4 +1788,60 @@ class RecipientChat {
         RecipientMessage.fromJson(Map<String, dynamic>.from(m as Map)),
     ],
   );
+}
+
+/// A traveler/recipient chat as Messages lists it.
+class RecipientChatSummary {
+  final String requestId;
+
+  /// The signed-in member is the recipient (not the traveler).
+  final bool asRecipient;
+  final String otherName;
+  final String? otherAvatar;
+  final String senderName;
+  final String item;
+  final String? lastBody;
+  final bool lastMine;
+  final DateTime? lastAt;
+  final int unread;
+  final bool open;
+
+  const RecipientChatSummary({
+    required this.requestId,
+    required this.asRecipient,
+    required this.otherName,
+    required this.senderName,
+    required this.item,
+    this.otherAvatar,
+    this.lastBody,
+    this.lastMine = false,
+    this.lastAt,
+    this.unread = 0,
+    this.open = true,
+  });
+
+  factory RecipientChatSummary.fromJson(Map<String, dynamic> j) =>
+      RecipientChatSummary(
+        requestId: j['request_id'] as String,
+        asRecipient: j['role'] == 'recipient',
+        otherName: (j['other_name'] as String?) ?? '',
+        otherAvatar: j['other_avatar'] as String?,
+        senderName: (j['sender_name'] as String?) ?? '',
+        item: (j['item'] as String?) ?? '',
+        lastBody: j['last_body'] as String?,
+        lastMine: j['last_mine'] == true,
+        lastAt: j['last_at'] == null
+            ? null
+            : DateTime.parse(j['last_at'] as String).toLocal(),
+        unread: (j['unread'] as num?)?.toInt() ?? 0,
+        open: j['chat_open'] != false,
+      );
+}
+
+/// Why a recipient link can't be opened in the app.
+enum RecipientLinkProblem { invalid, taken, notRecipient }
+
+class RecipientLinkException implements Exception {
+  final RecipientLinkProblem problem;
+  const RecipientLinkException(this.problem);
 }

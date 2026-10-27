@@ -5,17 +5,23 @@ import 'package:google_fonts/google_fonts.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/message_service.dart';
+import '../services/request_service.dart';
 import '../services/screen_cache.dart';
 import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
 import 'chat_thread_screen.dart';
+import 'recipient_chat_screen.dart';
 import 'notifications_screen.dart' show notificationTimeLabel;
 
 /// The user's conversations, one per delivery request.
 class MessagesScreen extends StatefulWidget {
   /// Overrides for tests.
   final MessageService? service;
+
+  /// The chats between travelers and recipients ("Parcel chats",
+  /// 20240186). Override for tests.
+  final RequestService? requestService;
   final DateTime Function()? now;
 
   /// How often the list quietly refreshes while it is on screen.
@@ -24,6 +30,7 @@ class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
     super.key,
     this.service,
+    this.requestService,
     this.now,
     this.refreshEvery = const Duration(seconds: 15),
   });
@@ -49,6 +56,11 @@ class _MessagesScreenState extends State<MessagesScreen>
   final _filtersTipKey = GlobalKey();
 
   List<ConversationSummary> _items = const [];
+
+  /// Chats with a parcel's recipient (traveler) or traveler (recipient).
+  List<RecipientChatSummary> _parcelChats =
+      ScreenCache.read<List<RecipientChatSummary>>(_kParcelChats) ?? const [];
+  static const _kParcelChats = 'recipient-chats';
   bool _loading = true;
   bool _failed = false;
 
@@ -134,6 +146,7 @@ class _MessagesScreenState extends State<MessagesScreen>
   Future<void> _load({bool quiet = false}) async {
     if (_refreshing) return;
     _refreshing = true;
+    unawaited(_loadParcelChats());
     try {
       final items = await _service.conversations();
       ScreenCache.write(MessagesScreen.cacheKey, items);
@@ -153,6 +166,45 @@ class _MessagesScreenState extends State<MessagesScreen>
       _refreshing = false;
     }
   }
+
+  Future<void> _loadParcelChats() async {
+    try {
+      final chats = await (widget.requestService ?? RequestService())
+          .recipientChats();
+      ScreenCache.write(_kParcelChats, chats);
+      if (mounted) setState(() => _parcelChats = chats);
+    } catch (e) {
+      debugPrint('[Messages] parcel chats: $e');
+    }
+  }
+
+  Future<void> _openParcelChat(RecipientChatSummary c) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RecipientChatScreen(
+          requestId: c.requestId,
+          asRecipient: c.asRecipient,
+          recipientName: c.otherName,
+          service: widget.requestService,
+        ),
+      ),
+    );
+    if (mounted) _load(quiet: true);
+  }
+
+  List<RecipientChatSummary> get _visibleParcelChats => [
+    for (final c in _parcelChats)
+      if ((_filter != 1 || c.open) &&
+          (_filter != 2 || !c.open) &&
+          (_query.isEmpty ||
+              [
+                c.otherName,
+                c.senderName,
+                c.item,
+                c.lastBody ?? '',
+              ].join(' ').toLowerCase().contains(_query)))
+        c,
+  ];
 
   void _retry() {
     setState(() {
@@ -409,23 +461,45 @@ class _MessagesScreenState extends State<MessagesScreen>
     }
 
     final visible = _visible;
+    final parcels = _visibleParcelChats;
     final now = _now;
+    final rows = <Widget>[
+      if (parcels.isNotEmpty) ...[
+        Text(
+          l.parcelChatsSection.toUpperCase(),
+          key: const ValueKey('messages-parcel-chats'),
+          style: GoogleFonts.dmSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            letterSpacing: 1.2,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        for (final c in parcels)
+          _ParcelChatTile(
+            chat: c,
+            timeLabel: c.lastAt == null
+                ? ''
+                : notificationTimeLabel(l, now, c.lastAt!),
+            onTap: () => _openParcelChat(c),
+          ),
+      ],
+      if (visible.isEmpty && parcels.isEmpty) _buildEmpty(),
+      for (final c in visible)
+        _ConversationTile(
+          conversation: c,
+          currentUserId: _service.currentUserId,
+          timeLabel: notificationTimeLabel(l, now, c.activityAt),
+          onTap: () => _open(c),
+        ),
+    ];
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-        itemCount: visible.isEmpty ? 1 : visible.length,
+        itemCount: rows.length,
         separatorBuilder: (context, index) => const SizedBox(height: 10),
-        itemBuilder: (context, i) {
-          if (visible.isEmpty) return _buildEmpty();
-          final c = visible[i];
-          return _ConversationTile(
-            conversation: c,
-            currentUserId: _service.currentUserId,
-            timeLabel: notificationTimeLabel(l, now, c.activityAt),
-            onTap: () => _open(c),
-          );
-        },
+        itemBuilder: (context, i) => rows[i],
       ),
     );
   }
@@ -466,6 +540,202 @@ class _MessagesScreenState extends State<MessagesScreen>
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+// ── Parcel chat tile ───────────────────────────────────────────────────────
+/// A chat between a parcel's traveler and its recipient (designed in Sleek):
+/// a package badge on the avatar, and who the other person is to you.
+class _ParcelChatTile extends StatelessWidget {
+  final RecipientChatSummary chat;
+  final String timeLabel;
+  final VoidCallback onTap;
+
+  const _ParcelChatTile({
+    required this.chat,
+    required this.timeLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final c = chat;
+    final unread = c.unread > 0;
+    final last = c.lastBody;
+    final preview = last == null
+        ? l.parcelChatSubtitle(c.senderName)
+        : c.lastMine
+        ? l.chatYouPrefix(last)
+        : last;
+    return GestureDetector(
+      key: ValueKey('parcel-chat-${c.requestId}'),
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: unread
+              ? AppColors.accent.withValues(alpha: 0.05)
+              : AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: unread
+                ? AppColors.accent.withValues(alpha: 0.4)
+                : AppColors.border,
+            width: unread ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ClipOval(
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: AvatarImage(
+                        path: c.otherAvatar,
+                        fallback: Container(
+                          alignment: Alignment.center,
+                          color: AppColors.secondary,
+                          child: Text(
+                            c.otherName.isEmpty
+                                ? '?'
+                                : c.otherName.characters.first,
+                            style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.card, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.inventory_2_rounded,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          c.otherName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          c.asRecipient ? l.chipYourParcel : l.chipRecipient,
+                          style: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        timeLabel,
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 10,
+                          color: unread
+                              ? AppColors.accent
+                              : AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          preview,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: unread
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                            color: unread
+                                ? AppColors.foreground
+                                : AppColors.mutedForeground,
+                          ),
+                        ),
+                      ),
+                      if (unread)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '${c.unread}',
+                            style: GoogleFonts.dmSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

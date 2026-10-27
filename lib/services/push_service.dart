@@ -15,6 +15,8 @@ import '../screens/traveler_results_screen.dart';
 import 'app_badge.dart';
 import 'push_registrar.dart';
 import '../screens/recipient_chat_screen.dart';
+import 'chat_presence.dart';
+import '../widgets/in_app_banner.dart';
 
 /// Push notifications (20240155_push_notifications.sql, send-push).
 ///
@@ -73,15 +75,20 @@ class PushService {
       (token) => _registrar?.tokenChanged(token),
     );
     if (_client.auth.currentUser != null) unawaited(_enable());
-    // iOS: show the banner even while the app is open.
+    // While the app is open, pushes show as Nata's own banner (below), so
+    // the one for the chat on screen can be left out: no system banner.
     await messaging.setForegroundNotificationPresentationOptions(
-      alert: true,
+      alert: false,
       badge: true,
-      sound: true,
+      sound: false,
     );
     FirebaseMessaging.onMessageOpenedApp.listen(_open);
-    // A push while the app is open: the badge follows the new count.
-    FirebaseMessaging.onMessage.listen((_) => AppBadge.refresh());
+    // A push while the app is open: the badge follows the new count, and a
+    // banner shows unless its chat is the one on screen.
+    FirebaseMessaging.onMessage.listen((message) {
+      AppBadge.refresh();
+      _banner(message);
+    });
     final initial = await messaging.getInitialMessage();
     if (initial != null) {
       // Let the first screen settle before opening another on top.
@@ -130,6 +137,36 @@ class PushService {
     }
   }
 
+  /// The chat a push is about, as [ChatPresence] names it (null: none).
+  static String? chatOf(Map<String, dynamic> data) {
+    final event = data['event'] as String?;
+    final conversation = data['conversation_id'] as String?;
+    final request = data['related_id'] as String?;
+    if (event == 'message_new' && (conversation ?? '').isNotEmpty) {
+      return ChatPresence.conversation(conversation!);
+    }
+    if ((event == 'recipient_message' || event == 'recipient_message_in') &&
+        (request ?? '').isNotEmpty) {
+      return ChatPresence.recipient(request!);
+    }
+    return null;
+  }
+
+  void _banner(RemoteMessage message) {
+    final chat = chatOf(message.data);
+    // Already reading it: the chat shows the message itself.
+    if (chat != null && chat == ChatPresence.current) return;
+    final overlay = _navigator?.currentState?.overlay;
+    final note = message.notification;
+    if (overlay == null || note == null) return;
+    InAppBanner.show(
+      overlay,
+      title: note.title ?? '',
+      body: note.body ?? '',
+      onTap: () => _open(message),
+    );
+  }
+
   void _open(RemoteMessage message) {
     final navigator = _navigator?.currentState;
     if (navigator == null || _client.auth.currentUser == null) return;
@@ -144,10 +181,15 @@ class PushService {
       return;
     }
     final request = message.data['related_id'] as String?;
-    if (event == 'recipient_message' && request != null && request.isNotEmpty) {
+    if ((event == 'recipient_message' || event == 'recipient_message_in') &&
+        request != null &&
+        request.isNotEmpty) {
       navigator.push(
         MaterialPageRoute(
-          builder: (_) => RecipientChatScreen(requestId: request),
+          builder: (_) => RecipientChatScreen(
+            requestId: request,
+            asRecipient: event == 'recipient_message_in',
+          ),
         ),
       );
       return;

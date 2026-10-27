@@ -2045,5 +2045,16 @@
   "publicNameReserved": "Ce nom ne peut pas être utilisé. Choisissez-en un autre.",
   "tipPublicNameTitle": "Voyagez sous un pseudonyme",
   "tipPublicNameBody": "Choisissez si les personnes qui vous trouvent en tant que voyageur voient votre nom ou un pseudonyme. Votre badge vérifié s'affiche toujours.",
-  "photosUpToThree": "Photos (jusqu'à 3)"
+  "photosUpToThree": "Photos (jusqu'à 3)",
+  "linkForRecipient": "Ce lien est destiné à la personne qui reçoit le colis.",
+  "linkNoLongerWorks": "Ce lien ne fonctionne plus.",
+  "parcelChatSubtitle": "Apporte votre colis de {sender}",
+  "parcelWaitingPickup": "En attente de récupération",
+  "parcelOnTheWay": "En route",
+  "parcelArrives": "Arrive le {date}",
+  "parcelCodeLabel": "Code de remise",
+  "parcelCodeNote": "Donnez ce code seulement quand vous avez votre colis en main.",
+  "chipYourParcel": "Votre colis",
+  "chipRecipient": "Destinataire",
+  "parcelChatsSection": "Discussions colis"
 }

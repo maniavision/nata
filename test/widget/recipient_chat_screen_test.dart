@@ -36,7 +36,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     final s = service ?? FakeRequestService();
-    if (data != null) s.recipientChats['r1'] = data;
+    if (data != null) s.recipientChatData['r1'] = data;
     await tester.pumpWidget(
       appWrapper(
         RecipientChatScreen(requestId: 'r1', service: s, now: () => now),

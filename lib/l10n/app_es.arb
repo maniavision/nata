@@ -2045,5 +2045,16 @@
   "publicNameReserved": "Este nombre no se puede usar. Elige otro.",
   "tipPublicNameTitle": "Viaja con un seudónimo",
   "tipPublicNameBody": "Elige si las personas que te encuentran como viajero ven tu nombre o un seudónimo. Tu insignia de verificado siempre se muestra.",
-  "photosUpToThree": "Fotos (hasta 3)"
+  "photosUpToThree": "Fotos (hasta 3)",
+  "linkForRecipient": "Este enlace es para la persona que recibe el paquete.",
+  "linkNoLongerWorks": "Este enlace ya no funciona.",
+  "parcelChatSubtitle": "Lleva tu paquete de {sender}",
+  "parcelWaitingPickup": "Esperando recogida",
+  "parcelOnTheWay": "En camino",
+  "parcelArrives": "Llega el {date}",
+  "parcelCodeLabel": "Código de entrega",
+  "parcelCodeNote": "Da este código solo cuando tengas tu paquete en la mano.",
+  "chipYourParcel": "Tu paquete",
+  "chipRecipient": "Recibe el paquete",
+  "parcelChatsSection": "Chats de paquetes"
 }

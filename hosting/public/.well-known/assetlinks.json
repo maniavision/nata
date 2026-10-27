@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.nata.nataapp",
+      "sha256_cert_fingerprints": [
+        "8E:D4:EC:25:4B:49:B4:05:DA:82:2A:BE:13:BA:5C:04:92:80:76:1D:4F:D1:12:61:B8:F8:E8:61:51:E6:BE:FB"
+      ]
+    }
+  }
+]

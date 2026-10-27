@@ -127,6 +127,7 @@ const NAME_FROM: Record<string, "sender" | "traveler" | "author" | "recipient"> 
   message_new: "author",
   message_photo: "author",
   recipient_message: "recipient",
+  recipient_message_in: "author",
 };
 
 const SYMBOLS: Record<string, string> = { USD: "$", EUR: "€", GBP: "£" };
