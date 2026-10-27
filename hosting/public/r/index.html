@@ -107,6 +107,8 @@
   .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--accent); margin: 0 auto; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .banner { background: var(--secondary); border-radius: 12px; padding: 12px; font-size: 12px; }
+  .banner.safety { display: flex; gap: 10px; align-items: flex-start; margin: 0; line-height: 1.45; }
+  .banner.safety svg { flex: none; width: 18px; height: 18px; color: var(--primary); }
   [hidden] { display: none !important; }
 </style>
 <script src="/config.js"></script>
@@ -143,6 +145,7 @@
       noRating: 'New traveler', flight: 'Trip', dates: 'Dates',
       code: 'Handover code',
       codeNote: 'Give this code to {traveler} only when you have your parcel in hand.',
+      safety: "Don't share your handover code in the chat or before the parcel is in your hands. Always meet {traveler} in a public place.",
       chat: 'Chat with {traveler}', write: 'Write a message…', send: 'Send',
       noMessages: 'No messages yet. Say hello to {traveler} to arrange the handover.',
       kept: 'Messages are kept by Nata until the delivery is complete',
@@ -168,6 +171,7 @@
       noRating: 'Nouveau voyageur', flight: 'Trajet', dates: 'Dates',
       code: 'Code de remise',
       codeNote: 'Donnez ce code à {traveler} seulement quand vous avez votre colis en main.',
+      safety: "Ne partagez pas votre code de remise dans le chat ni avant d'avoir le colis en main. Retrouvez toujours {traveler} dans un lieu public.",
       chat: 'Écrire à {traveler}', write: 'Écrire un message…', send: 'Envoyer',
       noMessages: 'Pas encore de messages. Écrivez à {traveler} pour organiser la remise.',
       kept: 'Les messages sont conservés par Nata jusqu’à la livraison',
@@ -193,6 +197,7 @@
       noRating: 'Viajero nuevo', flight: 'Viaje', dates: 'Fechas',
       code: 'Código de entrega',
       codeNote: 'Da este código a {traveler} solo cuando tengas tu paquete en la mano.',
+      safety: 'No compartas tu código de entrega en el chat ni antes de tener el paquete en tus manos. Reúnete siempre con {traveler} en un lugar público.',
       chat: 'Chatea con {traveler}', write: 'Escribe un mensaje…', send: 'Enviar',
       noMessages: 'Aún no hay mensajes. Escribe a {traveler} para organizar la entrega.',
       kept: 'Nata guarda los mensajes hasta que se complete la entrega',
@@ -234,6 +239,7 @@
   const ICON = {
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>',
     plane: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></svg>',
     box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
     send: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.21L4.5 12l-2.49 7.19a1 1 0 0 0 1.39 1.21z"/></svg>',
     gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
@@ -365,6 +371,7 @@
       </section>` : ''}
       <section class="stack" style="--gap:12px">
         <h2>${esc(t('chat', { traveler }))}</h2>
+        ${v.chat_open ? `<p class="banner safety" id="safety">${ICON.shield}<span>${esc(t('safety', { traveler }))}</span></p>` : ''}
         <div class="card chat" id="thread">${messages(v)}</div>
         ${v.chat_open ? `
         <form class="composer" id="composer">

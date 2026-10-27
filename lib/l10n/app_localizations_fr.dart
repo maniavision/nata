@@ -5060,4 +5060,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String notifRefundToBalanceBody(String amount) {
     return '$amount de votre demande annulée sont dans votre solde Nata.';
   }
+
+  @override
+  String recipientSafetyNote(String name) {
+    return 'Ne partagez pas votre code de remise dans le chat ni avant d\'avoir le colis en main. Retrouvez toujours $name dans un lieu public.';
+  }
 }

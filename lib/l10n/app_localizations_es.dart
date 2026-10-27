@@ -5023,4 +5023,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String notifRefundToBalanceBody(String amount) {
     return '$amount de tu solicitud cancelada están en tu saldo Nata.';
   }
+
+  @override
+  String recipientSafetyNote(String name) {
+    return 'No compartas tu código de entrega en el chat ni antes de tener el paquete en tus manos. Reúnete siempre con $name en un lugar público.';
+  }
 }

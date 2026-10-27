@@ -273,9 +273,11 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       children: [
-        if (widget.asRecipient)
-          _parcelCard(chat)
-        else
+        if (widget.asRecipient) ...[
+          _parcelCard(chat),
+          const SizedBox(height: 12),
+          _safetyNote(name),
+        ] else
           Container(
             key: const ValueKey('recipient-chat-banner'),
             padding: const EdgeInsets.all(12),
@@ -338,6 +340,39 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
           ),
         for (final m in chat.messages) _bubble(m),
       ],
+    );
+  }
+
+  /// Keep the code until the parcel is in hand; meet somewhere public.
+  Widget _safetyNote(String name) {
+    return Container(
+      key: const ValueKey('recipient-safety-note'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.shield_outlined,
+            size: 18,
+            color: AppColors.primary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.recipientSafetyNote(name),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                height: 1.4,
+                color: AppColors.foreground,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

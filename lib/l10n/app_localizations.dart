@@ -8671,6 +8671,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} from your cancelled request is in your Nata balance.'**
   String notifRefundToBalanceBody(String amount);
+
+  /// No description provided for @recipientSafetyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t share your handover code in the chat or before the parcel is in your hands. Always meet {name} in a public place.'**
+  String recipientSafetyNote(String name);
 }
 
 class _AppLocalizationsDelegate
