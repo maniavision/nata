@@ -15,7 +15,6 @@ void main() {
 
   const photo = 'https://example.invalid/avatars/amara.jpg';
   final blurred = find.byKey(const ValueKey('traveler-photo-blurred'));
-  final lock = find.byKey(const ValueKey('traveler-photo-lock'));
 
   TravelerTrip trip({bool revealed = false, String? path = photo}) {
     final t = sampleTrip();
@@ -46,13 +45,13 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('blurred with a lock until revealed', (tester) async {
+  testWidgets('blurred, with no lock, until revealed', (tester) async {
     await pumpPhoto(
       tester,
       const TravelerPhoto(path: photo, revealed: false, size: 52),
     );
     expect(blurred, findsOneWidget);
-    expect(lock, findsOneWidget);
+    expect(find.byIcon(Icons.lock_rounded), findsNothing);
   });
 
   testWidgets('clear once revealed', (tester) async {
@@ -61,7 +60,6 @@ void main() {
       const TravelerPhoto(path: photo, revealed: true, size: 52),
     );
     expect(blurred, findsNothing);
-    expect(lock, findsNothing);
   });
 
   testWidgets('no photo: nothing to hide', (tester) async {
@@ -70,7 +68,6 @@ void main() {
       const TravelerPhoto(path: null, revealed: false, size: 52),
     );
     expect(blurred, findsNothing);
-    expect(lock, findsNothing);
   });
 
   test('search results and profiles say whether it is revealed', () {

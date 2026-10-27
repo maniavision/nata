@@ -752,8 +752,6 @@ class _TravelerCardState extends State<_TravelerCard> {
                   path: widget.trip.avatarPath,
                   revealed: widget.trip.photoRevealed,
                   size: 52,
-                  // The verified badge has the bottom-right corner.
-                  lockLeft: true,
                 ),
                 Positioned(
                   bottom: -1,
