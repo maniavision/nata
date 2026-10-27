@@ -6,15 +6,22 @@ import 'package:intl/intl.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
+import '../services/chat_presence.dart';
 import '../services/request_service.dart';
+import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 
 /// The traveler's chat with the recipient (designed in Sleek, "Recipient
 /// Chat"). The recipient isn't on Nata: they read and reply from the
 /// private link texted to them (20240181_recipient_link.sql). Refreshed
 /// every few seconds; their messages also come as a push.
+///
+/// With [asRecipient], the same chat seen by a recipient who is on Nata and
+/// opened their link in the app (Sleek, "Parcel Chat (Recipient)"): the
+/// traveler, the parcel's status and the handover code (20240186).
 class RecipientChatScreen extends StatefulWidget {
   final String requestId;
+  final bool asRecipient;
 
   /// Shown until the chat has loaded.
   final String recipientName;
@@ -26,6 +33,7 @@ class RecipientChatScreen extends StatefulWidget {
   const RecipientChatScreen({
     super.key,
     required this.requestId,
+    this.asRecipient = false,
     this.recipientName = '',
     this.service,
     this.now,
@@ -47,9 +55,12 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
   RequestService get _service => widget.service ?? RequestService();
   DateTime get _now => (widget.now ?? DateTime.now)();
 
+  String get _presence => ChatPresence.recipient(widget.requestId);
+
   @override
   void initState() {
     super.initState();
+    ChatPresence.enter(_presence);
     _load();
     _timer = Timer.periodic(widget.refreshEvery, (_) {
       if (mounted && (ModalRoute.of(context)?.isCurrent ?? true)) _load();
@@ -58,6 +69,7 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
 
   @override
   void dispose() {
+    ChatPresence.leave(_presence);
     _timer?.cancel();
     _input.dispose();
     _scroll.dispose();
@@ -66,7 +78,9 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
 
   Future<void> _load() async {
     try {
-      final chat = await _service.recipientChat(widget.requestId);
+      final chat = widget.asRecipient
+          ? await _service.myRecipientChat(widget.requestId)
+          : await _service.recipientChat(widget.requestId);
       if (!mounted) return;
       final grew = chat.messages.length != (_chat?.messages.length ?? 0);
       setState(() {
@@ -95,7 +109,11 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final failed = context.l10n.recipientSendFailed;
     try {
-      await _service.sendRecipientMessage(widget.requestId, body);
+      if (widget.asRecipient) {
+        await _service.sendAsRecipient(widget.requestId, body);
+      } else {
+        await _service.sendRecipientMessage(widget.requestId, body);
+      }
       _input.clear();
       await _load();
     } catch (e) {
@@ -120,7 +138,9 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final chat = _chat;
-    final name = chat?.recipientName.isNotEmpty == true
+    final name = widget.asRecipient
+        ? (chat?.travelerName ?? '')
+        : chat?.recipientName.isNotEmpty == true
         ? chat!.recipientName
         : widget.recipientName;
     return Scaffold(
@@ -155,6 +175,8 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
     final l = context.l10n;
     final subtitle = chat == null
         ? ''
+        : widget.asRecipient
+        ? l.parcelChatSubtitle(chat.senderName)
         : l.recipientChatSubtitle(chat.senderName, chat.item);
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 12),
@@ -170,20 +192,24 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
             icon: const Icon(Icons.arrow_back_rounded),
             color: AppColors.foreground,
           ),
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: AppColors.secondary,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              name.isEmpty ? '?' : name.characters.first.toUpperCase(),
-              style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                color: AppColors.primary,
+          ClipOval(
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: AvatarImage(
+                path: widget.asRecipient ? chat?.travelerAvatar : null,
+                fallback: Container(
+                  alignment: Alignment.center,
+                  color: AppColors.secondary,
+                  child: Text(
+                    name.isEmpty ? '?' : name.characters.first.toUpperCase(),
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -193,7 +219,7 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l.recipientChatTitle(name),
+                  widget.asRecipient ? name : l.recipientChatTitle(name),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.manrope(
@@ -247,54 +273,57 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       children: [
-        Container(
-          key: const ValueKey('recipient-chat-banner'),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.secondary.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.sms_outlined,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.recipientChatBanner(name),
-                      style: GoogleFonts.dmSans(
-                        fontSize: 12,
-                        height: 1.4,
-                        color: AppColors.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      seen == null
-                          ? l.recipientSeenNever
-                          : l.recipientSeenAt(_when(seen)),
-                      key: const ValueKey('recipient-chat-seen'),
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.mutedForeground,
-                      ),
-                    ),
-                  ],
+        if (widget.asRecipient)
+          _parcelCard(chat)
+        else
+          Container(
+            key: const ValueKey('recipient-chat-banner'),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.sms_outlined,
+                  size: 18,
+                  color: AppColors.primary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.recipientChatBanner(name),
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        seen == null
+                            ? l.recipientSeenNever
+                            : l.recipientSeenAt(_when(seen)),
+                        key: const ValueKey('recipient-chat-seen'),
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 16),
-        if (chat.messages.isEmpty)
+        if (chat.messages.isEmpty && !widget.asRecipient)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Text(
@@ -312,9 +341,108 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
     );
   }
 
+  /// The recipient's view: where the parcel is, and the handover code.
+  Widget _parcelCard(RecipientChat chat) {
+    final l = context.l10n;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final status = chat.status == 'handed_off'
+        ? l.parcelOnTheWay
+        : chat.status == 'paid'
+        ? l.parcelWaitingPickup
+        : '';
+    final parts = [
+      if (status.isNotEmpty) status,
+      if (chat.fromCity.isNotEmpty && chat.toCity.isNotEmpty)
+        '${chat.fromCity} → ${chat.toCity}',
+      if (chat.arrivalDate != null)
+        l.parcelArrives(DateFormat.MMMd(locale).format(chat.arrivalDate!)),
+    ];
+    final code = chat.code;
+    return Container(
+      key: const ValueKey('recipient-chat-parcel'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.inventory_2_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  parts.join(' · '),
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (code != null && code.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              l.parcelCodeLabel.toUpperCase(),
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 10,
+                letterSpacing: 1.2,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              key: const ValueKey('recipient-chat-code'),
+              children: [
+                for (final c in code.characters) ...[
+                  Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      c,
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        color: AppColors.primaryForeground,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l.parcelCodeNote,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _bubble(RecipientMessage m) {
-    // The traveler's own messages on the right.
-    final mine = !m.fromRecipient;
+    // Each side's own messages on the right.
+    final mine = widget.asRecipient ? m.fromRecipient : !m.fromRecipient;
     return Padding(
       key: ValueKey('recipient-message-${m.id}'),
       padding: const EdgeInsets.only(bottom: 10),

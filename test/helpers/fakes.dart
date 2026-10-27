@@ -1163,7 +1163,7 @@ class FakeRequestService extends Fake implements RequestService {
   }
 
   /// The traveler's chats with recipients, by request id.
-  final Map<String, RecipientChat> recipientChats = {};
+  final Map<String, RecipientChat> recipientChatData = {};
   bool failRecipientChat = false;
   bool failRecipientSend = false;
   final List<({String requestId, String body})> recipientSent = [];
@@ -1171,7 +1171,7 @@ class FakeRequestService extends Fake implements RequestService {
   @override
   Future<RecipientChat> recipientChat(String requestId) async {
     if (failRecipientChat) throw Exception('chat failed');
-    return recipientChats[requestId] ??
+    return recipientChatData[requestId] ??
         const RecipientChat(
           recipientName: 'Amara',
           senderName: 'Sarah',
@@ -1181,12 +1181,82 @@ class FakeRequestService extends Fake implements RequestService {
         );
   }
 
+  /// Recipient links opened in the app: token -> request id, or the problem.
+  final Map<String, Object> recipientLinks = {};
+  final List<String> claimed = [];
+
+  @override
+  Future<String> claimRecipientLink(String token) async {
+    final found = recipientLinks[token];
+    if (found is RecipientLinkProblem) throw RecipientLinkException(found);
+    if (found == null) {
+      throw const RecipientLinkException(RecipientLinkProblem.invalid);
+    }
+    claimed.add(token);
+    return found as String;
+  }
+
+  @override
+  Future<RecipientChat> myRecipientChat(String requestId) async {
+    if (failRecipientChat) throw Exception('chat failed');
+    return recipientChatData[requestId] ??
+        const RecipientChat(
+          asRecipient: true,
+          recipientName: 'Amara',
+          senderName: 'Sarah',
+          item: 'iPad Mini',
+          travelerName: 'Daniel O.',
+          status: 'handed_off',
+          code: '4821',
+          fromCity: 'Lagos',
+          toCity: 'London',
+          open: true,
+          messages: [],
+        );
+  }
+
+  final List<({String requestId, String body})> sentAsRecipient = [];
+
+  @override
+  Future<void> sendAsRecipient(String requestId, String body) async {
+    if (failRecipientSend) throw Exception('send failed');
+    sentAsRecipient.add((requestId: requestId, body: body));
+    final chat = await myRecipientChat(requestId);
+    recipientChatData[requestId] = RecipientChat(
+      asRecipient: true,
+      recipientName: chat.recipientName,
+      senderName: chat.senderName,
+      item: chat.item,
+      travelerName: chat.travelerName,
+      status: chat.status,
+      code: chat.code,
+      fromCity: chat.fromCity,
+      toCity: chat.toCity,
+      open: chat.open,
+      messages: [
+        ...chat.messages,
+        RecipientMessage(
+          id: 'mine-${sentAsRecipient.length}',
+          fromRecipient: true,
+          body: body,
+          at: DateTime(2030, 6, 15, 12),
+        ),
+      ],
+    );
+  }
+
+  /// What recipientChats (Messages' parcel chats) returns.
+  List<RecipientChatSummary> parcelChats = [];
+
+  @override
+  Future<List<RecipientChatSummary>> recipientChats() async => parcelChats;
+
   @override
   Future<void> sendRecipientMessage(String requestId, String body) async {
     if (failRecipientSend) throw Exception('send failed');
     recipientSent.add((requestId: requestId, body: body));
     final chat = await recipientChat(requestId);
-    recipientChats[requestId] = RecipientChat(
+    recipientChatData[requestId] = RecipientChat(
       recipientName: chat.recipientName,
       senderName: chat.senderName,
       item: chat.item,

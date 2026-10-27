@@ -17,6 +17,7 @@ import '../widgets/nata_toast.dart';
 import '../services/app_badge.dart';
 import '../widgets/storage_photo.dart';
 import '../services/screen_cache.dart';
+import '../services/chat_presence.dart';
 
 /// Takes or chooses a photo to send. [camera] true = take one with the camera.
 /// Replaceable in tests.
@@ -110,6 +111,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
   @override
   void initState() {
     super.initState();
+    ChatPresence.enter(ChatPresence.conversation(_c.id));
     _load();
     WidgetsBinding.instance.addObserver(this);
     _connect();
@@ -140,6 +142,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
 
   @override
   void dispose() {
+    ChatPresence.leave(ChatPresence.conversation(_c.id));
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _typingTimer?.cancel();

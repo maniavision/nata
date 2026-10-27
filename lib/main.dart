@@ -9,6 +9,7 @@ import 'services/preferences_service.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/app_update_listener.dart';
 import 'services/app_badge.dart';
+import 'services/deep_links.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +68,7 @@ class _NataAppState extends State<NataApp> with WidgetsBindingObserver {
     // Keep the ValueNotifier in sync with PreferencesService changes.
     _prefs.addListener(_onPrefsChanged);
     PushService.instance.start(_navigatorKey);
+    DeepLinks.instance.start(_navigatorKey);
     WidgetsBinding.instance.addObserver(this);
   }
 

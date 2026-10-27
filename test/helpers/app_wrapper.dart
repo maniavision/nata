@@ -5,10 +5,15 @@ import 'package:carrywise_app/main.dart';
 
 /// Wraps [child] with MaterialApp + all localization delegates so that
 /// context.l10n works inside widget tests without needing a real NataApp.
-Widget appWrapper(Widget child, {Locale locale = const Locale('en')}) {
+Widget appWrapper(
+  Widget child, {
+  Locale locale = const Locale('en'),
+  GlobalKey<NavigatorState>? navigatorKey,
+}) {
   return LocaleNotifier(
     notifier: ValueNotifier(locale),
     child: MaterialApp(
+      navigatorKey: navigatorKey,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [

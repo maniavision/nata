@@ -2178,5 +2178,18 @@
   "publicNameReserved": "This name can't be used. Please choose another.",
   "tipPublicNameTitle": "Travel under a pseudonym",
   "tipPublicNameBody": "Choose whether people who find you as a traveler see your name or a pseudonym. Your verified badge always shows.",
-  "photosUpToThree": "Photos (up to 3)"
+  "photosUpToThree": "Photos (up to 3)",
+  "linkForRecipient": "This link is for the person receiving the parcel.",
+  "linkNoLongerWorks": "This link no longer works.",
+  "parcelChatSubtitle": "Bringing your parcel from {sender}",
+  "@parcelChatSubtitle": {"placeholders": {"sender": {"type": "String"}}},
+  "parcelWaitingPickup": "Waiting for pickup",
+  "parcelOnTheWay": "On the way",
+  "parcelArrives": "Arrives {date}",
+  "@parcelArrives": {"placeholders": {"date": {"type": "String"}}},
+  "parcelCodeLabel": "Handover code",
+  "parcelCodeNote": "Give this code only when you have your parcel in hand.",
+  "chipYourParcel": "Your parcel",
+  "chipRecipient": "Recipient",
+  "parcelChatsSection": "Parcel chats"
 }

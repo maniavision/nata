@@ -52,6 +52,10 @@ import 'app_localizations.dart';
       l.notifTripMatchTitle,
       l.notifTripMatchBody(traveler, route),
     ),
+    'recipient_message_in' => (
+      l.notifMessageTitle(s('author')),
+      l.notifMessageBody(s('message')),
+    ),
     'recipient_message' => (
       l.notifMessageTitle(s('recipient')),
       l.notifMessageBody(s('message')),

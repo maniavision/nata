@@ -8509,6 +8509,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photos (up to 3)'**
   String get photosUpToThree;
+
+  /// No description provided for @linkForRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is for the person receiving the parcel.'**
+  String get linkForRecipient;
+
+  /// No description provided for @linkNoLongerWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'This link no longer works.'**
+  String get linkNoLongerWorks;
+
+  /// No description provided for @parcelChatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bringing your parcel from {sender}'**
+  String parcelChatSubtitle(String sender);
+
+  /// No description provided for @parcelWaitingPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for pickup'**
+  String get parcelWaitingPickup;
+
+  /// No description provided for @parcelOnTheWay.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way'**
+  String get parcelOnTheWay;
+
+  /// No description provided for @parcelArrives.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives {date}'**
+  String parcelArrives(String date);
+
+  /// No description provided for @parcelCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover code'**
+  String get parcelCodeLabel;
+
+  /// No description provided for @parcelCodeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this code only when you have your parcel in hand.'**
+  String get parcelCodeNote;
+
+  /// No description provided for @chipYourParcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your parcel'**
+  String get chipYourParcel;
+
+  /// No description provided for @chipRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get chipRecipient;
+
+  /// No description provided for @parcelChatsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Parcel chats'**
+  String get parcelChatsSection;
 }
 
 class _AppLocalizationsDelegate

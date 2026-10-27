@@ -1,0 +1,21 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "73868ASRW9.com.nata.nataApp"
+        ],
+        "components": [
+          {
+            "/": "/r/*",
+            "comment": "A recipient's parcel page"
+          }
+        ],
+        "paths": [
+          "/r/*"
+        ]
+      }
+    ]
+  }
+}
