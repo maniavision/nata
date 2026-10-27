@@ -88,6 +88,40 @@ void main() {
     });
   });
 
+  group('any of the names', () {
+    test('one of several first or last names is enough', () {
+      expect(
+        TicketCheckService.anyNameOnTicket('KALU/AMARA MS', 'Amara Grace'),
+        isTrue,
+      );
+      expect(
+        TicketCheckService.anyNameOnTicket('KALU/GRACE MS', 'Amara Grace'),
+        isTrue,
+      );
+      expect(
+        TicketCheckService.anyNameOnTicket(
+          'OKONKWO/AMARA MS',
+          'Kalu-Okonkwo',
+        ),
+        isTrue,
+      );
+    });
+
+    test('none of them: no match', () {
+      expect(
+        TicketCheckService.anyNameOnTicket('KALU/JOY MS', 'Amara Grace'),
+        isFalse,
+      );
+    });
+
+    test('an initial alone does not count', () {
+      expect(
+        TicketCheckService.anyNameOnTicket('KALU/A MS', 'Amara A.'),
+        isFalse,
+      );
+    });
+  });
+
   group('check', () {
     Future<TicketCheckResult> check(
       String? text, {
@@ -117,6 +151,32 @@ void main() {
     test('someone else\'s ticket: name mismatch', () async {
       expect(
         await check('BOARDING PASS OKAFOR/DANIEL MR 22JUN'),
+        TicketCheckResult.nameMismatch,
+      );
+    });
+
+    test('one first name and one last name of several: passed', () async {
+      expect(
+        await check(
+          'BOARDING PASS OKONKWO/GRACE MS 22JUN',
+          profile: const {
+            'first_name': 'Amara Grace',
+            'last_name': 'Kalu Okonkwo',
+          },
+        ),
+        TicketCheckResult.passed,
+      );
+    });
+
+    test('a first name but none of the last names: name mismatch', () async {
+      expect(
+        await check(
+          'BOARDING PASS ADEYEMI/GRACE MS 22JUN',
+          profile: const {
+            'first_name': 'Amara Grace',
+            'last_name': 'Kalu Okonkwo',
+          },
+        ),
         TicketCheckResult.nameMismatch,
       );
     });

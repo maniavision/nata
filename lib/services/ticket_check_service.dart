@@ -10,7 +10,8 @@ enum TicketCheckResult {
   /// The traveler's name and the departure date are on the ticket.
   passed,
 
-  /// The profile's first or last name is not on the ticket.
+  /// None of the profile's first names, or none of its last names, is on the
+  /// ticket.
   nameMismatch,
 
   /// The trip's departure date is not on the ticket (or the arrival date,
@@ -28,7 +29,8 @@ enum TicketCheckResult {
 
 /// Checks a flight ticket (boarding pass, e-ticket, itinerary) on the device
 /// before a trip is saved, like [IdDocumentCheckService] does for IDs:
-/// - the traveler's nata.profiles first_name and last_name are on it,
+/// - one of the traveler's first names and one of their last names
+///   (nata.profiles first_name, last_name) are on it,
 /// - the trip's departure date is on it, in any of the usual ticket formats.
 ///
 /// Text: native OCR, PDFs rendered to images first (shared with the ID
@@ -61,7 +63,7 @@ class TicketCheckService {
     final first = (profile?['first_name'] as String?)?.trim() ?? '';
     final last = (profile?['last_name'] as String?)?.trim() ?? '';
     if (first.isNotEmpty && last.isNotEmpty) {
-      if (!nameOnTicket(text, first) || !nameOnTicket(text, last)) {
+      if (!anyNameOnTicket(text, first) || !anyNameOnTicket(text, last)) {
         return TicketCheckResult.nameMismatch;
       }
       nameChecked = true;
@@ -103,6 +105,18 @@ class TicketCheckService {
     return words.every(
       (w) => tokens.contains(w) || _titles.any((t) => tokens.contains('$w$t')),
     );
+  }
+
+  /// True when at least one word of [names] is on the ticket, as
+  /// [nameOnTicket] reads it: "Amara Grace" passes with AMARA or GRACE.
+  /// Initials don't count, unless the name is only initials.
+  @visibleForTesting
+  static bool anyNameOnTicket(String text, String names) {
+    final words = IdDocumentCheckService.normalize(
+      names,
+    ).split(' ').where((w) => w.isNotEmpty).toList();
+    final full = words.where((w) => w.length > 1).toList();
+    return (full.isEmpty ? words : full).any((w) => nameOnTicket(text, w));
   }
 
   // ── Dates ──────────────────────────────────────────────────────────────────
