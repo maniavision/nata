@@ -5025,6 +5025,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String recipientSafetyNote(String name) {
+    return 'No compartas tu código de entrega en el chat ni antes de tener el paquete en tus manos. Reúnete siempre con $name en un lugar público.';
+  }
+
+  @override
   String get customSizeOption => 'Otro tamaño…';
 
   @override

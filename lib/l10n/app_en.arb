@@ -2213,6 +2213,8 @@
   "notifRefundToBalanceTitle": "Refund added to your Nata balance",
   "notifRefundToBalanceBody": "{amount} from your cancelled request is in your Nata balance.",
   "@notifRefundToBalanceBody": {"placeholders": {"amount": {"type": "String"}}},
+  "recipientSafetyNote": "Don't share your handover code in the chat or before the parcel is in your hands. Always meet {name} in a public place.",
+  "@recipientSafetyNote": {"placeholders": {"name": {"type": "String"}}},
   "customSizeOption": "Custom size…",
   "customSizeTitle": "Your max item size",
   "customSizeBody": "The largest parcel you can take, in centimetres.",

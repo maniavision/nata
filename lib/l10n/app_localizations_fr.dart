@@ -5062,6 +5062,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String recipientSafetyNote(String name) {
+    return 'Ne partagez pas votre code de remise dans le chat ni avant d\'avoir le colis en main. Retrouvez toujours $name dans un lieu public.';
+  }
+
+  @override
   String get customSizeOption => 'Autre taille…';
 
   @override

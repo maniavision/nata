@@ -4977,6 +4977,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String recipientSafetyNote(String name) {
+    return 'Don\'t share your handover code in the chat or before the parcel is in your hands. Always meet $name in a public place.';
+  }
+
+  @override
   String get customSizeOption => 'Custom size…';
 
   @override

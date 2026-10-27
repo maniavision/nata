@@ -17,16 +17,18 @@ export const appLink = `${WEB_BASE}/app`;
 type Lang = "en" | "fr" | "es";
 export type SmsEvent = "code" | "picked_up" | "arriving" | "delivered" | "message";
 
-// Each fits one SMS (160 characters of the plain SMS alphabet): Spanish is
-// written without á, í, ó and ú, which would force the 70-character kind.
+// Each fits one SMS (160 characters of the plain SMS alphabet) except the
+// code, which also carries the safety notes and takes two. Spanish is written
+// without á, í, ó and ú, which would force the 70-character kind.
 const TEXTS: Record<Lang, Record<SmsEvent, string>> = {
   en: {
     code: "{sender} sent you a parcel with Nata. Handover code: {code}. " +
-      "Follow it and chat with the traveler: {link}",
+      "Only give it to the traveler once the parcel is in your hands. " +
+      "Always meet in a public place. Follow it and chat: {link}",
     picked_up: "{traveler} has your parcel from {sender} and is on the way " +
       "to {city}. Follow it: {link}",
     arriving: "{traveler} arrives in {city} today with your parcel from " +
-      "{sender}. Arrange the handover: {link}",
+      "{sender}. Meet in a public place: {link}",
     delivered: "Your parcel from {sender} was delivered. Thank you! Send or " +
       "carry parcels with Nata too: {app}",
     message: "{traveler}, who is bringing your parcel from {sender}, sent you " +
@@ -34,11 +36,12 @@ const TEXTS: Record<Lang, Record<SmsEvent, string>> = {
   },
   fr: {
     code: "{sender} vous envoie un colis avec Nata. Code de remise : {code}. " +
-      "Suivez-le et écrivez au voyageur : {link}",
+      "Ne le donnez au voyageur qu'une fois le colis en main. " +
+      "Rencontrez-vous toujours dans un lieu public. Suivi et chat : {link}",
     picked_up: "{traveler} a votre colis de {sender} et part pour {city}. " +
       "Suivez-le : {link}",
     arriving: "{traveler} arrive à {city} aujourd'hui avec votre colis de " +
-      "{sender}. Organisez la remise : {link}",
+      "{sender}. Retrouvez-vous dans un lieu public : {link}",
     delivered: "Votre colis de {sender} a été livré. Merci ! Envoyez ou " +
       "transportez des colis vous aussi avec Nata : {app}",
     message: "{traveler}, qui apporte votre colis de {sender}, vous a écrit : " +
@@ -46,11 +49,12 @@ const TEXTS: Record<Lang, Record<SmsEvent, string>> = {
   },
   es: {
     code: "{sender} te envio un paquete con Nata. Codigo de entrega: {code}. " +
-      "Siguelo y escribe al viajero: {link}",
+      "Dalo al viajero solo cuando tengas el paquete en tus manos. " +
+      "Reunanse siempre en un lugar publico. Siguelo y escribe: {link}",
     picked_up: "{traveler} tiene tu paquete de {sender} y va camino a " +
       "{city}. Siguelo: {link}",
     arriving: "{traveler} llega hoy a {city} con tu paquete de {sender}. " +
-      "Organiza la entrega: {link}",
+      "Reunanse en un lugar publico: {link}",
     delivered: "Tu paquete de {sender} fue entregado. ¡Gracias! Envia o " +
       "lleva paquetes tu también con Nata: {app}",
     message: "{traveler}, que lleva tu paquete de {sender}, te escribio: {link}",

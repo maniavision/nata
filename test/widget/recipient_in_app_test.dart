@@ -80,6 +80,20 @@ void main() {
       expect(find.byKey(const ValueKey('recipient-chat-banner')), findsNothing);
     });
 
+    testWidgets('warns to keep the code and meet in a public place', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      expect(
+        find.textContaining(
+          "Don't share your handover code in the chat or before the parcel "
+          'is in your hands. Always meet Daniel',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('their own messages sit on the right', (tester) async {
       await pump(tester);
 
