@@ -341,6 +341,77 @@ class MessageService {
         .from(_bucket)
         .createSignedUrl(path, _signedUrlLifetime.inSeconds),
   );
+
+  // ── Reporting and blocking (20240190) ─────────────────────────────────────
+
+  /// Whether the user blocked the other person in [conversationId], or was
+  /// blocked by them. Either way nobody can write there.
+  Future<ChatBlockState> blockState(String conversationId) async {
+    final rows =
+        await _client.rpc(
+              'chat_block_state',
+              params: {'p_conversation': conversationId},
+            )
+            as List<dynamic>;
+    if (rows.isEmpty) return ChatBlockState.none;
+    final r = Map<String, dynamic>.from(rows.first as Map);
+    return ChatBlockState(
+      iBlocked: (r['i_blocked'] as bool?) ?? false,
+      blockedMe: (r['blocked_me'] as bool?) ?? false,
+    );
+  }
+
+  /// Blocks [userId] (someone the user shares a chat with).
+  Future<void> block(String userId) =>
+      _client.rpc('block_user', params: {'p_user': userId});
+
+  Future<void> unblock(String userId) =>
+      _client.rpc('unblock_user', params: {'p_user': userId});
+
+  /// Reports the other person in [conversationId] to Nata's team, about one
+  /// of their messages when [messageId] is given; also blocks them when
+  /// [block] is true.
+  Future<void> report(
+    String conversationId, {
+    required ChatReportReason reason,
+    String? note,
+    String? messageId,
+    bool block = false,
+  }) => _client.rpc(
+    'report_chat',
+    params: {
+      'p_conversation': conversationId,
+      'p_reason': reason.code,
+      'p_note': note,
+      'p_message': messageId,
+      'p_block': block,
+    },
+  );
+}
+
+/// Whether two members of a chat have blocked each other.
+class ChatBlockState {
+  final bool iBlocked;
+  final bool blockedMe;
+
+  const ChatBlockState({required this.iBlocked, required this.blockedMe});
+
+  static const none = ChatBlockState(iBlocked: false, blockedMe: false);
+
+  bool get blocked => iBlocked || blockedMe;
+}
+
+/// Why a chat was reported (`nata.chat_reports.reason`).
+enum ChatReportReason {
+  harassment('harassment'),
+  scam('scam'),
+  spam('spam'),
+  inappropriate('inappropriate'),
+  unsafe('unsafe'),
+  other('other');
+
+  const ChatReportReason(this.code);
+  final String code;
 }
 
 /// An open chat's live connection (see [MessageService.live]).

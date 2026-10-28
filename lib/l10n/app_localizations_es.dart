@@ -5094,4 +5094,167 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get maybeLater => 'Más tarde';
+
+  @override
+  String get chatMore => 'Más';
+
+  @override
+  String chatReportUser(String name) {
+    return 'Denunciar a $name';
+  }
+
+  @override
+  String chatBlockUser(String name) {
+    return 'Bloquear a $name';
+  }
+
+  @override
+  String chatUnblockUser(String name) {
+    return 'Desbloquear a $name';
+  }
+
+  @override
+  String get chatReportMessage => 'Denunciar mensaje';
+
+  @override
+  String reportTitle(String name) {
+    return 'Denunciar a $name';
+  }
+
+  @override
+  String reportIntro(String name) {
+    return 'Cuéntanos qué pasó. El equipo de Nata revisa cada denuncia en 24 horas. $name no sabrá quién lo denunció.';
+  }
+
+  @override
+  String get reportAboutMessage => 'Sobre este mensaje';
+
+  @override
+  String get reportReasonHarassment => 'Acoso u odio';
+
+  @override
+  String get reportReasonScam => 'Estafa o pedir pagos fuera de Nata';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonInappropriate => 'Fotos o mensajes inapropiados';
+
+  @override
+  String get reportReasonUnsafe => 'No me siento seguro';
+
+  @override
+  String get reportReasonOther => 'Otra cosa';
+
+  @override
+  String get reportNoteHint => 'Añade detalles (opcional)';
+
+  @override
+  String reportAlsoBlock(String name) {
+    return 'Bloquear también a $name';
+  }
+
+  @override
+  String get reportSend => 'Enviar denuncia';
+
+  @override
+  String get reportSent =>
+      'Gracias. Nuestro equipo revisará tu denuncia en 24 horas.';
+
+  @override
+  String get reportFailed =>
+      'No se pudo enviar la denuncia. Inténtalo de nuevo.';
+
+  @override
+  String blockConfirmTitle(String name) {
+    return '¿Bloquear a $name?';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'Ninguno de los dos podrá enviar mensajes en este chat. Tu entrega no se cancela: para cancelarla u obtener ayuda, usa Informar un problema en la solicitud.';
+
+  @override
+  String get blockAction => 'Bloquear';
+
+  @override
+  String blockDone(String name) {
+    return '$name está bloqueado.';
+  }
+
+  @override
+  String get blockFailed => 'No se pudo hacer. Inténtalo de nuevo.';
+
+  @override
+  String chatYouBlocked(String name) {
+    return 'Bloqueaste a $name. Ninguno de los dos puede enviar mensajes aquí.';
+  }
+
+  @override
+  String get chatBlockedByOther => 'No puedes enviar mensajes en este chat.';
+
+  @override
+  String get chatUnblock => 'Desbloquear';
+
+  @override
+  String get chatBlockedDeliveryNote =>
+      'Tu entrega no se cancela. Para cancelarla u obtener ayuda, usa Informar un problema en la solicitud.';
+
+  @override
+  String get supportReportsCard => 'Denuncias de chat';
+
+  @override
+  String get supportReportsSuffix => 'abiertas';
+
+  @override
+  String get supportReportsLine => 'Miembros denunciados en el chat';
+
+  @override
+  String get supportReportsTitle => 'Denuncias de chat';
+
+  @override
+  String get supportReviewed => 'Revisadas';
+
+  @override
+  String get supportNoReports => 'No hay denuncias aquí.';
+
+  @override
+  String get supportReportedBy => 'Denunciado por';
+
+  @override
+  String get supportReportedMember => 'Miembro denunciado';
+
+  @override
+  String supportTimesReported(int count) {
+    return 'Denunciado $count veces';
+  }
+
+  @override
+  String get supportBlockedByReporter => 'Bloqueado por quien denunció';
+
+  @override
+  String get supportReportNote => 'Su nota';
+
+  @override
+  String get supportReportedMessage => 'Mensaje denunciado';
+
+  @override
+  String get supportConversation => 'Conversación';
+
+  @override
+  String get supportPhotoMessage => '[foto]';
+
+  @override
+  String get supportReviewNoteHint =>
+      'Qué hiciste (aviso, cuenta eliminada, nada que hacer…)';
+
+  @override
+  String get supportMarkReviewed => 'Marcar como revisada';
+
+  @override
+  String get supportReviewedSnack => 'Denuncia marcada como revisada.';
+
+  @override
+  String get supportActReportReviewed => 'Denuncia revisada';
 }

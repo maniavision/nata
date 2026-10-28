@@ -8797,6 +8797,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maybe later'**
   String get maybeLater;
+
+  /// No description provided for @chatMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get chatMore;
+
+  /// No description provided for @chatReportUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Report {name}'**
+  String chatReportUser(String name);
+
+  /// No description provided for @chatBlockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}'**
+  String chatBlockUser(String name);
+
+  /// No description provided for @chatUnblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock {name}'**
+  String chatUnblockUser(String name);
+
+  /// No description provided for @chatReportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Report message'**
+  String get chatReportMessage;
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report {name}'**
+  String reportTitle(String name);
+
+  /// No description provided for @reportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what happened. Nata\'s team reviews every report within 24 hours. {name} won\'t know who reported them.'**
+  String reportIntro(String name);
+
+  /// No description provided for @reportAboutMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'About this message'**
+  String get reportAboutMessage;
+
+  /// No description provided for @reportReasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment or hate'**
+  String get reportReasonHarassment;
+
+  /// No description provided for @reportReasonScam.
+  ///
+  /// In en, this message translates to:
+  /// **'Scam or asking to pay outside Nata'**
+  String get reportReasonScam;
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonInappropriate.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate photos or messages'**
+  String get reportReasonInappropriate;
+
+  /// No description provided for @reportReasonUnsafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels unsafe'**
+  String get reportReasonUnsafe;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details (optional)'**
+  String get reportNoteHint;
+
+  /// No description provided for @reportAlsoBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Also block {name}'**
+  String reportAlsoBlock(String name);
+
+  /// No description provided for @reportSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report'**
+  String get reportSend;
+
+  /// No description provided for @reportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks. Our team will review your report within 24 hours.'**
+  String get reportSent;
+
+  /// No description provided for @reportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send your report. Try again.'**
+  String get reportFailed;
+
+  /// No description provided for @blockConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}?'**
+  String blockConfirmTitle(String name);
+
+  /// No description provided for @blockConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Neither of you will be able to send messages in this chat. Your delivery isn\'t cancelled: to cancel or get help, use Report a problem on the request.'**
+  String get blockConfirmBody;
+
+  /// No description provided for @blockAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get blockAction;
+
+  /// No description provided for @blockDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is blocked.'**
+  String blockDone(String name);
+
+  /// No description provided for @blockFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t do that. Try again.'**
+  String get blockFailed;
+
+  /// No description provided for @chatYouBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You blocked {name}. Neither of you can send messages here.'**
+  String chatYouBlocked(String name);
+
+  /// No description provided for @chatBlockedByOther.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t send messages in this chat.'**
+  String get chatBlockedByOther;
+
+  /// No description provided for @chatUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get chatUnblock;
+
+  /// No description provided for @chatBlockedDeliveryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your delivery isn\'t cancelled. To cancel or get help, use Report a problem on the request.'**
+  String get chatBlockedDeliveryNote;
+
+  /// No description provided for @supportReportsCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat reports'**
+  String get supportReportsCard;
+
+  /// No description provided for @supportReportsSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'open'**
+  String get supportReportsSuffix;
+
+  /// No description provided for @supportReportsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Members reported in chat'**
+  String get supportReportsLine;
+
+  /// No description provided for @supportReportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat reports'**
+  String get supportReportsTitle;
+
+  /// No description provided for @supportReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed'**
+  String get supportReviewed;
+
+  /// No description provided for @supportNoReports.
+  ///
+  /// In en, this message translates to:
+  /// **'No chat reports here.'**
+  String get supportNoReports;
+
+  /// No description provided for @supportReportedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported by'**
+  String get supportReportedBy;
+
+  /// No description provided for @supportReportedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported member'**
+  String get supportReportedMember;
+
+  /// No description provided for @supportTimesReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported {count} times'**
+  String supportTimesReported(int count);
+
+  /// No description provided for @supportBlockedByReporter.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked by the reporter'**
+  String get supportBlockedByReporter;
+
+  /// No description provided for @supportReportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Their note'**
+  String get supportReportNote;
+
+  /// No description provided for @supportReportedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported message'**
+  String get supportReportedMessage;
+
+  /// No description provided for @supportConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation'**
+  String get supportConversation;
+
+  /// No description provided for @supportPhotoMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'[photo]'**
+  String get supportPhotoMessage;
+
+  /// No description provided for @supportReviewNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What you did (warned, removed the account, nothing needed…)'**
+  String get supportReviewNoteHint;
+
+  /// No description provided for @supportMarkReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as reviewed'**
+  String get supportMarkReviewed;
+
+  /// No description provided for @supportReviewedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Report marked as reviewed.'**
+  String get supportReviewedSnack;
+
+  /// No description provided for @supportActReportReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat report reviewed'**
+  String get supportActReportReviewed;
 }
 
 class _AppLocalizationsDelegate

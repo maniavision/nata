@@ -5132,4 +5132,167 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get maybeLater => 'Plus tard';
+
+  @override
+  String get chatMore => 'Plus';
+
+  @override
+  String chatReportUser(String name) {
+    return 'Signaler $name';
+  }
+
+  @override
+  String chatBlockUser(String name) {
+    return 'Bloquer $name';
+  }
+
+  @override
+  String chatUnblockUser(String name) {
+    return 'Débloquer $name';
+  }
+
+  @override
+  String get chatReportMessage => 'Signaler le message';
+
+  @override
+  String reportTitle(String name) {
+    return 'Signaler $name';
+  }
+
+  @override
+  String reportIntro(String name) {
+    return 'Dites-nous ce qui s\'est passé. L\'équipe Nata examine chaque signalement sous 24 heures. $name ne saura pas qui l\'a signalé.';
+  }
+
+  @override
+  String get reportAboutMessage => 'À propos de ce message';
+
+  @override
+  String get reportReasonHarassment => 'Harcèlement ou haine';
+
+  @override
+  String get reportReasonScam => 'Arnaque ou demande de paiement hors de Nata';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonInappropriate => 'Photos ou messages inappropriés';
+
+  @override
+  String get reportReasonUnsafe => 'Je ne me sens pas en sécurité';
+
+  @override
+  String get reportReasonOther => 'Autre chose';
+
+  @override
+  String get reportNoteHint => 'Ajoutez des détails (facultatif)';
+
+  @override
+  String reportAlsoBlock(String name) {
+    return 'Bloquer aussi $name';
+  }
+
+  @override
+  String get reportSend => 'Envoyer le signalement';
+
+  @override
+  String get reportSent =>
+      'Merci. Notre équipe examinera votre signalement sous 24 heures.';
+
+  @override
+  String get reportFailed => 'Impossible d\'envoyer le signalement. Réessayez.';
+
+  @override
+  String blockConfirmTitle(String name) {
+    return 'Bloquer $name ?';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'Aucun de vous deux ne pourra envoyer de messages dans cette discussion. Votre livraison n\'est pas annulée : pour l\'annuler ou obtenir de l\'aide, utilisez Signaler un problème sur la demande.';
+
+  @override
+  String get blockAction => 'Bloquer';
+
+  @override
+  String blockDone(String name) {
+    return '$name est bloqué.';
+  }
+
+  @override
+  String get blockFailed => 'Impossible pour le moment. Réessayez.';
+
+  @override
+  String chatYouBlocked(String name) {
+    return 'Vous avez bloqué $name. Aucun de vous deux ne peut envoyer de messages ici.';
+  }
+
+  @override
+  String get chatBlockedByOther =>
+      'Vous ne pouvez pas envoyer de messages dans cette discussion.';
+
+  @override
+  String get chatUnblock => 'Débloquer';
+
+  @override
+  String get chatBlockedDeliveryNote =>
+      'Votre livraison n\'est pas annulée. Pour l\'annuler ou obtenir de l\'aide, utilisez Signaler un problème sur la demande.';
+
+  @override
+  String get supportReportsCard => 'Signalements de discussion';
+
+  @override
+  String get supportReportsSuffix => 'ouverts';
+
+  @override
+  String get supportReportsLine => 'Membres signalés dans la discussion';
+
+  @override
+  String get supportReportsTitle => 'Signalements de discussion';
+
+  @override
+  String get supportReviewed => 'Examinés';
+
+  @override
+  String get supportNoReports => 'Aucun signalement ici.';
+
+  @override
+  String get supportReportedBy => 'Signalé par';
+
+  @override
+  String get supportReportedMember => 'Membre signalé';
+
+  @override
+  String supportTimesReported(int count) {
+    return 'Signalé $count fois';
+  }
+
+  @override
+  String get supportBlockedByReporter => 'Bloqué par l\'auteur du signalement';
+
+  @override
+  String get supportReportNote => 'Leur note';
+
+  @override
+  String get supportReportedMessage => 'Message signalé';
+
+  @override
+  String get supportConversation => 'Discussion';
+
+  @override
+  String get supportPhotoMessage => '[photo]';
+
+  @override
+  String get supportReviewNoteHint =>
+      'Ce que vous avez fait (avertissement, compte supprimé, rien à faire…)';
+
+  @override
+  String get supportMarkReviewed => 'Marquer comme examiné';
+
+  @override
+  String get supportReviewedSnack => 'Signalement marqué comme examiné.';
+
+  @override
+  String get supportActReportReviewed => 'Signalement examiné';
 }

@@ -766,6 +766,69 @@ class FakeMessageService extends Fake implements MessageService {
     if (failAttachmentUrl) throw Exception('no url');
     return 'https://example.com/signed/$path';
   }
+
+  ChatBlockState blockStateResult = ChatBlockState.none;
+  bool failReport = false;
+  bool failBlock = false;
+  final List<String> blocked = [];
+  final List<String> unblocked = [];
+  final List<
+    ({
+      String conversationId,
+      ChatReportReason reason,
+      String? note,
+      String? messageId,
+      bool block,
+    })
+  >
+  reports = [];
+
+  @override
+  Future<ChatBlockState> blockState(String conversationId) async =>
+      blockStateResult;
+
+  @override
+  Future<void> block(String userId) async {
+    if (failBlock) throw Exception('block failed');
+    blocked.add(userId);
+    blockStateResult = ChatBlockState(
+      iBlocked: true,
+      blockedMe: blockStateResult.blockedMe,
+    );
+  }
+
+  @override
+  Future<void> unblock(String userId) async {
+    unblocked.add(userId);
+    blockStateResult = ChatBlockState(
+      iBlocked: false,
+      blockedMe: blockStateResult.blockedMe,
+    );
+  }
+
+  @override
+  Future<void> report(
+    String conversationId, {
+    required ChatReportReason reason,
+    String? note,
+    String? messageId,
+    bool block = false,
+  }) async {
+    if (failReport) throw Exception('report failed');
+    reports.add((
+      conversationId: conversationId,
+      reason: reason,
+      note: note,
+      messageId: messageId,
+      block: block,
+    ));
+    if (block) {
+      blockStateResult = ChatBlockState(
+        iBlocked: true,
+        blockedMe: blockStateResult.blockedMe,
+      );
+    }
+  }
 }
 
 /// Makes the blurred ticket copy on Add Trip: answers [result] (null: the

@@ -12,6 +12,7 @@ import '../services/message_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/avatar_image.dart';
 import '../widgets/camera_denied_sheet.dart';
+import '../widgets/chat_report_sheet.dart';
 import 'messages_screen.dart';
 import '../widgets/nata_toast.dart';
 import '../services/app_badge.dart';
@@ -98,6 +99,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
   /// New messages, read receipts and typing, as they happen.
   ChatLive? _live;
 
+  /// Whether either person blocked the other (nobody can write then).
+  ChatBlockState _block = ChatBlockState.none;
+
   /// The other person is typing (cleared a few seconds after the last sign).
   bool _otherTyping = false;
   Timer? _typingTimer;
@@ -113,6 +117,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     super.initState();
     ChatPresence.enter(ChatPresence.conversation(_c.id));
     _load();
+    _loadBlock();
     WidgetsBinding.instance.addObserver(this);
     _connect();
     _startTimer();
@@ -204,6 +209,15 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
       });
     } finally {
       _loadingNow = false;
+    }
+  }
+
+  Future<void> _loadBlock() async {
+    try {
+      final state = await _service.blockState(_c.id);
+      if (mounted) setState(() => _block = state);
+    } catch (e) {
+      debugPrint('[Chat] block state: $e');
     }
   }
 
@@ -449,10 +463,199 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
                 ],
               ),
             ),
+            _buildMenu(),
           ],
         ),
       ),
     );
+  }
+
+  // ── Report and block ───────────────────────────────────────────────────────
+  String get _otherName =>
+      _c.otherFirstName.isEmpty ? _c.displayName : _c.otherFirstName;
+
+  Widget _buildMenu() {
+    final l = context.l10n;
+    final name = _otherName;
+    return PopupMenuButton<String>(
+      key: const ValueKey('chat-more'),
+      tooltip: l.chatMore,
+      icon: const Icon(
+        Icons.more_vert_rounded,
+        size: 20,
+        color: AppColors.foreground,
+      ),
+      color: AppColors.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      onSelected: (v) => switch (v) {
+        'report' => _report(),
+        'block' => _confirmBlock(),
+        _ => _unblock(),
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          key: const ValueKey('chat-menu-report'),
+          value: 'report',
+          child: _menuRow(Icons.flag_outlined, l.chatReportUser(name)),
+        ),
+        if (_block.iBlocked)
+          PopupMenuItem(
+            key: const ValueKey('chat-menu-unblock'),
+            value: 'unblock',
+            child: _menuRow(Icons.lock_open_rounded, l.chatUnblockUser(name)),
+          )
+        else
+          PopupMenuItem(
+            key: const ValueKey('chat-menu-block'),
+            value: 'block',
+            child: _menuRow(
+              Icons.block_rounded,
+              l.chatBlockUser(name),
+              color: AppColors.destructive,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _menuRow(IconData icon, String text, {Color? color}) => Row(
+    children: [
+      Icon(icon, size: 18, color: color ?? AppColors.foreground),
+      const SizedBox(width: 10),
+      Text(
+        text,
+        style: GoogleFonts.dmSans(
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+          color: color ?? AppColors.foreground,
+        ),
+      ),
+    ],
+  );
+
+  /// Long-pressing the other person's message offers to report it.
+  Future<void> _messageActions(ChatMessage m) async {
+    final l = context.l10n;
+    final choice = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: ListTile(
+            key: const ValueKey('chat-report-message'),
+            leading: const Icon(
+              Icons.flag_outlined,
+              color: AppColors.foreground,
+            ),
+            title: Text(
+              l.chatReportMessage,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: AppColors.foreground,
+              ),
+            ),
+            onTap: () => Navigator.of(ctx).pop(true),
+          ),
+        ),
+      ),
+    );
+    if (choice == true && mounted) await _report(message: m);
+  }
+
+  Future<void> _report({ChatMessage? message}) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await showModalBottomSheet<ChatReportDraft>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ChatReportSheet(
+        name: _otherName,
+        fullName: _c.displayName,
+        message: message,
+        alreadyBlocked: _block.iBlocked,
+      ),
+    );
+    if (result == null || !mounted) return;
+    try {
+      await _service.report(
+        _c.id,
+        reason: result.reason,
+        note: result.note,
+        messageId: message?.id,
+        block: result.block,
+      );
+      if (!mounted) return;
+      messenger.showSnackBar(nataToast(l.reportSent, tone: ToastTone.success));
+      if (result.block) await _loadBlock();
+    } catch (e) {
+      debugPrint('[Chat] report: $e');
+      messenger.showSnackBar(nataToast(l.reportFailed, tone: ToastTone.error));
+    }
+  }
+
+  Future<void> _confirmBlock() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final name = _otherName;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('chat-block-dialog'),
+        title: Text(l.blockConfirmTitle(name)),
+        content: Text(l.blockConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const ValueKey('chat-block-confirm'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: Text(l.blockAction),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await _service.block(_c.otherUserId);
+      if (!mounted) return;
+      setState(
+        () => _block = ChatBlockState(
+          iBlocked: true,
+          blockedMe: _block.blockedMe,
+        ),
+      );
+      messenger.showSnackBar(nataToast(l.blockDone(name)));
+    } catch (e) {
+      debugPrint('[Chat] block: $e');
+      messenger.showSnackBar(nataToast(l.blockFailed, tone: ToastTone.error));
+    }
+  }
+
+  Future<void> _unblock() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _service.unblock(_c.otherUserId);
+      if (!mounted) return;
+      setState(
+        () => _block = ChatBlockState(
+          iBlocked: false,
+          blockedMe: _block.blockedMe,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Chat] unblock: $e');
+      messenger.showSnackBar(nataToast(l.blockFailed, tone: ToastTone.error));
+    }
   }
 
   // ── Delivery card ──────────────────────────────────────────────────────────
@@ -831,7 +1034,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
           ),
         ),
         const SizedBox(width: 8),
-        Flexible(child: bubble),
+        Flexible(
+          child: GestureDetector(
+            onLongPress: () => _messageActions(m),
+            child: bubble,
+          ),
+        ),
       ],
     );
   }
@@ -961,9 +1169,103 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     );
   }
 
+  /// Once either person blocked the other: no input, and for the one who
+  /// blocked, a way back.
+  Widget _buildBlockedFooter() {
+    final l = context.l10n;
+    final mine = _block.iBlocked;
+    return SafeArea(
+      top: false,
+      child: Column(
+        key: const ValueKey('chat-blocked'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: AppColors.mutedForeground,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l.chatBlockedDeliveryNote,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      height: 1.4,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.6),
+              border: const Border(top: BorderSide(color: AppColors.border)),
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.block_rounded,
+                  size: 16,
+                  color: AppColors.mutedForeground,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(
+                      mine
+                          ? l.chatYouBlocked(_otherName)
+                          : l.chatBlockedByOther,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 12,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ),
+                if (mine)
+                  TextButton(
+                    key: const ValueKey('chat-unblock'),
+                    onPressed: _unblock,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.accent,
+                    ),
+                    child: Text(
+                      l.chatUnblock,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFooter() {
     final l = context.l10n;
     if (!_c.chatUnlocked) return _buildLockedFooter();
+    if (_block.blocked) return _buildBlockedFooter();
     return SafeArea(
       top: false,
       child: Container(
