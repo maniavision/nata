@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Supabase, Flutterwave and the rest of the network. Flutter only adds
          this to debug builds, so release builds need it here. -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -8,8 +9,14 @@
     <!-- Detect the country to suggest language and currency (geolocator) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- No access to the photo library: photos are picked with Android's photo
+         picker (image_picker) and files with the system file chooser
+         (file_picker), which need no permission. Google Play only allows these
+         permissions for apps whose core purpose is the photo library, so they
+         are removed even if a library adds them. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
     <application
         android:label="Nata"
         android:name="${applicationName}"
