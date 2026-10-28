@@ -5046,4 +5046,166 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maybeLater => 'Maybe later';
+
+  @override
+  String get chatMore => 'More';
+
+  @override
+  String chatReportUser(String name) {
+    return 'Report $name';
+  }
+
+  @override
+  String chatBlockUser(String name) {
+    return 'Block $name';
+  }
+
+  @override
+  String chatUnblockUser(String name) {
+    return 'Unblock $name';
+  }
+
+  @override
+  String get chatReportMessage => 'Report message';
+
+  @override
+  String reportTitle(String name) {
+    return 'Report $name';
+  }
+
+  @override
+  String reportIntro(String name) {
+    return 'Tell us what happened. Nata\'s team reviews every report within 24 hours. $name won\'t know who reported them.';
+  }
+
+  @override
+  String get reportAboutMessage => 'About this message';
+
+  @override
+  String get reportReasonHarassment => 'Harassment or hate';
+
+  @override
+  String get reportReasonScam => 'Scam or asking to pay outside Nata';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonInappropriate => 'Inappropriate photos or messages';
+
+  @override
+  String get reportReasonUnsafe => 'Feels unsafe';
+
+  @override
+  String get reportReasonOther => 'Something else';
+
+  @override
+  String get reportNoteHint => 'Add details (optional)';
+
+  @override
+  String reportAlsoBlock(String name) {
+    return 'Also block $name';
+  }
+
+  @override
+  String get reportSend => 'Send report';
+
+  @override
+  String get reportSent =>
+      'Thanks. Our team will review your report within 24 hours.';
+
+  @override
+  String get reportFailed => 'Couldn\'t send your report. Try again.';
+
+  @override
+  String blockConfirmTitle(String name) {
+    return 'Block $name?';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'Neither of you will be able to send messages in this chat. Your delivery isn\'t cancelled: to cancel or get help, use Report a problem on the request.';
+
+  @override
+  String get blockAction => 'Block';
+
+  @override
+  String blockDone(String name) {
+    return '$name is blocked.';
+  }
+
+  @override
+  String get blockFailed => 'Couldn\'t do that. Try again.';
+
+  @override
+  String chatYouBlocked(String name) {
+    return 'You blocked $name. Neither of you can send messages here.';
+  }
+
+  @override
+  String get chatBlockedByOther => 'You can\'t send messages in this chat.';
+
+  @override
+  String get chatUnblock => 'Unblock';
+
+  @override
+  String get chatBlockedDeliveryNote =>
+      'Your delivery isn\'t cancelled. To cancel or get help, use Report a problem on the request.';
+
+  @override
+  String get supportReportsCard => 'Chat reports';
+
+  @override
+  String get supportReportsSuffix => 'open';
+
+  @override
+  String get supportReportsLine => 'Members reported in chat';
+
+  @override
+  String get supportReportsTitle => 'Chat reports';
+
+  @override
+  String get supportReviewed => 'Reviewed';
+
+  @override
+  String get supportNoReports => 'No chat reports here.';
+
+  @override
+  String get supportReportedBy => 'Reported by';
+
+  @override
+  String get supportReportedMember => 'Reported member';
+
+  @override
+  String supportTimesReported(int count) {
+    return 'Reported $count times';
+  }
+
+  @override
+  String get supportBlockedByReporter => 'Blocked by the reporter';
+
+  @override
+  String get supportReportNote => 'Their note';
+
+  @override
+  String get supportReportedMessage => 'Reported message';
+
+  @override
+  String get supportConversation => 'Conversation';
+
+  @override
+  String get supportPhotoMessage => '[photo]';
+
+  @override
+  String get supportReviewNoteHint =>
+      'What you did (warned, removed the account, nothing needed…)';
+
+  @override
+  String get supportMarkReviewed => 'Mark as reviewed';
+
+  @override
+  String get supportReviewedSnack => 'Report marked as reviewed.';
+
+  @override
+  String get supportActReportReviewed => 'Chat report reviewed';
 }

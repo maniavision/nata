@@ -1099,4 +1099,155 @@ void main() {
       expect(find.byKey(const ValueKey('chat-delivery-card')), findsNothing);
     });
   });
+
+  group('Report and block', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byKey(const ValueKey('chat-more')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('reports the other person with a reason and a note', (
+      tester,
+    ) async {
+      await pump(tester);
+      await openMenu(tester);
+      expect(find.text('Report Amara'), findsOneWidget);
+      expect(find.text('Block Amara'), findsOneWidget);
+
+      await tapKey(tester, 'chat-menu-report');
+      expect(find.byKey(const ValueKey('report-sheet')), findsOneWidget);
+      expect(find.text('Report Amara K.'), findsOneWidget);
+
+      // No reason yet: nothing to send.
+      final send = find.byKey(const ValueKey('report-send'));
+      expect(tester.widget<ElevatedButton>(send).onPressed, isNull);
+
+      await tapKey(tester, 'report-reason-scam');
+      await tester.enterText(
+        find.byKey(const ValueKey('report-note')),
+        'Asked me to pay by bank transfer.',
+      );
+      await tester.ensureVisible(send);
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+
+      expect(service.reports, hasLength(1));
+      final r = service.reports.single;
+      expect(r.conversationId, 'conv-1');
+      expect(r.reason, ChatReportReason.scam);
+      expect(r.note, 'Asked me to pay by bank transfer.');
+      expect(r.messageId, isNull);
+      expect(r.block, isFalse);
+      expect(
+        find.text('Thanks. Our team will review your report within 24 hours.'),
+        findsOneWidget,
+      );
+      // Still free to write.
+      expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
+    });
+
+    testWidgets('long-pressing their message reports that message', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.longPress(find.text('Great, see you tomorrow.'));
+      await tester.pumpAndSettle();
+      await tapKey(tester, 'chat-report-message');
+
+      expect(find.byKey(const ValueKey('report-quoted')), findsOneWidget);
+      await tapKey(tester, 'report-reason-harassment');
+      await tester.ensureVisible(find.byKey(const ValueKey('report-block')));
+      await tapKey(tester, 'report-block');
+      await tester.ensureVisible(find.byKey(const ValueKey('report-send')));
+      await tapKey(tester, 'report-send');
+
+      final r = service.reports.single;
+      expect(r.messageId, 'm3');
+      expect(r.block, isTrue);
+      // Reporting with "Also block" blocks the chat.
+      expect(find.byKey(const ValueKey('chat-blocked')), findsOneWidget);
+      expect(find.byKey(const ValueKey('chat-input')), findsNothing);
+    });
+
+    testWidgets('my own messages have no report action', (tester) async {
+      await pump(tester);
+      await tester.longPress(find.text('On my way!'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('chat-report-message')), findsNothing);
+    });
+
+    testWidgets('blocking asks first, then closes the chat; unblock opens it', (
+      tester,
+    ) async {
+      await pump(tester);
+      await openMenu(tester);
+      await tapKey(tester, 'chat-menu-block');
+      expect(find.byKey(const ValueKey('chat-block-dialog')), findsOneWidget);
+      await tapKey(tester, 'chat-block-confirm');
+
+      expect(service.blocked, ['other-1']);
+      expect(find.byKey(const ValueKey('chat-blocked')), findsOneWidget);
+      expect(
+        find.text('You blocked Amara. Neither of you can send messages here.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('chat-input')), findsNothing);
+
+      // Once the "blocked" toast has gone.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      await tapKey(tester, 'chat-unblock');
+      expect(service.unblocked, ['other-1']);
+      expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
+    });
+
+    testWidgets('cancelling the block changes nothing', (tester) async {
+      await pump(tester);
+      await openMenu(tester);
+      await tapKey(tester, 'chat-menu-block');
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(service.blocked, isEmpty);
+      expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
+    });
+
+    testWidgets('blocked by them: no input and no unblock', (tester) async {
+      service.blockStateResult = const ChatBlockState(
+        iBlocked: false,
+        blockedMe: true,
+      );
+      await pump(tester);
+
+      expect(find.byKey(const ValueKey('chat-blocked')), findsOneWidget);
+      expect(
+        find.text("You can't send messages in this chat."),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('chat-unblock')), findsNothing);
+      expect(find.byKey(const ValueKey('chat-input')), findsNothing);
+    });
+
+    testWidgets('a failed report says so', (tester) async {
+      service.failReport = true;
+      await pump(tester);
+      await openMenu(tester);
+      await tapKey(tester, 'chat-menu-report');
+      await tapKey(tester, 'report-reason-spam');
+      await tester.ensureVisible(find.byKey(const ValueKey('report-send')));
+      await tapKey(tester, 'report-send');
+
+      expect(
+        find.text("Couldn't send your report. Try again."),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('in French', (tester) async {
+      await pump(tester, locale: const Locale('fr'));
+      await openMenu(tester);
+      expect(find.text('Signaler Amara'), findsOneWidget);
+      expect(find.text('Bloquer Amara'), findsOneWidget);
+    });
+  });
 }

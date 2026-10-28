@@ -117,6 +117,36 @@ class SupportService {
 
   Future<void> unlock(String requestId) =>
       _client.rpc('support_unlock', params: {'p_request': requestId});
+
+  /// Chat reports (20240190), open ones or reviewed ones, newest first.
+  Future<List<SupportChatReport>> chatReports({required bool open}) async {
+    final rows =
+        await _client.rpc('support_chat_reports', params: {'p_open': open})
+            as List;
+    return [
+      for (final r in rows)
+        SupportChatReport.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// The reported conversation's latest messages, oldest first.
+  Future<List<SupportReportMessage>> reportMessages(String reportId) async {
+    final rows =
+        await _client.rpc(
+              'support_report_messages',
+              params: {'p_report': reportId},
+            )
+            as List;
+    return [
+      for (final r in rows)
+        SupportReportMessage.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  Future<void> reviewReport(String reportId, String note) => _client.rpc(
+    'support_review_report',
+    params: {'p_report': reportId, 'p_note': note},
+  );
 }
 
 DateTime? _date(Object? v) => v == null ? null : DateTime.parse('$v').toLocal();
@@ -127,22 +157,25 @@ class SupportSummary {
   final int openProblems;
   final int lockedDeliveries;
   final int failedPayments;
+  final int openReports;
 
   const SupportSummary({
     required this.openProblems,
     required this.lockedDeliveries,
     required this.failedPayments,
+    this.openReports = 0,
   });
 
   factory SupportSummary.fromJson(Map<String, dynamic> j) => SupportSummary(
     openProblems: (j['open_problems'] as num?)?.toInt() ?? 0,
     lockedDeliveries: (j['locked_deliveries'] as num?)?.toInt() ?? 0,
     failedPayments: (j['failed_payments'] as num?)?.toInt() ?? 0,
+    openReports: (j['open_reports'] as num?)?.toInt() ?? 0,
   );
 }
 
-/// One support action: resolved, refunded, payout_retried, refund_retried
-/// or unlocked.
+/// One support action: resolved, refunded, payout_retried, refund_retried,
+/// unlocked or report_reviewed.
 class SupportActivity {
   final String action;
   final String subject;
@@ -335,4 +368,104 @@ class LockedDelivery {
     attempts: (j['attempts'] as num?)?.toInt() ?? 0,
     pickedUpAt: _date(j['picked_up_at']),
   );
+}
+
+/// A member reported in chat (`public.support_chat_reports`).
+class SupportChatReport {
+  final String id;
+
+  /// harassment, scam, spam, inappropriate, unsafe or other.
+  final String reason;
+  final String note;
+
+  /// What the reported message said (empty when the whole chat was
+  /// reported).
+  final String messageBody;
+  final bool isOpen;
+  final String reviewNote;
+  final DateTime createdAt;
+  final DateTime? reviewedAt;
+  final String? conversationId;
+  final String? requestId;
+  final String reporterId;
+  final String reportedId;
+  final String reporterName;
+  final String? reporterAvatar;
+  final String reportedName;
+  final String? reportedAvatar;
+
+  /// How many reports the reported member has had in all.
+  final int reportedCount;
+
+  /// The reporter blocked them.
+  final bool blocked;
+
+  const SupportChatReport({
+    required this.id,
+    required this.reason,
+    required this.note,
+    required this.messageBody,
+    required this.isOpen,
+    required this.reviewNote,
+    required this.createdAt,
+    required this.reviewedAt,
+    required this.conversationId,
+    required this.requestId,
+    required this.reporterId,
+    required this.reportedId,
+    required this.reporterName,
+    required this.reporterAvatar,
+    required this.reportedName,
+    required this.reportedAvatar,
+    required this.reportedCount,
+    required this.blocked,
+  });
+
+  factory SupportChatReport.fromJson(Map<String, dynamic> j) =>
+      SupportChatReport(
+        id: _str(j['id']),
+        reason: _str(j['reason']),
+        note: _str(j['note']),
+        messageBody: _str(j['message_body']),
+        isOpen: _str(j['status']) != 'reviewed',
+        reviewNote: _str(j['review_note']),
+        createdAt: _date(j['created_at']) ?? DateTime.now(),
+        reviewedAt: _date(j['reviewed_at']),
+        conversationId: j['conversation_id'] as String?,
+        requestId: j['request_id'] as String?,
+        reporterId: _str(j['reporter_id']),
+        reportedId: _str(j['reported_id']),
+        reporterName: _str(j['reporter_name']),
+        reporterAvatar: j['reporter_avatar'] as String?,
+        reportedName: _str(j['reported_name']),
+        reportedAvatar: j['reported_avatar'] as String?,
+        reportedCount: (j['reported_count'] as num?)?.toInt() ?? 1,
+        blocked: (j['blocked'] as bool?) ?? false,
+      );
+}
+
+/// One message of a reported conversation.
+class SupportReportMessage {
+  final String id;
+  final String authorId;
+  final String body;
+  final bool hasPhoto;
+  final DateTime createdAt;
+
+  const SupportReportMessage({
+    required this.id,
+    required this.authorId,
+    required this.body,
+    required this.hasPhoto,
+    required this.createdAt,
+  });
+
+  factory SupportReportMessage.fromJson(Map<String, dynamic> j) =>
+      SupportReportMessage(
+        id: _str(j['id']),
+        authorId: _str(j['author_id']),
+        body: _str(j['body']),
+        hasPhoto: (j['has_photo'] as bool?) ?? false,
+        createdAt: _date(j['created_at']) ?? DateTime.now(),
+      );
 }

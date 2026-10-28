@@ -65,7 +65,46 @@ class FakeSupportService extends Fake implements SupportService {
 
   @override
   Future<void> unlock(String requestId) async => unlocked.add(requestId);
+
+  List<SupportChatReport> openReports = [];
+  List<SupportChatReport> reviewedReports = [];
+  List<SupportReportMessage> conversation = [];
+  final List<({String id, String note})> reviewed = [];
+
+  @override
+  Future<List<SupportChatReport>> chatReports({required bool open}) async =>
+      open ? openReports : reviewedReports;
+
+  @override
+  Future<List<SupportReportMessage>> reportMessages(String reportId) async =>
+      conversation;
+
+  @override
+  Future<void> reviewReport(String reportId, String note) async =>
+      reviewed.add((id: reportId, note: note));
 }
+
+SupportChatReport chatReport({String id = 'cr1', int count = 1}) =>
+    SupportChatReport(
+      id: id,
+      reason: 'scam',
+      note: 'Wanted me to pay him directly.',
+      messageBody: 'Send the money to my bank instead',
+      isOpen: true,
+      reviewNote: '',
+      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+      reviewedAt: null,
+      conversationId: 'c1',
+      requestId: 'r1',
+      reporterId: 'u-amara',
+      reportedId: 'u-kwame',
+      reporterName: 'Amara Mensah',
+      reporterAvatar: null,
+      reportedName: 'Kwame Boateng',
+      reportedAvatar: null,
+      reportedCount: count,
+      blocked: true,
+    );
 
 SupportProblem problem({
   String id = 'd1',
@@ -256,5 +295,73 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('payments-locked-tab')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('locked-empty')), findsOneWidget);
+  });
+
+  testWidgets('the dashboard counts open chat reports', (tester) async {
+    tall(tester);
+    service.summaryValue = const SupportSummary(
+      openProblems: 0,
+      lockedDeliveries: 0,
+      failedPayments: 0,
+      openReports: 3,
+    );
+    await tester.pumpWidget(appWrapper(SupportScreen(service: service)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CHAT REPORTS'), findsOneWidget);
+    expect(find.byKey(const ValueKey('support-reports')), findsOneWidget);
+  });
+
+  testWidgets('a chat report opens with the conversation and is reviewed', (
+    tester,
+  ) async {
+    tall(tester);
+    service.openReports = [chatReport(count: 2)];
+    service.conversation = [
+      SupportReportMessage(
+        id: 'm1',
+        authorId: 'u-kwame',
+        body: 'Send the money to my bank instead',
+        hasPhoto: false,
+        createdAt: DateTime(2026, 10, 20, 9),
+      ),
+      SupportReportMessage(
+        id: 'm2',
+        authorId: 'u-amara',
+        body: 'No, I paid in the app.',
+        hasPhoto: false,
+        createdAt: DateTime(2026, 10, 20, 9, 5),
+      ),
+    ];
+    await tester.pumpWidget(appWrapper(SupportReportsScreen(service: service)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kwame Boateng'), findsOneWidget);
+    expect(find.text('Scam or asking to pay outside Nata'), findsOneWidget);
+    expect(find.text('Reported 2 times'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('report-cr1')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('report-message-body')), findsOneWidget);
+    expect(find.text('No, I paid in the app.'), findsOneWidget);
+    expect(find.text('Blocked by the reporter'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('report-review-note')),
+      'Warned the traveler.',
+    );
+    final button = find.byKey(const ValueKey('report-mark-reviewed'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+
+    expect(service.reviewed.single, (id: 'cr1', note: 'Warned the traveler.'));
+  });
+
+  testWidgets('no chat reports says so', (tester) async {
+    await tester.pumpWidget(appWrapper(SupportReportsScreen(service: service)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('reports-empty')), findsOneWidget);
   });
 }

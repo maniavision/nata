@@ -7,7 +7,9 @@ import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/request_service.dart' show PriceFormatter;
+import '../services/message_service.dart' show ChatReportReason;
 import '../services/support_service.dart';
+import '../widgets/chat_report_sheet.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/page_header.dart';
 import 'notifications_screen.dart' show notificationTimeLabel;
@@ -466,6 +468,18 @@ class _SupportScreenState extends State<SupportScreen> {
             line: l.supportFailedLine,
             onTap: () => _open(SupportPaymentsScreen(service: _service)),
           ),
+          const SizedBox(height: 12),
+          _SummaryCard(
+            key: const ValueKey('support-reports'),
+            icon: Icons.flag_rounded,
+            color: AppColors.primary,
+            background: AppColors.secondary,
+            label: l.supportReportsCard,
+            count: s.openReports,
+            suffix: l.supportReportsSuffix,
+            line: l.supportReportsLine,
+            onTap: () => _open(SupportReportsScreen(service: _service)),
+          ),
           const SizedBox(height: 20),
           _Section(
             title: l.supportRecentActivity,
@@ -572,6 +586,7 @@ class _ActivityRow extends StatelessWidget {
       'refunded' => (Icons.undo_rounded, l.supportActRefunded),
       'payout_retried' => (Icons.refresh_rounded, l.supportActPayoutRetried),
       'refund_retried' => (Icons.refresh_rounded, l.supportActRefundRetried),
+      'report_reviewed' => (Icons.flag_rounded, l.supportActReportReviewed),
       _ => (Icons.lock_open_rounded, l.supportActUnlocked),
     };
     final resolved = activity.action == 'resolved';
@@ -1717,6 +1732,429 @@ class _UnlockDialog extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Chat Reports ────────────────────────────────────────────────────────────
+
+String _chatReason(AppLocalizations l, String code) {
+  for (final r in ChatReportReason.values) {
+    if (r.code == code) return ChatReportSheet.reasonLabel(l, r);
+  }
+  return code;
+}
+
+/// Members reported in chat (20240190): open ones, or reviewed ones.
+class SupportReportsScreen extends StatefulWidget {
+  final SupportService? service;
+  const SupportReportsScreen({super.key, this.service});
+
+  @override
+  State<SupportReportsScreen> createState() => _SupportReportsScreenState();
+}
+
+class _SupportReportsScreenState extends State<SupportReportsScreen> {
+  late final SupportService _service = widget.service ?? SupportService();
+  bool _open = true;
+  List<SupportChatReport>? _reports;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final open = _open;
+    try {
+      final reports = await _service.chatReports(open: open);
+      if (!mounted || open != _open) return;
+      setState(() {
+        _reports = reports;
+        _failed = false;
+      });
+    } catch (e) {
+      debugPrint('[Support] reports: $e');
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  void _switch(bool open) {
+    if (open == _open) return;
+    setState(() {
+      _open = open;
+      _reports = null;
+    });
+    _load();
+  }
+
+  Widget _tab(String text, bool selected, VoidCallback onTap, {Key? key}) =>
+      GestureDetector(
+        key: key,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : AppColors.card,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.border,
+            ),
+          ),
+          child: Text(
+            text,
+            style: _body(
+              color: selected
+                  ? AppColors.primaryForeground
+                  : AppColors.mutedForeground,
+            ),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final reports = _reports;
+    return _Page(
+      title: l.supportReportsTitle,
+      onRefresh: _load,
+      children: [
+        Row(
+          children: [
+            _tab(
+              l.supportOpen,
+              _open,
+              () => _switch(true),
+              key: const ValueKey('reports-open'),
+            ),
+            const SizedBox(width: 8),
+            _tab(
+              l.supportReviewed,
+              !_open,
+              () => _switch(false),
+              key: const ValueKey('reports-reviewed'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (reports == null && _failed)
+          _message(l.supportLoadFailed)
+        else if (reports == null)
+          _loading()
+        else if (reports.isEmpty)
+          _message(l.supportNoReports, key: const ValueKey('reports-empty'))
+        else
+          for (final r in reports) ...[
+            _ReportCard(
+              report: r,
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        SupportReportDetailScreen(report: r, service: _service),
+                  ),
+                );
+                if (mounted) _load();
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+      ],
+    );
+  }
+}
+
+class _ReportCard extends StatelessWidget {
+  final SupportChatReport report;
+  final VoidCallback onTap;
+  const _ReportCard({required this.report, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final r = report;
+    return _Card(
+      cardKey: ValueKey('report-${r.id}'),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _Chip(
+                _chatReason(l, r.reason),
+                color: AppColors.destructive,
+                background: AppColors.destructive.withValues(alpha: 0.1),
+              ),
+              Text(_ago(context, r.createdAt), style: _small()),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _Avatar(name: r.reportedName, path: r.reportedAvatar),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.supportReportedMember.toUpperCase(),
+                      style: _label(),
+                    ),
+                    Text(r.reportedName, style: _body()),
+                    if (r.reportedCount > 1)
+                      Text(
+                        l.supportTimesReported(r.reportedCount),
+                        style: _small(color: AppColors.destructive),
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.mutedForeground,
+              ),
+            ],
+          ),
+          if (r.messageBody.isNotEmpty || r.note.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              r.messageBody.isNotEmpty ? '“${r.messageBody}”' : r.note,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: _small(color: AppColors.foreground),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Text('${l.supportReportedBy} ${r.reporterName}', style: _small()),
+        ],
+      ),
+    );
+  }
+}
+
+/// One chat report: who, why, the conversation, and closing it with a note.
+class SupportReportDetailScreen extends StatefulWidget {
+  final SupportChatReport report;
+  final SupportService? service;
+  const SupportReportDetailScreen({
+    super.key,
+    required this.report,
+    this.service,
+  });
+
+  @override
+  State<SupportReportDetailScreen> createState() =>
+      _SupportReportDetailScreenState();
+}
+
+class _SupportReportDetailScreenState extends State<SupportReportDetailScreen> {
+  late final SupportService _service = widget.service ?? SupportService();
+  final _note = TextEditingController();
+  List<SupportReportMessage>? _messages;
+  bool _busy = false;
+
+  SupportChatReport get _r => widget.report;
+
+  @override
+  void initState() {
+    super.initState();
+    _service
+        .reportMessages(_r.id)
+        .then((m) {
+          if (mounted) setState(() => _messages = m);
+        })
+        .catchError((Object e) {
+          debugPrint('[Support] report messages: $e');
+          if (mounted) setState(() => _messages = const []);
+        });
+  }
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _review() async {
+    final l = context.l10n;
+    final navigator = Navigator.of(context);
+    setState(() => _busy = true);
+    try {
+      await _service.reviewReport(_r.id, _note.text);
+      if (!mounted) return;
+      _snack(context, l.supportReviewedSnack);
+      navigator.pop(true);
+    } catch (e) {
+      debugPrint('[Support] review report: $e');
+      if (!mounted) return;
+      setState(() => _busy = false);
+      _snack(context, l.supportActionFailed);
+    }
+  }
+
+  Widget _bubble(SupportReportMessage m) {
+    final reported = m.authorId == _r.reportedId;
+    final text = m.hasPhoto && m.body.isEmpty
+        ? context.l10n.supportPhotoMessage
+        : m.body;
+    return Align(
+      alignment: reported ? Alignment.centerLeft : Alignment.centerRight,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        constraints: const BoxConstraints(maxWidth: 280),
+        decoration: BoxDecoration(
+          color: reported
+              ? AppColors.destructive.withValues(alpha: 0.06)
+              : AppColors.input,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: reported
+                ? AppColors.destructive.withValues(alpha: 0.25)
+                : AppColors.border,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              reported ? _r.reportedName : _r.reporterName,
+              style: _small(weight: FontWeight.w700),
+            ),
+            Text(text, style: _body(weight: FontWeight.w400)),
+            Text(
+              DateFormat('MMM d, h:mm a').format(m.createdAt),
+              style: _small(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final r = _r;
+    final messages = _messages;
+    return _Page(
+      title: l.supportReportsTitle,
+      onRefresh: () async {},
+      children: [
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _Chip(
+                    _chatReason(l, r.reason),
+                    color: AppColors.destructive,
+                    background: AppColors.destructive.withValues(alpha: 0.1),
+                  ),
+                  Text(_ago(context, r.createdAt), style: _small()),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _Person(name: r.reportedName, role: l.supportReportedMember),
+              const SizedBox(height: 8),
+              _Person(name: r.reporterName, role: l.supportReportedBy),
+              const SizedBox(height: 8),
+              if (r.reportedCount > 1)
+                Text(
+                  l.supportTimesReported(r.reportedCount),
+                  style: _small(color: AppColors.destructive),
+                ),
+              if (r.blocked) Text(l.supportBlockedByReporter, style: _small()),
+            ],
+          ),
+        ),
+        if (r.messageBody.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _Section(
+            title: l.supportReportedMessage,
+            children: [
+              Text(
+                r.messageBody,
+                key: const ValueKey('report-message-body'),
+                style: _body(weight: FontWeight.w400),
+              ),
+            ],
+          ),
+        ],
+        if (r.note.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _Section(
+            title: l.supportReportNote,
+            children: [Text(r.note, style: _body(weight: FontWeight.w400))],
+          ),
+        ],
+        const SizedBox(height: 16),
+        _Section(
+          title: l.supportConversation,
+          children: [
+            if (messages == null)
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.accent),
+              )
+            else
+              for (final m in messages) _bubble(m),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (r.isOpen) ...[
+          _Section(
+            title: l.supportResolutionNote,
+            children: [
+              TextField(
+                key: const ValueKey('report-review-note'),
+                controller: _note,
+                minLines: 3,
+                maxLines: 5,
+                style: _body(weight: FontWeight.w400),
+                decoration: InputDecoration(
+                  hintText: l.supportReviewNoteHint,
+                  hintStyle: _body(
+                    weight: FontWeight.w400,
+                    color: AppColors.mutedForeground,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.input,
+                  contentPadding: const EdgeInsets.all(12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _Pill(
+            l.supportMarkReviewed,
+            buttonKey: const ValueKey('report-mark-reviewed'),
+            busy: _busy,
+            onTap: _review,
+          ),
+        ] else if (r.reviewNote.isNotEmpty)
+          _Section(
+            title: l.supportResolutionNote,
+            children: [
+              Text(r.reviewNote, style: _body(weight: FontWeight.w400)),
+            ],
+          ),
+      ],
     );
   }
 }
