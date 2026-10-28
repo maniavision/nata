@@ -354,5 +354,9 @@ workflows:
       google_play:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
         track: production
-        submit_as_draft: false
+        # Google Play only accepts draft releases until the app has been
+        # published once ("Only releases with status draft may be created on
+        # draft app"). The draft is then sent for review from Play Console.
+        # Set this to false after the first release is live.
+        submit_as_draft: true
       <<: *email
