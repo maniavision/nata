@@ -1847,8 +1847,8 @@
   "deleteAccountRow": "Eliminar cuenta",
   "deleteAccountRowSub": "Elimina tu cuenta de Nata para siempre",
   "daTitle": "¿Eliminar tu cuenta?",
-  "daBody": "No se puede deshacer.",
-  "daWhatWeDelete": "Lo que eliminamos",
+  "daBody": "Tu cuenta se cierra ahora y se elimina definitivamente después de 7 días. Vuelve a iniciar sesión antes si cambias de opinión.",
+  "daWhatWeDelete": "Qué eliminamos después de 7 días",
   "daDeleteProfile": "Tu perfil, nombre y foto",
   "daDeleteId": "Tus documentos de identidad y selfie",
   "daDeletePayment": "Métodos de pago y cuentas de cobro guardados",
@@ -1859,7 +1859,7 @@
   "daKeepPaymentsSub": "Necesarios para la contabilidad",
   "daKeepDeliveries": "Entregas completadas y reseñas",
   "daKeepDeliveriesSub": "Se muestran como «Usuario eliminado»",
-  "daUnderstand": "Entiendo que es definitivo",
+  "daUnderstand": "Entiendo que mi cuenta se elimina definitivamente después de 7 días",
   "daConfirmButton": "Eliminar mi cuenta",
   "daFailed": "No se pudo eliminar tu cuenta. Inténtalo de nuevo.",
   "daLoadFailed": "No se pudo comprobar tu cuenta.",
@@ -2139,5 +2139,11 @@
   "supportReviewNoteHint": "Qué hiciste (aviso, cuenta eliminada, nada que hacer…)",
   "supportMarkReviewed": "Marcar como revisada",
   "supportReviewedSnack": "Denuncia marcada como revisada.",
-  "supportActReportReviewed": "Denuncia revisada"
+  "supportActReportReviewed": "Denuncia revisada",
+  "restoreAccountTitle": "Tu cuenta se está eliminando",
+  "restoreAccountBody": "Se eliminará definitivamente el {date}. Restáurala para seguir usando Nata.",
+  "restoreAccountButton": "Restaurar mi cuenta",
+  "restoreAccountKeepDeleted": "Dejar que se elimine",
+  "restoreAccountStaysDeleted": "Tu cuenta se eliminará definitivamente el {date}.",
+  "restoreAccountFailed": "No se pudo restaurar tu cuenta. Inténtalo de nuevo."
 }

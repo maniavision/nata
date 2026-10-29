@@ -7349,13 +7349,13 @@ abstract class AppLocalizations {
   /// No description provided for @daBody.
   ///
   /// In en, this message translates to:
-  /// **'This can\'t be undone.'**
+  /// **'Your account closes now and is deleted for good after 7 days. Sign in before then if you change your mind.'**
   String get daBody;
 
   /// No description provided for @daWhatWeDelete.
   ///
   /// In en, this message translates to:
-  /// **'What we delete'**
+  /// **'What we delete after 7 days'**
   String get daWhatWeDelete;
 
   /// No description provided for @daDeleteProfile.
@@ -7421,7 +7421,7 @@ abstract class AppLocalizations {
   /// No description provided for @daUnderstand.
   ///
   /// In en, this message translates to:
-  /// **'I understand this is permanent'**
+  /// **'I understand my account is deleted for good after 7 days'**
   String get daUnderstand;
 
   /// No description provided for @daConfirmButton.
@@ -9073,6 +9073,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chat report reviewed'**
   String get supportActReportReviewed;
+
+  /// No description provided for @restoreAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is being deleted'**
+  String get restoreAccountTitle;
+
+  /// No description provided for @restoreAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be deleted for good on {date}. Restore it to keep using Nata.'**
+  String restoreAccountBody(String date);
+
+  /// No description provided for @restoreAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore my account'**
+  String get restoreAccountButton;
+
+  /// No description provided for @restoreAccountKeepDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it deleted'**
+  String get restoreAccountKeepDeleted;
+
+  /// No description provided for @restoreAccountStaysDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will be deleted for good on {date}.'**
+  String restoreAccountStaysDeleted(String date);
+
+  /// No description provided for @restoreAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore your account. Try again.'**
+  String get restoreAccountFailed;
 }
 
 class _AppLocalizationsDelegate

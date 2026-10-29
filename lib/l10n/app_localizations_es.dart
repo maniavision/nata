@@ -4249,10 +4249,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get daTitle => '¿Eliminar tu cuenta?';
 
   @override
-  String get daBody => 'No se puede deshacer.';
+  String get daBody =>
+      'Tu cuenta se cierra ahora y se elimina definitivamente después de 7 días. Vuelve a iniciar sesión antes si cambias de opinión.';
 
   @override
-  String get daWhatWeDelete => 'Lo que eliminamos';
+  String get daWhatWeDelete => 'Qué eliminamos después de 7 días';
 
   @override
   String get daDeleteProfile => 'Tu perfil, nombre y foto';
@@ -4285,7 +4286,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get daKeepDeliveriesSub => 'Se muestran como «Usuario eliminado»';
 
   @override
-  String get daUnderstand => 'Entiendo que es definitivo';
+  String get daUnderstand =>
+      'Entiendo que mi cuenta se elimina definitivamente después de 7 días';
 
   @override
   String get daConfirmButton => 'Eliminar mi cuenta';
@@ -5257,4 +5259,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get supportActReportReviewed => 'Denuncia revisada';
+
+  @override
+  String get restoreAccountTitle => 'Tu cuenta se está eliminando';
+
+  @override
+  String restoreAccountBody(String date) {
+    return 'Se eliminará definitivamente el $date. Restáurala para seguir usando Nata.';
+  }
+
+  @override
+  String get restoreAccountButton => 'Restaurar mi cuenta';
+
+  @override
+  String get restoreAccountKeepDeleted => 'Dejar que se elimine';
+
+  @override
+  String restoreAccountStaysDeleted(String date) {
+    return 'Tu cuenta se eliminará definitivamente el $date.';
+  }
+
+  @override
+  String get restoreAccountFailed =>
+      'No se pudo restaurar tu cuenta. Inténtalo de nuevo.';
 }

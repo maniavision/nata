@@ -67,9 +67,10 @@ class AccountService {
     );
   }
 
-  /// Deletes the account (the delete-account edge function): personal data,
-  /// files and the sign-in. Throws [AccountDeletionBlockedException] while
-  /// money or a delivery is in flight. Sign out afterwards.
+  /// Closes the account (the delete-account edge function); its data, files
+  /// and sign-in are erased 7 days later unless the member signs in again
+  /// and restores it (20240191). Throws [AccountDeletionBlockedException]
+  /// while money or a delivery is in flight. Sign out afterwards.
   Future<void> deleteAccount() async {
     try {
       await _client.functions.invoke('delete-account');
@@ -82,4 +83,15 @@ class AccountService {
       rethrow;
     }
   }
+
+  /// When the signed-in member's data will be erased, or null when their
+  /// account isn't waiting to be deleted.
+  Future<DateTime?> deletionScheduledFor() async {
+    final result = await _client.rpc('account_deletion_status');
+    if (result == null) return null;
+    return DateTime.parse('$result').toLocal();
+  }
+
+  /// Keeps an account that was waiting to be deleted.
+  Future<void> restoreAccount() => _client.rpc('restore_my_account');
 }
