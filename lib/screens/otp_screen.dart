@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 import '../l10n/l10n_ext.dart';
+import 'package:intl/intl.dart';
+import '../services/account_service.dart';
 import '../services/auth_service.dart';
 import '../services/preferences_service.dart';
 
@@ -37,6 +39,12 @@ class OtpScreen extends StatefulWidget {
   /// defaults to [PreferencesService.loadFromProfile].
   final Future<void> Function()? loadSettings;
 
+  /// When the account's data will be erased, if it is waiting to be deleted
+  /// (20240191); and restoring it. Overrides for tests; default to
+  /// [AccountService].
+  final Future<DateTime?> Function()? deletionScheduledFor;
+  final Future<void> Function()? restoreAccount;
+
   const OtpScreen({
     super.key,
     required this.phone,
@@ -48,6 +56,8 @@ class OtpScreen extends StatefulWidget {
     this.authService,
     this.saveSettings,
     this.loadSettings,
+    this.deletionScheduledFor,
+    this.restoreAccount,
   });
 
   @override
@@ -174,6 +184,8 @@ class _OtpScreenState extends State<OtpScreen> {
       final response = await _auth.verifyOtp(widget.phone, _otp);
 
       if (response.session != null) {
+        // An account waiting to be deleted: keep it, or stay signed out.
+        if (!await _restoreIfDeleting()) return;
         if (widget.isSignUp) {
           // New users: save their name and country of residence
           if (widget.firstName.isNotEmpty || widget.lastName.isNotEmpty) {
@@ -217,6 +229,76 @@ class _OtpScreenState extends State<OtpScreen> {
       });
       _clearBoxes();
     }
+  }
+
+  /// True to carry on signing in. When the account is waiting to be deleted,
+  /// asks whether to restore it; if not, signs out again.
+  Future<bool> _restoreIfDeleting() async {
+    DateTime? erasedOn;
+    try {
+      erasedOn =
+          await (widget.deletionScheduledFor ??
+              AccountService().deletionScheduledFor)();
+    } catch (e) {
+      // Can't tell: let them in; the server still erases it on time.
+      debugPrint('[OtpScreen] deletion status: $e');
+      return true;
+    }
+    if (erasedOn == null || !mounted) return true;
+
+    final l = context.l10n;
+    final date = DateFormat.yMMMMd(
+      Localizations.localeOf(context).toString(),
+    ).format(erasedOn);
+    final restore = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('restore-account-dialog'),
+        title: Text(l.restoreAccountTitle),
+        content: Text(l.restoreAccountBody(date)),
+        actions: [
+          TextButton(
+            key: const ValueKey('restore-account-keep-deleted'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.restoreAccountKeepDeleted),
+          ),
+          TextButton(
+            key: const ValueKey('restore-account'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.accent),
+            child: Text(l.restoreAccountButton),
+          ),
+        ],
+      ),
+    );
+
+    if (restore == true) {
+      try {
+        await (widget.restoreAccount ?? AccountService().restoreAccount)();
+        return true;
+      } catch (e) {
+        debugPrint('[OtpScreen] restore: $e');
+        if (mounted) {
+          setState(() {
+            _error = l.restoreAccountFailed;
+            _loading = false;
+          });
+        }
+      }
+    } else if (mounted) {
+      setState(() {
+        _error = l.restoreAccountStaysDeleted(date);
+        _loading = false;
+      });
+    }
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      debugPrint('[OtpScreen] sign out: $e');
+    }
+    _clearBoxes();
+    return false;
   }
 
   Future<void> _resend() async {

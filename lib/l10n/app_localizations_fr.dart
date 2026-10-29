@@ -4275,10 +4275,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get daTitle => 'Supprimer votre compte ?';
 
   @override
-  String get daBody => 'Cette action est irréversible.';
+  String get daBody =>
+      'Votre compte est fermé tout de suite et supprimé définitivement après 7 jours. Reconnectez-vous d\'ici là si vous changez d\'avis.';
 
   @override
-  String get daWhatWeDelete => 'Ce que nous supprimons';
+  String get daWhatWeDelete => 'Ce que nous supprimons après 7 jours';
 
   @override
   String get daDeleteProfile => 'Votre profil, nom et photo';
@@ -4313,7 +4314,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get daKeepDeliveriesSub => 'Affichés comme « Utilisateur supprimé »';
 
   @override
-  String get daUnderstand => 'Je comprends que c’est définitif';
+  String get daUnderstand =>
+      'Je comprends que mon compte est supprimé définitivement après 7 jours';
 
   @override
   String get daConfirmButton => 'Supprimer mon compte';
@@ -5295,4 +5297,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportActReportReviewed => 'Signalement examiné';
+
+  @override
+  String get restoreAccountTitle => 'Votre compte est en cours de suppression';
+
+  @override
+  String restoreAccountBody(String date) {
+    return 'Il sera supprimé définitivement le $date. Restaurez-le pour continuer à utiliser Nata.';
+  }
+
+  @override
+  String get restoreAccountButton => 'Restaurer mon compte';
+
+  @override
+  String get restoreAccountKeepDeleted => 'Laisser supprimer';
+
+  @override
+  String restoreAccountStaysDeleted(String date) {
+    return 'Votre compte sera supprimé définitivement le $date.';
+  }
+
+  @override
+  String get restoreAccountFailed =>
+      'Impossible de restaurer votre compte. Réessayez.';
 }

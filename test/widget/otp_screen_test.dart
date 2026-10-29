@@ -156,7 +156,12 @@ void languageAfterSignInTests() {
     });
     tearDown(() => PreferencesService().resetAll());
 
-    Future<void> signIn(WidgetTester tester, {bool isSignUp = false}) async {
+    Future<void> signIn(
+      WidgetTester tester, {
+      bool isSignUp = false,
+      DateTime? erasedOn,
+      Future<void> Function()? restore,
+    }) async {
       await tester.pumpWidget(
         appWrapper(
           OtpScreen(
@@ -167,6 +172,8 @@ void languageAfterSignInTests() {
             authService: auth,
             saveSettings: () async => saves++,
             loadSettings: () async => loads++,
+            deletionScheduledFor: () async => erasedOn,
+            restoreAccount: restore,
             onSuccess: () => signedIn = true,
           ),
         ),
@@ -279,6 +286,72 @@ void languageAfterSignInTests() {
       expect(saves, 1);
       expect(loads, 0);
       expect(PreferencesService().hasAccountOnDevice, isTrue);
+    });
+
+    group('an account waiting to be deleted', () {
+      final erasedOn = DateTime(2030, 6, 22);
+
+      testWidgets('is restored and signed in', (tester) async {
+        var restored = 0;
+        await signIn(
+          tester,
+          erasedOn: erasedOn,
+          restore: () async => restored++,
+        );
+        expect(
+          find.byKey(const ValueKey('restore-account-dialog')),
+          findsOneWidget,
+        );
+        expect(find.text('Your account is being deleted'), findsOneWidget);
+        expect(find.textContaining('June 22, 2030'), findsOneWidget);
+
+        await tester.tap(find.byKey(const ValueKey('restore-account')));
+        for (var i = 0; i < 5; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+
+        expect(restored, 1);
+        expect(signedIn, isTrue);
+        expect(loads, 1);
+      });
+
+      testWidgets('kept deleted: signed out again, with the date', (
+        tester,
+      ) async {
+        when(() => auth.signOut()).thenAnswer((_) async {});
+        var restored = 0;
+        await signIn(
+          tester,
+          erasedOn: erasedOn,
+          restore: () async => restored++,
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('restore-account-keep-deleted')),
+        );
+        for (var i = 0; i < 5; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+
+        expect(restored, 0);
+        expect(signedIn, isFalse);
+        expect(loads, 0);
+        verify(() => auth.signOut()).called(1);
+        expect(
+          find.text('Your account will be deleted for good on June 22, 2030.'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('an account not being deleted signs in as usual', (
+        tester,
+      ) async {
+        await signIn(tester, erasedOn: null);
+        expect(
+          find.byKey(const ValueKey('restore-account-dialog')),
+          findsNothing,
+        );
+        expect(signedIn, isTrue);
+      });
     });
   });
 }

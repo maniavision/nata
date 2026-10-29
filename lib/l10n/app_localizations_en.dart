@@ -4201,10 +4201,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get daTitle => 'Delete your account?';
 
   @override
-  String get daBody => 'This can\'t be undone.';
+  String get daBody =>
+      'Your account closes now and is deleted for good after 7 days. Sign in before then if you change your mind.';
 
   @override
-  String get daWhatWeDelete => 'What we delete';
+  String get daWhatWeDelete => 'What we delete after 7 days';
 
   @override
   String get daDeleteProfile => 'Your profile, name and photo';
@@ -4237,7 +4238,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get daKeepDeliveriesSub => 'Shown as \"Deleted user\"';
 
   @override
-  String get daUnderstand => 'I understand this is permanent';
+  String get daUnderstand =>
+      'I understand my account is deleted for good after 7 days';
 
   @override
   String get daConfirmButton => 'Delete my account';
@@ -5208,4 +5210,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportActReportReviewed => 'Chat report reviewed';
+
+  @override
+  String get restoreAccountTitle => 'Your account is being deleted';
+
+  @override
+  String restoreAccountBody(String date) {
+    return 'It will be deleted for good on $date. Restore it to keep using Nata.';
+  }
+
+  @override
+  String get restoreAccountButton => 'Restore my account';
+
+  @override
+  String get restoreAccountKeepDeleted => 'Keep it deleted';
+
+  @override
+  String restoreAccountStaysDeleted(String date) {
+    return 'Your account will be deleted for good on $date.';
+  }
+
+  @override
+  String get restoreAccountFailed =>
+      'Couldn\'t restore your account. Try again.';
 }
