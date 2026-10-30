@@ -5548,4 +5548,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get depositStatusPaidToSender => 'versée à l\'expéditeur';
+
+  @override
+  String get makeDefault => 'Par défaut';
+
+  @override
+  String get stripeCardsNote =>
+      'Les données de carte vont directement à Stripe ; Nata ne voit jamais votre numéro de carte.';
+
+  @override
+  String get addCardSecurely => 'Ajouter une carte en toute sécurité';
+
+  @override
+  String get stripeCardFormNote =>
+      'Vous saisirez la carte dans le formulaire sécurisé de Stripe. Elle est enregistrée chez Stripe pour vos prochains paiements.';
+
+  @override
+  String get errCardSave => 'Impossible d\'enregistrer la carte. Réessayez.';
+
+  @override
+  String get savedCardCheckoutNote =>
+      'Vous pouvez choisir une autre carte ou en ajouter une dans la page de paiement sécurisée.';
+
+  @override
+  String get useAnotherWallet => 'Utiliser un autre portefeuille';
 }

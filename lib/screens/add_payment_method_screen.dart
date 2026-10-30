@@ -6,99 +6,16 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
 import '../services/phone_number.dart';
+import '../services/stripe_sheet.dart';
 import '../widgets/one_line_text.dart';
-
-/// Card checks, kept apart from the screen so they can be tested.
-class CardInput {
-  /// The digits of a card number, without spaces.
-  static String digits(String input) => input.replaceAll(RegExp(r'\D'), '');
-
-  /// A plausible card number: 13 to 19 digits passing the Luhn checksum.
-  static bool isValidNumber(String input) {
-    final d = digits(input);
-    if (d.length < 13 || d.length > 19) return false;
-    var sum = 0;
-    for (var i = 0; i < d.length; i++) {
-      var n = int.parse(d[d.length - 1 - i]);
-      if (i.isOdd) {
-        n *= 2;
-        if (n > 9) n -= 9;
-      }
-      sum += n;
-    }
-    return sum % 10 == 0;
-  }
-
-  /// "MM/YY" for a month that has not ended yet ([now] for tests).
-  static bool isValidExpiry(String input, {DateTime? now}) {
-    final m = RegExp(r'^(\d{2})/(\d{2})$').firstMatch(input.trim());
-    if (m == null) return false;
-    final month = int.parse(m.group(1)!);
-    final year = 2000 + int.parse(m.group(2)!);
-    if (month < 1 || month > 12) return false;
-    final today = now ?? DateTime.now();
-    // Valid through the last day of the expiry month.
-    return !DateTime(
-      year,
-      month + 1,
-    ).isBefore(DateTime(today.year, today.month + 1));
-  }
-
-  static bool isValidCvv(String input) =>
-      RegExp(r'^\d{3,4}$').hasMatch(input.trim());
-
-  /// The card network from the number's first digits.
-  static String brand(String input) {
-    final d = digits(input);
-    if (d.startsWith('4')) return 'Visa';
-    if (RegExp(r'^(5[1-5]|2[2-7])').hasMatch(d)) return 'Mastercard';
-    if (RegExp(r'^3[47]').hasMatch(d)) return 'American Express';
-    return 'Card';
-  }
-}
-
-/// Groups card digits by four as the user types: "4242 4242 4242 4242".
-class _CardNumberFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final d = CardInput.digits(newValue.text);
-    final capped = d.length > 19 ? d.substring(0, 19) : d;
-    final text = [
-      for (var i = 0; i < capped.length; i += 4)
-        capped.substring(i, i + 4 > capped.length ? capped.length : i + 4),
-    ].join(' ');
-    return TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
-  }
-}
-
-/// Adds the "/" in an expiry date as the user types: "0827" -> "08/27".
-class _ExpiryFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    var d = CardInput.digits(newValue.text);
-    if (d.length > 4) d = d.substring(0, 4);
-    final text = d.length > 2 ? '${d.substring(0, 2)}/${d.substring(2)}' : d;
-    return TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
-  }
-}
 
 /// Add Payment Method, opened from Payment Settings. What can be saved
 /// follows where the member lives (my_payment_options, 20240174): a mobile
 /// money wallet on their country's pawaPay networks when they live in such a
 /// country, else a card or Apple Pay. Pops with the new (unsaved)
-/// [PaymentMethod] once it is valid; Payment Settings saves it.
+/// [PaymentMethod] once it is valid; Payment Settings saves it. A card is
+/// typed into Stripe's own sheet and saved with Stripe (20240196), never
+/// here: the screen then pops with a bare card [PaymentMethod].
 class AddPaymentMethodScreen extends StatefulWidget {
   /// The account holder's first name, for "Fortune's iPhone".
   final String holderFirstName;
@@ -106,10 +23,16 @@ class AddPaymentMethodScreen extends StatefulWidget {
   /// Override for tests; defaults to [PaymentService.paymentOptions].
   final Future<PaymentOptions> Function()? loadOptions;
 
+  /// Override for tests: saves a card through Stripe's sheet; null when
+  /// the member closed it. Defaults to [PaymentService.addStripeCard].
+  final Future<List<StripeCard>?> Function({required bool makeDefault})?
+  addCard;
+
   const AddPaymentMethodScreen({
     super.key,
     required this.holderFirstName,
     this.loadOptions,
+    this.addCard,
   });
 
   @override
@@ -126,10 +49,9 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
   bool _setAsDefault = false;
   String? _error;
 
-  final _cardNameCtrl = TextEditingController();
-  final _cardNumberCtrl = TextEditingController();
-  final _expiryCtrl = TextEditingController();
-  final _cvvCtrl = TextEditingController();
+  /// Saving a card with Stripe.
+  bool _savingCard = false;
+
   final _mobileNumberCtrl = TextEditingController();
   final _mobileNameCtrl = TextEditingController();
 
@@ -162,14 +84,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
 
   @override
   void dispose() {
-    for (final c in [
-      _cardNameCtrl,
-      _cardNumberCtrl,
-      _expiryCtrl,
-      _cvvCtrl,
-      _mobileNumberCtrl,
-      _mobileNameCtrl,
-    ]) {
+    for (final c in [_mobileNumberCtrl, _mobileNameCtrl]) {
       c.dispose();
     }
     super.dispose();
@@ -181,31 +96,8 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     String? error;
     switch (_kind) {
       case PaymentMethodKind.card:
-        final number = CardInput.digits(_cardNumberCtrl.text);
-        final expiry = RegExp(
-          r'^(\d{2})/(\d{2})$',
-        ).firstMatch(_expiryCtrl.text.trim());
-        if (_cardNameCtrl.text.trim().length < 2) {
-          error = l.errCardName;
-        } else if (!CardInput.isValidNumber(number)) {
-          error = l.errCardNumber;
-        } else if (expiry == null ||
-            !CardInput.isValidExpiry(_expiryCtrl.text)) {
-          error = l.errCardExpiry;
-        } else if (!CardInput.isValidCvv(_cvvCtrl.text)) {
-          error = l.errCardCvv;
-        } else {
-          // Only the brand and last 4 digits leave this screen: never the
-          // full number or the CVV.
-          method = PaymentMethod(
-            kind: PaymentMethodKind.card,
-            cardBrand: CardInput.brand(number),
-            cardLast4: number.substring(number.length - 4),
-            cardExpMonth: int.parse(expiry.group(1)!),
-            cardExpYear: 2000 + int.parse(expiry.group(2)!),
-            cardHolderName: _cardNameCtrl.text.trim(),
-          );
-        }
+        _saveCard();
+        return;
       case PaymentMethodKind.mobileMoney:
         final options = _options ?? PaymentOptions.cards;
         final network = options.networks
@@ -238,6 +130,33 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
       return;
     }
     Navigator.of(context).pop(method.copyWith(isDefault: _setAsDefault));
+  }
+
+  /// The card goes into Stripe's sheet and is saved with Stripe.
+  Future<void> _saveCard() async {
+    if (_savingCard) return;
+    final l = context.l10n;
+    setState(() {
+      _savingCard = true;
+      _error = null;
+    });
+    try {
+      final cards =
+          await (widget.addCard ??
+              ({required bool makeDefault}) => PaymentService().addStripeCard(
+                present: presentStripeSetupSheet,
+                makeDefault: makeDefault,
+              ))(makeDefault: _setAsDefault);
+      if (!mounted || cards == null) return;
+      Navigator.of(context).pop(
+        PaymentMethod(kind: PaymentMethodKind.card, isDefault: _setAsDefault),
+      );
+    } catch (e) {
+      debugPrint('[AddPaymentMethod] card: $e');
+      if (mounted) setState(() => _error = l.errCardSave);
+    } finally {
+      if (mounted) setState(() => _savingCard = false);
+    }
   }
 
   /// The wallet's number with the country's calling code (+ code and
@@ -302,8 +221,8 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
                     _kindTabs(l),
                     const SizedBox(height: 16),
                     switch (_kind) {
-                      PaymentMethodKind.card => _cardForm(l),
-                      PaymentMethodKind.mobileMoney => _cardForm(l),
+                      PaymentMethodKind.card => _stripeCardNote(l),
+                      PaymentMethodKind.mobileMoney => _stripeCardNote(l),
                       PaymentMethodKind.applePay => _appleNote(l),
                     },
                   ],
@@ -521,75 +440,47 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     );
   }
 
-  Widget _cardForm(AppLocalizations l) {
+  /// Cards are typed into Stripe's own form, never here.
+  Widget _stripeCardNote(AppLocalizations l) {
     return _card(
       child: Column(
+        key: const ValueKey('add-payment-stripe-card'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _title(l.cardDetails),
-          const SizedBox(height: 14),
-          _label(l.nameOnCard),
-          _field(
-            fieldKey: 'add-payment-card-name',
-            icon: Icons.person_rounded,
-            controller: _cardNameCtrl,
-            hint: l.nameOnCardHint,
-            capitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: 14),
-          _label(l.cardNumber),
-          _field(
-            fieldKey: 'add-payment-card-number',
-            icon: Icons.credit_card_rounded,
-            controller: _cardNumberCtrl,
-            hint: '1234 5678 9012 3456',
-            keyboardType: TextInputType.number,
-            formatters: [_CardNumberFormatter()],
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _label(l.expiryDate, small: true),
-                    _field(
-                      fieldKey: 'add-payment-card-expiry',
-                      icon: Icons.calendar_month_rounded,
-                      controller: _expiryCtrl,
-                      hint: context.l10n.expiryHint,
-                      keyboardType: TextInputType.number,
-                      formatters: [_ExpiryFormatter()],
-                      compact: true,
-                    ),
-                  ],
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.lock_rounded,
+                  size: 16,
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _label('CVV', small: true),
-                    _field(
-                      fieldKey: 'add-payment-card-cvv',
-                      icon: Icons.lock_rounded,
-                      controller: _cvvCtrl,
-                      hint: '•••',
-                      keyboardType: TextInputType.number,
-                      formatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
-                      ],
-                      obscure: true,
-                      compact: true,
-                    ),
-                  ],
+                child: Text(
+                  l.stripeCardFormNote,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.5,
+                    color: AppColors.foreground,
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.stripeCardsNote,
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              height: 1.5,
+              color: AppColors.mutedForeground,
+            ),
           ),
         ],
       ),
@@ -752,6 +643,12 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     );
   }
 
+  /// The card tab: saved through Stripe's sheet.
+  bool get _isCard =>
+      _options != null &&
+      !_options!.mobileMoney &&
+      _kind == PaymentMethodKind.card;
+
   Widget _footer(AppLocalizations l, double bottom) {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
@@ -764,10 +661,22 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
         height: 50,
         child: ElevatedButton.icon(
           key: const ValueKey('add-payment-save'),
-          onPressed: _save,
-          icon: const Icon(Icons.check_circle_rounded, size: 18),
+          onPressed: _savingCard ? null : _save,
+          icon: _savingCard
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(
+                  _isCard ? Icons.lock_rounded : Icons.check_circle_rounded,
+                  size: 18,
+                ),
           label: Text(
-            l.savePaymentMethod,
+            _isCard ? l.addCardSecurely : l.savePaymentMethod,
             style: GoogleFonts.dmSans(
               fontWeight: FontWeight.w700,
               fontSize: 14,

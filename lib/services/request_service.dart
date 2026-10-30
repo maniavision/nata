@@ -292,11 +292,22 @@ class StripeSheet {
   /// Apple Pay's merchant ID; null until Apple Pay is set up (cards only).
   final String? appleMerchantId;
 
+  /// The member's Stripe Customer and a short-lived key for it, so the sheet
+  /// offers their saved cards (20240196); null without one.
+  final String? customerId;
+  final String? ephemeralKey;
+
+  /// Saving a card (a SetupIntent) rather than paying.
+  final bool setup;
+
   const StripeSheet({
     required this.clientSecret,
     required this.publishableKey,
     this.merchantCountry = 'US',
     this.appleMerchantId,
+    this.customerId,
+    this.ephemeralKey,
+    this.setup = false,
   });
 }
 
@@ -1243,6 +1254,8 @@ class RequestService {
                 publishableKey: data['publishable_key'] as String? ?? '',
                 merchantCountry: data['merchant_country'] as String? ?? 'US',
                 appleMerchantId: data['apple_merchant_id'] as String?,
+                customerId: data['customer_id'] as String?,
+                ephemeralKey: data['ephemeral_key'] as String?,
               ),
       );
     } on FunctionException catch (e) {

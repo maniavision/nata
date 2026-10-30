@@ -258,12 +258,53 @@ void main() {
         );
         await tester.pump();
 
-        // Ghana instead of the suggested Kenya, its network and the number.
+        // Shown as a summary: Ghana instead of the suggested Kenya, its
+        // network and the number.
+        expect(
+          find.byKey(const ValueKey('mobile-money-saved-wallet')),
+          findsOneWidget,
+        );
+        expect(find.text('Telecel Cash · +233 201234567'), findsOneWidget);
+        expect(find.byKey(const ValueKey('mobile-money-phone')), findsNothing);
+
+        // Change opens the form, filled in.
+        await tester.tap(find.byKey(const ValueKey('mobile-money-change')));
+        await tester.pump();
         expect(find.text('Ghana · GHS'), findsOneWidget);
         final phone = tester.widget<TextField>(
           find.byKey(const ValueKey('mobile-money-phone')),
         );
         expect(phone.controller!.text, '201234567');
+      });
+
+      testWidgets('paying by card: the saved default card comes first', (
+        tester,
+      ) async {
+        service.kind = CheckoutKind.card;
+        await pumpPayable(
+          tester,
+          payments: FakePaymentService(
+            methods: const [
+              PaymentMethod(
+                id: 'pm_visa',
+                kind: PaymentMethodKind.card,
+                cardBrand: 'Visa',
+                cardLast4: '4242',
+                cardExpMonth: 8,
+                cardExpYear: 2027,
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Visa •••• 4242'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('checkout-saved-card-note')),
+          findsOneWidget,
+        );
+        await pay(tester);
+        expect(service.paymentsStarted.single.method, PayMethod.card);
       });
 
       testWidgets('a way the server refuses is explained', (tester) async {

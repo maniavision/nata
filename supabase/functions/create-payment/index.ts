@@ -37,7 +37,8 @@
  * until delivery and never changes the request's status.
  *
  * Responds 200 with { tx_ref, client_secret, publishable_key,
- * merchant_country, apple_merchant_id } (Stripe's sheet), or
+ * merchant_country, apple_merchant_id, customer_id, ephemeral_key } (Stripe's
+ * sheet, with the member's saved cards: 20240196_stripe_customers.sql), or
  * { tx_ref, direct: true } (mobile money, waiting for the payer's approval).
  * Errors: 401 unauthorized, 403 not_allowed, 409 not_payable / expired /
  * checks_missing / method_not_offered / mobile_money_unavailable /
@@ -77,13 +78,19 @@ function stripeKey(): string | null {
 /** Calls Stripe (form-encoded); [status] 0 when it couldn't be reached. */
 async function stripe(
   path: string,
-  init: { method?: string; form?: Record<string, string>; idempotencyKey?: string } = {},
+  init: {
+    method?: string;
+    form?: Record<string, string>;
+    idempotencyKey?: string;
+    stripeVersion?: string;
+  } = {},
 ): Promise<{ status: number; body: Record<string, unknown> }> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${stripeKey()}`,
   };
   if (init.form) headers["Content-Type"] = "application/x-www-form-urlencoded";
   if (init.idempotencyKey) headers["Idempotency-Key"] = init.idempotencyKey;
+  if (init.stripeVersion) headers["Stripe-Version"] = init.stripeVersion;
   let res: Response;
   try {
     res = await fetch(`https://api.stripe.com/v1${path}`, {
@@ -154,6 +161,57 @@ async function caller(req: Request) {
   if (!token) return null;
   const { data: { user } } = await admin.auth.getUser(token);
   return user ?? null;
+}
+
+/** The API version the mobile payment sheet's ephemeral keys are made for. */
+const SHEET_API_VERSION = "2024-06-20";
+
+/**
+ * The member's Stripe Customer (nata.stripe_customers, 20240196), made the
+ * first time; null when Stripe can't be reached.
+ */
+async function stripeCustomer(
+  userId: string,
+  email?: string | null,
+): Promise<string | null> {
+  const db = admin.schema("nata");
+  const { data: row } = await db.from("stripe_customers")
+    .select("customer_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (row?.customer_id) return String(row.customer_id);
+  const res = await stripe("/customers", {
+    method: "POST",
+    idempotencyKey: `nata-customer-${userId}`,
+    form: {
+      "metadata[user_id]": userId,
+      ...(email ? { email: String(email) } : {}),
+    },
+  });
+  const id = String(res.body.id ?? "");
+  if (res.status !== 200 || !id) {
+    console.error("[stripe] customer", res.status);
+    return null;
+  }
+  const { error } = await db.from("stripe_customers")
+    .upsert({ user_id: userId, customer_id: id }, { onConflict: "user_id", ignoreDuplicates: true });
+  if (error) console.error("[stripe] save customer", error.message);
+  // Another call may have saved one first: that one wins.
+  const { data: saved } = await db.from("stripe_customers")
+    .select("customer_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return saved?.customer_id ? String(saved.customer_id) : id;
+}
+
+/** A short-lived key letting the payment sheet show [customer]'s cards. */
+async function ephemeralKey(customer: string): Promise<string | null> {
+  const res = await stripe("/ephemeral_keys", {
+    method: "POST",
+    stripeVersion: SHEET_API_VERSION,
+    form: { customer },
+  });
+  return res.status === 200 ? String(res.body.secret ?? "") || null : null;
 }
 
 // ── This function ──────────────────────────────────────────────────────────
@@ -334,6 +392,11 @@ Deno.serve(async (req: Request) => {
   // Cards and Apple Pay: the PaymentIntent first, so the payment's tx_ref
   // can be its id.
   if (!mobile) {
+    // The member's saved cards (20240196): the sheet offers them, with the
+    // default first, and can save a new one. Without a customer it still
+    // takes a card.
+    const customer = await stripeCustomer(user.id, user.email);
+    const key = customer ? await ephemeralKey(customer) : null;
     const pi = await stripe("/payment_intents", {
       method: "POST",
       idempotencyKey: `nata-${requestId}-${crypto.randomUUID()}`,
@@ -349,6 +412,7 @@ Deno.serve(async (req: Request) => {
         "metadata[request_id]": requestId,
         "metadata[purpose]": purpose,
         "metadata[sender_id]": user.id,
+        ...(customer && key ? { customer } : {}),
         ...(user.email ? { receipt_email: String(user.email) } : {}),
       },
     });
@@ -385,6 +449,8 @@ Deno.serve(async (req: Request) => {
       publishable_key: Deno.env.get("STRIPE_PUBLISHABLE_KEY")?.trim() ?? "",
       merchant_country: "US",
       apple_merchant_id: Deno.env.get("STRIPE_APPLE_MERCHANT_ID")?.trim() || null,
+      customer_id: customer && key ? customer : null,
+      ephemeral_key: customer && key ? key : null,
     });
   }
   // Mobile money: pawaPay's deposit id, a bare UUID.

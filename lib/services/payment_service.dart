@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
+import 'request_service.dart' show StripeSheet;
 
 enum PaymentMethodKind {
   card('card'),
@@ -573,6 +574,63 @@ class PaymentService {
     }
   }
 
+  /// The member's cards saved with Stripe (stripe-cards, 20240196), the
+  /// default first.
+  Future<List<StripeCard>> stripeCards() async =>
+      _cardsFrom(await _stripeCards('list'));
+
+  /// Saves a card through Stripe's own sheet, in setup mode: [present]
+  /// shows it and says whether it was saved. Returns the cards then, or
+  /// null when the member closed the sheet. [makeDefault] makes it the
+  /// default (the first card always is).
+  Future<List<StripeCard>?> addStripeCard({
+    required Future<bool> Function(StripeSheet sheet) present,
+    bool makeDefault = false,
+  }) async {
+    final setup = await _stripeCards('setup');
+    final saved = await present(
+      StripeSheet(
+        clientSecret: setup['client_secret'] as String,
+        publishableKey: setup['publishable_key'] as String? ?? '',
+        merchantCountry: setup['merchant_country'] as String? ?? 'US',
+        appleMerchantId: setup['apple_merchant_id'] as String?,
+        customerId: setup['customer_id'] as String?,
+        ephemeralKey: setup['ephemeral_key'] as String?,
+        setup: true,
+      ),
+    );
+    if (!saved) return null;
+    return _cardsFrom(
+      await _stripeCards('finish_setup', {
+        'setup_intent': setup['setup_intent'],
+        'make_default': makeDefault,
+      }),
+    );
+  }
+
+  Future<List<StripeCard>> setDefaultStripeCard(String cardId) async =>
+      _cardsFrom(await _stripeCards('set_default', {'card_id': cardId}));
+
+  /// Removes a saved card; the newest other one becomes the default.
+  Future<List<StripeCard>> removeStripeCard(String cardId) async =>
+      _cardsFrom(await _stripeCards('remove', {'card_id': cardId}));
+
+  static List<StripeCard> _cardsFrom(Map<String, dynamic> data) => [
+    for (final c in (data['cards'] as List? ?? const []))
+      StripeCard.fromJson(Map<String, dynamic>.from(c as Map)),
+  ];
+
+  Future<Map<String, dynamic>> _stripeCards(
+    String action, [
+    Map<String, dynamic> fields = const {},
+  ]) async {
+    final response = await _client.functions.invoke(
+      'stripe-cards',
+      body: {'action': action, ...fields},
+    );
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   /// Sends the traveler's pending payouts (send-payouts). Returns how many
   /// were sent; the rest wait for a payout account or failed.
   Future<int> sendPayouts() async {
@@ -756,5 +814,55 @@ class NataBalance {
     availableUsd: (j['available_usd'] as num?)?.toDouble() ?? 0,
     keepEarnings: j['keep_earnings'] == true,
     refundsToBalance: j['refunds_to_balance'] == true,
+  );
+}
+
+/// A card saved with Stripe (20240196): only what is safe to show.
+class StripeCard {
+  final String id;
+
+  /// Stripe's brand code: visa, mastercard, amex...
+  final String brand;
+  final String last4;
+  final int expMonth;
+  final int expYear;
+  final bool isDefault;
+
+  const StripeCard({
+    required this.id,
+    required this.brand,
+    required this.last4,
+    required this.expMonth,
+    required this.expYear,
+    this.isDefault = false,
+  });
+
+  /// "Visa", "Mastercard", "American Express".
+  String get brandName => switch (brand) {
+    'visa' => 'Visa',
+    'mastercard' => 'Mastercard',
+    'amex' => 'American Express',
+    'discover' => 'Discover',
+    'jcb' => 'JCB',
+    'unionpay' => 'UnionPay',
+    'diners' => 'Diners Club',
+    _ => 'Card',
+  };
+
+  /// "Visa •••• 4242".
+  String get title => '$brandName •••• $last4';
+
+  /// "08/27".
+  String get expiry =>
+      '${expMonth.toString().padLeft(2, '0')}/'
+      '${(expYear % 100).toString().padLeft(2, '0')}';
+
+  factory StripeCard.fromJson(Map<String, dynamic> j) => StripeCard(
+    id: j['id'] as String,
+    brand: (j['brand'] as String? ?? 'card').toLowerCase(),
+    last4: j['last4'] as String? ?? '',
+    expMonth: (j['exp_month'] as num?)?.toInt() ?? 0,
+    expYear: (j['exp_year'] as num?)?.toInt() ?? 0,
+    isDefault: j['is_default'] == true,
   );
 }

@@ -2204,5 +2204,12 @@
   "depositStatusHeld": "conservée",
   "depositStatusRefunding": "remboursement en cours",
   "depositStatusRefunded": "remboursée",
-  "depositStatusPaidToSender": "versée à l'expéditeur"
+  "depositStatusPaidToSender": "versée à l'expéditeur",
+  "makeDefault": "Par défaut",
+  "stripeCardsNote": "Les données de carte vont directement à Stripe ; Nata ne voit jamais votre numéro de carte.",
+  "addCardSecurely": "Ajouter une carte en toute sécurité",
+  "stripeCardFormNote": "Vous saisirez la carte dans le formulaire sécurisé de Stripe. Elle est enregistrée chez Stripe pour vos prochains paiements.",
+  "errCardSave": "Impossible d'enregistrer la carte. Réessayez.",
+  "savedCardCheckoutNote": "Vous pouvez choisir une autre carte ou en ajouter une dans la page de paiement sécurisée.",
+  "useAnotherWallet": "Utiliser un autre portefeuille"
 }
