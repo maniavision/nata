@@ -12,6 +12,7 @@ import '../services/traveler_service.dart' show TravelerReview, TravelerReviews;
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 import '../widgets/storage_photo.dart';
+import '../widgets/theft_warning.dart';
 
 /// Accepting and declining a request, shared by the Incoming card and the
 /// request details screen. Each returns true when the request changed.
@@ -25,6 +26,8 @@ class IncomingRequestActions {
   ) async {
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    // The theft warning first: the traveler confirms they will deliver.
+    if (!await confirmTheftWarning(context)) return false;
     try {
       await service.accept(request.id);
       messenger.showSnackBar(
@@ -536,6 +539,10 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
                       ),
                     ),
                   ..._declaredValue(),
+                  if (_r.isPending) ...[
+                    const TheftWarning(),
+                    const SizedBox(height: 12),
+                  ],
                   if (_r.photoPaths.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     _sectionTitle(l.itemPhotosTitle),

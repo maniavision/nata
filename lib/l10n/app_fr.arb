@@ -2211,5 +2211,10 @@
   "stripeCardFormNote": "Vous saisirez la carte dans le formulaire sécurisé de Stripe. Elle est enregistrée chez Stripe pour vos prochains paiements.",
   "errCardSave": "Impossible d'enregistrer la carte. Réessayez.",
   "savedCardCheckoutNote": "Vous pouvez choisir une autre carte ou en ajouter une dans la page de paiement sécurisée.",
-  "useAnotherWallet": "Utiliser un autre portefeuille"
+  "useAnotherWallet": "Utiliser un autre portefeuille",
+  "theftWarningTitle": "Garder l'article de quelqu'un est un vol",
+  "theftWarningBody": "Si vous ne livrez pas ces articles, Nata transmet votre identité vérifiée (nom, pièce d'identité et photo) à la police locale et à l'expéditeur, qui peut porter plainte.",
+  "theftConfirmTitle": "Avant d'accepter",
+  "theftConfirmCheck": "Je livrerai ces articles au destinataire",
+  "theftPickupNote": "Vous êtes maintenant responsable de ces articles. Les garder est un vol : votre identité vérifiée est transmise à la police locale."
 }

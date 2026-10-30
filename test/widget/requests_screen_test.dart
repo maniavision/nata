@@ -177,6 +177,8 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('incoming-accept-p1')));
       await tester.pumpAndSettle();
 
+      await confirmTheftWarningSheet(tester);
+
       expect(service.accepted, ['p1']);
       expect(service.incomingCalls, before + 1);
       expect(
@@ -232,6 +234,8 @@ void main() {
 
         await tester.tap(find.byKey(const ValueKey('incoming-accept-p1')));
         await tester.pumpAndSettle();
+
+        await confirmTheftWarningSheet(tester);
 
         expect(find.text(c.value), findsOneWidget);
       });

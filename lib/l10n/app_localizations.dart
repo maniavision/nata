@@ -9505,6 +9505,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use another wallet'**
   String get useAnotherWallet;
+
+  /// No description provided for @theftWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeping someone\'s item is theft'**
+  String get theftWarningTitle;
+
+  /// No description provided for @theftWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you don\'t deliver these items, Nata gives your verified identity (name, ID document and photo) to the local police and to the sender, and the sender can press charges.'**
+  String get theftWarningBody;
+
+  /// No description provided for @theftConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you accept'**
+  String get theftConfirmTitle;
+
+  /// No description provided for @theftConfirmCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'I will deliver these items to the recipient'**
+  String get theftConfirmCheck;
+
+  /// No description provided for @theftPickupNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now responsible for these items. Keeping them is theft: your verified ID goes to the local police.'**
+  String get theftPickupNote;
 }
 
 class _AppLocalizationsDelegate

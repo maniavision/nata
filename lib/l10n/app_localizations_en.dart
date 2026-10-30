@@ -5483,4 +5483,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useAnotherWallet => 'Use another wallet';
+
+  @override
+  String get theftWarningTitle => 'Keeping someone\'s item is theft';
+
+  @override
+  String get theftWarningBody =>
+      'If you don\'t deliver these items, Nata gives your verified identity (name, ID document and photo) to the local police and to the sender, and the sender can press charges.';
+
+  @override
+  String get theftConfirmTitle => 'Before you accept';
+
+  @override
+  String get theftConfirmCheck => 'I will deliver these items to the recipient';
+
+  @override
+  String get theftPickupNote =>
+      'You\'re now responsible for these items. Keeping them is theft: your verified ID goes to the local police.';
 }
