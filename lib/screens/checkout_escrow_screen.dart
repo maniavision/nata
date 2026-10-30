@@ -115,6 +115,32 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     null => _kindFailed ? const [0, 1, 2] : const [],
   };
 
+  /// The member's default card saved with Stripe (20240196): offered first
+  /// when paying by card.
+  StripeCard? _savedCard;
+
+  /// Mobile money: a saved wallet shows as a summary until Change.
+  bool _editingWallet = true;
+
+  Future<void> _loadSavedCard() async {
+    try {
+      final cards = await (widget.paymentService ?? PaymentService())
+          .stripeCards();
+      final card =
+          cards.where((c) => c.isDefault).firstOrNull ?? cards.firstOrNull;
+      if (!mounted || card == null) return;
+      setState(() {
+        _savedCard = card;
+        // The saved card first, unless the sender picked something already.
+        if (_paymentMethod == 0 && !_useBalance && _payment == null) {
+          _paymentMethod = 1;
+        }
+      });
+    } catch (e) {
+      debugPrint('[Checkout] saved cards: $e');
+    }
+  }
+
   Future<void> _loadKind() async {
     try {
       final kind = await _service.checkoutKind(_r.id);
@@ -124,6 +150,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         _paymentMethod = kind == CheckoutKind.mobileMoney ? 2 : 0;
       });
       if (kind == CheckoutKind.mobileMoney) _loadMobileOptions();
+      if (kind == CheckoutKind.card) _loadSavedCard();
     } catch (e) {
       debugPrint('[Checkout] checkout kind: $e');
       if (mounted) setState(() => _kindFailed = true);
@@ -227,6 +254,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           _mobilePhoneCtrl.text = digits.startsWith(code)
               ? digits.substring(code.length)
               : digits;
+          _editingWallet = false;
         });
         return;
       }
@@ -1127,8 +1155,12 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         icon: Icons.credit_card_rounded,
         iconBg: AppColors.card,
         iconColor: AppColors.primary,
-        title: context.l10n.creditCard,
-        subtitle: context.l10n.creditCardSub,
+        // The saved default card, when there is one.
+        title: _savedCard?.title ?? context.l10n.creditCard,
+        subtitle: _savedCard == null
+            ? context.l10n.creditCardSub
+            : '${context.l10n.cardExpires(_savedCard!.expiry)} · '
+                  '${context.l10n.defaultLabel}',
         iconBorder: true,
       ),
       _PayMethod(
@@ -1298,6 +1330,19 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           ),
           if (_kind == CheckoutKind.mobileMoney) _buildMobileOnlyNote(),
           if (_payingByMobile) _buildMobileMoneyPanel(),
+          if (_payingByCard && _savedCard != null && _paymentMethod == 1)
+            Padding(
+              key: const ValueKey('checkout-saved-card-note'),
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                context.l10n.savedCardCheckoutNote,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  height: 1.4,
+                  color: AppColors.mutedForeground,
+                ),
+              ),
+            ),
           if (_payingByCard) _buildStripeNote(),
         ],
       ),
@@ -1400,6 +1445,70 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           ),
           if (_mobileFailed)
             TextButton(onPressed: _loadMobileOptions, child: Text(l.retry)),
+        ],
+      );
+    } else if (!_editingWallet && _mobileChoice != null && _directReady) {
+      // The saved wallet, with Change to use another.
+      final choice = _mobileChoice!;
+      final network = choice.networks
+          .where((n) => n.code == _mobileNetwork)
+          .firstOrNull;
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            key: const ValueKey('mobile-money-saved-wallet'),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.accent, width: 1.5),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        [
+                          ?network?.name,
+                          '${choice.dialCode} ${_mobilePhoneCtrl.text}',
+                        ].join(' · '),
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                      Text(
+                        choice.countryName,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  choice.amountText,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          TextButton.icon(
+            key: const ValueKey('mobile-money-change'),
+            onPressed: () => setState(() => _editingWallet = true),
+            icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+            label: Text(l.useAnotherWallet),
+          ),
         ],
       );
     } else {

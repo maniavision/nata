@@ -1026,6 +1026,7 @@ class FakeRequestService extends Fake implements RequestService {
       String? country,
       String? phone,
       String? network,
+      bool deposit,
     })
   >
   paymentsStarted = [];
@@ -1045,6 +1046,7 @@ class FakeRequestService extends Fake implements RequestService {
     String? country,
     String? phone,
     String? network,
+    bool deposit = false,
   }) async {
     if (failStartPayment != null) throw failStartPayment!;
     paymentsStarted.add((
@@ -1053,6 +1055,7 @@ class FakeRequestService extends Fake implements RequestService {
       country: country,
       phone: phone,
       network: network,
+      deposit: deposit,
     ));
     return nextPayment;
   }
@@ -1109,6 +1112,27 @@ class FakeRequestService extends Fake implements RequestService {
 
   @override
   Future<List<MobileMoneyOption>> mobileMoneyOptions(String requestId) async {
+    if (failMobileOptions) throw StateError('options failed');
+    return mobileOptions;
+  }
+
+  /// The traveler's deposit (20240195), by request; none due by default.
+  /// [failDeposit] makes loading it fail.
+  Map<String, RequestDeposit> deposits = {};
+  bool failDeposit = false;
+  int depositLoads = 0;
+
+  @override
+  Future<RequestDeposit> requestDeposit(String requestId) async {
+    depositLoads++;
+    if (failDeposit) throw StateError('deposit failed');
+    return deposits[requestId] ?? RequestDeposit.notDue;
+  }
+
+  @override
+  Future<List<MobileMoneyOption>> depositMobileMoneyOptions(
+    String requestId,
+  ) async {
     if (failMobileOptions) throw StateError('options failed');
     return mobileOptions;
   }
@@ -1788,9 +1812,91 @@ class FakePaymentService extends Fake implements PaymentService {
     List<PaymentMethod>? methods,
     this.accounts = const [],
     this.schedule = PayoutSchedule.automatic,
-  }) : saved = [...?methods];
+  }) : saved = [...?methods],
+       // Cards are saved with Stripe (20240196), whose first card is the
+       // default.
+       cards = [
+         for (final (i, m)
+             in (methods ?? const <PaymentMethod>[])
+                 .where((m) => m.kind == PaymentMethodKind.card)
+                 .indexed)
+           StripeCard(
+             id: m.id,
+             brand: (m.cardBrand ?? 'card').toLowerCase(),
+             last4: m.cardLast4 ?? '',
+             expMonth: m.cardExpMonth ?? 1,
+             expYear: m.cardExpYear ?? 2030,
+             isDefault: i == 0,
+           ),
+       ];
 
   final List<PaymentMethod> saved;
+
+  /// The member's Stripe cards; [nextCard] is what adding one saves, and a
+  /// null [nextCard] stands for the sheet being closed.
+  List<StripeCard> cards;
+  StripeCard? nextCard = const StripeCard(
+    id: 'pm_mc',
+    brand: 'mastercard',
+    last4: '4444',
+    expMonth: 8,
+    expYear: 2030,
+  );
+  bool failCards = false;
+
+  @override
+  Future<List<StripeCard>> stripeCards() async {
+    if (failCards) throw StateError('cards failed');
+    return cards;
+  }
+
+  @override
+  Future<List<StripeCard>?> addStripeCard({
+    required Future<bool> Function(StripeSheet sheet) present,
+    bool makeDefault = false,
+  }) async {
+    if (failSave) throw StateError('save failed');
+    final card = nextCard;
+    if (card == null) return null;
+    final first = cards.isEmpty || makeDefault;
+    cards = [
+      for (final c in cards) first ? _withDefault(c, false) : c,
+      _withDefault(card, first),
+    ];
+    return cards;
+  }
+
+  @override
+  Future<List<StripeCard>> setDefaultStripeCard(String cardId) async {
+    if (failSave) throw StateError('save failed');
+    cards = [for (final c in cards) _withDefault(c, c.id == cardId)];
+    return cards;
+  }
+
+  @override
+  Future<List<StripeCard>> removeStripeCard(String cardId) async {
+    if (failSave) throw StateError('save failed');
+    final wasDefault = cards.any((c) => c.id == cardId && c.isDefault);
+    cards = [
+      for (final c in cards)
+        if (c.id != cardId) c,
+    ];
+    if (wasDefault && cards.isNotEmpty) {
+      cards = [
+        for (final c in cards) _withDefault(c, identical(c, cards.last)),
+      ];
+    }
+    return cards;
+  }
+
+  static StripeCard _withDefault(StripeCard c, bool isDefault) => StripeCard(
+    id: c.id,
+    brand: c.brand,
+    last4: c.last4,
+    expMonth: c.expMonth,
+    expYear: c.expYear,
+    isDefault: isDefault,
+  );
   List<PayoutAccount> accounts;
   PayoutSchedule schedule;
 

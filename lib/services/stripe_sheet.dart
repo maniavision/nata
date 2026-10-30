@@ -26,7 +26,13 @@ Future<CardSheetResult> presentStripeSheet(StripeSheet sheet) async {
     await Stripe.instance.applySettings();
     await Stripe.instance.initPaymentSheet(
       paymentSheetParameters: SetupPaymentSheetParameters(
-        paymentIntentClientSecret: sheet.clientSecret,
+        paymentIntentClientSecret: sheet.setup ? null : sheet.clientSecret,
+        setupIntentClientSecret: sheet.setup ? sheet.clientSecret : null,
+        // The member's saved cards, the default first (20240196).
+        customerId: sheet.ephemeralKey == null ? null : sheet.customerId,
+        customerEphemeralKeySecret: sheet.customerId == null
+            ? null
+            : sheet.ephemeralKey,
         merchantDisplayName: 'Nata',
         applePay: sheet.appleMerchantId == null
             ? null
@@ -56,3 +62,8 @@ Future<CardSheetResult> presentStripeSheet(StripeSheet sheet) async {
     return CardSheetResult.failed;
   }
 }
+
+/// Saves a card in Stripe's sheet ([sheet] in setup mode): true once Stripe
+/// saved it, false when closed or refused (the sheet already said why).
+Future<bool> presentStripeSetupSheet(StripeSheet sheet) async =>
+    await presentStripeSheet(sheet) == CardSheetResult.paid;

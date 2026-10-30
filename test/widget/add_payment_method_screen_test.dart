@@ -14,6 +14,7 @@ void main() {
   Future<List<PaymentMethod?>> pumpAdd(
     WidgetTester tester, {
     PaymentOptions options = PaymentOptions.cards,
+    Future<List<StripeCard>?> Function({required bool makeDefault})? addCard,
   }) async {
     tester.view.physicalSize = const Size(900, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -30,6 +31,7 @@ void main() {
                     builder: (_) => AddPaymentMethodScreen(
                       holderFirstName: 'Fortune',
                       loadOptions: () async => options,
+                      addCard: addCard,
                     ),
                   ),
                 ),
@@ -60,72 +62,59 @@ void main() {
     return f.evaluate().isEmpty ? null : t.widget<Text>(f).data;
   }
 
-  Future<void> fillCard(WidgetTester t) async {
-    await enter(t, 'add-payment-card-name', 'Fortune Niama');
-    await enter(t, 'add-payment-card-number', '5555555555554444');
-    await enter(t, 'add-payment-card-expiry', '0830');
-    await enter(t, 'add-payment-card-cvv', '123');
-  }
-
   group('AddPaymentMethodScreen', () {
-    testWidgets('opens on the card form', (tester) async {
+    testWidgets('a card is typed into Stripe\'s form, not here', (
+      tester,
+    ) async {
       await pumpAdd(tester);
 
       expect(find.text('Add Payment Method'), findsOneWidget);
-      expect(find.text('Card Details'), findsOneWidget);
-      expect(find.text('NAME ON CARD'), findsOneWidget);
-      expect(find.text('Save Payment Method'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('add-payment-stripe-card')),
+        findsOneWidget,
+      );
+      expect(find.text('Add card securely'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
     });
 
-    testWidgets('formats the card number and expiry as typed', (tester) async {
-      await pumpAdd(tester);
+    testWidgets('once Stripe saved the card, it comes back as a card', (
+      tester,
+    ) async {
+      bool? asDefault;
+      final results = await pumpAdd(
+        tester,
+        addCard: ({required bool makeDefault}) async {
+          asDefault = makeDefault;
+          return const [];
+        },
+      );
+      await tester.tap(find.byKey(const ValueKey('add-payment-default')));
+      await save(tester);
 
-      await enter(tester, 'add-payment-card-number', '4242424242424242');
-      await enter(tester, 'add-payment-card-expiry', '0827');
-
-      String text(String key) =>
-          tester.widget<TextField>(find.byKey(ValueKey(key))).controller!.text;
-      expect(text('add-payment-card-number'), '4242 4242 4242 4242');
-      expect(text('add-payment-card-expiry'), '08/27');
+      expect(asDefault, isTrue);
+      expect(results.single!.kind, PaymentMethodKind.card);
     });
 
-    testWidgets('checks each card field in turn', (tester) async {
-      await pumpAdd(tester);
-
+    testWidgets('closing Stripe\'s form stays here', (tester) async {
+      final results = await pumpAdd(
+        tester,
+        addCard: ({required bool makeDefault}) async => null,
+      );
       await save(tester);
-      expect(error(tester), 'Enter the name as it appears on the card.');
 
-      await enter(tester, 'add-payment-card-name', 'Fortune Niama');
-      await enter(tester, 'add-payment-card-number', '4242424242424241');
-      await save(tester);
-      expect(error(tester), 'Enter a valid card number.');
-
-      await enter(tester, 'add-payment-card-number', '4242424242424242');
-      await enter(tester, 'add-payment-card-expiry', '0120');
-      await save(tester);
-      expect(error(tester), 'Enter a valid expiry date (MM/YY).');
-
-      await enter(tester, 'add-payment-card-expiry', '0830');
-      await save(tester);
-      expect(error(tester), 'Enter the 3 or 4 digit security code.');
+      expect(results, isEmpty);
+      expect(find.byType(AddPaymentMethodScreen), findsOneWidget);
     });
 
-    testWidgets('a valid card comes back masked', (tester) async {
-      final results = await pumpAdd(tester);
-      await fillCard(tester);
-
+    testWidgets('a card Stripe couldn\'t save says so', (tester) async {
+      await pumpAdd(
+        tester,
+        addCard: ({required bool makeDefault}) async =>
+            throw StateError('stripe'),
+      );
       await save(tester);
 
-      final m = results.single!;
-      expect(m.kind, PaymentMethodKind.card);
-      expect(m.title, 'Mastercard •••• 4444');
-      expect(m.expiry, '08/30');
-      expect(m.cardHolderName, 'Fortune Niama');
-      expect(m.isDefault, isFalse);
-      // Nothing secret leaves the screen.
-      final row = m.toInsertJson('u').values.join(' ');
-      expect(row, isNot(contains('5555555555554444')));
-      expect(row, isNot(contains('123')));
+      expect(error(tester), "Couldn't save the card. Try again.");
     });
 
     const congo = PaymentOptions(
@@ -289,28 +278,26 @@ void main() {
       await pumpSettings(tester);
       expect(find.byType(AddPaymentMethodScreen), findsOneWidget);
 
-      await fillCard(tester);
       await save(tester);
 
       expect(find.byType(AddPaymentMethodScreen), findsNothing);
-      expect(payments.saved.last.title, 'Mastercard •••• 4444');
+      expect(payments.cards.last.title, 'Mastercard •••• 4444');
       expect(find.text('Mastercard •••• 4444'), findsOneWidget);
       expect(find.text('Expires 08/30'), findsOneWidget);
-      // Apple Pay keeps the Default chip.
-      expect(find.text('Default'), findsOneWidget);
+      // Apple Pay keeps its Default chip; Visa stays the default card.
+      expect(find.text('Default'), findsNWidgets(2));
     });
 
     testWidgets('a new default takes over the Default chip', (tester) async {
       await pumpSettings(tester);
-      await fillCard(tester);
       await tester.tap(find.byKey(const ValueKey('add-payment-default')));
 
       await save(tester);
 
-      expect(find.text('Default'), findsOneWidget);
-      // Apple Pay lost it, so it can be removed now.
+      // The new card is the default card now.
+      expect(payments.cards.last.isDefault, isTrue);
       expect(
-        find.byKey(const ValueKey('payment-method-remove-apple-pay')),
+        find.byKey(const ValueKey('stripe-card-default-visa-4242')),
         findsOneWidget,
       );
     });

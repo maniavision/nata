@@ -686,6 +686,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       case RequestFailure.itemValueInvalid:
         return l.errItemValue;
       case RequestFailure.notPaid:
+      case RequestFailure.depositRequired:
       case RequestFailure.smsUnavailable:
       case RequestFailure.phoneRejected:
       case RequestFailure.amountOutOfBounds:

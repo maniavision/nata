@@ -9173,7 +9173,7 @@ abstract class AppLocalizations {
   /// No description provided for @overCarryLimit.
   ///
   /// In en, this message translates to:
-  /// **'Above your {limit} carrying limit.'**
+  /// **'Above your {limit} carrying limit: you\'ll pay a refundable deposit before pickup.'**
   String overCarryLimit(String limit);
 
   /// No description provided for @carryLimitRow.
@@ -9247,6 +9247,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The most an item can be worth for you to carry it. You can still carry items above your limit with a refundable deposit.'**
   String get carryLimitSheetNote;
+
+  /// No description provided for @depositRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit required before pickup'**
+  String get depositRequiredTitle;
+
+  /// No description provided for @depositRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'These items are declared at {value}, above your {limit} carrying limit. Pay a refundable deposit of {amount} to pick them up.'**
+  String depositRequiredBody(String value, String limit, String amount);
+
+  /// No description provided for @depositRefundNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded in full once the recipient\'s code confirms delivery'**
+  String get depositRefundNote;
+
+  /// No description provided for @payDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay deposit'**
+  String get payDeposit;
+
+  /// No description provided for @depositUnlockPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the deposit to unlock pickup'**
+  String get depositUnlockPickup;
+
+  /// No description provided for @depositHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit held: {amount} · refunded after delivery'**
+  String depositHeld(String amount);
+
+  /// No description provided for @depositPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Your deposit of {amount} is being confirmed'**
+  String depositPending(String amount);
+
+  /// No description provided for @depositRefunding.
+  ///
+  /// In en, this message translates to:
+  /// **'Your deposit of {amount} is being refunded'**
+  String depositRefunding(String amount);
+
+  /// No description provided for @depositTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get depositTitle;
+
+  /// No description provided for @depositToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'DEPOSIT TO PAY'**
+  String get depositToPay;
+
+  /// No description provided for @depositViaMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} via mobile money'**
+  String depositViaMobile(String amount);
+
+  /// No description provided for @depositDeclaredValue.
+  ///
+  /// In en, this message translates to:
+  /// **'DECLARED VALUE'**
+  String get depositDeclaredValue;
+
+  /// No description provided for @depositYourLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR CARRYING LIMIT'**
+  String get depositYourLimit;
+
+  /// No description provided for @depositHowItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'HOW IT WORKS'**
+  String get depositHowItWorks;
+
+  /// No description provided for @depositStepHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid now, held by Nata'**
+  String get depositStepHeld;
+
+  /// No description provided for @depositStepRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded in full when the recipient\'s code confirms delivery, or if the request is cancelled'**
+  String get depositStepRefund;
+
+  /// No description provided for @depositStepKept.
+  ///
+  /// In en, this message translates to:
+  /// **'If the item is kept, the deposit goes to the sender'**
+  String get depositStepKept;
+
+  /// No description provided for @depositStepKeptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeping someone\'s item is theft: Nata shares your verified identity with the police and the sender.'**
+  String get depositStepKeptBody;
+
+  /// No description provided for @depositPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'PAYMENT METHOD'**
+  String get depositPaymentMethod;
+
+  /// No description provided for @depositCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit or debit card'**
+  String get depositCard;
+
+  /// No description provided for @depositCardNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid in Stripe\'s secure payment sheet'**
+  String get depositCardNote;
+
+  /// No description provided for @depositAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree: Nata connects senders and travelers and isn\'t the carrier. I\'ll deliver these items as described.'**
+  String get depositAgree;
+
+  /// No description provided for @payDepositAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay deposit {amount}'**
+  String payDepositAmount(String amount);
+
+  /// No description provided for @depositReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit received. You can pick up the items now.'**
+  String get depositReceived;
+
+  /// No description provided for @errDepositRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the deposit before picking up these items.'**
+  String get errDepositRequired;
+
+  /// No description provided for @errDepositLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the deposit. Try again.'**
+  String get errDepositLoad;
+
+  /// No description provided for @walletDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get walletDeposit;
+
+  /// No description provided for @walletDepositReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit from traveler'**
+  String get walletDepositReceived;
+
+  /// No description provided for @supportPayDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay deposit to sender'**
+  String get supportPayDeposit;
+
+  /// No description provided for @supportPayDepositConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The traveler\'s deposit of {amount} goes to the sender\'s Nata balance instead of back to the traveler. Do this only when the items were kept.'**
+  String supportPayDepositConfirm(String amount);
+
+  /// No description provided for @supportDepositPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit paid to the sender'**
+  String get supportDepositPaid;
+
+  /// No description provided for @supportDepositRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit {amount} · {status}'**
+  String supportDepositRow(String amount, String status);
+
+  /// No description provided for @depositStatusHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'held'**
+  String get depositStatusHeld;
+
+  /// No description provided for @depositStatusRefunding.
+  ///
+  /// In en, this message translates to:
+  /// **'refunding'**
+  String get depositStatusRefunding;
+
+  /// No description provided for @depositStatusRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'refunded'**
+  String get depositStatusRefunded;
+
+  /// No description provided for @depositStatusPaidToSender.
+  ///
+  /// In en, this message translates to:
+  /// **'paid to sender'**
+  String get depositStatusPaidToSender;
+
+  /// No description provided for @makeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Make default'**
+  String get makeDefault;
+
+  /// No description provided for @stripeCardsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Card details go straight to Stripe; Nata never sees your card number.'**
+  String get stripeCardsNote;
+
+  /// No description provided for @addCardSecurely.
+  ///
+  /// In en, this message translates to:
+  /// **'Add card securely'**
+  String get addCardSecurely;
+
+  /// No description provided for @stripeCardFormNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll enter the card in Stripe\'s secure form. It\'s saved with Stripe for your next payments.'**
+  String get stripeCardFormNote;
+
+  /// No description provided for @errCardSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the card. Try again.'**
+  String get errCardSave;
+
+  /// No description provided for @savedCardCheckoutNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can pick another card or add one in the secure payment sheet.'**
+  String get savedCardCheckoutNote;
+
+  /// No description provided for @useAnotherWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another wallet'**
+  String get useAnotherWallet;
 }
 
 class _AppLocalizationsDelegate

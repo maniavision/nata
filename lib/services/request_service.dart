@@ -209,6 +209,10 @@ enum RequestFailure {
   /// An item's estimated value isn't a number from 0 to 1,000,000.
   itemValueInvalid,
 
+  /// The items are above the traveler's carrying limit: the deposit first
+  /// (20240195).
+  depositRequired,
+
   /// The mobile money network is down for now.
   networkUnavailable,
 
@@ -288,11 +292,22 @@ class StripeSheet {
   /// Apple Pay's merchant ID; null until Apple Pay is set up (cards only).
   final String? appleMerchantId;
 
+  /// The member's Stripe Customer and a short-lived key for it, so the sheet
+  /// offers their saved cards (20240196); null without one.
+  final String? customerId;
+  final String? ephemeralKey;
+
+  /// Saving a card (a SetupIntent) rather than paying.
+  final bool setup;
+
   const StripeSheet({
     required this.clientSecret,
     required this.publishableKey,
     this.merchantCountry = 'US',
     this.appleMerchantId,
+    this.customerId,
+    this.ephemeralKey,
+    this.setup = false,
   });
 }
 
@@ -1212,6 +1227,7 @@ class RequestService {
     String? country,
     String? phone,
     String? network,
+    bool deposit = false,
   }) async {
     try {
       final response = await _client.functions.invoke(
@@ -1219,6 +1235,7 @@ class RequestService {
         body: {
           'request_id': requestId,
           'method': method.wire,
+          if (deposit) 'purpose': 'deposit',
           if (country != null) 'country': country,
           if (phone != null) 'phone': phone,
           if (network != null) 'network': network,
@@ -1237,6 +1254,8 @@ class RequestService {
                 publishableKey: data['publishable_key'] as String? ?? '',
                 merchantCountry: data['merchant_country'] as String? ?? 'US',
                 appleMerchantId: data['apple_merchant_id'] as String?,
+                customerId: data['customer_id'] as String?,
+                ephemeralKey: data['ephemeral_key'] as String?,
               ),
       );
     } on FunctionException catch (e) {
@@ -1278,6 +1297,32 @@ class RequestService {
   Future<List<MobileMoneyOption>> mobileMoneyOptions(String requestId) async {
     final rows = await _client.rpc(
       'mobile_money_options',
+      params: {'p_request_id': requestId},
+    );
+    return [
+      for (final r in (rows as List))
+        MobileMoneyOption.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Where the traveler's deposit for [requestId] stands (request_deposit,
+  /// 20240195): whether one is due, how much, and whether it is held.
+  Future<RequestDeposit> requestDeposit(String requestId) async {
+    _userId;
+    final row = await _client.rpc(
+      'request_deposit',
+      params: {'p_request_id': requestId},
+    );
+    return RequestDeposit.fromJson(Map<String, dynamic>.from(row as Map));
+  }
+
+  /// The countries whose mobile money can pay the deposit for [requestId],
+  /// each with the amount in its currency at today's rate.
+  Future<List<MobileMoneyOption>> depositMobileMoneyOptions(
+    String requestId,
+  ) async {
+    final rows = await _client.rpc(
+      'deposit_mobile_money_options',
       params: {'p_request_id': requestId},
     );
     return [
@@ -1766,6 +1811,7 @@ class RequestService {
 
     if (has('not_signed_in')) return RequestFailure.notSignedIn;
     if (has('item_value_invalid')) return RequestFailure.itemValueInvalid;
+    if (has('deposit_required')) return RequestFailure.depositRequired;
     if (has('not_verified')) return RequestFailure.notVerified;
     if (has('trip_full')) return RequestFailure.tripFull;
     if (has('sender_on_trip')) return RequestFailure.senderOnTrip;
@@ -2062,5 +2108,76 @@ class CarryLimit {
     nextLimitUsd: (j['next_limit_usd'] as num?)?.toDouble(),
     deliveriesNeeded: (j['deliveries_needed'] as num?)?.toInt() ?? 0,
     ratingNeeded: (j['rating_needed'] as num?)?.toDouble(),
+  );
+}
+
+/// Where a traveler's deposit stands.
+enum DepositStatus { none, pending, held, refunding, refunded, paidToSender }
+
+/// The refundable deposit a traveler pays before picking up items worth more
+/// than their carrying limit (20240195).
+class RequestDeposit {
+  /// A deposit is due: the declared value is above the traveler's limit.
+  final bool required;
+
+  /// The declared value, which the deposit is, in its currency.
+  final double? amount;
+  final String? currency;
+
+  /// The traveler's limit, in US dollars.
+  final double? limitUsd;
+
+  final DepositStatus status;
+
+  /// What was paid, in the currency charged (mobile money converts it).
+  final double? paidAmount;
+  final String? paidCurrency;
+
+  /// How the request is paid, so the deposit too: mobile money or card.
+  final CheckoutKind kind;
+
+  const RequestDeposit({
+    this.required = false,
+    this.amount,
+    this.currency,
+    this.limitUsd,
+    this.status = DepositStatus.none,
+    this.paidAmount,
+    this.paidCurrency,
+    this.kind = CheckoutKind.card,
+  });
+
+  static const notDue = RequestDeposit();
+
+  /// Pickup waits for it.
+  bool get blocksPickup => required && status != DepositStatus.held;
+
+  /// "\$450" or "XOF 271,000".
+  String? get amountText => amount == null || currency == null
+      ? null
+      : PriceFormatter.write(amount!, currency!);
+
+  String? get paidText => paidAmount == null || paidCurrency == null
+      ? amountText
+      : PriceFormatter.write(paidAmount!, paidCurrency!);
+
+  factory RequestDeposit.fromJson(Map<String, dynamic> j) => RequestDeposit(
+    required: j['required'] == true,
+    amount: (j['amount'] as num?)?.toDouble(),
+    currency: (j['currency'] as String?)?.trim(),
+    limitUsd: (j['limit_usd'] as num?)?.toDouble(),
+    status: switch (j['status']) {
+      'pending' => DepositStatus.pending,
+      'held' => DepositStatus.held,
+      'refunding' => DepositStatus.refunding,
+      'refunded' => DepositStatus.refunded,
+      'paid_to_sender' => DepositStatus.paidToSender,
+      _ => DepositStatus.none,
+    },
+    paidAmount: (j['paid_amount'] as num?)?.toDouble(),
+    paidCurrency: (j['paid_currency'] as String?)?.trim(),
+    kind: j['kind'] == 'mobile_money'
+        ? CheckoutKind.mobileMoney
+        : CheckoutKind.card,
   );
 }
