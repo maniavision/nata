@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
+import '../services/exchange_rate_service.dart';
 import '../services/phone_number.dart';
+import '../services/preferences_service.dart';
 import '../services/request_service.dart';
 import '../services/stripe_sheet.dart';
 import '../widgets/nata_toast.dart';
@@ -457,7 +459,13 @@ class _DepositScreenState extends State<DepositScreen> {
             children: [
               pill(l.depositDeclaredValue, _d.amountText ?? ''),
               const SizedBox(width: 10),
-              pill(l.depositYourLimit, _d.limitText),
+              pill(
+                l.depositYourLimit,
+                _d.limitTextIn(
+                  PreferencesService().currency.code,
+                  ExchangeRateService.shared.latest,
+                ),
+              ),
             ],
           ),
         ],
