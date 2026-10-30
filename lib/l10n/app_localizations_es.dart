@@ -5324,7 +5324,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String overCarryLimit(String limit) {
-    return 'Por encima de tu límite de transporte de $limit.';
+    return 'Por encima de tu límite de transporte de $limit: pagarás un depósito reembolsable antes de la recogida.';
   }
 
   @override
@@ -5377,4 +5377,137 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get carryLimitSheetNote =>
       'El valor máximo de un artículo que puedes llevar. Aun así puedes llevar artículos por encima de tu límite con un depósito reembolsable.';
+
+  @override
+  String get depositRequiredTitle => 'Depósito necesario antes de la recogida';
+
+  @override
+  String depositRequiredBody(String value, String limit, String amount) {
+    return 'Estos artículos están declarados en $value, por encima de tu límite de transporte de $limit. Paga un depósito reembolsable de $amount para recogerlos.';
+  }
+
+  @override
+  String get depositRefundNote =>
+      'Se reembolsa por completo cuando el código del destinatario confirma la entrega';
+
+  @override
+  String get payDeposit => 'Pagar depósito';
+
+  @override
+  String get depositUnlockPickup =>
+      'Paga el depósito para desbloquear la recogida';
+
+  @override
+  String depositHeld(String amount) {
+    return 'Depósito retenido: $amount · se reembolsa tras la entrega';
+  }
+
+  @override
+  String depositPending(String amount) {
+    return 'Tu depósito de $amount se está confirmando';
+  }
+
+  @override
+  String depositRefunding(String amount) {
+    return 'Tu depósito de $amount se está reembolsando';
+  }
+
+  @override
+  String get depositTitle => 'Depósito';
+
+  @override
+  String get depositToPay => 'DEPÓSITO A PAGAR';
+
+  @override
+  String depositViaMobile(String amount) {
+    return '$amount por dinero móvil';
+  }
+
+  @override
+  String get depositDeclaredValue => 'VALOR DECLARADO';
+
+  @override
+  String get depositYourLimit => 'TU LÍMITE';
+
+  @override
+  String get depositHowItWorks => 'CÓMO FUNCIONA';
+
+  @override
+  String get depositStepHeld => 'Se paga ahora y Nata lo retiene';
+
+  @override
+  String get depositStepRefund =>
+      'Se reembolsa por completo cuando el código del destinatario confirma la entrega, o si se cancela la solicitud';
+
+  @override
+  String get depositStepKept =>
+      'Si el artículo no se entrega, el depósito es para el remitente';
+
+  @override
+  String get depositStepKeptBody =>
+      'Quedarse con el artículo de otra persona es un robo: Nata comparte tu identidad verificada con la policía y el remitente.';
+
+  @override
+  String get depositPaymentMethod => 'MÉTODO DE PAGO';
+
+  @override
+  String get depositCard => 'Tarjeta de crédito o débito';
+
+  @override
+  String get depositCardNote => 'Se paga en la hoja de pago segura de Stripe';
+
+  @override
+  String get depositAgree =>
+      'Acepto: Nata conecta remitentes y viajeros y no es el transportista. Entregaré estos artículos tal como se describen.';
+
+  @override
+  String payDepositAmount(String amount) {
+    return 'Pagar depósito de $amount';
+  }
+
+  @override
+  String get depositReceived =>
+      'Depósito recibido. Ya puedes recoger los artículos.';
+
+  @override
+  String get errDepositRequired =>
+      'Paga el depósito antes de recoger estos artículos.';
+
+  @override
+  String get errDepositLoad =>
+      'No se pudo cargar el depósito. Inténtalo de nuevo.';
+
+  @override
+  String get walletDeposit => 'Depósito';
+
+  @override
+  String get walletDepositReceived => 'Depósito del viajero';
+
+  @override
+  String get supportPayDeposit => 'Pagar el depósito al remitente';
+
+  @override
+  String supportPayDepositConfirm(String amount) {
+    return 'El depósito del viajero de $amount va al saldo Nata del remitente en lugar de devolverse al viajero. Hazlo solo si los artículos no se entregaron.';
+  }
+
+  @override
+  String get supportDepositPaid => 'Depósito pagado al remitente';
+
+  @override
+  String supportDepositRow(String amount, String status) {
+    return 'Depósito $amount · $status';
+  }
+
+  @override
+  String get depositStatusHeld => 'retenido';
+
+  @override
+  String get depositStatusRefunding => 'en reembolso';
+
+  @override
+  String get depositStatusRefunded => 'reembolsado';
+
+  @override
+  String get depositStatusPaidToSender => 'pagado al remitente';
 }

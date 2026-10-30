@@ -47,6 +47,12 @@ class FakeSupportService extends Fake implements SupportService {
   Future<void> refundSender(String disputeId, String note) async =>
       refundedIds.add(disputeId);
 
+  final List<String> depositPaidIds = [];
+
+  @override
+  Future<void> payDepositToSender(String disputeId, String note) async =>
+      depositPaidIds.add(disputeId);
+
   @override
   Future<({String? pickup, String? handover})> photos(String requestId) async =>
       (pickup: null, handover: null);
@@ -110,6 +116,7 @@ SupportProblem problem({
   String id = 'd1',
   String paymentStatus = 'held',
   String status = 'open',
+  String depositStatus = '',
 }) => SupportProblem(
   disputeId: id,
   requestId: 'r1',
@@ -132,6 +139,9 @@ SupportProblem problem({
   paidAt: DateTime(2026, 6, 18),
   pickedUpAt: DateTime(2026, 6, 19),
   createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+  depositAmount: depositStatus.isEmpty ? null : 450,
+  depositCurrency: depositStatus.isEmpty ? '' : 'USD',
+  depositStatus: depositStatus,
 );
 
 void main() {
@@ -211,6 +221,53 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(service.refundedIds, ['d1']);
+  });
+
+  testWidgets('a held deposit can be paid to the sender, after confirming', (
+    tester,
+  ) async {
+    tall(tester);
+    await tester.pumpWidget(
+      appWrapper(
+        SupportProblemDetailScreen(
+          problem: problem(depositStatus: 'held'),
+          service: service,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(r'Deposit $450 · held'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('support-pay-deposit')));
+    await tester.pumpAndSettle();
+    expect(service.depositPaidIds, isEmpty);
+    expect(
+      find.byKey(const ValueKey('support-pay-deposit-confirm')),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('support-pay-deposit-confirm-button')),
+    );
+    await tester.pumpAndSettle();
+    expect(service.depositPaidIds, ['d1']);
+  });
+
+  testWidgets('no deposit, or one refunded: nothing to pay', (tester) async {
+    tall(tester);
+    for (final status in ['', 'refunded']) {
+      await tester.pumpWidget(
+        appWrapper(
+          SupportProblemDetailScreen(
+            key: ValueKey(status),
+            problem: problem(depositStatus: status),
+            service: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('support-pay-deposit')), findsNothing);
+    }
   });
 
   testWidgets('money already paid out cannot be refunded', (tester) async {

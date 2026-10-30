@@ -5362,7 +5362,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String overCarryLimit(String limit) {
-    return 'Au-dessus de votre limite de transport de $limit.';
+    return 'Au-dessus de votre limite de transport de $limit : vous verserez une caution remboursable avant la récupération.';
   }
 
   @override
@@ -5415,4 +5415,137 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get carryLimitSheetNote =>
       'La valeur maximale d\'un article que vous pouvez transporter. Vous pouvez quand même transporter des articles au-dessus de votre limite avec une caution remboursable.';
+
+  @override
+  String get depositRequiredTitle => 'Caution requise avant la récupération';
+
+  @override
+  String depositRequiredBody(String value, String limit, String amount) {
+    return 'Ces articles sont déclarés à $value, au-dessus de votre limite de transport de $limit. Versez une caution remboursable de $amount pour les récupérer.';
+  }
+
+  @override
+  String get depositRefundNote =>
+      'Remboursée en totalité dès que le code du destinataire confirme la livraison';
+
+  @override
+  String get payDeposit => 'Verser la caution';
+
+  @override
+  String get depositUnlockPickup =>
+      'Versez la caution pour débloquer la récupération';
+
+  @override
+  String depositHeld(String amount) {
+    return 'Caution versée : $amount · remboursée après la livraison';
+  }
+
+  @override
+  String depositPending(String amount) {
+    return 'Votre caution de $amount est en cours de confirmation';
+  }
+
+  @override
+  String depositRefunding(String amount) {
+    return 'Votre caution de $amount est en cours de remboursement';
+  }
+
+  @override
+  String get depositTitle => 'Caution';
+
+  @override
+  String get depositToPay => 'CAUTION À VERSER';
+
+  @override
+  String depositViaMobile(String amount) {
+    return '$amount par mobile money';
+  }
+
+  @override
+  String get depositDeclaredValue => 'VALEUR DÉCLARÉE';
+
+  @override
+  String get depositYourLimit => 'VOTRE LIMITE';
+
+  @override
+  String get depositHowItWorks => 'COMMENT ÇA MARCHE';
+
+  @override
+  String get depositStepHeld => 'Payée maintenant, conservée par Nata';
+
+  @override
+  String get depositStepRefund =>
+      'Remboursée en totalité quand le code du destinataire confirme la livraison, ou si la demande est annulée';
+
+  @override
+  String get depositStepKept =>
+      'Si l\'article est gardé, la caution revient à l\'expéditeur';
+
+  @override
+  String get depositStepKeptBody =>
+      'Garder l\'article de quelqu\'un est un vol : Nata transmet votre identité vérifiée à la police et à l\'expéditeur.';
+
+  @override
+  String get depositPaymentMethod => 'MOYEN DE PAIEMENT';
+
+  @override
+  String get depositCard => 'Carte de crédit ou de débit';
+
+  @override
+  String get depositCardNote =>
+      'Payée dans la page de paiement sécurisée de Stripe';
+
+  @override
+  String get depositAgree =>
+      'J\'accepte : Nata met en relation expéditeurs et voyageurs et n\'est pas le transporteur. Je livrerai ces articles comme décrit.';
+
+  @override
+  String payDepositAmount(String amount) {
+    return 'Verser la caution de $amount';
+  }
+
+  @override
+  String get depositReceived =>
+      'Caution reçue. Vous pouvez récupérer les articles.';
+
+  @override
+  String get errDepositRequired =>
+      'Versez la caution avant de récupérer ces articles.';
+
+  @override
+  String get errDepositLoad => 'Impossible de charger la caution. Réessayez.';
+
+  @override
+  String get walletDeposit => 'Caution';
+
+  @override
+  String get walletDepositReceived => 'Caution du voyageur';
+
+  @override
+  String get supportPayDeposit => 'Verser la caution à l\'expéditeur';
+
+  @override
+  String supportPayDepositConfirm(String amount) {
+    return 'La caution du voyageur de $amount va dans le solde Nata de l\'expéditeur au lieu d\'être remboursée au voyageur. À faire seulement si les articles ont été gardés.';
+  }
+
+  @override
+  String get supportDepositPaid => 'Caution versée à l\'expéditeur';
+
+  @override
+  String supportDepositRow(String amount, String status) {
+    return 'Caution $amount · $status';
+  }
+
+  @override
+  String get depositStatusHeld => 'conservée';
+
+  @override
+  String get depositStatusRefunding => 'remboursement en cours';
+
+  @override
+  String get depositStatusRefunded => 'remboursée';
+
+  @override
+  String get depositStatusPaidToSender => 'versée à l\'expéditeur';
 }

@@ -11,6 +11,7 @@ import '../services/payment_service.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
 import 'delivery_confirm_screen.dart';
+import 'deposit_screen.dart';
 import 'review_screen.dart';
 import 'messages_screen.dart';
 import '../widgets/camera_denied_sheet.dart';
@@ -224,6 +225,42 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
   AcceptedDelivery get d => widget.delivery;
   RequestService get _service => widget.requestService ?? RequestService();
 
+  /// The refundable deposit for items above the traveler's carrying limit
+  /// (20240195): pickup waits for it.
+  RequestDeposit _deposit = RequestDeposit.notDue;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDeposit();
+  }
+
+  Future<void> _loadDeposit() async {
+    try {
+      final deposit = await _service.requestDeposit(d.requestId);
+      if (mounted) setState(() => _deposit = deposit);
+    } catch (e) {
+      debugPrint('[DeliveryTask] deposit: $e');
+    }
+  }
+
+  Future<void> _payDeposit() async {
+    final paid = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => DepositScreen(
+          requestId: d.requestId,
+          deposit: _deposit,
+          service: widget.requestService,
+          paymentService: widget.paymentService,
+        ),
+      ),
+    );
+    if (paid == true && mounted) {
+      setState(() => _error = null);
+      await _loadDeposit();
+    }
+  }
+
   /// Adds a photo of the sealed box (up to 3) before the pickup.
   Future<void> _addPickupPhoto() async {
     if (_pickupPhotos.length >= RequestService.maxDeliveryPhotos) return;
@@ -239,6 +276,10 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
   /// then the pickup is recorded.
   Future<void> _markPickedUp() async {
     if (_markingPickedUp || _pickedUpAt != null) return;
+    if (_deposit.blocksPickup) {
+      setState(() => _error = context.l10n.errDepositRequired);
+      return;
+    }
     if (_pickupPhotos.isEmpty) {
       final photo = await _takePhoto();
       if (photo == null || !mounted) return;
@@ -260,6 +301,15 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
         _pickedUpAt = DateTime.now();
         _changed = true;
       });
+    } on RequestException catch (e) {
+      debugPrint('[DeliveryTask] picked up: $e');
+      if (!mounted) return;
+      if (e.reason == RequestFailure.depositRequired) {
+        setState(() => _error = context.l10n.errDepositRequired);
+        await _loadDeposit();
+      } else {
+        setState(() => _error = context.l10n.errPickUpFailed);
+      }
     } catch (e) {
       debugPrint('[DeliveryTask] picked up: $e');
       if (mounted) setState(() => _error = context.l10n.errPickUpFailed);
@@ -363,6 +413,7 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                   const SizedBox(height: 16),
                   _itemCard(l),
                   const SizedBox(height: 16),
+                  ..._depositCard(l),
                   _receivedStep(l),
                   const SizedBox(height: 16),
                   _deliveredStep(l),
@@ -756,7 +807,38 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
             ),
             const SizedBox(height: 12),
           ],
-          if (pickedUpAt != null)
+          if (pickedUpAt == null && _deposit.blocksPickup)
+            Container(
+              key: const ValueKey('delivery-task-pickup-locked'),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppColors.muted,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.lock_rounded,
+                    size: 14,
+                    color: AppColors.mutedForeground,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      l.depositUnlockPickup,
+                      style: GoogleFonts.dmSans(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (pickedUpAt != null)
             Text(
               l.pickedUpOn(
                 DateFormat.yMMMd(locale).add_jm().format(pickedUpAt),
@@ -801,6 +883,145 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
         ],
       ),
     );
+  }
+
+  /// Before pickup, for items above the traveler's limit: the deposit to
+  /// pay, or where the one paid stands.
+  List<Widget> _depositCard(AppLocalizations l) {
+    final dep = _deposit;
+    if (!dep.required && dep.status == DepositStatus.none) return const [];
+    if (dep.status == DepositStatus.held ||
+        dep.status == DepositStatus.pending ||
+        (dep.status == DepositStatus.refunding && !dep.required)) {
+      final held = dep.status == DepositStatus.held;
+      final text = switch (dep.status) {
+        DepositStatus.held => l.depositHeld(dep.paidText ?? ''),
+        DepositStatus.pending => l.depositPending(dep.paidText ?? ''),
+        _ => l.depositRefunding(dep.paidText ?? ''),
+      };
+      return [
+        Container(
+          key: const ValueKey('delivery-task-deposit-held'),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: held ? _greenBg : AppColors.muted,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: (held ? _green : AppColors.border).withValues(alpha: 0.4),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.verified_user_rounded,
+                size: 18,
+                color: held ? _green : AppColors.mutedForeground,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  text,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: held ? _green : AppColors.foreground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ];
+    }
+    if (!dep.blocksPickup || _pickedUpAt != null) return const [];
+    const amber = Color(0xFFA86B12);
+    return [
+      Container(
+        key: const ValueKey('delivery-task-deposit'),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFBF0DC),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: amber.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.shield_outlined, size: 18, color: amber),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l.depositRequiredTitle,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l.depositRequiredBody(
+                dep.amountText ?? '',
+                PriceFormatter.write(dep.limitUsd ?? 100, 'USD'),
+                dep.amountText ?? '',
+              ),
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                height: 1.45,
+                color: AppColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.replay_rounded, size: 14, color: _green),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l.depositRefundNote,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                key: const ValueKey('delivery-task-pay-deposit'),
+                onPressed: _payDeposit,
+                icon: const Icon(Icons.lock_rounded, size: 16),
+                label: Text(
+                  l.payDeposit,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.foreground,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+    ];
   }
 
   Widget _deliveredStep(AppLocalizations l) {

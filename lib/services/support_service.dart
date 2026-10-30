@@ -64,6 +64,13 @@ class SupportService {
     params: {'p_dispute': disputeId, 'p_note': note},
   );
 
+  /// Pays the traveler's deposit to the sender's Nata balance, for items
+  /// that were kept (20240195). The problem stays open.
+  Future<void> payDepositToSender(String disputeId, String note) => _client.rpc(
+    'support_pay_deposit_to_sender',
+    params: {'p_dispute': disputeId, 'p_note': note},
+  );
+
   /// The pickup and handover photos, as short-lived links.
   Future<({String? pickup, String? handover})> photos(String requestId) async {
     final rows =
@@ -229,6 +236,12 @@ class SupportProblem {
   final DateTime createdAt;
   final DateTime? resolvedAt;
 
+  /// The traveler's deposit (20240195), when they paid one: held,
+  /// refunding, refunded or paid_to_sender; empty otherwise.
+  final double? depositAmount;
+  final String depositCurrency;
+  final String depositStatus;
+
   const SupportProblem({
     required this.disputeId,
     required this.requestId,
@@ -254,6 +267,9 @@ class SupportProblem {
     this.deliveredAt,
     required this.createdAt,
     this.resolvedAt,
+    this.depositAmount,
+    this.depositCurrency = '',
+    this.depositStatus = '',
   });
 
   bool get isOpen => status == 'open' || status == 'under_review';
@@ -264,6 +280,9 @@ class SupportProblem {
       paymentStatus == 'held' &&
       payoutStatus != 'processing' &&
       payoutStatus != 'paid';
+
+  /// The deposit can still go to the sender: held, problem open.
+  bool get depositPayable => isOpen && depositStatus == 'held';
 
   factory SupportProblem.fromJson(Map<String, dynamic> j) => SupportProblem(
     disputeId: _str(j['dispute_id']),
@@ -290,6 +309,9 @@ class SupportProblem {
     deliveredAt: _date(j['delivered_at']),
     createdAt: _date(j['created_at']) ?? DateTime.now(),
     resolvedAt: _date(j['resolved_at']),
+    depositAmount: (j['deposit_amount'] as num?)?.toDouble(),
+    depositCurrency: _str(j['deposit_currency']),
+    depositStatus: _str(j['deposit_status']),
   );
 }
 

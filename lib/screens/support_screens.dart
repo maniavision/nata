@@ -904,6 +904,7 @@ class _SupportProblemDetailScreenState
   final _note = TextEditingController();
   ({String? pickup, String? handover}) _photos = (pickup: null, handover: null);
   bool _confirmRefund = false;
+  bool _confirmDeposit = false;
   bool _busy = false;
 
   SupportProblem get _p => widget.problem;
@@ -1146,6 +1147,31 @@ class _SupportProblemDetailScreenState
                 ],
               ),
             ),
+            if (p.depositStatus.isNotEmpty && p.depositAmount != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                key: const ValueKey('support-deposit'),
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.input,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Text(
+                  l.supportDepositRow(
+                    PriceFormatter.write(p.depositAmount!, p.depositCurrency),
+                    switch (p.depositStatus) {
+                      'held' => l.depositStatusHeld,
+                      'refunding' => l.depositStatusRefunding,
+                      'refunded' => l.depositStatusRefunded,
+                      _ => l.depositStatusPaidToSender,
+                    },
+                  ),
+                  style: _body(),
+                ),
+              ),
+            ],
           ],
         ),
         if (p.isOpen) ...[
@@ -1184,7 +1210,7 @@ class _SupportProblemDetailScreenState
           _Pill(
             l.supportMarkResolved,
             buttonKey: const ValueKey('support-resolve'),
-            busy: _busy && !_confirmRefund,
+            busy: _busy && !_confirmRefund && !_confirmDeposit,
             onTap: () => _act(
               () => _service.resolve(p.disputeId, _note.text),
               l.supportResolvedSnack,
@@ -1267,6 +1293,77 @@ class _SupportProblemDetailScreenState
                                 _note.text,
                               ),
                               l.supportRefundSnack,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+          if (p.depositPayable) ...[
+            const SizedBox(height: 10),
+            _Pill(
+              l.supportPayDeposit,
+              buttonKey: const ValueKey('support-pay-deposit'),
+              primary: false,
+              destructive: true,
+              onTap: _busy
+                  ? null
+                  : () => setState(() => _confirmDeposit = !_confirmDeposit),
+            ),
+            if (_confirmDeposit) ...[
+              const SizedBox(height: 12),
+              Container(
+                key: const ValueKey('support-pay-deposit-confirm'),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.destructive.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.destructive.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.supportPayDepositConfirm(
+                        PriceFormatter.write(
+                          p.depositAmount ?? 0,
+                          p.depositCurrency,
+                        ),
+                      ),
+                      style: _small(),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _Pill(
+                            l.cancel,
+                            primary: false,
+                            onTap: () =>
+                                setState(() => _confirmDeposit = false),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _Pill(
+                            l.supportPayDeposit,
+                            buttonKey: const ValueKey(
+                              'support-pay-deposit-confirm-button',
+                            ),
+                            destructive: true,
+                            busy: _busy,
+                            onTap: () => _act(
+                              () => _service.payDepositToSender(
+                                p.disputeId,
+                                _note.text,
+                              ),
+                              l.supportDepositPaid,
                             ),
                           ),
                         ),

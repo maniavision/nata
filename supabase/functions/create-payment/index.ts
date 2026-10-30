@@ -29,6 +29,13 @@
  * approve, with no payment page. The payment's tx_ref is the deposit id;
  * verify-payment and pawapay-callback settle it.
  *
+ * With { purpose: "deposit" } it is the traveler's refundable deposit
+ * instead (20240195_item_deposits.sql): allowed for the request's traveler
+ * while it is accepted or paid and a deposit is due (nata.deposit_due); the
+ * amount is the declared value, or the same in the wallet's currency for
+ * mobile money (nata.deposit_charge), with the same method rule. It is held
+ * until delivery and never changes the request's status.
+ *
  * Responds 200 with { tx_ref, client_secret, publishable_key,
  * merchant_country, apple_merchant_id } (Stripe's sheet), or
  * { tx_ref, direct: true } (mobile money, waiting for the payer's approval).
@@ -185,6 +192,7 @@ Deno.serve(async (req: Request) => {
   let country = "";
   let phone = "";
   let network = "";
+  let deposit = false;
   try {
     const body = await req.json();
     requestId = String(body.request_id ?? "");
@@ -192,6 +200,7 @@ Deno.serve(async (req: Request) => {
     country = String(body.country ?? "").trim().toUpperCase();
     phone = String(body.phone ?? "").trim();
     network = String(body.network ?? "").trim().toUpperCase();
+    deposit = body.purpose === "deposit";
   } catch (_) {
     return json({ error: "bad_request" }, 400);
   }
@@ -210,21 +219,47 @@ Deno.serve(async (req: Request) => {
   const { data: request } = await db
     .from("delivery_requests")
     .select(
-      "id, sender_id, status, expires_at, display_total, display_fee, display_currency, ticket_checked_at",
+      "id, sender_id, status, expires_at, display_total, display_fee, display_currency, ticket_checked_at, trips(traveler_id)",
     )
     .eq("id", requestId)
     .maybeSingle();
-  if (!request || request.sender_id !== user.id) {
-    return json({ error: "not_allowed" }, 403);
-  }
-  if (request.status !== "accepted" || !request.display_total) {
-    return json({ error: "not_payable" }, 409);
-  }
-  if (request.expires_at && new Date(request.expires_at) <= new Date()) {
-    return json({ error: "expired" }, 409);
-  }
-  if (!request.ticket_checked_at) {
-    return json({ error: "checks_missing" }, 409);
+  const travelerId = (request?.trips as { traveler_id?: string } | null)
+    ?.traveler_id;
+  if (deposit) {
+    // The traveler's deposit: before pickup, and only while one is due and
+    // none is held yet.
+    if (!request || travelerId !== user.id) {
+      return json({ error: "not_allowed" }, 403);
+    }
+    if (request.status !== "accepted" && request.status !== "paid") {
+      return json({ error: "not_payable" }, 409);
+    }
+    const [{ data: due }, { data: held }] = await Promise.all([
+      db.rpc("deposit_due", { p_request_id: requestId }).maybeSingle(),
+      db.from("payments")
+        .select("id")
+        .eq("request_id", requestId)
+        .eq("purpose", "deposit")
+        .in("status", ["held", "released"])
+        .eq("needs_refund", false)
+        .limit(1),
+    ]);
+    if (!(due as { required?: boolean } | null)?.required || (held ?? []).length) {
+      return json({ error: "not_payable" }, 409);
+    }
+  } else {
+    if (!request || request.sender_id !== user.id) {
+      return json({ error: "not_allowed" }, 403);
+    }
+    if (request.status !== "accepted" || !request.display_total) {
+      return json({ error: "not_payable" }, 409);
+    }
+    if (request.expires_at && new Date(request.expires_at) <= new Date()) {
+      return json({ error: "expired" }, 409);
+    }
+    if (!request.ticket_checked_at) {
+      return json({ error: "checks_missing" }, 409);
+    }
   }
 
   // Mobile money between two members living where pawaPay takes it; card or
@@ -259,13 +294,29 @@ Deno.serve(async (req: Request) => {
     if (!net || !wallet) return json({ error: "phone_rejected" }, 422);
   }
 
-  const baseAmount = Number(request.display_total);
-  const baseCurrency = String(request.display_currency ?? "USD").trim().toUpperCase();
+  let baseAmount = Number(request.display_total);
+  let baseCurrency = String(request.display_currency ?? "USD").trim().toUpperCase();
+  if (deposit) {
+    // The declared value, as it is (a card) or in the wallet's currency.
+    const { data: charge, error } = await db
+      .rpc("deposit_charge", { p_request_id: requestId, p_country: null })
+      .maybeSingle();
+    if (error || !charge) {
+      console.error("[create-payment] deposit", error);
+      return json({ error: "not_payable" }, 409);
+    }
+    const c = charge as { amount: number; currency: string };
+    baseAmount = Number(c.amount);
+    baseCurrency = String(c.currency).trim().toUpperCase();
+  }
   let amount = baseAmount;
   let currency = baseCurrency;
   if (mobile) {
     const { data: charge, error } = await db
-      .rpc("mobile_money_charge", { p_request_id: requestId, p_country: country })
+      .rpc(deposit ? "deposit_charge" : "mobile_money_charge", {
+        p_request_id: requestId,
+        p_country: country,
+      })
       .maybeSingle();
     if (error || !charge) {
       const msg = String(error?.message ?? "");
@@ -276,8 +327,9 @@ Deno.serve(async (req: Request) => {
     amount = Number(c.amount);
     currency = String(c.currency).trim().toUpperCase();
   }
-  // The fee, in the currency charged.
-  const fee = Number(request.display_fee ?? 0) * (amount / baseAmount);
+  // The fee, in the currency charged (a deposit has none).
+  const fee = deposit ? 0 : Number(request.display_fee ?? 0) * (amount / baseAmount);
+  const purpose = deposit ? "deposit" : "delivery";
 
   // Cards and Apple Pay: the PaymentIntent first, so the payment's tx_ref
   // can be its id.
@@ -291,8 +343,11 @@ Deno.serve(async (req: Request) => {
         // Cards only (Apple Pay and Google Pay are cards too): nothing that
         // sends the payer elsewhere or settles days later.
         "payment_method_types[]": "card",
-        description: "Nata delivery, held in escrow until delivery",
+        description: deposit
+          ? "Nata deposit, refunded after delivery"
+          : "Nata delivery, held in escrow until delivery",
         "metadata[request_id]": requestId,
+        "metadata[purpose]": purpose,
         "metadata[sender_id]": user.id,
         ...(user.email ? { receipt_email: String(user.email) } : {}),
       },
@@ -316,6 +371,7 @@ Deno.serve(async (req: Request) => {
       base_currency: baseCurrency,
       country_code: null,
       method,
+      purpose,
       status: "pending",
     });
     if (stripeInsert) {
@@ -346,6 +402,7 @@ Deno.serve(async (req: Request) => {
     base_currency: baseCurrency,
     country_code: country,
     method,
+    purpose,
     status: "pending",
   });
   if (insertError) {
@@ -365,7 +422,7 @@ Deno.serve(async (req: Request) => {
           accountDetails: { phoneNumber: wallet, provider: network },
         },
         clientReferenceId: requestId,
-        customerMessage: "Nata delivery",
+        customerMessage: deposit ? "Nata deposit" : "Nata delivery",
       },
     });
     const status = String(res.body.status ?? "");

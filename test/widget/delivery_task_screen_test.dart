@@ -1,5 +1,6 @@
 import 'package:carrywise_app/screens/delivery_confirm_screen.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
+import 'package:carrywise_app/screens/deposit_screen.dart';
 import 'package:carrywise_app/screens/recipient_chat_screen.dart';
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:flutter/foundation.dart';
@@ -438,5 +439,109 @@ void main() {
 
     expect(find.text('Détails de la livraison'), findsOneWidget);
     expect(find.text("J'ai récupéré l'article"), findsOneWidget);
+  });
+
+  group('deposit', () {
+    const due = RequestDeposit(
+      required: true,
+      amount: 450,
+      currency: 'USD',
+      limitUsd: 100,
+    );
+
+    testWidgets('none due: no deposit card, pickup as usual', (tester) async {
+      await pump(tester, sampleDelivery());
+
+      expect(find.byKey(const ValueKey('delivery-task-deposit')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('delivery-task-picked-up')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('due: the deposit card, and pickup is locked', (tester) async {
+      service.deposits['req-1'] = due;
+      await pump(tester, sampleDelivery());
+
+      expect(
+        find.byKey(const ValueKey('delivery-task-deposit')),
+        findsOneWidget,
+      );
+      expect(find.text('Deposit required before pickup'), findsOneWidget);
+      expect(
+        find.textContaining(r'above your $100 carrying limit'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('delivery-task-pickup-locked')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('delivery-task-picked-up')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('Pay deposit opens the deposit page', (tester) async {
+      service.deposits['req-1'] = due;
+      await pump(tester, sampleDelivery());
+
+      await tester.tap(find.byKey(const ValueKey('delivery-task-pay-deposit')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DepositScreen), findsOneWidget);
+    });
+
+    testWidgets('held: a green note, and pickup is open', (tester) async {
+      service.deposits['req-1'] = const RequestDeposit(
+        required: true,
+        amount: 450,
+        currency: 'USD',
+        status: DepositStatus.held,
+        paidAmount: 450,
+        paidCurrency: 'USD',
+      );
+      await pump(tester, sampleDelivery());
+
+      expect(
+        find.text(r'Deposit held: $450 · refunded after delivery'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('delivery-task-picked-up')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the server asks for a deposit: said, and looked up again', (
+      tester,
+    ) async {
+      service.failPickUp = const RequestException(
+        RequestFailure.depositRequired,
+      );
+      await pump(tester, sampleDelivery());
+      final loads = service.depositLoads;
+
+      await tester.tap(find.byKey(const ValueKey('delivery-task-picked-up')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Pay the deposit before picking up these items.'),
+        findsOneWidget,
+      );
+      expect(service.depositLoads, loads + 1);
+    });
+
+    testWidgets('if it can\'t be loaded, pickup stays as it was', (
+      tester,
+    ) async {
+      service.failDeposit = true;
+      await pump(tester, sampleDelivery());
+
+      expect(
+        find.byKey(const ValueKey('delivery-task-picked-up')),
+        findsOneWidget,
+      );
+    });
   });
 }
