@@ -123,8 +123,19 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      final auth = widget.authService ?? AuthService();
+      // The store reviewers' demo account goes straight in: Google Play and
+      // App Review can't fetch a code.
+      if (AuthService.isReviewPhone(e164)) {
+        await auth.reviewSignIn(e164);
+        final prefs = PreferencesService();
+        await prefs.loadFromProfile();
+        prefs.rememberAccount();
+        if (mounted) _goHome();
+        return;
+      }
       // Logging in never creates an account: the number must already exist.
-      await (widget.authService ?? AuthService()).sendOtp(
+      await auth.sendOtp(
         e164,
         createUser: false,
       );

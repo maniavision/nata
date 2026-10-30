@@ -53,6 +53,34 @@ void main() {
       expect(find.byType(OtpScreen), findsOneWidget);
     });
 
+    testWidgets('the reviewers\' demo number goes straight in, no code', (
+      tester,
+    ) async {
+      final auth = FakeAuthService();
+      await pump(
+        tester,
+        LoginScreen(
+          authService: auth,
+          homeBuilder: (_) => const Scaffold(body: Text('home')),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField).first, '+1 202 555 0101');
+      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.pumpAndSettle();
+
+      expect(auth.reviewSignIns, ['+12025550101']);
+      expect(auth.otpRequests, isEmpty);
+      expect(find.byType(OtpScreen), findsNothing);
+      expect(find.text('home'), findsOneWidget);
+    });
+
+    test('only the demo number counts as the reviewers\'', () {
+      expect(AuthService.isReviewPhone('+1 (202) 555-0101'), isTrue);
+      expect(AuthService.isReviewPhone('+12025550102'), isFalse);
+      expect(AuthService.isReviewPhone('+242061234567'), isFalse);
+    });
+
     testWidgets('a number with no account never reaches the code screen', (
       tester,
     ) async {
