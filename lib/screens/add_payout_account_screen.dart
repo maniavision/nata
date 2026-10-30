@@ -17,7 +17,9 @@ import 'stripe_bank_section.dart';
 /// pays out to in their country of residence (it can't be changed here;
 /// add-payout-account checks it too), or their bank through Stripe where
 /// Stripe can pay out (payout-options lists it as the STRIPE bank), given
-/// in Nata's own form ([StripeBankSection]). Pops the saved account.
+/// in Nata's own form ([StripeBankSection]). In Nigeria, their bank account,
+/// paid by Flutterwave (payout-options lists Flutterwave's banks; the
+/// account is saved under the name the bank gives). Pops the saved account.
 class AddPayoutAccountScreen extends StatefulWidget {
   /// Overrides for tests; default to the real service and the country of
   /// residence on the profile (the device's country when it has none).
@@ -67,6 +69,9 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
   String? _error;
 
   PaymentService get _service => widget.service ?? PaymentService();
+
+  /// Paid by Flutterwave to a Nigerian bank (20240198).
+  bool get _nigeria => _country?.isoCode == 'NG';
 
   bool get _viaStripe =>
       _kind == PayoutAccountKind.bank &&
@@ -208,6 +213,7 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
             maxPayoutAccounts,
           ),
           PayoutAccountFailure.unavailable => l.errPaymentsUnavailable,
+          PayoutAccountFailure.accountNotFound => l.errPayoutAccountNotFound,
           PayoutAccountFailure.emailRequired ||
           PayoutAccountFailure.other => l.errSavePayoutAccount,
         },
@@ -291,9 +297,11 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
                       _textField(
                         _number,
                         key: 'payout-number',
-                        keyboard: _kind == PayoutAccountKind.bank
-                            ? TextInputType.text
-                            : TextInputType.phone,
+                        keyboard: _kind == PayoutAccountKind.mobileMoney
+                            ? TextInputType.phone
+                            : _nigeria
+                            ? TextInputType.number
+                            : TextInputType.text,
                         prefix: _kind == PayoutAccountKind.mobileMoney
                             ? _country?.phoneCode
                             : null,
@@ -306,6 +314,18 @@ class _AddPayoutAccountScreenState extends State<AddPayoutAccountScreen> {
                         keyboard: TextInputType.name,
                       ),
                       const SizedBox(height: 12),
+                      if (_nigeria && _kind == PayoutAccountKind.bank) ...[
+                        Text(
+                          l.payoutNigeriaBankNote,
+                          key: const ValueKey('payout-nigeria-note'),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11,
+                            height: 1.4,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       Text(
                         l.payoutAccountNoteSecure,
                         style: GoogleFonts.dmSans(

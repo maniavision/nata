@@ -327,8 +327,20 @@ class MobileMoneyNetwork {
 }
 
 /// How a request is paid: mobile money (pawaPay) or card and Apple Pay
-/// (Stripe), from where the sender and the traveler live.
-enum CheckoutKind { mobileMoney, card }
+/// (Stripe), from where the sender and the traveler live; or a card on
+/// Flutterwave's page, in naira, when the payer lives in Nigeria
+/// (20240198).
+enum CheckoutKind {
+  mobileMoney,
+  card,
+  flutterwave;
+
+  static CheckoutKind fromServer(Object? value) => switch (value) {
+    'mobile_money' => mobileMoney,
+    'flutterwave' => flutterwave,
+    _ => card,
+  };
+}
 
 /// Where a payment stands.
 enum PaymentStatus { pending, successful, failed }
@@ -1297,17 +1309,16 @@ class RequestService {
     }
   }
 
-  /// How [requestId] is paid (checkout_kind, 20240173): mobile money when
-  /// the sender and the traveler both live where pawaPay takes it, card or
-  /// Apple Pay through Stripe otherwise.
+  /// How the sender pays [requestId] (checkout_kind, 20240173): mobile
+  /// money when the sender and the traveler both live where pawaPay takes
+  /// it, card or Apple Pay through Stripe otherwise, and a card through
+  /// Flutterwave when the sender lives in Nigeria (20240198).
   Future<CheckoutKind> checkoutKind(String requestId) async {
     final kind = await _client.rpc(
       'checkout_kind',
       params: {'p_request_id': requestId},
     );
-    return kind == 'mobile_money'
-        ? CheckoutKind.mobileMoney
-        : CheckoutKind.card;
+    return CheckoutKind.fromServer(kind);
   }
 
   /// The countries whose mobile money can pay [requestId], each with the
@@ -2278,8 +2289,6 @@ class RequestDeposit {
     },
     paidAmount: (j['paid_amount'] as num?)?.toDouble(),
     paidCurrency: (j['paid_currency'] as String?)?.trim(),
-    kind: j['kind'] == 'mobile_money'
-        ? CheckoutKind.mobileMoney
-        : CheckoutKind.card,
+    kind: CheckoutKind.fromServer(j['kind']),
   );
 }

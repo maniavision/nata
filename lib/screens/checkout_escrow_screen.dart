@@ -103,8 +103,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   bool get _payingByMobile => _paymentMethod == 2;
 
   /// How this request is paid, from where the sender and the traveler live:
-  /// mobile money only, or card and Apple Pay only. Every way is shown when
-  /// it can't be had (create-payment still refuses the wrong one).
+  /// mobile money only, card and Apple Pay only, or a card on Flutterwave's
+  /// page for a sender living in Nigeria. Every way is shown when it can't
+  /// be had (create-payment still refuses the wrong one).
   CheckoutKind? _kind;
   bool _kindFailed = false;
 
@@ -112,6 +113,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   List<int> get _offered => switch (_kind) {
     CheckoutKind.mobileMoney => const [2],
     CheckoutKind.card => const [0, 1],
+    CheckoutKind.flutterwave => const [1],
     null => _kindFailed ? const [0, 1, 2] : const [],
   };
 
@@ -147,7 +149,11 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       if (!mounted) return;
       setState(() {
         _kind = kind;
-        _paymentMethod = kind == CheckoutKind.mobileMoney ? 2 : 0;
+        _paymentMethod = switch (kind) {
+          CheckoutKind.mobileMoney => 2,
+          CheckoutKind.flutterwave => 1,
+          CheckoutKind.card => 0,
+        };
       });
       if (kind == CheckoutKind.mobileMoney) _loadMobileOptions();
       if (kind == CheckoutKind.card) _loadSavedCard();
@@ -1343,7 +1349,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 ),
               ),
             ),
-          if (_payingByCard) _buildStripeNote(),
+          if (_payingByCard) _buildSecureNote(),
         ],
       ),
     );
@@ -1381,10 +1387,14 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     );
   }
 
-  /// Cards are paid in Stripe's sheet: the details never reach Nata.
-  Widget _buildStripeNote() {
+  /// Cards are paid in Stripe's sheet, or on Flutterwave's page for a
+  /// sender living in Nigeria: the details never reach Nata.
+  Widget _buildSecureNote() {
+    final flutterwave = _kind == CheckoutKind.flutterwave;
     return Padding(
-      key: const ValueKey('checkout-stripe-note'),
+      key: ValueKey(
+        flutterwave ? 'checkout-flutterwave-note' : 'checkout-stripe-note',
+      ),
       padding: const EdgeInsets.only(top: 12),
       child: Row(
         children: [
@@ -1396,7 +1406,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              context.l10n.paidSecurelyThroughStripe,
+              flutterwave
+                  ? context.l10n.paidSecurelyThroughFlutterwave
+                  : context.l10n.paidSecurelyThroughStripe,
               style: GoogleFonts.dmSans(
                 fontSize: 12,
                 height: 1.35,

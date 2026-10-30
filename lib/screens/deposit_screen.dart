@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
@@ -27,6 +28,11 @@ class DepositScreen extends StatefulWidget {
   /// Override for tests: Stripe's payment sheet.
   final Future<CardSheetResult> Function(StripeSheet sheet)? presentCardSheet;
 
+  /// Overrides for tests: opening and closing Flutterwave's payment page (an
+  /// in-app browser by default), for a traveler living in Nigeria.
+  final Future<bool> Function(Uri link)? openPaymentPage;
+  final Future<void> Function()? closePaymentPage;
+
   /// How often a payment in progress is checked.
   final Duration pollInterval;
 
@@ -37,6 +43,8 @@ class DepositScreen extends StatefulWidget {
     this.service,
     this.paymentService,
     this.presentCardSheet,
+    this.openPaymentPage,
+    this.closePaymentPage,
     this.pollInterval = const Duration(seconds: 3),
   });
 
@@ -48,6 +56,9 @@ class _DepositScreenState extends State<DepositScreen> {
   RequestService get _service => widget.service ?? RequestService();
   RequestDeposit get _d => widget.deposit;
   bool get _mobile => _d.kind == CheckoutKind.mobileMoney;
+
+  /// A card on Flutterwave's page, in naira (the traveler lives in Nigeria).
+  bool get _flutterwave => _d.kind == CheckoutKind.flutterwave;
 
   bool _agreed = false;
 
@@ -213,9 +224,11 @@ class _DepositScreenState extends State<DepositScreen> {
         }
         return;
       }
-      // Mobile money: the prompt is on the traveler's phone.
+      // Mobile money: the prompt is on the traveler's phone. Flutterwave:
+      // its page, watched until the payment goes through.
       setState(() => _payment = payment);
       _startPolling();
+      if (payment.link != null) await _openPage();
     } on RequestException catch (e) {
       messenger.showSnackBar(
         nataToast(switch (e.reason) {
@@ -239,6 +252,42 @@ class _DepositScreenState extends State<DepositScreen> {
     } finally {
       if (mounted) setState(() => _starting = false);
     }
+  }
+
+  Future<void> _openPage() async {
+    final link = _payment?.link;
+    if (link == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final l = context.l10n;
+    var opened = false;
+    try {
+      opened = await (widget.openPaymentPage ?? _openInApp)(link);
+    } catch (e) {
+      debugPrint('[Deposit] open payment page: $e');
+    }
+    if (!opened) {
+      messenger.showSnackBar(
+        nataToast(l.errPaymentStart, tone: ToastTone.error),
+      );
+    }
+  }
+
+  static Future<bool> _openInApp(Uri link) =>
+      launchUrl(link, mode: LaunchMode.inAppBrowserView);
+
+  static Future<void> _closeInApp() async {
+    try {
+      if (await supportsCloseForLaunchMode(LaunchMode.inAppBrowserView)) {
+        await closeInAppWebView();
+      }
+    } catch (_) {
+      // Already closed.
+    }
+  }
+
+  Future<void> _closePage(PaymentLink payment) async {
+    if (payment.link == null) return;
+    await (widget.closePaymentPage ?? _closeInApp)();
   }
 
   void _startPolling() {
@@ -267,12 +316,16 @@ class _DepositScreenState extends State<DepositScreen> {
       switch (status) {
         case PaymentStatus.successful:
           _poll?.cancel();
+          await _closePage(payment);
+          if (!mounted) return;
           messenger.showSnackBar(
             nataToast(l.depositReceived, tone: ToastTone.success),
           );
           Navigator.of(context).pop(true);
         case PaymentStatus.failed:
           _poll?.cancel();
+          await _closePage(payment);
+          if (!mounted) return;
           setState(() => _payment = null);
           messenger.showSnackBar(
             nataToast(l.errPaymentFailed, tone: ToastTone.error),
@@ -315,6 +368,8 @@ class _DepositScreenState extends State<DepositScreen> {
                   const SizedBox(height: 16),
                   if (_payment != null && _mobile)
                     _approveOnPhone()
+                  else if (_payment?.link != null)
+                    _payOnPage()
                   else ...[
                     _method(),
                     const SizedBox(height: 16),
@@ -582,7 +637,9 @@ class _DepositScreenState extends State<DepositScreen> {
         key: const ValueKey('deposit-card'),
         icon: Icons.credit_card_rounded,
         title: l.depositCard,
-        subtitle: l.depositCardNote,
+        subtitle: _flutterwave
+            ? l.depositCardFlutterwaveNote
+            : l.depositCardNote,
       );
     } else if (_optionsFailed) {
       body = Row(
@@ -822,6 +879,62 @@ class _DepositScreenState extends State<DepositScreen> {
       ],
     ),
   );
+
+  /// While the traveler pays on Flutterwave's page.
+  Widget _payOnPage() {
+    final l = context.l10n;
+    return _card(
+      key: const ValueKey('deposit-on-page'),
+      child: Column(
+        children: [
+          const SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            l.completeYourPayment,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              color: AppColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l.completeYourPaymentSub,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              height: 1.4,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton(
+            key: const ValueKey('deposit-check'),
+            onPressed: () => _check(manual: true),
+            child: Text(l.iPaidCheckNow),
+          ),
+          TextButton(
+            key: const ValueKey('deposit-open-page'),
+            onPressed: _openPage,
+            child: Text(l.openPaymentPage),
+          ),
+          TextButton(
+            key: const ValueKey('deposit-cancel'),
+            onPressed: () {
+              _poll?.cancel();
+              setState(() => _payment = null);
+            },
+            child: Text(l.chooseAnotherWayToPay),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _approveOnPhone() {
     final l = context.l10n;

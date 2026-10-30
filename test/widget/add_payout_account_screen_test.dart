@@ -219,6 +219,34 @@ void main() {
     );
   });
 
+  testWidgets('Nigeria: paid by Flutterwave, under the bank\'s name', (
+    tester,
+  ) async {
+    await pump(tester);
+    await pick(tester, 'GTBank');
+
+    expect(find.byKey(const ValueKey('payout-nigeria-note')), findsOneWidget);
+    expect(find.textContaining('through Flutterwave'), findsOneWidget);
+  });
+
+  testWidgets('an account Flutterwave can\'t find is explained', (
+    tester,
+  ) async {
+    payments.failAddAccount = const PayoutAccountException(
+      PayoutAccountFailure.accountNotFound,
+    );
+    await pump(tester);
+    await pick(tester, 'GTBank');
+    await fill(tester, '0690000031', 'Amara Kalu');
+    await save(tester);
+
+    expect(
+      find.textContaining("Flutterwave couldn't find this account"),
+      findsOneWidget,
+    );
+    expect(popped, isNull);
+  });
+
   testWidgets('a bank refused by the server is explained', (tester) async {
     payments.failAddAccount = const PayoutAccountException(
       PayoutAccountFailure.notSupported,

@@ -239,6 +239,34 @@ void main() {
         );
       });
 
+      testWidgets('living in Nigeria: a card on Flutterwave\'s page', (
+        tester,
+      ) async {
+        service.kind = CheckoutKind.flutterwave;
+        await pumpPayable(tester);
+
+        expect(method(1), findsOneWidget);
+        expect(method(0), findsNothing);
+        expect(method(2), findsNothing);
+        expect(
+          find.byKey(const ValueKey('checkout-flutterwave-note')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('in naira'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('checkout-stripe-note')),
+          findsNothing,
+        );
+
+        await pay(tester);
+        expect(service.paymentsStarted.single.method, PayMethod.card);
+        expect(opened, [service.nextPayment.link]);
+        expect(
+          find.byKey(const ValueKey('checkout-payment-in-progress')),
+          findsOneWidget,
+        );
+      });
+
       testWidgets('the saved mobile money wallet is filled in', (tester) async {
         service.kind = CheckoutKind.mobileMoney;
         await pumpPayable(
