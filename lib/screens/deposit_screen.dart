@@ -395,7 +395,6 @@ class _DepositScreenState extends State<DepositScreen> {
   Widget _summary() {
     final l = context.l10n;
     final local = _mobile ? _choice?.amountText : null;
-    final limit = _d.limitUsd;
     TextStyle small(Color c) => GoogleFonts.dmSans(
       fontSize: 10,
       fontWeight: FontWeight.w700,
@@ -458,10 +457,7 @@ class _DepositScreenState extends State<DepositScreen> {
             children: [
               pill(l.depositDeclaredValue, _d.amountText ?? ''),
               const SizedBox(width: 10),
-              pill(
-                l.depositYourLimit,
-                limit == null ? '-' : PriceFormatter.write(limit, 'USD'),
-              ),
+              pill(l.depositYourLimit, _d.limitText),
             ],
           ),
         ],

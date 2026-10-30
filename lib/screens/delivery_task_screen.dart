@@ -968,7 +968,7 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
             Text(
               l.depositRequiredBody(
                 dep.amountText ?? '',
-                PriceFormatter.write(dep.limitUsd ?? 100, 'USD'),
+                dep.limitText,
                 dep.amountText ?? '',
               ),
               style: GoogleFonts.dmSans(

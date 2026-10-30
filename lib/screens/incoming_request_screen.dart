@@ -638,7 +638,7 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  l.overCarryLimit(widget.money.format(limit.limitUsd)),
+                  l.overCarryLimit(limit.limitText),
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
                     height: 1.4,

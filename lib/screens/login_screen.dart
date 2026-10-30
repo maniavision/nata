@@ -135,10 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       // Logging in never creates an account: the number must already exist.
-      await auth.sendOtp(
-        e164,
-        createUser: false,
-      );
+      await auth.sendOtp(e164, createUser: false);
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(

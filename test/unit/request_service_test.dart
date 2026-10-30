@@ -464,6 +464,49 @@ void main() {
       expect(l.isTop, isFalse);
     });
 
+    test('is in the traveler\'s own currency when the server says', () {
+      final l = CarryLimit.fromJson({
+        'level': 1,
+        'limit_usd': 99.5,
+        'next_limit_usd': 298.5,
+        'deliveries_needed': 3,
+        'currency': 'XAF',
+        'limit_amount': 60000,
+        'next_limit_amount': 180000,
+        'tiers': [60000, 180000, 600000],
+      });
+
+      expect(l.limitText, 'XAF 60,000');
+      expect(l.nextLimitText, 'XAF 180,000');
+      expect(l.tierText(3), 'XAF 600,000');
+    });
+
+    test('pounds and euros keep their symbol', () {
+      final gb = CarryLimit.fromJson({
+        'level': 2,
+        'limit_usd': 760,
+        'currency': 'GBP',
+        'limit_amount': 600,
+        'tiers': [200, 600, 2000],
+      });
+      expect(gb.limitText, '£600');
+      expect(gb.tierText(1), '£200');
+      final eu = CarryLimit.fromJson({
+        'level': 1,
+        'limit_usd': 215,
+        'currency': 'EUR',
+        'limit_amount': 200,
+        'tiers': [200, 600, 2000],
+      });
+      expect(eu.limitText, '€200');
+    });
+
+    test('an older server: the dollar amounts', () {
+      final l = CarryLimit.fromJson({'level': 2, 'limit_usd': 300});
+      expect(l.limitText, r'$300');
+      expect(l.tierText(3), r'$1,000');
+    });
+
     test('the highest level has no next one', () {
       final l = CarryLimit.fromJson({'level': 3, 'limit_usd': 1000});
 

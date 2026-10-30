@@ -2077,6 +2077,16 @@ class CarryLimit {
   final int deliveriesNeeded;
   final double? ratingNeeded;
 
+  /// The limit in the traveler's own currency, from where they live
+  /// (20240197): \$200, £200, €200, XAF 60,000, or \$100 elsewhere. Null
+  /// from older servers: the dollar amounts are shown then.
+  final String currency;
+  final double? limitAmount;
+  final double? nextLimitAmount;
+
+  /// The three levels' limits, in [currency].
+  final List<double> tiers;
+
   const CarryLimit({
     required this.level,
     required this.limitUsd,
@@ -2085,6 +2095,10 @@ class CarryLimit {
     this.nextLimitUsd,
     this.deliveriesNeeded = 0,
     this.ratingNeeded,
+    this.currency = 'USD',
+    this.limitAmount,
+    this.nextLimitAmount,
+    this.tiers = levels,
   });
 
   /// A new traveler's.
@@ -2100,6 +2114,21 @@ class CarryLimit {
 
   bool get isTop => nextLimitUsd == null;
 
+  /// "\$200", "£200" or "XAF 60,000".
+  String get limitText =>
+      PriceFormatter.write(limitAmount ?? limitUsd, currency);
+
+  String? get nextLimitText {
+    final next = nextLimitAmount ?? nextLimitUsd;
+    return next == null ? null : PriceFormatter.write(next, currency);
+  }
+
+  /// Level [level] (1 to 3)'s limit, written in [currency].
+  String tierText(int level) => PriceFormatter.write(
+    tiers[(level - 1).clamp(0, tiers.length - 1)],
+    currency,
+  );
+
   factory CarryLimit.fromJson(Map<String, dynamic> j) => CarryLimit(
     level: (j['level'] as num?)?.toInt() ?? 1,
     limitUsd: (j['limit_usd'] as num?)?.toDouble() ?? 100,
@@ -2108,6 +2137,15 @@ class CarryLimit {
     nextLimitUsd: (j['next_limit_usd'] as num?)?.toDouble(),
     deliveriesNeeded: (j['deliveries_needed'] as num?)?.toInt() ?? 0,
     ratingNeeded: (j['rating_needed'] as num?)?.toDouble(),
+    currency: (j['currency'] as String?)?.trim() ?? 'USD',
+    limitAmount: (j['limit_amount'] as num?)?.toDouble(),
+    nextLimitAmount: (j['next_limit_amount'] as num?)?.toDouble(),
+    tiers: switch (j['tiers']) {
+      final List t when t.length == 3 => [
+        for (final v in t) (v as num).toDouble(),
+      ],
+      _ => levels,
+    },
   );
 }
 
@@ -2124,8 +2162,11 @@ class RequestDeposit {
   final double? amount;
   final String? currency;
 
-  /// The traveler's limit, in US dollars.
+  /// The traveler's limit, in US dollars, and in their own currency
+  /// (20240197).
   final double? limitUsd;
+  final double? limitAmount;
+  final String? limitCurrency;
 
   final DepositStatus status;
 
@@ -2141,6 +2182,8 @@ class RequestDeposit {
     this.amount,
     this.currency,
     this.limitUsd,
+    this.limitAmount,
+    this.limitCurrency,
     this.status = DepositStatus.none,
     this.paidAmount,
     this.paidCurrency,
@@ -2157,6 +2200,11 @@ class RequestDeposit {
       ? null
       : PriceFormatter.write(amount!, currency!);
 
+  /// "£200" (or the dollars, from an older server).
+  String get limitText => limitAmount != null && limitCurrency != null
+      ? PriceFormatter.write(limitAmount!, limitCurrency!)
+      : PriceFormatter.write(limitUsd ?? 100, 'USD');
+
   String? get paidText => paidAmount == null || paidCurrency == null
       ? amountText
       : PriceFormatter.write(paidAmount!, paidCurrency!);
@@ -2166,6 +2214,8 @@ class RequestDeposit {
     amount: (j['amount'] as num?)?.toDouble(),
     currency: (j['currency'] as String?)?.trim(),
     limitUsd: (j['limit_usd'] as num?)?.toDouble(),
+    limitAmount: (j['limit_amount'] as num?)?.toDouble(),
+    limitCurrency: (j['limit_currency'] as String?)?.trim(),
     status: switch (j['status']) {
       'pending' => DepositStatus.pending,
       'held' => DepositStatus.held,

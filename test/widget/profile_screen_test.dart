@@ -288,6 +288,31 @@ void main() {
       );
     });
 
+    testWidgets('limits in the traveler\'s own currency', (tester) async {
+      await pump(
+        tester,
+        const CarryLimit(
+          level: 1,
+          limitUsd: 99.5,
+          nextLimitUsd: 298.5,
+          deliveriesNeeded: 3,
+          currency: 'XAF',
+          limitAmount: 60000,
+          nextLimitAmount: 180000,
+          tiers: [60000, 180000, 600000],
+        ),
+      );
+
+      expect(find.text('XAF 60,000'), findsOneWidget);
+      expect(
+        find.textContaining('3 deliveries to unlock XAF 180,000'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('profile-carry-limit')));
+      await tester.pumpAndSettle();
+      expect(find.text('XAF 600,000'), findsOneWidget);
+    });
+
     testWidgets('the highest level', (tester) async {
       await pump(tester, const CarryLimit(level: 3, limitUsd: 1000));
 
