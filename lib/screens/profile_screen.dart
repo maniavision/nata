@@ -276,12 +276,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String get _carryLimitSubtitle {
     final l = context.l10n;
     final limit = _carryLimit;
-    final next = limit.nextLimitUsd;
+    final next = limit.nextLimitText;
     final progress = next == null
         ? l.carryLimitTop
         : limit.deliveriesNeeded > 0
-        ? l.carryLimitNextDeliveries(limit.deliveriesNeeded, _money(next))
-        : l.carryLimitNextRating(_money(next));
+        ? l.carryLimitNextDeliveries(limit.deliveriesNeeded, next)
+        : l.carryLimitNextRating(next);
     return '${l.carryLimitLevel(limit.level)} · $progress';
   }
 
@@ -290,7 +290,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _CarryLimitSheet(limit: _carryLimit, money: _money),
+      builder: (context) => _CarryLimitSheet(limit: _carryLimit),
     );
   }
 
@@ -1101,7 +1101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         iconColor: AppColors.primary,
         title: context.l10n.carryLimitRow,
         subtitle: _carryLimitSubtitle,
-        trailing: _money(_carryLimit.limitUsd),
+        trailing: _carryLimit.limitText,
         onTap: _showCarryLimit,
       ),
       _SettingsItem(
@@ -1377,9 +1377,8 @@ class _SettingsItem {
 /// The three levels, the member's highlighted.
 class _CarryLimitSheet extends StatelessWidget {
   final CarryLimit limit;
-  final String Function(double usd) money;
 
-  const _CarryLimitSheet({required this.limit, required this.money});
+  const _CarryLimitSheet({required this.limit});
 
   @override
   Widget build(BuildContext context) {
@@ -1422,15 +1421,15 @@ class _CarryLimitSheet extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            l.carryLimitSheetCurrent(limit.level, money(limit.limitUsd)),
+            l.carryLimitSheetCurrent(limit.level, limit.limitText),
             style: GoogleFonts.dmSans(
               fontSize: 14,
               color: AppColors.mutedForeground,
             ),
           ),
           const SizedBox(height: 16),
-          for (var i = 0; i < CarryLimit.levels.length; i++) ...[
-            _levelRow(context, i + 1, names[i], CarryLimit.levels[i]),
+          for (var i = 0; i < names.length; i++) ...[
+            _levelRow(context, i + 1, names[i], limit.tierText(i + 1)),
             const SizedBox(height: 8),
           ],
           const SizedBox(height: 8),
@@ -1447,7 +1446,12 @@ class _CarryLimitSheet extends StatelessWidget {
     );
   }
 
-  Widget _levelRow(BuildContext context, int level, String name, double usd) {
+  Widget _levelRow(
+    BuildContext context,
+    int level,
+    String name,
+    String amount,
+  ) {
     final current = level == limit.level;
     return Container(
       key: ValueKey('carry-limit-level-$level'),
@@ -1504,7 +1508,7 @@ class _CarryLimitSheet extends StatelessWidget {
             const SizedBox(width: 10),
           ],
           Text(
-            money(usd),
+            amount,
             style: GoogleFonts.dmSans(
               fontWeight: FontWeight.w700,
               fontSize: 16,

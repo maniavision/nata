@@ -245,6 +245,23 @@ void main() {
       );
     });
 
+    testWidgets('the note gives the limit in the traveler\'s currency', (
+      tester,
+    ) async {
+      service.carryLimit = const CarryLimit(
+        level: 1,
+        limitUsd: 255,
+        currency: 'GBP',
+        limitAmount: 200,
+      );
+      await pump(tester, valued(450));
+
+      expect(
+        find.textContaining('Above your £200 carrying limit'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('a higher level lifts the limit', (tester) async {
       service.carryLimit = const CarryLimit(level: 2, limitUsd: 300);
       await pump(tester, valued(250));
