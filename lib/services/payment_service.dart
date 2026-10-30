@@ -281,6 +281,9 @@ enum PayoutAccountFailure {
 
   /// Already [maxPayoutAccounts] payout accounts.
   limitReached,
+
+  /// Flutterwave doesn't recognise the Nigerian bank account.
+  accountNotFound,
   unavailable,
   other,
 }
@@ -494,6 +497,7 @@ class PaymentService {
         'not_supported' => PayoutAccountFailure.notSupported,
         'country_mismatch' => PayoutAccountFailure.countryMismatch,
         'limit_reached' => PayoutAccountFailure.limitReached,
+        'account_not_found' => PayoutAccountFailure.accountNotFound,
         'payments_unavailable' => PayoutAccountFailure.unavailable,
         _ => PayoutAccountFailure.other,
       });

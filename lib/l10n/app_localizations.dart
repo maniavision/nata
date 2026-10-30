@@ -9505,6 +9505,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use another wallet'**
   String get useAnotherWallet;
+
+  /// No description provided for @paidSecurelyThroughFlutterwave.
+  ///
+  /// In en, this message translates to:
+  /// **'You live in Nigeria, so you pay by card in naira, on Flutterwave\'s secure page. Your card details never reach Nata.'**
+  String get paidSecurelyThroughFlutterwave;
+
+  /// No description provided for @depositCardFlutterwaveNote.
+  ///
+  /// In en, this message translates to:
+  /// **'In naira, on Flutterwave\'s secure page'**
+  String get depositCardFlutterwaveNote;
+
+  /// No description provided for @errPayoutAccountNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Flutterwave couldn\'t find this account. Check the bank and the 10-digit account number.'**
+  String get errPayoutAccountNotFound;
+
+  /// No description provided for @payoutNigeriaBankNote.
+  ///
+  /// In en, this message translates to:
+  /// **'In Nigeria, payouts go to your bank account through Flutterwave. The account is saved under the name your bank gives.'**
+  String get payoutNigeriaBankNote;
 }
 
 class _AppLocalizationsDelegate

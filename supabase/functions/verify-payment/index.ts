@@ -7,14 +7,16 @@
  * Called by the app (with the sender's JWT) with { tx_ref }. A pending
  * payment is checked with its provider and recorded once it is settled:
  * Stripe for cards and Apple Pay (the tx_ref is the PaymentIntent's id),
- * pawaPay for mobile money (20240165; the tx_ref is the deposit id).
+ * pawaPay for mobile money (20240165; the tx_ref is the deposit id),
+ * Flutterwave for cards of members living in Nigeria (20240198; paid on
+ * Flutterwave's page, the tx_ref is ours).
  *
  * Responds 200 with { status: pending | successful | failed }: successful
  * once the money is held in escrow (or already released).
  * Errors: 401 unauthorized, 404 not_found, 503 payments_unavailable.
  */
 
-// ── Stripe, pawaPay and Supabase helpers (the same in each payment function, so
+// ── Stripe, pawaPay, Flutterwave and Supabase helpers (the same in each payment function, so
 // each can be deployed on its own, also from the dashboard) ──────────────
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -187,6 +189,73 @@ async function recordDeposit(depositId: string): Promise<string> {
   return "pending";
 }
 
+function flutterwaveKey(): string | null {
+  const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
+  return key ? key : null;
+}
+
+/** Calls Flutterwave; [ok] when it answered with success. */
+async function flutterwave(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<{ ok: boolean; status: number; body: Record<string, unknown> }> {
+  let res: Response;
+  try {
+    res = await fetch(`https://api.flutterwave.com/v3${path}`, {
+      method: init.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${flutterwaveKey()}`,
+        "Content-Type": "application/json",
+      },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+  } catch (_) {
+    return { ok: false, status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { ok: res.ok && body.status === "success", status: res.status, body };
+}
+
+/**
+ * Looks a Flutterwave payment up by our reference and records it:
+ * 'successful' (held in escrow), 'failed', or 'pending' (not paid yet, or
+ * still in progress).
+ */
+async function recordFlutterwave(txRef: string): Promise<string> {
+  const res = await flutterwave(
+    `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(txRef)}`,
+  );
+  const d = res.body.data as Record<string, unknown> | undefined;
+  if (!res.ok || !d || d.tx_ref !== txRef || d.id == null) return "pending";
+  const db = admin.schema("nata");
+  const status = String(d.status ?? "");
+  if (status === "successful") {
+    const { data, error } = await db.rpc("complete_payment", {
+      p_tx_ref: txRef,
+      p_transaction_id: String(d.id),
+      p_amount: Number(d.amount ?? 0),
+      p_currency: String(d.currency ?? ""),
+      p_payment_type: String(d.payment_type ?? "card"),
+    });
+    if (error) throw error;
+    return data === "mismatch" || data === "not_found" ? "failed" : "successful";
+  }
+  if (status === "failed" || status === "cancelled") {
+    const { error } = await db.rpc("fail_payment", {
+      p_tx_ref: txRef,
+      p_transaction_id: String(d.id),
+    });
+    if (error) throw error;
+    return "failed";
+  }
+  return "pending";
+}
+
 /** The signed-in user calling the function, from their JWT. */
 async function caller(req: Request) {
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
@@ -256,7 +325,15 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // A provider Nata no longer uses (Flutterwave): the sender pays another
-  // way.
+  if (payment.provider === "flutterwave") {
+    if (!flutterwaveKey()) return json({ error: "payments_unavailable" }, 503);
+    try {
+      return json({ status: await recordFlutterwave(txRef) });
+    } catch (e) {
+      console.error("[verify-payment] flutterwave", e);
+      return json({ status: "pending" });
+    }
+  }
+
   return json({ status: "failed" });
 });

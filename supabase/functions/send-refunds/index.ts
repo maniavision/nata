@@ -1,8 +1,7 @@
 /**
  * send-refunds — gives senders their money back: Stripe refunds for cards
- * and Apple Pay, pawaPay refunds for mobile money. A payment made through a
- * provider Nata no longer uses (Flutterwave) is marked failed, for support
- * to refund by hand.
+ * and Apple Pay, pawaPay refunds for mobile money, Flutterwave refunds for
+ * the cards of members living in Nigeria (20240198).
  *
  * Called by the app (with the sender's JWT) right after a paid request is
  * cancelled, which sends that sender's pending refunds; or with the service
@@ -21,10 +20,13 @@
  * already has a refund, so one Stripe took without answering is never sent
  * twice.
  *
+ * A Flutterwave refund is marked sent once Flutterwave takes it; one it
+ * says was already refunded counts as sent.
+ *
  * Responds 200 with { sent, failed, started }. Errors: 401 unauthorized,
  * 503 payments_unavailable.
  */
-// ── Stripe, pawaPay and Supabase helpers (the same in each payment function, so
+// ── Stripe, pawaPay, Flutterwave and Supabase helpers (the same in each payment function, so
 // each can be deployed on its own, also from the dashboard) ──────────────
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -170,7 +172,78 @@ async function caller(req: Request) {
   return user ?? null;
 }
 
+function flutterwaveKey(): string | null {
+  const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
+  return key ? key : null;
+}
+
+/** Calls Flutterwave; [ok] when it answered with success. */
+async function flutterwave(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<{ ok: boolean; status: number; body: Record<string, unknown> }> {
+  let res: Response;
+  try {
+    res = await fetch(`https://api.flutterwave.com/v3${path}`, {
+      method: init.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${flutterwaveKey()}`,
+        "Content-Type": "application/json",
+      },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+  } catch (_) {
+    return { ok: false, status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { ok: res.ok && body.status === "success", status: res.status, body };
+}
+
 // ── This function ──────────────────────────────────────────────────────────
+
+/**
+ * Refunds [r.amount] of the Flutterwave transaction [r.transaction_id], and
+ * records it sent or failed.
+ */
+async function refundWithFlutterwave(r: {
+  payment_id: string;
+  transaction_id: string;
+  amount: number;
+}): Promise<"sent" | "failed"> {
+  const db = admin.schema("nata");
+  const fail = async (reason: string, retry: boolean) => {
+    await db.rpc("refund_failed", {
+      p_payment_id: r.payment_id,
+      p_reason: reason,
+      p_retry: retry,
+    });
+    return "failed" as const;
+  };
+  if (!flutterwaveKey()) return fail("Flutterwave isn't set up", true);
+  const res = await flutterwave(
+    `/transactions/${encodeURIComponent(r.transaction_id)}/refund`,
+    { method: "POST", body: { amount: Number(r.amount) } },
+  );
+  const message = String(res.body.message ?? "");
+  if (res.ok || /already been refunded|fully refunded/i.test(message)) {
+    const id = (res.body.data as { id?: unknown } | undefined)?.id;
+    await db.rpc("refund_sent", {
+      p_payment_id: r.payment_id,
+      p_provider_id: id == null ? null : String(id),
+    });
+    return "sent";
+  }
+  // Not answered: it may not have reached Flutterwave, so try again later.
+  return fail(
+    `Flutterwave: ${message || `HTTP ${res.status}`}`,
+    res.status === 0 || res.status >= 500,
+  );
+}
 
 /**
  * Refunds [r.amount] of the PaymentIntent [r.transaction_id] through Stripe,
@@ -236,7 +309,7 @@ async function refundWithStripe(r: {
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!pawapayToken() && !stripeKey()) {
+  if (!pawapayToken() && !stripeKey() && !flutterwaveKey()) {
     return json({ error: "payments_unavailable" }, 503);
   }
 
@@ -333,10 +406,15 @@ Deno.serve(async (req: Request) => {
       }
       continue;
     }
-    // Flutterwave is no longer used: support refunds these by hand.
+    if (providerOf.get(r.payment_id) === "flutterwave") {
+      const outcome = await refundWithFlutterwave(r);
+      if (outcome === "sent") sent++;
+      else failed++;
+      continue;
+    }
     await db.rpc("refund_failed", {
       p_payment_id: r.payment_id,
-      p_reason: "Paid through Flutterwave, no longer used: refund by hand",
+      p_reason: "Paid through a provider Nata no longer uses: refund by hand",
       p_retry: false,
     });
     failed++;

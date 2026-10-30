@@ -16,12 +16,20 @@
  *
  * The method must fit where the sender and the traveler live
  * (nata.checkout_kind, 20240173): mobile money only when both live in a
- * country where pawaPay takes it, card or Apple Pay otherwise.
+ * country where pawaPay takes it, card or Apple Pay otherwise. A payer
+ * living in Nigeria pays by card through Flutterwave instead
+ * (nata.payer_checkout_kind, 20240198).
  *
  * Cards and Apple Pay are a Stripe PaymentIntent, paid in the app's own
  * Stripe payment sheet (no page to leave for): the payment's tx_ref is the
  * PaymentIntent's id, and verify-payment and stripe-webhook settle it. It is
  * charged in the price's own currency.
+ *
+ * Flutterwave cards (20240198) are paid on Flutterwave's payment page, in
+ * naira at today's rate (nata.naira_amount); the payment's tx_ref is ours
+ * (nata-<uuid>), and verify-payment and flutterwave-webhook settle it.
+ * Flutterwave needs an email: the account's, or one made from the member's
+ * id for an account made with a phone number.
  *
  * Mobile money is a pawaPay deposit (20240165): the wallet's [phone]
  * (international, +<code><number>) on its [network] (pawaPay's provider code,
@@ -36,7 +44,8 @@
  * mobile money (nata.deposit_charge), with the same method rule. It is held
  * until delivery and never changes the request's status.
  *
- * Responds 200 with { tx_ref, client_secret, publishable_key,
+ * Responds 200 with { link, tx_ref } (Flutterwave's page), or
+ * { tx_ref, client_secret, publishable_key,
  * merchant_country, apple_merchant_id, customer_id, ephemeral_key } (Stripe's
  * sheet, with the member's saved cards: 20240196_stripe_customers.sql), or
  * { tx_ref, direct: true } (mobile money, waiting for the payer's approval).
@@ -48,7 +57,7 @@
  * provider) / network_unavailable (the network is down), 502 provider_error.
  */
 
-// ── Stripe, pawaPay and Supabase helpers (the same in each payment function, so
+// ── Stripe, pawaPay, Flutterwave and Supabase helpers (the same in each payment function, so
 // each can be deployed on its own, also from the dashboard) ──────────────
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -153,6 +162,38 @@ async function pawapay(
     // Not JSON: keep the empty body.
   }
   return { status: res.status, body };
+}
+
+function flutterwaveKey(): string | null {
+  const key = Deno.env.get("FLW_SECRET_KEY")?.trim();
+  return key ? key : null;
+}
+
+/** Calls Flutterwave; [ok] when it answered with success. */
+async function flutterwave(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<{ ok: boolean; status: number; body: Record<string, unknown> }> {
+  let res: Response;
+  try {
+    res = await fetch(`https://api.flutterwave.com/v3${path}`, {
+      method: init.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${flutterwaveKey()}`,
+        "Content-Type": "application/json",
+      },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+  } catch (_) {
+    return { ok: false, status: 0, body: {} };
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch (_) {
+    // Not JSON: keep the empty body.
+  }
+  return { ok: res.ok && body.status === "success", status: res.status, body };
 }
 
 /** The signed-in user calling the function, from their JWT. */
@@ -269,10 +310,6 @@ Deno.serve(async (req: Request) => {
   if (mobile && !/^[A-Z]{2}$/.test(country)) {
     return json({ error: "bad_request" }, 400);
   }
-  if (mobile ? !pawapayToken() : !stripeKey()) {
-    return json({ error: "payments_unavailable" }, 503);
-  }
-
   const db = admin.schema("nata");
   const { data: request } = await db
     .from("delivery_requests")
@@ -321,16 +358,22 @@ Deno.serve(async (req: Request) => {
   }
 
   // Mobile money between two members living where pawaPay takes it; card or
-  // Apple Pay otherwise.
-  const { data: kind, error: kindError } = await db.rpc("checkout_kind", {
+  // Apple Pay otherwise; a card through Flutterwave for a payer living in
+  // Nigeria.
+  const { data: kind, error: kindError } = await db.rpc("payer_checkout_kind", {
     p_request_id: requestId,
+    p_payer: user.id,
   });
   if (kindError) {
     console.error("[create-payment] checkout kind", kindError);
     return json({ error: "provider_error" }, 502);
   }
-  if ((kind === "mobile_money") !== mobile) {
+  const viaFlutterwave = kind === "flutterwave";
+  if (viaFlutterwave ? method !== "card" : (kind === "mobile_money") !== mobile) {
     return json({ error: "method_not_offered" }, 409);
+  }
+  if (viaFlutterwave ? !flutterwaveKey() : mobile ? !pawapayToken() : !stripeKey()) {
+    return json({ error: "payments_unavailable" }, 503);
   }
 
   // Mobile money: the network must be one of the country's, and the number
@@ -385,9 +428,83 @@ Deno.serve(async (req: Request) => {
     amount = Number(c.amount);
     currency = String(c.currency).trim().toUpperCase();
   }
+  if (viaFlutterwave) {
+    // In naira, at today's rate.
+    const { data: naira, error } = await db.rpc("naira_amount", {
+      p_amount: baseAmount,
+      p_currency: baseCurrency,
+    });
+    if (error || naira == null) {
+      console.error("[create-payment] naira", error);
+      return json({ error: "rate_unavailable" }, 409);
+    }
+    amount = Number(naira);
+    currency = "NGN";
+  }
   // The fee, in the currency charged (a deposit has none).
   const fee = deposit ? 0 : Number(request.display_fee ?? 0) * (amount / baseAmount);
   const purpose = deposit ? "deposit" : "delivery";
+
+  // A card through Flutterwave: its payment page, in naira.
+  if (viaFlutterwave) {
+    const txRef = `nata-${crypto.randomUUID()}`;
+    const { error: flwInsert } = await db.from("payments").insert({
+      request_id: requestId,
+      sender_id: user.id,
+      provider: "flutterwave",
+      tx_ref: txRef,
+      amount,
+      service_fee: Math.round(fee * 100) / 100,
+      currency,
+      base_amount: baseAmount,
+      base_currency: baseCurrency,
+      country_code: "NG",
+      method,
+      purpose,
+      status: "pending",
+    });
+    if (flwInsert) {
+      console.error("[create-payment] insert", flwInsert);
+      return json({ error: "provider_error" }, 502);
+    }
+    const { data: profile } = await db
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    const name = [profile?.first_name, profile?.last_name]
+      .filter((p) => p && String(p).trim())
+      .join(" ");
+    const res = await flutterwave("/payments", {
+      method: "POST",
+      body: {
+        tx_ref: txRef,
+        amount,
+        currency,
+        payment_options: "card",
+        redirect_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-return`,
+        customer: {
+          email: user.email || `member-${user.id}@nata-app-a03de.web.app`,
+          name: name || undefined,
+          phonenumber: user.phone || undefined,
+        },
+        customizations: {
+          title: "Nata",
+          description: deposit
+            ? "Nata deposit, refunded after delivery"
+            : "Nata delivery, held in escrow until delivery",
+        },
+        meta: { request_id: requestId, purpose },
+      },
+    });
+    const link = (res.body.data as { link?: string } | undefined)?.link;
+    if (!res.ok || !link) {
+      console.error("[create-payment] flutterwave", res.status, res.body.message);
+      await db.rpc("fail_payment", { p_tx_ref: txRef, p_transaction_id: null });
+      return json({ error: "provider_error" }, 502);
+    }
+    return json({ link, tx_ref: txRef });
+  }
 
   // Cards and Apple Pay: the PaymentIntent first, so the payment's tx_ref
   // can be its id.

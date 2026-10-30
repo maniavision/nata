@@ -15,6 +15,8 @@ void main() {
   late FakeRequestService service;
   bool? popped;
   var sheets = 0;
+  final pages = <Uri>[];
+  var closed = 0;
   CardSheetResult sheetResult = CardSheetResult.paid;
 
   const card = RequestDeposit(
@@ -31,10 +33,20 @@ void main() {
     kind: CheckoutKind.mobileMoney,
   );
 
+  const naira = RequestDeposit(
+    required: true,
+    amount: 450,
+    currency: 'USD',
+    limitUsd: 100,
+    kind: CheckoutKind.flutterwave,
+  );
+
   setUp(() {
     service = FakeRequestService();
     popped = null;
     sheets = 0;
+    pages.clear();
+    closed = 0;
     sheetResult = CardSheetResult.paid;
   });
 
@@ -64,6 +76,11 @@ void main() {
                         sheets++;
                         return sheetResult;
                       },
+                      openPaymentPage: (link) async {
+                        pages.add(link);
+                        return true;
+                      },
+                      closePaymentPage: () async => closed++,
                     ),
                   ),
                 );
@@ -175,6 +192,33 @@ void main() {
     expect(find.byKey(const ValueKey('deposit-approve')), findsOneWidget);
 
     await tester.pumpAndSettle();
+    expect(popped, isTrue);
+  });
+
+  testWidgets('living in Nigeria: Flutterwave\'s page, closed once held', (
+    tester,
+  ) async {
+    service.paymentStatuses = [PaymentStatus.pending, PaymentStatus.successful];
+    await pump(tester, naira);
+
+    expect(
+      find.text('In naira, on Flutterwave\'s secure page'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('deposit-agree')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('deposit-pay')));
+    await tester.pump();
+
+    final started = service.paymentsStarted.single;
+    expect(started.deposit, isTrue);
+    expect(started.method, PayMethod.card);
+    expect(pages, [service.nextPayment.link]);
+    expect(sheets, 0);
+    expect(find.byKey(const ValueKey('deposit-on-page')), findsOneWidget);
+
+    await tester.pumpAndSettle();
+    expect(closed, 1);
     expect(popped, isTrue);
   });
 

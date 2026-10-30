@@ -416,6 +416,13 @@ void main() {
       expect(d.blocksPickup, isFalse);
     });
 
+    test('the way to pay: mobile money, card, or Flutterwave', () {
+      expect(CheckoutKind.fromServer('mobile_money'), CheckoutKind.mobileMoney);
+      expect(CheckoutKind.fromServer('flutterwave'), CheckoutKind.flutterwave);
+      expect(CheckoutKind.fromServer('card'), CheckoutKind.card);
+      expect(CheckoutKind.fromServer(null), CheckoutKind.card);
+    });
+
     test('a deposit due and not held blocks pickup', () {
       for (final status in ['none', 'pending', 'refunding', 'refunded']) {
         final d = RequestDeposit.fromJson({

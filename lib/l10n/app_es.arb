@@ -2211,5 +2211,9 @@
   "stripeCardFormNote": "Introducirás la tarjeta en el formulario seguro de Stripe. Se guarda en Stripe para tus próximos pagos.",
   "errCardSave": "No se pudo guardar la tarjeta. Inténtalo de nuevo.",
   "savedCardCheckoutNote": "Puedes elegir otra tarjeta o añadir una en la hoja de pago segura.",
-  "useAnotherWallet": "Usar otra billetera"
+  "useAnotherWallet": "Usar otra billetera",
+  "paidSecurelyThroughFlutterwave": "Vives en Nigeria, así que pagas con tarjeta en nairas, en la página segura de Flutterwave. Los datos de tu tarjeta nunca llegan a Nata.",
+  "depositCardFlutterwaveNote": "En nairas, en la página segura de Flutterwave",
+  "errPayoutAccountNotFound": "Flutterwave no encuentra esta cuenta. Revisa el banco y el número de cuenta de 10 dígitos.",
+  "payoutNigeriaBankNote": "En Nigeria, tus pagos llegan a tu cuenta bancaria a través de Flutterwave. La cuenta se guarda con el nombre que da tu banco."
 }

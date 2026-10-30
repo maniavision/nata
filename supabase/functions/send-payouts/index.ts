@@ -1,8 +1,11 @@
 /**
  * send-payouts — pays travelers: pawaPay payouts to their mobile money
- * (20240169; Flutterwave is no longer used), and Stripe transfers to the
- * Stripe account of travelers paid to a bank (20240170), which Stripe then
- * pays out to their bank.
+ * (20240169), Stripe transfers to the Stripe account of travelers paid to
+ * a bank (20240170), which Stripe then pays out to their bank, and
+ * Flutterwave transfers to the bank of travelers living in Nigeria
+ * (20240198). Flutterwave only takes transfers from whitelisted addresses,
+ * so the database sends those itself (nata.flutterwave_transfer) and
+ * flutterwave-webhook records the result.
  *
  * Called by the app (with the traveler's JWT) right after a delivery is
  * confirmed, after adding a payout account, and from Withdraw
@@ -11,9 +14,9 @@
  * PAYMENT_JOBS_SECRET) from the payment-jobs schedule
  * (nata.call_send_payouts), with { traveler } or for everyone's.
  *
- * nata.claim_payouts takes the pending payouts that have a mobile money
- * account to go to (a pawaPay network, or a Stripe account Stripe allows
- * payouts on). A Stripe transfer carries the payout's reference as its
+ * nata.claim_payouts takes the pending payouts that have an account to go
+ * to (a pawaPay network, a Stripe account Stripe allows payouts on, or a
+ * Nigerian bank). A Stripe transfer carries the payout's reference as its
  * transfer_group, and Stripe is asked first whether one was already made,
  * so a payout is never transferred twice; it is paid as soon as Stripe
  * makes it. Each pawaPay attempt has its own pawaPay payoutId (pawaPay never
@@ -22,7 +25,8 @@
  * yet (no payout
  * account, or a bank account: bank payouts aren't sent yet) stay pending.
  * pawaPay reports the result to pawapay-callback; the schedule also looks
- * again at payouts still in progress after a few minutes.
+ * again at payouts still in progress after a few minutes (Flutterwave's
+ * through nata.check_flutterwave_transfer).
  *
  * Responds 200 with { sent, failed } (sent: taken by pawaPay). Errors:
  * 401 unauthorized, 503 payments_unavailable.
@@ -280,8 +284,19 @@ Deno.serve(async (req: Request) => {
     currency: string;
     account_bank: string;
     account_number: string;
+    provider: string;
   }[]) {
-    if (p.account_bank === "STRIPE") {
+    if (p.provider === "flutterwave") {
+      const { data: outcome, error: flwError } = await db.rpc(
+        "flutterwave_transfer",
+        { p_reference: p.reference },
+      );
+      if (flwError) console.error("[send-payouts] flutterwave", flwError);
+      if (outcome === "sent") sent++;
+      else failed++;
+      continue;
+    }
+    if (p.provider === "stripe" || p.account_bank === "STRIPE") {
       if (await transferWithStripe(p)) sent++;
       else failed++;
       continue;
@@ -341,7 +356,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // Payouts still in progress after a few minutes (a callback that never
-  // came): ask pawaPay. Only the schedule does this.
+  // came): ask pawaPay or Flutterwave. Only the schedule does this.
   if (job) {
     const { data: waiting } = await db.from("payouts")
       .select("reference, provider_payout_id")
@@ -350,6 +365,14 @@ Deno.serve(async (req: Request) => {
       .lt("updated_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
       .limit(50);
     for (const w of (waiting ?? []) as { reference: string; provider_payout_id: string }[]) {
+      if (/^[0-9]+$/.test(w.provider_payout_id)) {
+        // A Flutterwave transfer: the database asks, from its own address.
+        const { error: checkError } = await db.rpc("check_flutterwave_transfer", {
+          p_reference: w.reference,
+        });
+        if (checkError) console.error("[send-payouts] flutterwave check", checkError);
+        continue;
+      }
       if (!UUID.test(w.provider_payout_id)) continue; // not a pawaPay payout
       try {
         const status = await recordPayout(w.reference, w.provider_payout_id);
