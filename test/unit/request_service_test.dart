@@ -394,6 +394,55 @@ void main() {
     });
   });
 
+  group('RequestDeposit', () {
+    test('is read from request_deposit', () {
+      final d = RequestDeposit.fromJson({
+        'required': true,
+        'amount': 450,
+        'currency': 'USD',
+        'limit_usd': 100,
+        'status': 'held',
+        'paid_amount': 271000,
+        'paid_currency': 'XOF',
+        'kind': 'mobile_money',
+      });
+
+      expect(d.required, isTrue);
+      expect(d.amountText, r'$450');
+      expect(d.paidText, 'XOF 271,000');
+      expect(d.status, DepositStatus.held);
+      expect(d.kind, CheckoutKind.mobileMoney);
+      expect(d.blocksPickup, isFalse);
+    });
+
+    test('a deposit due and not held blocks pickup', () {
+      for (final status in ['none', 'pending', 'refunding', 'refunded']) {
+        final d = RequestDeposit.fromJson({
+          'required': true,
+          'amount': 450,
+          'currency': 'USD',
+          'status': status,
+        });
+        expect(d.blocksPickup, isTrue, reason: status);
+      }
+    });
+
+    test('none due never blocks', () {
+      expect(
+        RequestDeposit.fromJson({'required': false}).blocksPickup,
+        isFalse,
+      );
+      expect(RequestDeposit.notDue.blocksPickup, isFalse);
+    });
+
+    test('pickup refused for a deposit is told apart', () {
+      expect(
+        RequestService.reasonFor('nata:deposit_required'),
+        RequestFailure.depositRequired,
+      );
+    });
+  });
+
   group('CarryLimit', () {
     test('is read from the database', () {
       final l = CarryLimit.fromJson({

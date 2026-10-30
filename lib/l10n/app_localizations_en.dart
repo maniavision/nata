@@ -5275,7 +5275,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String overCarryLimit(String limit) {
-    return 'Above your $limit carrying limit.';
+    return 'Above your $limit carrying limit: you\'ll pay a refundable deposit before pickup.';
   }
 
   @override
@@ -5328,4 +5328,135 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carryLimitSheetNote =>
       'The most an item can be worth for you to carry it. You can still carry items above your limit with a refundable deposit.';
+
+  @override
+  String get depositRequiredTitle => 'Deposit required before pickup';
+
+  @override
+  String depositRequiredBody(String value, String limit, String amount) {
+    return 'These items are declared at $value, above your $limit carrying limit. Pay a refundable deposit of $amount to pick them up.';
+  }
+
+  @override
+  String get depositRefundNote =>
+      'Refunded in full once the recipient\'s code confirms delivery';
+
+  @override
+  String get payDeposit => 'Pay deposit';
+
+  @override
+  String get depositUnlockPickup => 'Pay the deposit to unlock pickup';
+
+  @override
+  String depositHeld(String amount) {
+    return 'Deposit held: $amount · refunded after delivery';
+  }
+
+  @override
+  String depositPending(String amount) {
+    return 'Your deposit of $amount is being confirmed';
+  }
+
+  @override
+  String depositRefunding(String amount) {
+    return 'Your deposit of $amount is being refunded';
+  }
+
+  @override
+  String get depositTitle => 'Deposit';
+
+  @override
+  String get depositToPay => 'DEPOSIT TO PAY';
+
+  @override
+  String depositViaMobile(String amount) {
+    return '$amount via mobile money';
+  }
+
+  @override
+  String get depositDeclaredValue => 'DECLARED VALUE';
+
+  @override
+  String get depositYourLimit => 'YOUR CARRYING LIMIT';
+
+  @override
+  String get depositHowItWorks => 'HOW IT WORKS';
+
+  @override
+  String get depositStepHeld => 'Paid now, held by Nata';
+
+  @override
+  String get depositStepRefund =>
+      'Refunded in full when the recipient\'s code confirms delivery, or if the request is cancelled';
+
+  @override
+  String get depositStepKept =>
+      'If the item is kept, the deposit goes to the sender';
+
+  @override
+  String get depositStepKeptBody =>
+      'Keeping someone\'s item is theft: Nata shares your verified identity with the police and the sender.';
+
+  @override
+  String get depositPaymentMethod => 'PAYMENT METHOD';
+
+  @override
+  String get depositCard => 'Credit or debit card';
+
+  @override
+  String get depositCardNote => 'Paid in Stripe\'s secure payment sheet';
+
+  @override
+  String get depositAgree =>
+      'I agree: Nata connects senders and travelers and isn\'t the carrier. I\'ll deliver these items as described.';
+
+  @override
+  String payDepositAmount(String amount) {
+    return 'Pay deposit $amount';
+  }
+
+  @override
+  String get depositReceived =>
+      'Deposit received. You can pick up the items now.';
+
+  @override
+  String get errDepositRequired =>
+      'Pay the deposit before picking up these items.';
+
+  @override
+  String get errDepositLoad => 'Couldn\'t load the deposit. Try again.';
+
+  @override
+  String get walletDeposit => 'Deposit';
+
+  @override
+  String get walletDepositReceived => 'Deposit from traveler';
+
+  @override
+  String get supportPayDeposit => 'Pay deposit to sender';
+
+  @override
+  String supportPayDepositConfirm(String amount) {
+    return 'The traveler\'s deposit of $amount goes to the sender\'s Nata balance instead of back to the traveler. Do this only when the items were kept.';
+  }
+
+  @override
+  String get supportDepositPaid => 'Deposit paid to the sender';
+
+  @override
+  String supportDepositRow(String amount, String status) {
+    return 'Deposit $amount · $status';
+  }
+
+  @override
+  String get depositStatusHeld => 'held';
+
+  @override
+  String get depositStatusRefunding => 'refunding';
+
+  @override
+  String get depositStatusRefunded => 'refunded';
+
+  @override
+  String get depositStatusPaidToSender => 'paid to sender';
 }

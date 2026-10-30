@@ -165,7 +165,7 @@ class _WalletActivityState extends State<WalletActivity> {
   List<WalletEntry> get _shown => [
     for (final e in _entries ?? const <WalletEntry>[])
       if (_filter == _Filter.all ||
-          (_filter == _Filter.payouts) == (e.kind != WalletEntryKind.payment))
+          (_filter == _Filter.payouts) == !e.kind.isOutgoing)
         e,
   ];
 
@@ -317,7 +317,7 @@ class WalletEntryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     // Money in: earnings and refunds to the balance.
-    final payout = entry.kind != WalletEntryKind.payment;
+    final payout = !entry.kind.isOutgoing;
     final item = entry.item?.trim();
     final hasItem = item != null && item.isNotEmpty;
     final title = switch (entry.kind) {
@@ -331,6 +331,12 @@ class WalletEntryRow extends StatelessWidget {
             : l.walletPaidFromBalance,
       WalletEntryKind.payment =>
         hasItem ? l.walletPaymentTitle(item) : l.walletPaymentFallback,
+      WalletEntryKind.deposit =>
+        hasItem ? '${l.walletDeposit} · $item' : l.walletDeposit,
+      WalletEntryKind.depositReceived =>
+        hasItem
+            ? '${l.walletDepositReceived} · $item'
+            : l.walletDepositReceived,
     };
     final route = entry.fromCity != null && entry.toCity != null
         ? '${entry.fromCity} → ${entry.toCity}'

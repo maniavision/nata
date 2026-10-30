@@ -1026,6 +1026,7 @@ class FakeRequestService extends Fake implements RequestService {
       String? country,
       String? phone,
       String? network,
+      bool deposit,
     })
   >
   paymentsStarted = [];
@@ -1045,6 +1046,7 @@ class FakeRequestService extends Fake implements RequestService {
     String? country,
     String? phone,
     String? network,
+    bool deposit = false,
   }) async {
     if (failStartPayment != null) throw failStartPayment!;
     paymentsStarted.add((
@@ -1053,6 +1055,7 @@ class FakeRequestService extends Fake implements RequestService {
       country: country,
       phone: phone,
       network: network,
+      deposit: deposit,
     ));
     return nextPayment;
   }
@@ -1109,6 +1112,27 @@ class FakeRequestService extends Fake implements RequestService {
 
   @override
   Future<List<MobileMoneyOption>> mobileMoneyOptions(String requestId) async {
+    if (failMobileOptions) throw StateError('options failed');
+    return mobileOptions;
+  }
+
+  /// The traveler's deposit (20240195), by request; none due by default.
+  /// [failDeposit] makes loading it fail.
+  Map<String, RequestDeposit> deposits = {};
+  bool failDeposit = false;
+  int depositLoads = 0;
+
+  @override
+  Future<RequestDeposit> requestDeposit(String requestId) async {
+    depositLoads++;
+    if (failDeposit) throw StateError('deposit failed');
+    return deposits[requestId] ?? RequestDeposit.notDue;
+  }
+
+  @override
+  Future<List<MobileMoneyOption>> depositMobileMoneyOptions(
+    String requestId,
+  ) async {
     if (failMobileOptions) throw StateError('options failed');
     return mobileOptions;
   }

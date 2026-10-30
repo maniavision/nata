@@ -632,6 +632,15 @@ enum WalletEntryKind {
 
   /// A refund kept in the Nata balance (20240187).
   refund,
+
+  /// A deposit the traveler paid before pickup (20240195).
+  deposit,
+
+  /// A traveler's deposit paid to the sender, for items kept.
+  depositReceived;
+
+  /// Money paid out of the member's pocket, rather than money in.
+  bool get isOutgoing => this == payment || this == deposit;
 }
 
 /// Where a wallet history row stands, as the app shows it.
@@ -697,10 +706,12 @@ class WalletEntry {
     final kind = switch (j['kind']) {
       'payment' => WalletEntryKind.payment,
       'refund' => WalletEntryKind.refund,
+      'deposit' => WalletEntryKind.deposit,
+      'deposit_received' => WalletEntryKind.depositReceived,
       _ => WalletEntryKind.payout,
     };
     final raw = j['status'] as String?;
-    final status = kind != WalletEntryKind.payment
+    final status = !kind.isOutgoing
         ? switch (raw) {
             'paid' => WalletEntryStatus.paid,
             'processing' => WalletEntryStatus.sending,

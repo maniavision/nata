@@ -237,7 +237,12 @@ void main() {
       await pump(tester, valued(450));
 
       expect(find.byKey(const ValueKey('incoming-over-limit')), findsOneWidget);
-      expect(find.text(r'Above your $100 carrying limit.'), findsOneWidget);
+      expect(
+        find.text(
+          "Above your \$100 carrying limit: you'll pay a refundable deposit before pickup.",
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a higher level lifts the limit', (tester) async {
