@@ -198,6 +198,73 @@ void main() {
     });
   });
 
+  group('declared value', () {
+    IncomingRequest valued(double value, {bool receipt = false}) =>
+        sampleIncoming(
+          items: [
+            RequestItem(
+              name: 'Camera',
+              category: RequestCategory.electronics,
+              description: '',
+              value: value,
+              valueCurrency: 'USD',
+              hasReceipt: receipt,
+            ),
+          ],
+        );
+
+    testWidgets('shows each value and the total', (tester) async {
+      await pump(tester, valued(80));
+
+      expect(find.text(r'Value $80'), findsOneWidget);
+      expect(find.text(r'Declared value $80'), findsOneWidget);
+      expect(find.byKey(const ValueKey('incoming-receipt')), findsNothing);
+    });
+
+    testWidgets('says when a receipt is attached', (tester) async {
+      await pump(tester, valued(80, receipt: true));
+
+      expect(find.byKey(const ValueKey('incoming-receipt')), findsOneWidget);
+    });
+
+    testWidgets('within the traveler\'s limit: no note', (tester) async {
+      await pump(tester, valued(100));
+
+      expect(find.byKey(const ValueKey('incoming-over-limit')), findsNothing);
+    });
+
+    testWidgets('above the traveler\'s limit: a note', (tester) async {
+      await pump(tester, valued(450));
+
+      expect(find.byKey(const ValueKey('incoming-over-limit')), findsOneWidget);
+      expect(find.text(r'Above your $100 carrying limit.'), findsOneWidget);
+    });
+
+    testWidgets('a higher level lifts the limit', (tester) async {
+      service.carryLimit = const CarryLimit(level: 2, limitUsd: 300);
+      await pump(tester, valued(250));
+
+      expect(find.byKey(const ValueKey('incoming-over-limit')), findsNothing);
+    });
+
+    testWidgets('if the limit can\'t be loaded, no note', (tester) async {
+      service.failCarryLimit = true;
+      await pump(tester, valued(450));
+
+      expect(find.byKey(const ValueKey('incoming-over-limit')), findsNothing);
+      expect(find.text(r'Declared value $450'), findsOneWidget);
+    });
+
+    testWidgets('older requests without values show none', (tester) async {
+      await pump(tester, sampleIncoming());
+
+      expect(
+        find.byKey(const ValueKey('incoming-declared-value')),
+        findsNothing,
+      );
+    });
+  });
+
   testWidgets('is translated', (tester) async {
     tester.view.physicalSize = const Size(900, 2400);
     tester.view.devicePixelRatio = 1.0;

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
+import '../services/exchange_rate_service.dart';
 import '../services/request_service.dart';
 import '../services/traveler_service.dart' show TravelerReview, TravelerReviews;
 import '../widgets/avatar_image.dart';
@@ -167,12 +168,17 @@ class IncomingRequestScreen extends StatefulWidget {
   /// Override for tests; defaults to [DateTime.now].
   final DateTime Function()? now;
 
+  /// Override for tests: today's exchange rates, to compare the items'
+  /// value with the traveler's carrying limit.
+  final Future<ExchangeRates?> Function()? loadRates;
+
   const IncomingRequestScreen({
     super.key,
     required this.request,
     this.money = PriceFormatter.usd,
     this.service,
     this.now,
+    this.loadRates,
   });
 
   @override
@@ -192,11 +198,42 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
   TravelerReviews? _senderReviews;
   bool _senderReviewsLoading = true;
 
+  /// The traveler's carrying limit and today's rates (20240194); null while
+  /// loading or if they couldn't be loaded.
+  CarryLimit? _limit;
+  ExchangeRates? _rates;
+
   @override
   void initState() {
     super.initState();
     _loadPhotos();
     _loadSenderReviews();
+    _loadLimit();
+  }
+
+  Future<void> _loadLimit() async {
+    final declared = declaredValue(_r.items);
+    if (declared == null) return;
+    try {
+      final limit = await _service.myCarryLimit();
+      if (mounted) setState(() => _limit = limit);
+      // Values in another currency are compared in dollars.
+      if (declared.currency == 'USD') return;
+      final rates =
+          await (widget.loadRates ?? ExchangeRateService.shared.rates)();
+      if (mounted) setState(() => _rates = rates);
+    } catch (e) {
+      debugPrint('[IncomingRequest] carry limit: $e');
+    }
+  }
+
+  /// The items' declared value in dollars, if it can be worked out.
+  double? get _declaredUsd {
+    final d = declaredValue(_r.items);
+    if (d == null) return null;
+    if (d.currency == 'USD') return d.total;
+    final rate = _rates?.rateFor(d.currency);
+    return rate == null || rate <= 0 ? null : d.total / rate;
   }
 
   Future<void> _loadSenderReviews() async {
@@ -478,10 +515,27 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
                                 ),
                               ),
                             ],
+                            if (item.value != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                l.itemValueShort(
+                                  PriceFormatter.write(
+                                    item.value!,
+                                    item.valueCurrency ?? 'USD',
+                                  ),
+                                ),
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.foreground,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
                     ),
+                  ..._declaredValue(),
                   if (_r.photoPaths.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     _sectionTitle(l.itemPhotosTitle),
@@ -513,6 +567,89 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
         ),
       ),
     );
+  }
+
+  /// The items' total value, whether a receipt came with them, and a note
+  /// when it's above the traveler's carrying limit (20240194).
+  List<Widget> _declaredValue() {
+    final l = context.l10n;
+    final d = declaredValue(_r.items);
+    if (d == null) return const [];
+    final receipt = _r.items.any((i) => i.hasReceipt);
+    final usd = _declaredUsd;
+    final limit = _limit;
+    final over = usd != null && limit != null && usd > limit.limitUsd;
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                l.declaredValueRow(PriceFormatter.write(d.total, d.currency)),
+                key: const ValueKey('incoming-declared-value'),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+            if (receipt) ...[
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 14,
+                color: Color(0xFF168A68),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                l.itemReceiptAttached,
+                key: const ValueKey('incoming-receipt'),
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  color: const Color(0xFF168A68),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      if (over)
+        Container(
+          key: const ValueKey('incoming-over-limit'),
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFBF0DC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFA86B12).withValues(alpha: 0.25),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.shield_outlined,
+                size: 16,
+                color: Color(0xFFA86B12),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.overCarryLimit(widget.money.format(limit.limitUsd)),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+    ];
   }
 
   Widget _photos() {

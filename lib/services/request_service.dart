@@ -70,10 +70,26 @@ class RequestItem {
   final RequestCategory category;
   final String description;
 
+  /// What the sender says the item is worth (20240194), in [valueCurrency];
+  /// null for requests sent before values were asked.
+  final double? value;
+  final String? valueCurrency;
+
+  /// A receipt or listing photo was attached (only the sender and Nata's
+  /// staff can open it).
+  final bool hasReceipt;
+
+  /// While sending: where the receipt was uploaded.
+  final String? receiptPath;
+
   const RequestItem({
     required this.name,
     this.category = RequestCategory.electronics,
     this.description = '',
+    this.value,
+    this.valueCurrency,
+    this.hasReceipt = false,
+    this.receiptPath,
   });
 
   /// What the `create_delivery_request` function takes for this item.
@@ -81,7 +97,19 @@ class RequestItem {
     'name': name.trim(),
     'category': category.dbValue,
     'description': description.trim(),
+    if (value != null) 'value': value,
+    if (receiptPath != null) 'receipt_path': receiptPath,
   };
+
+  RequestItem withReceipt(String path) => RequestItem(
+    name: name,
+    category: category,
+    description: description,
+    value: value,
+    valueCurrency: valueCurrency,
+    hasReceipt: true,
+    receiptPath: path,
+  );
 
   factory RequestItem.fromJson(Map<String, dynamic> j) => RequestItem(
     name: (j['name'] as String?) ?? '',
@@ -90,6 +118,20 @@ class RequestItem {
       orElse: () => RequestCategory.electronics,
     ),
     description: (j['description'] as String?) ?? '',
+    value: (j['value'] as num?)?.toDouble(),
+    valueCurrency: (j['value_currency'] as String?)?.trim(),
+    hasReceipt: j['has_receipt'] == true,
+  );
+}
+
+/// The items' total value and its currency, or null when no item has one
+/// (requests sent before values were asked).
+({double total, String currency})? declaredValue(List<RequestItem> items) {
+  final valued = items.where((i) => i.value != null).toList();
+  if (valued.isEmpty) return null;
+  return (
+    total: valued.fold<double>(0, (sum, i) => sum + i.value!),
+    currency: valued.first.valueCurrency ?? 'USD',
   );
 }
 
@@ -163,6 +205,9 @@ enum RequestFailure {
 
   /// The amount is more or less than the mobile money network allows.
   amountOutOfBounds,
+
+  /// An item's estimated value isn't a number from 0 to 1,000,000.
+  itemValueInvalid,
 
   /// The mobile money network is down for now.
   networkUnavailable,
@@ -962,14 +1007,16 @@ class RequestService {
   Future<String> send(
     String requestId,
     RequestDraft draft,
-    List<PickedReceipt> photos,
-  ) async {
+    List<PickedReceipt> photos, {
+    Map<int, PickedReceipt> receipts = const {},
+  }) async {
     final uid = _userId;
 
     final paths = <String>[
       for (var i = 0; i < photos.length; i++)
         '$uid/$requestId/$i.${photos[i].extension.toLowerCase()}',
     ];
+    final items = _withReceipts(draft.items, receipts, '$uid/$requestId', '');
 
     try {
       for (var i = 0; i < photos.length; i++) {
@@ -984,6 +1031,7 @@ class RequestService {
               ),
             );
       }
+      await _uploadReceipts(items, receipts, upsert: true);
     } catch (e) {
       throw RequestException(RequestFailure.other, e);
     }
@@ -994,7 +1042,7 @@ class RequestService {
         params: {
           'p_id': requestId,
           'p_trip_id': draft.tripId,
-          'p_items': [for (final i in draft.items) i.toJson()],
+          'p_items': [for (final i in items) i.toJson()],
           'p_item_weight_kg': draft.weightKg,
           'p_item_size': draft.itemSize,
           'p_item_size_class': draft.sizeClass.dbValue,
@@ -1047,8 +1095,22 @@ class RequestService {
     SentRequest request,
     RequestDraft draft, {
     List<PickedReceipt>? photos,
+    Map<int, PickedReceipt> receipts = const {},
   }) async {
     final uid = _userId;
+    // New names, so a receipt being replaced stays valid until the update is
+    // in. Items without a new receipt keep the one in their place.
+    final items = _withReceipts(
+      draft.items,
+      receipts,
+      '$uid/${request.id}',
+      'e${DateTime.now().millisecondsSinceEpoch}_',
+    );
+    try {
+      await _uploadReceipts(items, receipts);
+    } catch (e) {
+      throw RequestException(RequestFailure.other, e);
+    }
     List<String>? paths;
     if (photos != null) {
       // New names, so the current photos stay valid until the update is in.
@@ -1078,7 +1140,7 @@ class RequestService {
         'update_delivery_request',
         params: {
           'p_id': request.id,
-          'p_items': [for (final i in draft.items) i.toJson()],
+          'p_items': [for (final i in items) i.toJson()],
           'p_item_weight_kg': draft.weightKg,
           'p_item_size': draft.itemSize,
           'p_item_size_class': draft.sizeClass.dbValue,
@@ -1632,6 +1694,14 @@ class RequestService {
     create: () => _client.storage.from(_bucket).createSignedUrl(path, 600),
   );
 
+  /// The signed-in traveler's carrying limit (20240194).
+  Future<CarryLimit> myCarryLimit() async {
+    _userId;
+    final rows = await _client.rpc('my_carry_limit') as List<dynamic>;
+    if (rows.isEmpty) return CarryLimit.starting;
+    return CarryLimit.fromJson(Map<String, dynamic>.from(rows.first as Map));
+  }
+
   /// The traveler accepts [requestId]. The database fixes the price in the
   /// sender's currency at that day's rate in the same step.
   Future<void> accept(String requestId) async {
@@ -1642,6 +1712,42 @@ class RequestService {
       throw RequestException(reasonFor(e.message), e);
     } catch (e) {
       throw RequestException(RequestFailure.other, e);
+    }
+  }
+
+  /// [items] with the storage path of their receipt, from [receipts] (by
+  /// item index), in [folder].
+  List<RequestItem> _withReceipts(
+    List<RequestItem> items,
+    Map<int, PickedReceipt> receipts,
+    String folder,
+    String prefix,
+  ) => [
+    for (var i = 0; i < items.length; i++)
+      receipts[i] == null
+          ? items[i]
+          : items[i].withReceipt(
+              '$folder/${prefix}receipt-$i.'
+              '${receipts[i]!.extension.toLowerCase()}',
+            ),
+  ];
+
+  Future<void> _uploadReceipts(
+    List<RequestItem> items,
+    Map<int, PickedReceipt> receipts, {
+    bool upsert = false,
+  }) async {
+    for (final e in receipts.entries) {
+      await _client.storage
+          .from(_bucket)
+          .uploadBinary(
+            items[e.key].receiptPath!,
+            e.value.bytes,
+            fileOptions: FileOptions(
+              contentType: e.value.contentType,
+              upsert: upsert,
+            ),
+          );
     }
   }
 
@@ -1659,6 +1765,7 @@ class RequestService {
     bool has(String code) => message.contains('nata:$code');
 
     if (has('not_signed_in')) return RequestFailure.notSignedIn;
+    if (has('item_value_invalid')) return RequestFailure.itemValueInvalid;
     if (has('not_verified')) return RequestFailure.notVerified;
     if (has('trip_full')) return RequestFailure.tripFull;
     if (has('sender_on_trip')) return RequestFailure.senderOnTrip;
@@ -1902,5 +2009,58 @@ class BalanceCheckout {
     currency: (j['currency'] as String?) ?? 'USD',
     available: (j['available'] as num?)?.toDouble() ?? 0,
     covers: j['covers'] == true,
+  );
+}
+
+/// How much an item may be worth for a traveler to carry it without a
+/// deposit (`public.my_carry_limit`, 20240194): $100 to start, $300 after 3
+/// deliveries, $1,000 after 10 rated 4.5 or more.
+class CarryLimit {
+  /// 1, 2 or 3.
+  final int level;
+
+  /// The limit, in US dollars.
+  final double limitUsd;
+
+  /// Deliveries completed as a traveler, and their average rating.
+  final int delivered;
+  final double? rating;
+
+  /// The next level's limit (null at the highest), and what it still takes.
+  final double? nextLimitUsd;
+  final int deliveriesNeeded;
+  final double? ratingNeeded;
+
+  const CarryLimit({
+    required this.level,
+    required this.limitUsd,
+    this.delivered = 0,
+    this.rating,
+    this.nextLimitUsd,
+    this.deliveriesNeeded = 0,
+    this.ratingNeeded,
+  });
+
+  /// A new traveler's.
+  static const starting = CarryLimit(
+    level: 1,
+    limitUsd: 100,
+    nextLimitUsd: 300,
+    deliveriesNeeded: 3,
+  );
+
+  /// The limits of the three levels, in US dollars.
+  static const levels = [100.0, 300.0, 1000.0];
+
+  bool get isTop => nextLimitUsd == null;
+
+  factory CarryLimit.fromJson(Map<String, dynamic> j) => CarryLimit(
+    level: (j['level'] as num?)?.toInt() ?? 1,
+    limitUsd: (j['limit_usd'] as num?)?.toDouble() ?? 100,
+    delivered: (j['delivered'] as num?)?.toInt() ?? 0,
+    rating: (j['rating'] as num?)?.toDouble(),
+    nextLimitUsd: (j['next_limit_usd'] as num?)?.toDouble(),
+    deliveriesNeeded: (j['deliveries_needed'] as num?)?.toInt() ?? 0,
+    ratingNeeded: (j['rating_needed'] as num?)?.toDouble(),
   );
 }

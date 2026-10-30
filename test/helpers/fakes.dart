@@ -884,13 +884,28 @@ class FakeRequestService extends Fake implements RequestService {
   /// The request id of every attempt, failed or not.
   final List<String> attemptIds = [];
 
+  /// The receipts of the last send or update, by item position.
+  Map<int, PickedReceipt> receipts = {};
+
+  /// What [myCarryLimit] answers; [failCarryLimit] makes it fail.
+  CarryLimit carryLimit = CarryLimit.starting;
+  bool failCarryLimit = false;
+
+  @override
+  Future<CarryLimit> myCarryLimit() async {
+    if (failCarryLimit) throw StateError('carry limit failed');
+    return carryLimit;
+  }
+
   @override
   Future<String> send(
     String requestId,
     RequestDraft draft,
-    List<PickedReceipt> photos,
-  ) async {
+    List<PickedReceipt> photos, {
+    Map<int, PickedReceipt> receipts = const {},
+  }) async {
     attempts++;
+    this.receipts = receipts;
     attemptIds.add(requestId);
     if (gate != null) await gate!.future;
     if (fail != null) throw fail!;
@@ -922,8 +937,10 @@ class FakeRequestService extends Fake implements RequestService {
     SentRequest request,
     RequestDraft draft, {
     List<PickedReceipt>? photos,
+    Map<int, PickedReceipt> receipts = const {},
   }) async {
     attempts++;
+    this.receipts = receipts;
     if (fail != null) throw fail!;
     updated.add((request: request, draft: draft, photos: photos));
   }
@@ -1543,6 +1560,8 @@ SentRequest sampleSentRequest({
           name: 'AirPods Max',
           category: RequestCategory.electronics,
           description: 'Sealed box',
+          value: 450,
+          valueCurrency: 'USD',
         ),
       ],
   weightKg: 0.9,

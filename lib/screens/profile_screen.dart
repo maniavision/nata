@@ -17,6 +17,7 @@ import '../services/screen_cache.dart';
 import '../widgets/avatar_image.dart';
 import '../services/emergency_contact_service.dart';
 import '../services/traveler_service.dart';
+import '../services/request_service.dart';
 import 'delete_account_screen.dart';
 import 'identity_status_screen.dart';
 import 'identity_verification_screen.dart';
@@ -40,11 +41,15 @@ class ProfileScreen extends StatefulWidget {
   final EmergencyContactService? emergencyService;
   final TravelerService? travelerService;
 
+  /// Override for tests; defaults to [RequestService.myCarryLimit].
+  final Future<CarryLimit> Function()? loadCarryLimit;
+
   const ProfileScreen({
     super.key,
     this.authService,
     this.emergencyService,
     this.travelerService,
+    this.loadCarryLimit,
   });
 
   /// Where the page keeps what it showed between visits (ScreenCache).
@@ -142,6 +147,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isAdmin = false;
   bool _isLoading = true;
 
+  /// The most an item can be worth for this member to carry it (20240194).
+  CarryLimit _carryLimit = CarryLimit.starting;
+
   StreamSubscription? _profileSubscription;
   StreamSubscription? _walletSubscription;
   StreamSubscription? _statsSubscription;
@@ -206,6 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _setupStreams();
     _loadEmergencyContact();
     _loadAdmin();
+    _loadCarryLimit();
     CoachTip publicNameTip() => CoachTip(
       target: _publicNameTipKey,
       icon: Icons.badge_outlined,
@@ -251,6 +260,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       debugPrint('[Profile] admin check: $e');
     }
+  }
+
+  Future<void> _loadCarryLimit() async {
+    try {
+      final limit =
+          await (widget.loadCarryLimit ?? RequestService().myCarryLimit)();
+      if (mounted) setState(() => _carryLimit = limit);
+    } catch (e) {
+      debugPrint('[Profile] carrying limit: $e');
+    }
+  }
+
+  /// "Level 1 · 3 deliveries to unlock $300".
+  String get _carryLimitSubtitle {
+    final l = context.l10n;
+    final limit = _carryLimit;
+    final next = limit.nextLimitUsd;
+    final progress = next == null
+        ? l.carryLimitTop
+        : limit.deliveriesNeeded > 0
+        ? l.carryLimitNextDeliveries(limit.deliveriesNeeded, _money(next))
+        : l.carryLimitNextRating(_money(next));
+    return '${l.carryLimitLevel(limit.level)} · $progress';
+  }
+
+  void _showCarryLimit() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _CarryLimitSheet(limit: _carryLimit, money: _money),
+    );
   }
 
   Future<void> _loadEmergencyContact() async {
@@ -1054,6 +1095,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ).push(MaterialPageRoute(builder: (_) => const RouteAlertsScreen())),
       ),
       _SettingsItem(
+        key: const ValueKey('profile-carry-limit'),
+        icon: Icons.verified_user_outlined,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.carryLimitRow,
+        subtitle: _carryLimitSubtitle,
+        trailing: _money(_carryLimit.limitUsd),
+        onTap: _showCarryLimit,
+      ),
+      _SettingsItem(
         icon: Icons.shield_rounded,
         iconBg: _verificationStatus == 'verified'
             ? const Color(0xFFE4F4EE)
@@ -1320,6 +1371,150 @@ class _SettingsItem {
     this.verified = false,
     this.onTap,
   });
+}
+
+// ── Carrying limit ─────────────────────────────────────────────────────────
+/// The three levels, the member's highlighted.
+class _CarryLimitSheet extends StatelessWidget {
+  final CarryLimit limit;
+  final String Function(double usd) money;
+
+  const _CarryLimitSheet({required this.limit, required this.money});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final names = [l.carryLimitLevel1, l.carryLimitLevel2, l.carryLimitLevel3];
+    return Container(
+      key: const ValueKey('carry-limit-sheet'),
+      decoration: const BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        24,
+        20,
+        24 + MediaQuery.of(context).padding.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.carryLimitSheetTitle,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, size: 20),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l.carryLimitSheetCurrent(limit.level, money(limit.limitUsd)),
+            style: GoogleFonts.dmSans(
+              fontSize: 14,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < CarryLimit.levels.length; i++) ...[
+            _levelRow(context, i + 1, names[i], CarryLimit.levels[i]),
+            const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 8),
+          Text(
+            l.carryLimitSheetNote,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              height: 1.4,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _levelRow(BuildContext context, int level, String name, double usd) {
+    final current = level == limit.level;
+    return Container(
+      key: ValueKey('carry-limit-level-$level'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: current ? AppColors.secondary : AppColors.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: current ? AppColors.primary : AppColors.border,
+          width: current ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.carryLimitLevel(level),
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  name,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (current) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                context.l10n.carryLimitCurrent,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Text(
+            money(usd),
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: AppColors.foreground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Language Picker ────────────────────────────────────────────────────────

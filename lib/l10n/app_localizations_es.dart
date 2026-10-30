@@ -5282,4 +5282,99 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get restoreAccountFailed =>
       'No se pudo restaurar tu cuenta. Inténtalo de nuevo.';
+
+  @override
+  String get itemValueLabel => 'Valor estimado';
+
+  @override
+  String get itemValueHelp =>
+      'Lo que costaría reemplazarlo. Es el importe por el que el artículo está cubierto.';
+
+  @override
+  String get itemReceiptLabel => 'Recibo (opcional)';
+
+  @override
+  String get itemReceiptAdd => 'Adjunta un recibo o una foto del anuncio';
+
+  @override
+  String get itemReceiptAttached => 'Recibo adjunto';
+
+  @override
+  String get errItemValue => 'Indica cuánto vale el artículo.';
+
+  @override
+  String errItemValueN(int n) {
+    return 'Indica cuánto vale el artículo $n.';
+  }
+
+  @override
+  String declaredValueTotal(String amount) {
+    return 'Valor declarado: $amount';
+  }
+
+  @override
+  String itemValueShort(String amount) {
+    return 'Valor $amount';
+  }
+
+  @override
+  String declaredValueRow(String amount) {
+    return 'Valor declarado $amount';
+  }
+
+  @override
+  String overCarryLimit(String limit) {
+    return 'Por encima de tu límite de transporte de $limit.';
+  }
+
+  @override
+  String get carryLimitRow => 'Límite de transporte';
+
+  @override
+  String carryLimitLevel(int level) {
+    return 'Nivel $level';
+  }
+
+  @override
+  String carryLimitNextDeliveries(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entregas para desbloquear $amount',
+      one: '1 entrega para desbloquear $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String carryLimitNextRating(String amount) {
+    return 'Mantén una valoración de 4,5 para desbloquear $amount';
+  }
+
+  @override
+  String get carryLimitTop => 'Nivel más alto';
+
+  @override
+  String get carryLimitSheetTitle => 'Tu límite de transporte';
+
+  @override
+  String carryLimitSheetCurrent(int level, String amount) {
+    return 'Nivel $level · Límite actual $amount';
+  }
+
+  @override
+  String get carryLimitLevel1 => 'Viajero nuevo';
+
+  @override
+  String get carryLimitLevel2 => 'Después de 3 entregas';
+
+  @override
+  String get carryLimitLevel3 => 'Después de 10 entregas con 4,5+';
+
+  @override
+  String get carryLimitCurrent => 'Actual';
+
+  @override
+  String get carryLimitSheetNote =>
+      'El valor máximo de un artículo que puedes llevar. Aun así puedes llevar artículos por encima de tu límite con un depósito reembolsable.';
 }

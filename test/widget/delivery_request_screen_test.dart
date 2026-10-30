@@ -123,6 +123,16 @@ void main() {
   Future<void> enter(WidgetTester tester, String key, String text) async {
     await tester.enterText(find.byKey(ValueKey(key)), text);
     await tester.pump();
+    // Naming an item also gives it a value, so tests about other fields
+    // get past the value check; the value tests clear it again.
+    final item = RegExp(r'^request-item-(\d+)$').firstMatch(key);
+    if (item != null && text.trim().isNotEmpty) {
+      final value = find.byKey(ValueKey('request-item-value-${item[1]}'));
+      if (value.evaluate().isNotEmpty) {
+        await tester.enterText(value, '100');
+        await tester.pump();
+      }
+    }
   }
 
   Future<void> tapKey(WidgetTester tester, String key) async {
@@ -1794,6 +1804,81 @@ void main() {
     });
   });
 
+  group('item values', () {
+    testWidgets('each item needs a value', (tester) async {
+      await pump(tester);
+      await fillValid(tester);
+      await enter(tester, 'request-item-value-0', '');
+      await send(tester);
+
+      expect(errorText(tester), 'Enter what the item is worth.');
+      expect(service.sent, isEmpty);
+    });
+
+    for (final bad in ['abc', '12.345', '2000000']) {
+      testWidgets('rejects the value "$bad"', (tester) async {
+        await pump(tester);
+        await fillValid(tester);
+        await enter(tester, 'request-item-value-0', bad);
+        await send(tester);
+
+        expect(errorText(tester), 'Enter what the item is worth.');
+        expect(service.sent, isEmpty);
+      });
+    }
+
+    testWidgets('the value is sent with the item', (tester) async {
+      await pump(tester);
+      await fillValid(tester);
+      await enter(tester, 'request-item-value-0', '450.50');
+      await send(tester);
+
+      expect(service.sent.single.draft.items.single.value, 450.5);
+    });
+
+    testWidgets('the declared total adds up every item', (tester) async {
+      await pump(tester);
+      await enter(tester, 'request-item-0', 'Watch');
+      await enter(tester, 'request-item-value-0', '100');
+      await tapKey(tester, 'request-add-item');
+      await enter(tester, 'request-item-1', 'Shirt');
+      await enter(tester, 'request-item-value-1', '250');
+
+      expect(find.text(r'Declared value: $350'), findsOneWidget);
+    });
+
+    testWidgets('a receipt can be attached, removed and sent', (tester) async {
+      await pump(tester);
+      await fillValid(tester);
+      nextPhoto = photo(name: 'receipt.jpg');
+      await tapKey(tester, 'request-item-receipt-add-0');
+      await tapKey(tester, 'request-photo-library');
+
+      expect(find.byKey(const ValueKey('request-item-receipt-0')), findsOne);
+      await tapKey(tester, 'request-item-receipt-remove-0');
+      expect(
+        find.byKey(const ValueKey('request-item-receipt-0')),
+        findsNothing,
+      );
+
+      await tapKey(tester, 'request-item-receipt-add-0');
+      await tapKey(tester, 'request-photo-library');
+      await send(tester);
+
+      expect(service.receipts.keys, [0]);
+      expect(service.receipts[0]!.name, 'receipt.jpg');
+    });
+
+    testWidgets('no receipt is fine', (tester) async {
+      await pump(tester);
+      await fillValid(tester);
+      await send(tester);
+
+      expect(service.sent, hasLength(1));
+      expect(service.receipts, isEmpty);
+    });
+  });
+
   group('translations', () {
     testWidgets('Spanish', (tester) async {
       await pump(tester, locale: const Locale('es'));
@@ -1875,6 +1960,7 @@ Future<void> fillValidWithoutPhoto(WidgetTester tester) async {
   }
 
   await enter('request-item-0', 'Apple AirPods Max');
+  await enter('request-item-value-0', '100');
   await enter('request-recipient-name', 'Jane Doe');
   await enter('request-recipient-phone', '+44 7700 900123');
   await enter('request-weight', '0.9 kg');
@@ -1887,6 +1973,7 @@ class _ThrowingService extends FakeRequestService {
   Future<String> send(
     String requestId,
     RequestDraft draft,
-    List<PickedReceipt> photos,
-  ) async => throw StateError('boom');
+    List<PickedReceipt> photos, {
+    Map<int, PickedReceipt> receipts = const {},
+  }) async => throw StateError('boom');
 }
