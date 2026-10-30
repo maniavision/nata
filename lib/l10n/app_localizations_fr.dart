@@ -5572,4 +5572,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get useAnotherWallet => 'Utiliser un autre portefeuille';
+
+  @override
+  String get theftWarningTitle => 'Garder l\'article de quelqu\'un est un vol';
+
+  @override
+  String get theftWarningBody =>
+      'Si vous ne livrez pas ces articles, Nata transmet votre identité vérifiée (nom, pièce d\'identité et photo) à la police locale et à l\'expéditeur, qui peut porter plainte.';
+
+  @override
+  String get theftConfirmTitle => 'Avant d\'accepter';
+
+  @override
+  String get theftConfirmCheck => 'Je livrerai ces articles au destinataire';
+
+  @override
+  String get theftPickupNote =>
+      'Vous êtes maintenant responsable de ces articles. Les garder est un vol : votre identité vérifiée est transmise à la police locale.';
 }

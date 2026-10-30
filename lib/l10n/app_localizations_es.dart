@@ -5535,4 +5535,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get useAnotherWallet => 'Usar otra billetera';
+
+  @override
+  String get theftWarningTitle =>
+      'Quedarse con el artículo de otra persona es un robo';
+
+  @override
+  String get theftWarningBody =>
+      'Si no entregas estos artículos, Nata entrega tu identidad verificada (nombre, documento de identidad y foto) a la policía local y al remitente, que puede presentar una denuncia.';
+
+  @override
+  String get theftConfirmTitle => 'Antes de aceptar';
+
+  @override
+  String get theftConfirmCheck => 'Entregaré estos artículos al destinatario';
+
+  @override
+  String get theftPickupNote =>
+      'Ahora eres responsable de estos artículos. Quedártelos es un robo: tu identidad verificada se entrega a la policía local.';
 }

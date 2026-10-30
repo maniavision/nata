@@ -17,6 +17,7 @@ import 'package:carrywise_app/services/request_service.dart';
 import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
+import 'package:flutter/widgets.dart' show ValueKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:carrywise_app/screens/delivery_task_screen.dart';
 import 'package:carrywise_app/services/payment_service.dart';
@@ -2217,4 +2218,12 @@ class FakeChatLive implements ChatLive {
 
   @override
   Future<void> close() async => closed = true;
+}
+
+/// Confirms the theft warning shown before a request is accepted.
+Future<void> confirmTheftWarningSheet(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('theft-confirm-check')));
+  await tester.pump();
+  await tester.tap(find.byKey(const ValueKey('theft-confirm-accept')));
+  await tester.pumpAndSettle();
 }

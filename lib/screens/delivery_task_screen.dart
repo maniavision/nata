@@ -16,6 +16,7 @@ import 'review_screen.dart';
 import 'messages_screen.dart';
 import '../widgets/camera_denied_sheet.dart';
 import 'recipient_chat_screen.dart';
+import '../widgets/theft_warning.dart';
 
 /// A request the traveler accepted and is now carrying, as Requests >
 /// Incoming shows it.
@@ -880,6 +881,11 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                 ),
               ),
             ),
+          // A reminder at the moment the items change hands.
+          if (pickedUpAt == null) ...[
+            const SizedBox(height: 10),
+            const TheftWarning(compact: true),
+          ],
         ],
       ),
     );

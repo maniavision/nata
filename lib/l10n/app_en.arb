@@ -2381,5 +2381,10 @@
   "stripeCardFormNote": "You'll enter the card in Stripe's secure form. It's saved with Stripe for your next payments.",
   "errCardSave": "Couldn't save the card. Try again.",
   "savedCardCheckoutNote": "You can pick another card or add one in the secure payment sheet.",
-  "useAnotherWallet": "Use another wallet"
+  "useAnotherWallet": "Use another wallet",
+  "theftWarningTitle": "Keeping someone's item is theft",
+  "theftWarningBody": "If you don't deliver these items, Nata gives your verified identity (name, ID document and photo) to the local police and to the sender, and the sender can press charges.",
+  "theftConfirmTitle": "Before you accept",
+  "theftConfirmCheck": "I will deliver these items to the recipient",
+  "theftPickupNote": "You're now responsible for these items. Keeping them is theft: your verified ID goes to the local police."
 }

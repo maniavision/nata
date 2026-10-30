@@ -115,8 +115,46 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('incoming-accept')));
     await tester.pumpAndSettle();
 
+    await confirmTheftWarningSheet(tester);
+
     expect(service.accepted, ['in-1']);
     expect(popped, isTrue);
+  });
+
+  testWidgets('a pending request warns that keeping items is theft', (
+    tester,
+  ) async {
+    await pump(tester, sampleIncoming());
+
+    expect(find.byKey(const ValueKey('theft-warning')), findsOneWidget);
+    expect(find.text("Keeping someone's item is theft"), findsOneWidget);
+    expect(find.textContaining('to the local police'), findsOneWidget);
+  });
+
+  testWidgets('once answered, no warning', (tester) async {
+    await pump(tester, sampleIncoming(status: 'paid'));
+
+    expect(find.byKey(const ValueKey('theft-warning')), findsNothing);
+  });
+
+  testWidgets('Accept needs the promise to deliver first', (tester) async {
+    await pump(tester, sampleIncoming());
+
+    await tester.tap(find.byKey(const ValueKey('incoming-accept')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('theft-confirm-sheet')), findsOneWidget);
+
+    // Not ticked: the button does nothing.
+    final button = tester.widget<ElevatedButton>(
+      find.byKey(const ValueKey('theft-confirm-accept')),
+    );
+    expect(button.onPressed, isNull);
+
+    // Cancelled without confirming: not accepted.
+    await tester.tap(find.byKey(const ValueKey('theft-confirm-cancel')));
+    await tester.pumpAndSettle();
+    expect(service.accepted, isEmpty);
+    expect(find.byType(IncomingRequestScreen), findsOneWidget);
   });
 
   testWidgets('Decline asks, then answers it', (tester) async {
@@ -139,6 +177,8 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('incoming-accept')));
     await tester.pumpAndSettle();
+
+    await confirmTheftWarningSheet(tester);
 
     expect(find.byType(IncomingRequestScreen), findsOneWidget);
     expect(

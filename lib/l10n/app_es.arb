@@ -2211,5 +2211,10 @@
   "stripeCardFormNote": "Introducirás la tarjeta en el formulario seguro de Stripe. Se guarda en Stripe para tus próximos pagos.",
   "errCardSave": "No se pudo guardar la tarjeta. Inténtalo de nuevo.",
   "savedCardCheckoutNote": "Puedes elegir otra tarjeta o añadir una en la hoja de pago segura.",
-  "useAnotherWallet": "Usar otra billetera"
+  "useAnotherWallet": "Usar otra billetera",
+  "theftWarningTitle": "Quedarse con el artículo de otra persona es un robo",
+  "theftWarningBody": "Si no entregas estos artículos, Nata entrega tu identidad verificada (nombre, documento de identidad y foto) a la policía local y al remitente, que puede presentar una denuncia.",
+  "theftConfirmTitle": "Antes de aceptar",
+  "theftConfirmCheck": "Entregaré estos artículos al destinatario",
+  "theftPickupNote": "Ahora eres responsable de estos artículos. Quedártelos es un robo: tu identidad verificada se entrega a la policía local."
 }

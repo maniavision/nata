@@ -441,6 +441,15 @@ void main() {
     expect(find.text("J'ai récupéré l'article"), findsOneWidget);
   });
 
+  testWidgets('before pickup, a reminder that keeping items is theft', (
+    tester,
+  ) async {
+    await pump(tester, sampleDelivery());
+
+    expect(find.byKey(const ValueKey('theft-warning-compact')), findsOneWidget);
+    expect(find.textContaining('Keeping them is theft'), findsOneWidget);
+  });
+
   group('deposit', () {
     const due = RequestDeposit(
       required: true,
