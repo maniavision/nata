@@ -313,6 +313,11 @@ workflows:
         track: internal
         # Drafts until the app has been published once on Google Play.
         submit_as_draft: true
+        # Play won't send changes for review through the API while the app
+        # has rejected or pending changes ("Changes cannot be sent for review
+        # automatically"): the release is saved, then sent for review from
+        # Play Console › Publishing overview.
+        changes_not_sent_for_review: true
       <<: *email
 
   # ───────────────────────────────────────────────────────────────────────────
@@ -359,4 +364,9 @@ workflows:
         # draft app"). The draft is then sent for review from Play Console.
         # Set this to false after the first release is live.
         submit_as_draft: true
+        # Play won't send changes for review through the API while the app
+        # has rejected or pending changes ("Changes cannot be sent for review
+        # automatically"): the release is saved, then sent for review from
+        # Play Console › Publishing overview.
+        changes_not_sent_for_review: true
       <<: *email
