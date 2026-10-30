@@ -141,6 +141,8 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
           _ItemForm(_nextItemId++)
             ..name.text = i.name
             ..description.text = i.description
+            ..value.text = i.value == null ? '' : _valueText(i.value!)
+            ..keepsReceipt = i.hasReceipt
             ..category = i.category,
       ]);
     if (_items.isEmpty) _items.add(_ItemForm(_nextItemId++));
@@ -336,48 +338,54 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       setState(() => _error = context.l10n.errPhotoLimit);
       return;
     }
-    final camera = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: AppColors.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              key: const ValueKey('request-photo-camera'),
-              leading: const Icon(
-                Icons.photo_camera_rounded,
-                color: AppColors.primary,
-              ),
-              title: Text(
-                ctx.l10n.takePhoto,
-                style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
-              ),
-              onTap: () => Navigator.of(ctx).pop(true),
-            ),
-            ListTile(
-              key: const ValueKey('request-photo-library'),
-              leading: const Icon(
-                Icons.photo_library_rounded,
-                color: AppColors.primary,
-              ),
-              title: Text(
-                ctx.l10n.chatChoosePhoto,
-                style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
-              ),
-              onTap: () => Navigator.of(ctx).pop(false),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
+    final camera = await _askCameraOrLibrary();
     if (camera == null || !mounted) return;
+    await _pickPhotos(camera);
+  }
 
+  /// True for the camera, false for the library, null when closed.
+  Future<bool?> _askCameraOrLibrary() => showModalBottomSheet<bool>(
+    context: context,
+    backgroundColor: AppColors.card,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          ListTile(
+            key: const ValueKey('request-photo-camera'),
+            leading: const Icon(
+              Icons.photo_camera_rounded,
+              color: AppColors.primary,
+            ),
+            title: Text(
+              ctx.l10n.takePhoto,
+              style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+            ),
+            onTap: () => Navigator.of(ctx).pop(true),
+          ),
+          ListTile(
+            key: const ValueKey('request-photo-library'),
+            leading: const Icon(
+              Icons.photo_library_rounded,
+              color: AppColors.primary,
+            ),
+            title: Text(
+              ctx.l10n.chatChoosePhoto,
+              style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+            ),
+            onTap: () => Navigator.of(ctx).pop(false),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _pickPhotos(bool camera) async {
     try {
       final room = _maxPhotos - _photos.length;
       // From the library, several at once (up to the room left).
@@ -407,6 +415,67 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         setState(() => _error = context.l10n.chatCameraFailed);
       }
     }
+  }
+
+  /// A receipt or listing photo for item [index] (20240194).
+  Future<void> _addReceipt(int index) async {
+    final camera = await _askCameraOrLibrary();
+    if (camera == null || !mounted) return;
+    try {
+      final picked = await (widget.photoPicker ?? _defaultPhotoPicker)(
+        camera: camera,
+      );
+      if (picked == null || !mounted) return;
+      if (picked.sizeBytes > _maxPhotoBytes) {
+        setState(() => _error = context.l10n.errPhotoTooBig);
+        return;
+      }
+      setState(() {
+        _items[index].receipt = picked;
+        _error = null;
+      });
+    } catch (e) {
+      if (mounted && isCameraDenied(e)) {
+        await showCameraDeniedSheet(context);
+      } else if (mounted) {
+        setState(() => _error = context.l10n.chatCameraFailed);
+      }
+    }
+  }
+
+  void _removeReceipt(int index) => setState(() {
+    _items[index]
+      ..receipt = null
+      ..keepsReceipt = false;
+  });
+
+  /// The currency item values are entered in: the request's own while
+  /// editing, else the member's.
+  String get _valueCurrency => _editing?.displayCurrency ?? _currency;
+
+  static String _valueText(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+
+  /// "450", "450.50" or "1,200" → 450.0 / 450.5 / 1200.0; null if it isn't
+  /// an amount from 0 to 1,000,000.
+  static double? _parseValue(String input) {
+    final t = input.trim().replaceAll(RegExp(r'[\s,]'), '');
+    if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(t)) return null;
+    final v = double.tryParse(t);
+    return v != null && v <= 1000000 ? v : null;
+  }
+
+  /// The items' total value while the form is filled in.
+  double? get _declaredTotal {
+    double total = 0;
+    var any = false;
+    for (final item in _items) {
+      final v = _parseValue(item.value.text);
+      if (v == null) continue;
+      total += v;
+      any = true;
+    }
+    return any ? total : null;
   }
 
   static Future<List<PickedReceipt>> _defaultMultiPicker(int limit) async {
@@ -455,6 +524,9 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       if (_items[i].name.text.trim().isEmpty) {
         return _items.length == 1 ? l.errItemName : l.errItemNameN(i + 1);
       }
+      if (_parseValue(_items[i].value.text) == null) {
+        return _items.length == 1 ? l.errItemValue : l.errItemValueN(i + 1);
+      }
     }
     if (_recipientNameCtrl.text.trim().length < 2) return l.errRecipientName;
     if (_recipientPhone == null) {
@@ -478,6 +550,12 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     return null;
   }
 
+  /// The receipts picked in this visit, by item index.
+  Map<int, PickedReceipt> get _pickedReceipts => {
+    for (var i = 0; i < _items.length; i++)
+      if (_items[i].receipt != null) i: _items[i].receipt!,
+  };
+
   Future<void> _send() async {
     if (_sending) return;
     final problem = _validate();
@@ -500,6 +578,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
             name: item.name.text,
             category: item.category,
             description: item.description.text,
+            value: _parseValue(item.value.text),
           ),
       ],
       weightKg: RequestInput.parseWeightKg(_weightCtrl.text)!,
@@ -524,6 +603,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
           editing,
           draft,
           photos: _photosChanged ? List.of(_photos) : null,
+          receipts: _pickedReceipts,
         );
         if (!mounted) return;
         ScaffoldMessenger.of(context)
@@ -534,7 +614,12 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         Navigator.of(context).pop(true);
         return;
       }
-      await service.send(_requestId, draft, List.of(_photos));
+      await service.send(
+        _requestId,
+        draft,
+        List.of(_photos),
+        receipts: _pickedReceipts,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -598,6 +683,8 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errNotCancellable;
       case RequestFailure.feeChanged:
         return l.errFeeChanged;
+      case RequestFailure.itemValueInvalid:
+        return l.errItemValue;
       case RequestFailure.notPaid:
       case RequestFailure.smsUnavailable:
       case RequestFailure.phoneRejected:
@@ -895,6 +982,33 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
           _buildItemCard(i),
           const SizedBox(height: 12),
         ],
+        if (_declaredTotal case final total?)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.verified_user_outlined,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l.declaredValueTotal(
+                      PriceFormatter.write(total, _valueCurrency),
+                    ),
+                    key: const ValueKey('request-declared-total'),
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         if (atLimit)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -1075,7 +1189,187 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                 focusedBorder: _fieldBorder(focused: true),
               ),
             ),
+            const SizedBox(height: 14),
+            _fieldLabel('${l.itemValueLabel.toUpperCase()} *'),
+            const SizedBox(height: 6),
+            _buildValueField(index),
+            const SizedBox(height: 6),
+            Text(
+              l.itemValueHelp,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                height: 1.4,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 14),
+            _fieldLabel(l.itemReceiptLabel.toUpperCase()),
+            const SizedBox(height: 6),
+            _buildReceiptTile(index),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildValueField(int index) {
+    final item = _items[index];
+    final currency = _valueCurrency;
+    final symbol = AppCurrency.fromCode(currency).symbol;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.input,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Text(
+            symbol,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              key: ValueKey('request-item-value-$index'),
+              controller: item.value,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                LengthLimitingTextInputFormatter(12),
+              ],
+              onChanged: (_) => setState(() => _error = null),
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.foreground,
+              ),
+              decoration: InputDecoration(
+                hintText: '0',
+                hintStyle: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  color: AppColors.mutedForeground,
+                ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
+            ),
+          ),
+          if (currency != 'USD' && symbol != currency)
+            Text(
+              currency,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// An optional receipt or listing photo: a dashed tile to add one, or
+  /// what was attached with ✕ to remove it.
+  Widget _buildReceiptTile(int index) {
+    final l = context.l10n;
+    final item = _items[index];
+    if (item.hasReceipt) {
+      final picked = item.receipt;
+      return Container(
+        key: ValueKey('request-item-receipt-$index'),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppColors.input,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: picked != null
+                    ? Image.memory(
+                        picked.bytes,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => const _ReceiptIcon(),
+                      )
+                    : const _ReceiptIcon(),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l.itemReceiptAttached,
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+            IconButton(
+              key: ValueKey('request-item-receipt-remove-$index'),
+              tooltip: l.remove,
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _removeReceipt(index),
+              icon: const Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: AppColors.mutedForeground,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return GestureDetector(
+      key: ValueKey('request-item-receipt-add-$index'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _addReceipt(index),
+      child: CustomPaint(
+        painter: const _DashedBorderPainter(
+          color: AppColors.border,
+          radius: 12,
+          strokeWidth: 1.5,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.receipt_long_rounded,
+                size: 18,
+                color: AppColors.mutedForeground,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l.itemReceiptAdd,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2004,11 +2298,20 @@ class _ItemForm {
   final int id;
   final name = TextEditingController();
   final description = TextEditingController();
+  final value = TextEditingController();
   RequestCategory category = RequestCategory.electronics;
+
+  /// A receipt or listing photo picked now, or (while editing) the one the
+  /// item already has.
+  PickedReceipt? receipt;
+  bool keepsReceipt = false;
+
+  bool get hasReceipt => receipt != null || keepsReceipt;
 
   void dispose() {
     name.dispose();
     description.dispose();
+    value.dispose();
   }
 }
 
@@ -2051,4 +2354,19 @@ class _DashedBorderPainter extends CustomPainter {
       old.color != color ||
       old.radius != radius ||
       old.strokeWidth != strokeWidth;
+}
+
+/// A receipt without a picture to show (kept from before, or unreadable).
+class _ReceiptIcon extends StatelessWidget {
+  const _ReceiptIcon();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    color: AppColors.secondary,
+    child: const Icon(
+      Icons.receipt_long_rounded,
+      size: 20,
+      color: AppColors.primary,
+    ),
+  );
 }

@@ -99,10 +99,7 @@ void main() {
         isTrue,
       );
       expect(
-        TicketCheckService.anyNameOnTicket(
-          'OKONKWO/AMARA MS',
-          'Kalu-Okonkwo',
-        ),
+        TicketCheckService.anyNameOnTicket('OKONKWO/AMARA MS', 'Kalu-Okonkwo'),
         isTrue,
       );
     });

@@ -5233,4 +5233,99 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreAccountFailed =>
       'Couldn\'t restore your account. Try again.';
+
+  @override
+  String get itemValueLabel => 'Estimated value';
+
+  @override
+  String get itemValueHelp =>
+      'What it would cost to replace. It sets how much the item is covered for.';
+
+  @override
+  String get itemReceiptLabel => 'Receipt (optional)';
+
+  @override
+  String get itemReceiptAdd => 'Attach a receipt or listing photo';
+
+  @override
+  String get itemReceiptAttached => 'Receipt attached';
+
+  @override
+  String get errItemValue => 'Enter what the item is worth.';
+
+  @override
+  String errItemValueN(int n) {
+    return 'Enter what item $n is worth.';
+  }
+
+  @override
+  String declaredValueTotal(String amount) {
+    return 'Declared value: $amount';
+  }
+
+  @override
+  String itemValueShort(String amount) {
+    return 'Value $amount';
+  }
+
+  @override
+  String declaredValueRow(String amount) {
+    return 'Declared value $amount';
+  }
+
+  @override
+  String overCarryLimit(String limit) {
+    return 'Above your $limit carrying limit.';
+  }
+
+  @override
+  String get carryLimitRow => 'Carrying limit';
+
+  @override
+  String carryLimitLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String carryLimitNextDeliveries(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deliveries to unlock $amount',
+      one: '1 delivery to unlock $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String carryLimitNextRating(String amount) {
+    return 'Keep a 4.5 rating to unlock $amount';
+  }
+
+  @override
+  String get carryLimitTop => 'Highest level';
+
+  @override
+  String get carryLimitSheetTitle => 'Your carrying limit';
+
+  @override
+  String carryLimitSheetCurrent(int level, String amount) {
+    return 'Level $level · Current limit $amount';
+  }
+
+  @override
+  String get carryLimitLevel1 => 'New traveler';
+
+  @override
+  String get carryLimitLevel2 => 'After 3 deliveries';
+
+  @override
+  String get carryLimitLevel3 => 'After 10 deliveries rated 4.5+';
+
+  @override
+  String get carryLimitCurrent => 'Current';
+
+  @override
+  String get carryLimitSheetNote =>
+      'The most an item can be worth for you to carry it. You can still carry items above your limit with a refundable deposit.';
 }

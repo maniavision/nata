@@ -344,6 +344,91 @@ void main() {
     });
   });
 
+  group('Item values', () {
+    test('the value and receipt are sent when set', () {
+      final j = const RequestItem(
+        name: 'Watch',
+        value: 250,
+        receiptPath: 'u/r/receipt-0.jpg',
+      ).toJson();
+
+      expect(j['value'], 250);
+      expect(j['receipt_path'], 'u/r/receipt-0.jpg');
+    });
+
+    test('and left out when not', () {
+      final j = const RequestItem(name: 'Watch').toJson();
+
+      expect(j.containsKey('value'), isFalse);
+      expect(j.containsKey('receipt_path'), isFalse);
+    });
+
+    test('are read back, without the receipt\'s path', () {
+      final item = RequestItem.fromJson({
+        'name': 'Watch',
+        'category': 'electronics',
+        'description': '',
+        'value': 120.5,
+        'value_currency': 'EUR',
+        'has_receipt': true,
+      });
+
+      expect(item.value, 120.5);
+      expect(item.valueCurrency, 'EUR');
+      expect(item.hasReceipt, isTrue);
+      expect(item.receiptPath, isNull);
+    });
+
+    test('the declared value adds up the items', () {
+      final d = declaredValue(const [
+        RequestItem(name: 'A', value: 100, valueCurrency: 'XOF'),
+        RequestItem(name: 'B', value: 50.5, valueCurrency: 'XOF'),
+      ]);
+
+      expect(d?.total, 150.5);
+      expect(d?.currency, 'XOF');
+    });
+
+    test('no values, no declared value', () {
+      expect(declaredValue(const [RequestItem(name: 'A')]), isNull);
+    });
+  });
+
+  group('CarryLimit', () {
+    test('is read from the database', () {
+      final l = CarryLimit.fromJson({
+        'level': 2,
+        'limit_usd': 300,
+        'delivered': 5,
+        'rating': 4.8,
+        'next_limit_usd': 1000,
+        'deliveries_needed': 5,
+        'rating_needed': null,
+      });
+
+      expect(l.level, 2);
+      expect(l.limitUsd, 300);
+      expect(l.delivered, 5);
+      expect(l.rating, 4.8);
+      expect(l.nextLimitUsd, 1000);
+      expect(l.deliveriesNeeded, 5);
+      expect(l.isTop, isFalse);
+    });
+
+    test('the highest level has no next one', () {
+      final l = CarryLimit.fromJson({'level': 3, 'limit_usd': 1000});
+
+      expect(l.isTop, isTrue);
+    });
+
+    test('a new traveler starts at \$100', () {
+      expect(CarryLimit.starting.level, 1);
+      expect(CarryLimit.starting.limitUsd, 100);
+      expect(CarryLimit.starting.nextLimitUsd, 300);
+      expect(CarryLimit.starting.deliveriesNeeded, 3);
+    });
+  });
+
   group('RequestDraft', () {
     test('holds up to five items', () => expect(RequestDraft.maxItems, 5));
 

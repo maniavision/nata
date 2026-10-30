@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:carrywise_app/screens/login_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
+import 'package:carrywise_app/services/request_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
 import '../helpers/fakes.dart';
@@ -227,6 +228,102 @@ void main() {
       for (final l in ['Home', 'Requests', 'Trips', 'Messages', 'Profile']) {
         expect(find.text(l), findsWidgets);
       }
+    });
+  });
+
+  group('ProfileScreen carrying limit', () {
+    setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
+
+    Future<void> pump(WidgetTester tester, CarryLimit limit) async {
+      tester.view.physicalSize = const Size(900, 3200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          ProfileScreen(
+            authService: FakeAuthService(),
+            loadCarryLimit: () async => limit,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a new traveler: level 1 and what unlocks the next', (
+      tester,
+    ) async {
+      await pump(tester, CarryLimit.starting);
+
+      final row = find.byKey(const ValueKey('profile-carry-limit'));
+      expect(row, findsOneWidget);
+      expect(
+        find.descendant(of: row, matching: find.text('Carrying limit')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: row,
+          matching: find.textContaining('Level 1 · 3 deliveries to unlock'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('enough deliveries but not the rating', (tester) async {
+      await pump(
+        tester,
+        const CarryLimit(
+          level: 2,
+          limitUsd: 300,
+          delivered: 12,
+          rating: 4.2,
+          nextLimitUsd: 1000,
+          ratingNeeded: 4.5,
+        ),
+      );
+
+      expect(
+        find.textContaining('Level 2 · Keep a 4.5 rating to unlock'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the highest level', (tester) async {
+      await pump(tester, const CarryLimit(level: 3, limitUsd: 1000));
+
+      expect(find.textContaining('Level 3 · Highest level'), findsOneWidget);
+    });
+
+    testWidgets('tapping it lists the three levels, current marked', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const CarryLimit(
+          level: 2,
+          limitUsd: 300,
+          nextLimitUsd: 1000,
+          deliveriesNeeded: 4,
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('profile-carry-limit')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('carry-limit-sheet')), findsOneWidget);
+      for (final level in [1, 2, 3]) {
+        expect(
+          find.byKey(ValueKey('carry-limit-level-$level')),
+          findsOneWidget,
+        );
+      }
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('carry-limit-level-2')),
+          matching: find.text('Current'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('After 10 deliveries rated 4.5+'), findsOneWidget);
     });
   });
 }

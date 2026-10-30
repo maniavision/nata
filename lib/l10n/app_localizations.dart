@@ -9109,6 +9109,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t restore your account. Try again.'**
   String get restoreAccountFailed;
+
+  /// No description provided for @itemValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated value'**
+  String get itemValueLabel;
+
+  /// No description provided for @itemValueHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What it would cost to replace. It sets how much the item is covered for.'**
+  String get itemValueHelp;
+
+  /// No description provided for @itemReceiptLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt (optional)'**
+  String get itemReceiptLabel;
+
+  /// No description provided for @itemReceiptAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a receipt or listing photo'**
+  String get itemReceiptAdd;
+
+  /// No description provided for @itemReceiptAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt attached'**
+  String get itemReceiptAttached;
+
+  /// No description provided for @errItemValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter what the item is worth.'**
+  String get errItemValue;
+
+  /// No description provided for @errItemValueN.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter what item {n} is worth.'**
+  String errItemValueN(int n);
+
+  /// No description provided for @declaredValueTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Declared value: {amount}'**
+  String declaredValueTotal(String amount);
+
+  /// No description provided for @itemValueShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Value {amount}'**
+  String itemValueShort(String amount);
+
+  /// No description provided for @declaredValueRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Declared value {amount}'**
+  String declaredValueRow(String amount);
+
+  /// No description provided for @overCarryLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Above your {limit} carrying limit.'**
+  String overCarryLimit(String limit);
+
+  /// No description provided for @carryLimitRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Carrying limit'**
+  String get carryLimitRow;
+
+  /// No description provided for @carryLimitLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String carryLimitLevel(int level);
+
+  /// No description provided for @carryLimitNextDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 delivery to unlock {amount}} other{{count} deliveries to unlock {amount}}}'**
+  String carryLimitNextDeliveries(int count, String amount);
+
+  /// No description provided for @carryLimitNextRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a 4.5 rating to unlock {amount}'**
+  String carryLimitNextRating(String amount);
+
+  /// No description provided for @carryLimitTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest level'**
+  String get carryLimitTop;
+
+  /// No description provided for @carryLimitSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your carrying limit'**
+  String get carryLimitSheetTitle;
+
+  /// No description provided for @carryLimitSheetCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} · Current limit {amount}'**
+  String carryLimitSheetCurrent(int level, String amount);
+
+  /// No description provided for @carryLimitLevel1.
+  ///
+  /// In en, this message translates to:
+  /// **'New traveler'**
+  String get carryLimitLevel1;
+
+  /// No description provided for @carryLimitLevel2.
+  ///
+  /// In en, this message translates to:
+  /// **'After 3 deliveries'**
+  String get carryLimitLevel2;
+
+  /// No description provided for @carryLimitLevel3.
+  ///
+  /// In en, this message translates to:
+  /// **'After 10 deliveries rated 4.5+'**
+  String get carryLimitLevel3;
+
+  /// No description provided for @carryLimitCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get carryLimitCurrent;
+
+  /// No description provided for @carryLimitSheetNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The most an item can be worth for you to carry it. You can still carry items above your limit with a refundable deposit.'**
+  String get carryLimitSheetNote;
 }
 
 class _AppLocalizationsDelegate
