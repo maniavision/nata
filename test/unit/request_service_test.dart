@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:carrywise_app/services/delivery_pricing.dart';
+import 'package:carrywise_app/services/exchange_rate_service.dart';
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:carrywise_app/services/trip_service.dart' show PickedReceipt;
 import 'package:flutter_test/flutter_test.dart';
@@ -499,6 +500,47 @@ void main() {
         'tiers': [200, 600, 2000],
       });
       expect(eu.limitText, '€200');
+    });
+
+    group('in the member\'s display currency', () {
+      final rates = ExchangeRates(
+        perUsd: const {'USD': 1, 'EUR': 0.9, 'GBP': 0.75, 'XAF': 600},
+        updatedAt: DateTime(2030),
+      );
+      const xaf = CarryLimit(
+        level: 1,
+        limitUsd: 100,
+        nextLimitUsd: 300,
+        currency: 'XAF',
+        limitAmount: 60000,
+        nextLimitAmount: 180000,
+        tiers: [60000, 180000, 600000],
+      );
+
+      test('the same currency keeps the round amount', () {
+        expect(xaf.limitTextIn('XAF', rates), 'XAF 60,000');
+      });
+
+      test('another currency is converted at today\'s rate', () {
+        expect(xaf.limitTextIn('EUR', rates), '€90');
+        expect(xaf.nextLimitTextIn('USD', rates), r'$300');
+        expect(xaf.tierTextIn(3, 'GBP', rates), '£750');
+      });
+
+      test('without rates, the limit\'s own currency', () {
+        expect(xaf.limitTextIn('EUR', null), 'XAF 60,000');
+      });
+
+      test('a deposit\'s limit too', () {
+        const d = RequestDeposit(
+          required: true,
+          limitUsd: 266,
+          limitAmount: 200,
+          limitCurrency: 'GBP',
+        );
+        expect(d.limitTextIn('GBP', rates), '£200');
+        expect(d.limitTextIn('USD', rates), r'$267');
+      });
     });
 
     test('an older server: the dollar amounts', () {

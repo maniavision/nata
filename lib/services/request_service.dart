@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'delivery_pricing.dart';
+import 'exchange_rate_service.dart' show ExchangeRates;
 import 'trip_service.dart' show PickedReceipt;
 import 'traveler_service.dart'
     show TravelerReview, TravelerReviews, TravelerTrip;
@@ -513,6 +514,23 @@ class PriceFormatter {
       write(ceilWhole(usd * rate).toDouble(), currency);
 
   static const _symbols = {'USD': r'$', 'EUR': '€', 'GBP': '£'};
+
+  /// [amount] in [from], written in [to] at today's [rates] (rounded up to
+  /// a whole amount); in [from] when [to] is the same or a rate is missing.
+  static String writeIn(
+    double amount,
+    String from,
+    String to,
+    ExchangeRates? rates,
+  ) {
+    if (from == to) return write(amount, from);
+    final fromRate = rates?.rateFor(from);
+    final toRate = rates?.rateFor(to);
+    if (fromRate == null || toRate == null || fromRate <= 0) {
+      return write(amount, from);
+    }
+    return write(ceilWhole(amount / fromRate * toRate).toDouble(), to);
+  }
 
   /// [amount], already in [currency], written as "$28" or "XOF 16,400".
   static String write(double amount, String currency) {
@@ -2123,6 +2141,34 @@ class CarryLimit {
     return next == null ? null : PriceFormatter.write(next, currency);
   }
 
+  /// The limit in the member's display currency [to] (a round amount when
+  /// it is the limit's own currency).
+  String limitTextIn(String to, ExchangeRates? rates) => PriceFormatter.writeIn(
+    limitAmount ?? limitUsd,
+    limitAmount == null ? 'USD' : currency,
+    to,
+    rates,
+  );
+
+  String? nextLimitTextIn(String to, ExchangeRates? rates) {
+    final next = nextLimitAmount ?? nextLimitUsd;
+    if (next == null) return null;
+    return PriceFormatter.writeIn(
+      next,
+      nextLimitAmount == null ? 'USD' : currency,
+      to,
+      rates,
+    );
+  }
+
+  String tierTextIn(int level, String to, ExchangeRates? rates) =>
+      PriceFormatter.writeIn(
+        tiers[(level - 1).clamp(0, tiers.length - 1)],
+        currency,
+        to,
+        rates,
+      );
+
   /// Level [level] (1 to 3)'s limit, written in [currency].
   String tierText(int level) => PriceFormatter.write(
     tiers[(level - 1).clamp(0, tiers.length - 1)],
@@ -2204,6 +2250,12 @@ class RequestDeposit {
   String get limitText => limitAmount != null && limitCurrency != null
       ? PriceFormatter.write(limitAmount!, limitCurrency!)
       : PriceFormatter.write(limitUsd ?? 100, 'USD');
+
+  /// The limit in the member's display currency [to].
+  String limitTextIn(String to, ExchangeRates? rates) =>
+      limitAmount != null && limitCurrency != null
+      ? PriceFormatter.writeIn(limitAmount!, limitCurrency!, to, rates)
+      : PriceFormatter.writeIn(limitUsd ?? 100, 'USD', to, rates);
 
   String? get paidText => paidAmount == null || paidCurrency == null
       ? amountText

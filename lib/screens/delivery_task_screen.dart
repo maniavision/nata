@@ -7,7 +7,9 @@ import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import 'package:intl/intl.dart';
+import '../services/exchange_rate_service.dart';
 import '../services/payment_service.dart';
+import '../services/preferences_service.dart';
 import '../services/request_service.dart';
 import '../widgets/avatar_image.dart';
 import 'delivery_confirm_screen.dart';
@@ -968,7 +970,10 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
             Text(
               l.depositRequiredBody(
                 dep.amountText ?? '',
-                dep.limitText,
+                dep.limitTextIn(
+                  PreferencesService().currency.code,
+                  ExchangeRateService.shared.latest,
+                ),
                 dep.amountText ?? '',
               ),
               style: GoogleFonts.dmSans(
