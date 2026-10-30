@@ -89,6 +89,25 @@ class AuthService {
         e.code == 'user_not_found';
   }
 
+  /// The store reviewers' demo account (supabase/seed/demo_accounts.md):
+  /// Google Play and App Review need to sign in without fetching a code.
+  static const reviewPhone = '+12025550101';
+
+  static bool isReviewPhone(String phone) =>
+      phone.replaceAll(RegExp(r'\D'), '') ==
+      reviewPhone.replaceAll(RegExp(r'\D'), '');
+
+  /// Signs the demo account in with no code (review-sign-in confirms the
+  /// test number's fixed code on the server, so it isn't in the app).
+  Future<void> reviewSignIn(String phone) async {
+    final response = await _client.functions.invoke(
+      'review-sign-in',
+      body: {'phone': phone},
+    );
+    final refresh = (response.data as Map)['refresh_token'] as String;
+    await _client.auth.setSession(refresh);
+  }
+
   /// Verifies the 6-digit OTP received via SMS.
   /// Returns the [AuthResponse] which contains the session.
   Future<AuthResponse> verifyOtp(String phone, String token) async {

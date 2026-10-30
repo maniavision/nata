@@ -231,6 +231,13 @@ class FakeAuthService extends Fake implements AuthService {
   }
 
   @override
+  /// Numbers signed in through review-sign-in (the demo account).
+  final List<String> reviewSignIns = [];
+
+  @override
+  Future<void> reviewSignIn(String phone) async => reviewSignIns.add(phone);
+
+  @override
   Future<void> sendOtp(
     String phone, {
     bool createUser = true,
