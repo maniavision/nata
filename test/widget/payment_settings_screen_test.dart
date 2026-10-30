@@ -152,7 +152,7 @@ void main() {
       await pump(tester);
 
       await tester.tap(
-        find.byKey(const ValueKey('payment-method-remove-visa-4242')),
+        find.byKey(const ValueKey('stripe-card-remove-visa-4242')),
       );
       await tester.pumpAndSettle();
       expect(find.text('Remove this payment method?'), findsOneWidget);
@@ -164,18 +164,19 @@ void main() {
       // Cancel keeps it.
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
-      expect(payments.saved, hasLength(2));
+      expect(payments.cards, hasLength(1));
 
       await tester.tap(
-        find.byKey(const ValueKey('payment-method-remove-visa-4242')),
+        find.byKey(const ValueKey('stripe-card-remove-visa-4242')),
       );
       await tester.pumpAndSettle();
       await tester.tap(
-        find.byKey(const ValueKey('payment-method-remove-confirm')),
+        find.byKey(const ValueKey('stripe-card-remove-confirm')),
       );
       await tester.pumpAndSettle();
 
-      expect(payments.saved.map((m) => m.id), ['apple-pay']);
+      // Removed from Stripe.
+      expect(payments.cards, isEmpty);
       expect(find.text('Visa •••• 4242'), findsNothing);
       expect(find.text('Apple Pay'), findsOneWidget);
     });
@@ -183,6 +184,23 @@ void main() {
     testWidgets('the default can be removed too; another takes its place', (
       tester,
     ) async {
+      payments = FakePaymentService(
+        methods: const [
+          PaymentMethod(
+            id: 'apple-pay',
+            kind: PaymentMethodKind.applePay,
+            isDefault: true,
+            walletDeviceLabel: "Fortune's iPhone",
+          ),
+          PaymentMethod(
+            id: 'mpesa',
+            kind: PaymentMethodKind.mobileMoney,
+            mobileProvider: 'M-Pesa',
+            mobileNetwork: 'MPESA_KEN',
+            mobileNumber: '+254712345678',
+          ),
+        ],
+      );
       await pump(tester);
       await tester.pumpAndSettle();
 
@@ -199,7 +217,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(payments.saved.map((m) => m.id), ['visa-4242']);
+      expect(payments.saved.map((m) => m.id), ['mpesa']);
       expect(payments.saved.single.isDefault, isTrue);
       expect(find.text('Apple Pay'), findsNothing);
       expect(find.text('Default'), findsOneWidget);
@@ -324,11 +342,11 @@ void main() {
       payments.failSave = true;
 
       await tester.tap(
-        find.byKey(const ValueKey('payment-method-remove-visa-4242')),
+        find.byKey(const ValueKey('stripe-card-remove-visa-4242')),
       );
       await tester.pumpAndSettle();
       await tester.tap(
-        find.byKey(const ValueKey('payment-method-remove-confirm')),
+        find.byKey(const ValueKey('stripe-card-remove-confirm')),
       );
       await tester.pumpAndSettle();
 
@@ -386,6 +404,57 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('\$150.00 held in Escrow'), findsWidgets);
+    });
+  });
+
+  group('Stripe cards', () {
+    testWidgets('several cards: the default is marked, another made default', (
+      tester,
+    ) async {
+      payments.cards = [
+        ...payments.cards,
+        const StripeCard(
+          id: 'pm_mc',
+          brand: 'mastercard',
+          last4: '5555',
+          expMonth: 11,
+          expYear: 2028,
+        ),
+      ];
+      payments.cards = [
+        for (final c in payments.cards)
+          StripeCard(
+            id: c.id,
+            brand: c.brand,
+            last4: c.last4,
+            expMonth: c.expMonth,
+            expYear: c.expYear,
+            isDefault: c.id == 'visa-4242',
+          ),
+      ];
+      await pump(tester);
+
+      expect(find.text('Mastercard •••• 5555'), findsOneWidget);
+      expect(find.byKey(const ValueKey('stripe-cards-note')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('stripe-card-default-pm_mc')));
+      await tester.pumpAndSettle();
+
+      expect(
+        payments.cards.firstWhere((c) => c.id == 'pm_mc').isDefault,
+        isTrue,
+      );
+      expect(
+        find.byKey(const ValueKey('stripe-card-default-visa-4242')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('cards that can\'t be loaded leave the rest', (tester) async {
+      payments.failCards = true;
+      await pump(tester);
+
+      expect(find.text('Apple Pay'), findsOneWidget);
+      expect(find.text('Visa •••• 4242'), findsNothing);
     });
   });
 }

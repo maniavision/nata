@@ -2374,5 +2374,12 @@
   "depositStatusHeld": "held",
   "depositStatusRefunding": "refunding",
   "depositStatusRefunded": "refunded",
-  "depositStatusPaidToSender": "paid to sender"
+  "depositStatusPaidToSender": "paid to sender",
+  "makeDefault": "Make default",
+  "stripeCardsNote": "Card details go straight to Stripe; Nata never sees your card number.",
+  "addCardSecurely": "Add card securely",
+  "stripeCardFormNote": "You'll enter the card in Stripe's secure form. It's saved with Stripe for your next payments.",
+  "errCardSave": "Couldn't save the card. Try again.",
+  "savedCardCheckoutNote": "You can pick another card or add one in the secure payment sheet.",
+  "useAnotherWallet": "Use another wallet"
 }

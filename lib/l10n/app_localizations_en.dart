@@ -5459,4 +5459,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depositStatusPaidToSender => 'paid to sender';
+
+  @override
+  String get makeDefault => 'Make default';
+
+  @override
+  String get stripeCardsNote =>
+      'Card details go straight to Stripe; Nata never sees your card number.';
+
+  @override
+  String get addCardSecurely => 'Add card securely';
+
+  @override
+  String get stripeCardFormNote =>
+      'You\'ll enter the card in Stripe\'s secure form. It\'s saved with Stripe for your next payments.';
+
+  @override
+  String get errCardSave => 'Couldn\'t save the card. Try again.';
+
+  @override
+  String get savedCardCheckoutNote =>
+      'You can pick another card or add one in the secure payment sheet.';
+
+  @override
+  String get useAnotherWallet => 'Use another wallet';
 }

@@ -9,6 +9,7 @@ import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/wallet_money.dart';
+import '../services/stripe_sheet.dart';
 import 'add_payment_method_screen.dart';
 import '../widgets/nata_toast.dart';
 
@@ -52,6 +53,9 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
   late final PaymentService _service = widget.service ?? PaymentService();
 
   List<PaymentMethod> _methods = const [];
+
+  /// Cards saved with Stripe (20240196), the default first.
+  List<StripeCard> _cards = const [];
   List<PayoutAccount> _payoutAccounts = const [];
   PayoutSchedule _schedule = PayoutSchedule.automatic;
 
@@ -151,9 +155,19 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     }
   }
 
+  Future<void> _loadCards() async {
+    try {
+      final cards = await _service.stripeCards();
+      if (mounted) setState(() => _cards = cards);
+    } catch (e) {
+      debugPrint('[PaymentSettings] cards: $e');
+    }
+  }
+
   Future<void> _load() async {
     _loadRecent();
     _loadBalance();
+    _loadCards();
     try {
       final results = await Future.wait([
         _service.methods(),
@@ -162,7 +176,12 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       ]);
       if (!mounted) return;
       setState(() {
-        _methods = results[0] as List<PaymentMethod>;
+        // Cards live with Stripe now; older card rows (a brand and last 4
+        // digits only) can't pay.
+        _methods = [
+          for (final m in results[0] as List<PaymentMethod>)
+            if (m.kind != PaymentMethodKind.card) m,
+        ];
         _payoutAccounts = results[1] as List<PayoutAccount>;
         _schedule = results[2] as PayoutSchedule;
         _loading = false;
@@ -194,11 +213,21 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
   Future<void> _addMethod() async {
     final added = await Navigator.of(context).push<PaymentMethod>(
       MaterialPageRoute(
-        builder: (context) =>
-            AddPaymentMethodScreen(holderFirstName: _firstName),
+        builder: (context) => AddPaymentMethodScreen(
+          holderFirstName: _firstName,
+          addCard: ({required bool makeDefault}) => _service.addStripeCard(
+            present: presentStripeSetupSheet,
+            makeDefault: makeDefault,
+          ),
+        ),
       ),
     );
     if (added == null || !mounted) return;
+    // A card is already saved with Stripe by then.
+    if (added.kind == PaymentMethodKind.card) {
+      await _loadCards();
+      return;
+    }
     await _change(() => _service.addMethod(added));
   }
 
@@ -261,6 +290,52 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     );
     if (confirmed != true || !mounted) return;
     await _change(() => _service.removeMethod(method.id));
+  }
+
+  Future<void> _removeCard(StripeCard card) async {
+    final l = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const ValueKey('stripe-card-remove-dialog'),
+        title: Text(l.removePaymentMethodTitle),
+        content: Text(
+          card.isDefault && _cards.length > 1
+              ? l.removeDefaultPaymentMethodBody(card.title)
+              : l.removePaymentMethodBody(card.title),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const ValueKey('stripe-card-remove-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: Text(l.remove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _changeCards(() => _service.removeStripeCard(card.id));
+  }
+
+  /// A change to the Stripe cards, which answers with them.
+  Future<void> _changeCards(Future<List<StripeCard>> Function() save) async {
+    try {
+      final cards = await save();
+      if (mounted) {
+        setState(() {
+          _cards = cards;
+          _error = null;
+        });
+      }
+    } catch (e) {
+      debugPrint('[PaymentSettings] card change: $e');
+      if (mounted) setState(() => _error = (l) => l.errPaymentSettingsSave);
+    }
   }
 
   /// Saves a change, then reloads: the database also moves the default.
@@ -549,10 +624,57 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                   ),
                   const SizedBox(height: 8),
                 ],
-                if (_methods.isEmpty)
+                if (_methods.isEmpty && _cards.isEmpty)
                   _empty(l.noPaymentMethods)
                 else
                   _list([
+                    for (final c in _cards)
+                      _row(
+                        leading: _iconBox(
+                          Icons.credit_card_rounded,
+                          radius: 8,
+                          size: 20,
+                        ),
+                        title: c.title,
+                        subtitle: l.cardExpires(c.expiry),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Which card is offered first, once there are
+                            // several.
+                            if (c.isDefault && _cards.length > 1)
+                              _chip(l.defaultLabel)
+                            else if (!c.isDefault)
+                              GestureDetector(
+                                key: ValueKey('stripe-card-default-${c.id}'),
+                                onTap: () => _changeCards(
+                                  () => _service.setDefaultStripeCard(c.id),
+                                ),
+                                child: Text(
+                                  l.makeDefault,
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              key: ValueKey('stripe-card-remove-${c.id}'),
+                              onTap: () => _removeCard(c),
+                              child: Text(
+                                l.remove,
+                                style: GoogleFonts.dmSans(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                  color: AppColors.mutedForeground,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     for (final m in _methods)
                       _row(
                         leading: _iconBox(
@@ -587,6 +709,29 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                         ),
                       ),
                   ]),
+                if (_cards.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    key: const ValueKey('stripe-cards-note'),
+                    children: [
+                      const Icon(
+                        Icons.lock_rounded,
+                        size: 12,
+                        color: AppColors.mutedForeground,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          l.stripeCardsNote,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
     );

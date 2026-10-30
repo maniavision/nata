@@ -9463,6 +9463,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'paid to sender'**
   String get depositStatusPaidToSender;
+
+  /// No description provided for @makeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Make default'**
+  String get makeDefault;
+
+  /// No description provided for @stripeCardsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Card details go straight to Stripe; Nata never sees your card number.'**
+  String get stripeCardsNote;
+
+  /// No description provided for @addCardSecurely.
+  ///
+  /// In en, this message translates to:
+  /// **'Add card securely'**
+  String get addCardSecurely;
+
+  /// No description provided for @stripeCardFormNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll enter the card in Stripe\'s secure form. It\'s saved with Stripe for your next payments.'**
+  String get stripeCardFormNote;
+
+  /// No description provided for @errCardSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the card. Try again.'**
+  String get errCardSave;
+
+  /// No description provided for @savedCardCheckoutNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can pick another card or add one in the secure payment sheet.'**
+  String get savedCardCheckoutNote;
+
+  /// No description provided for @useAnotherWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another wallet'**
+  String get useAnotherWallet;
 }
 
 class _AppLocalizationsDelegate
