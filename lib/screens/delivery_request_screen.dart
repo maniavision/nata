@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/city_service.dart';
+import '../services/contact_check.dart';
 import '../services/country_service.dart';
 import '../services/delivery_pricing.dart';
 import '../services/exchange_rate_service.dart';
@@ -529,6 +530,14 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       }
     }
     if (_recipientNameCtrl.text.trim().length < 2) return l.errRecipientName;
+    // No swapping contacts before the traveler accepts (the database checks
+    // the same).
+    if (ContactCheck.anyHasContactDetails([
+      for (final item in _items) ...[item.name.text, item.description.text],
+      _recipientNameCtrl.text,
+    ])) {
+      return l.contactDetailsNotAllowed;
+    }
     if (_recipientPhone == null) {
       return l.errRecipientPhone;
     }
@@ -704,6 +713,8 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errNotDelivered;
       case RequestFailure.alreadyReviewed:
         return l.errAlreadyReviewed;
+      case RequestFailure.contactDetails:
+        return l.contactDetailsNotAllowed;
       case RequestFailure.balanceTooLow:
       case RequestFailure.other:
         return l.errRequestFailed;
@@ -1142,6 +1153,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               maxLength: 80,
               capitalization: TextCapitalization.sentences,
             ),
+            _contactNote(item.name, 'request-item-$index-contact'),
             const SizedBox(height: 14),
             _fieldLabel(l.itemCategory.toUpperCase()),
             const SizedBox(height: 8),
@@ -1189,6 +1201,10 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                 enabledBorder: _fieldBorder(),
                 focusedBorder: _fieldBorder(focused: true),
               ),
+            ),
+            _contactNote(
+              item.description,
+              'request-description-$index-contact',
             ),
             const SizedBox(height: 14),
             _fieldLabel('${l.itemValueLabel.toUpperCase()} *'),
@@ -1440,6 +1456,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
             maxLength: 80,
             capitalization: TextCapitalization.words,
           ),
+          _contactNote(_recipientNameCtrl, 'request-recipient-name-contact'),
           const SizedBox(height: 14),
           _fieldLabel(l.recipientPhone.toUpperCase()),
           const SizedBox(height: 6),
@@ -2183,6 +2200,43 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       width: focused ? 2 : 1,
     ),
   );
+
+  /// A red note under [controller]'s field while it holds a phone number or
+  /// contact details (see [ContactCheck]).
+  Widget _contactNote(TextEditingController controller, String key) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        if (!ContactCheck.hasContactDetails(value.text)) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+          child: Row(
+            key: ValueKey(key),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 14,
+                color: AppColors.destructive,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  context.l10n.contactDetailsNotAllowed,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    color: AppColors.destructive,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   // One line in every language, so side-by-side fields line up.
   Widget _fieldLabel(String text, {bool small = false}) => OneLineText(

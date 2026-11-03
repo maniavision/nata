@@ -2215,5 +2215,6 @@
   "paidSecurelyThroughFlutterwave": "Vous vivez au Nigeria : vous payez par carte en nairas, sur la page sécurisée de Flutterwave. Vos données de carte ne passent jamais par Nata.",
   "depositCardFlutterwaveNote": "En nairas, sur la page sécurisée de Flutterwave",
   "errPayoutAccountNotFound": "Flutterwave ne trouve pas ce compte. Vérifiez la banque et le numéro de compte à 10 chiffres.",
-  "payoutNigeriaBankNote": "Au Nigeria, vos paiements arrivent sur votre compte bancaire via Flutterwave. Le compte est enregistré au nom donné par votre banque."
+  "payoutNigeriaBankNote": "Au Nigeria, vos paiements arrivent sur votre compte bancaire via Flutterwave. Le compte est enregistré au nom donné par votre banque.",
+  "contactDetailsNotAllowed": "Pas de numéro de téléphone, d'e-mail ni de coordonnées ici. Une fois que le voyageur accepte, vous pouvez discuter dans Nata."
 }

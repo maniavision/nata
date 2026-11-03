@@ -5499,4 +5499,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get payoutNigeriaBankNote =>
       'In Nigeria, payouts go to your bank account through Flutterwave. The account is saved under the name your bank gives.';
+
+  @override
+  String get contactDetailsNotAllowed =>
+      'No phone numbers, emails or contact details here. Once the traveler accepts, you can chat in Nata.';
 }

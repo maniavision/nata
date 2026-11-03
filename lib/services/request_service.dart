@@ -138,6 +138,9 @@ class RequestItem {
 
 /// Why sending a request did not work.
 enum RequestFailure {
+  /// A phone number or contact details in the item or recipient fields.
+  contactDetails,
+
   /// A problem was already reported on this delivery.
   alreadyReported,
 
@@ -1839,6 +1842,7 @@ class RequestService {
     bool has(String code) => message.contains('nata:$code');
 
     if (has('not_signed_in')) return RequestFailure.notSignedIn;
+    if (has('contact_details')) return RequestFailure.contactDetails;
     if (has('item_value_invalid')) return RequestFailure.itemValueInvalid;
     if (has('deposit_required')) return RequestFailure.depositRequired;
     if (has('not_verified')) return RequestFailure.notVerified;
