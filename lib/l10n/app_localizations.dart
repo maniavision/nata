@@ -9535,6 +9535,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No phone numbers, emails or contact details here. Once the traveler accepts, you can chat in Nata.'**
   String get contactDetailsNotAllowed;
+
+  /// No description provided for @errTooManyTravelers.
+  ///
+  /// In en, this message translates to:
+  /// **'You can send one request to {max} travelers at most.'**
+  String errTooManyTravelers(int max);
+
+  /// No description provided for @errDifferentDestinations.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick travelers going to the same city.'**
+  String get errDifferentDestinations;
+
+  /// No description provided for @errFeesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load Nata\'s fee. Check your connection and try again.'**
+  String get errFeesUnavailable;
+
+  /// No description provided for @feeLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get feeLocal;
+
+  /// No description provided for @feeInternational.
+  ///
+  /// In en, this message translates to:
+  /// **'International'**
+  String get feeInternational;
+
+  /// No description provided for @feeTotalIfAllAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'If they all accept'**
+  String get feeTotalIfAllAccept;
+
+  /// No description provided for @nataFeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nata fee'**
+  String get nataFeeTitle;
+
+  /// No description provided for @feeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay a traveler\'s fee only if they accept. It opens the chat, where you agree on the price and the handover and pay the traveler directly.'**
+  String get feeNote;
+
+  /// No description provided for @sendRequestToTravelers.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to {count} travelers'**
+  String sendRequestToTravelers(int count);
+
+  /// No description provided for @pickTravelersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick up to {max} travelers going to the same city to send them one request.'**
+  String pickTravelersHint(int max);
+
+  /// No description provided for @travelersPicked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 traveler picked} other{{count} travelers picked}}'**
+  String travelersPicked(int count);
+
+  /// No description provided for @pickTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick {name}'**
+  String pickTraveler(String name);
+
+  /// No description provided for @confirmDeliveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item delivered?'**
+  String get confirmDeliveredTitle;
+
+  /// No description provided for @confirmDeliveredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm only once {name} has handed over your item. This closes the delivery.'**
+  String confirmDeliveredBody(String name);
+
+  /// No description provided for @confirmDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm delivery'**
+  String get confirmDelivered;
+
+  /// No description provided for @cancelFlatPaidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The chat with the traveler is already open, so Nata\'s fee of {fee} isn\'t refunded. Cancel anyway?'**
+  String cancelFlatPaidBody(String fee);
+
+  /// No description provided for @payNataFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the Nata fee ({amount})'**
+  String payNataFee(String amount);
+
+  /// No description provided for @nataFeeCheckout.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the Nata fee'**
+  String get nataFeeCheckout;
+
+  /// No description provided for @howNataFeeWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'What the Nata fee is for'**
+  String get howNataFeeWorks;
+
+  /// No description provided for @nataFeeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'It opens the chat with {name}. There you agree on the delivery price and the handover, and you pay {name} directly. If {name} cancels, the fee is refunded.'**
+  String nataFeeNote(String name);
+
+  /// No description provided for @feeTotalToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Total to pay'**
+  String get feeTotalToPay;
+
+  /// No description provided for @priceAgreedInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Price agreed in chat'**
+  String get priceAgreedInChat;
+
+  /// No description provided for @senderConfirmsDeliveryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Agree on the price and the handover with {name} in the chat. {name} pays you directly and confirms the delivery in the app once the item arrives.'**
+  String senderConfirmsDeliveryNote(String name);
+
+  /// No description provided for @notifAcceptedFeeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{traveler} accepted your request. Pay the Nata fee within 24 hours to start chatting.'**
+  String notifAcceptedFeeBody(String traveler);
+
+  /// No description provided for @notifChatOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat is open'**
+  String get notifChatOpenTitle;
+
+  /// No description provided for @notifFeePaidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{sender} paid the Nata fee. Agree on the price and the handover in the chat.'**
+  String notifFeePaidBody(String sender);
+
+  /// No description provided for @notifFeeReceivedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can now chat with {traveler} to agree on the price and the handover.'**
+  String notifFeeReceivedBody(String traveler);
+
+  /// No description provided for @notifConfirmedBySenderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{sender} confirmed you delivered their item.'**
+  String notifConfirmedBySenderBody(String sender);
 }
 
 class _AppLocalizationsDelegate

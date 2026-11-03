@@ -418,9 +418,21 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
                   ..._depositCard(l),
                   _receivedStep(l),
                   const SizedBox(height: 16),
-                  _deliveredStep(l),
-                  const SizedBox(height: 24),
-                  _confirm(l),
+                  // Flat (20240200): the sender confirms delivery; there is
+                  // no recipient and no code.
+                  if (widget.delivery.source?.isFlat ?? false)
+                    _card(
+                      child: _note(
+                        l.senderConfirmsDeliveryNote(
+                          widget.delivery.senderName,
+                        ),
+                      ),
+                    )
+                  else ...[
+                    _deliveredStep(l),
+                    const SizedBox(height: 24),
+                    _confirm(l),
+                  ],
                 ],
               ),
             ),

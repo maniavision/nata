@@ -284,7 +284,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _loadCodes(List<SentRequest> sent) async {
     final service = widget.requestService ?? RequestService();
     final codes = <String, DeliveryCode>{};
-    for (final r in sent.where((r) => r.isPaid)) {
+    // Flat requests have no recipient and no code (20240200).
+    for (final r in sent.where((r) => r.isPaid && !r.isFlat)) {
       try {
         final code = await service.deliveryCode(r.id);
         if (code != null) codes[r.id] = code;
@@ -384,6 +385,51 @@ class _RequestsScreenState extends State<RequestsScreen> {
   /// Requests whose receipt is being confirmed.
   final Set<String> _confirming = {};
 
+  /// A flat request: the sender confirms the traveler delivered (there is no
+  /// code), then rates them.
+  Future<void> _confirmDelivered(SentRequest request) async {
+    final l = context.l10n;
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('confirm-delivered-dialog'),
+        title: Text(l.confirmDeliveredTitle),
+        content: Text(l.confirmDeliveredBody(request.trip.firstName)),
+        actions: [
+          TextButton(
+            key: const ValueKey('confirm-delivered-no'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.notYet),
+          ),
+          TextButton(
+            key: const ValueKey('confirm-delivered-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.confirmDelivered),
+          ),
+        ],
+      ),
+    );
+    if (yes != true || !mounted) return;
+    setState(() => _confirming.add(request.id));
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await (widget.requestService ?? RequestService()).confirmDelivered(
+        request.id,
+      );
+      if (!mounted) return;
+      setState(() => _confirming.remove(request.id));
+      await _review(request);
+    } catch (e) {
+      debugPrint('[Requests] confirm delivered: $e');
+      if (!mounted) return;
+      setState(() => _confirming.remove(request.id));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
+      _loadSent();
+    }
+  }
+
   /// Opens a pending request in the request form; reloads once it is saved.
   Future<void> _edit(SentRequest request) async {
     final saved = await Navigator.of(context).push<bool>(
@@ -417,7 +463,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
         key: const ValueKey('cancel-request-dialog'),
         title: Text(l.cancelRequestTitle),
         content: Text(
-          fee > 0 ? l.cancelRequestFeeBody(feeText) : l.cancelRequestFreeBody,
+          fee > 0
+              ? (request.isFlat
+                    ? l.cancelFlatPaidBody(feeText)
+                    : l.cancelRequestFeeBody(feeText))
+              : l.cancelRequestFreeBody,
         ),
         actions: [
           TextButton(
@@ -445,7 +495,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       );
       // Paid: the money (less the fee) goes back right away. If this call
       // fails the refund stays queued and is sent later.
-      if (request.isPaid) {
+      if (request.isPaid && !request.isFlat) {
         unawaited(
           service.sendRefunds().catchError(
             (Object e) => debugPrint('[Requests] refunds: $e'),
@@ -531,6 +581,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       (_incomingAll ?? const []).where((r) => r.isPending).toList();
 
   String _payoutText(IncomingRequest r) {
+    if (r.isFlat) return context.l10n.priceAgreedInChat;
     final shown = _money.format(r.payoutUsd);
     return _money.currency == 'USD' ? shown : '≈ $shown';
   }
@@ -1277,7 +1328,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
     onTap: r.isEditable ? () => _edit(r) : null,
     onCancel: r.isCancellable ? () => _cancel(r) : null,
     onPay: r.awaitingPayment ? () => _pay(r) : null,
-    onConfirmReceipt: r.awaitingReceipt && !_confirming.contains(r.id)
+    onConfirmReceipt: _confirming.contains(r.id)
+        ? null
+        : r.awaitingDeliveryConfirm
+        ? () => _confirmDelivered(r)
+        : r.awaitingReceipt
         ? () => _confirmReceipt(r)
         : null,
     onReview: r.canReview ? () => _review(r) : null,
@@ -1639,6 +1694,8 @@ class _SentRequestCard extends StatelessWidget {
   String get _totalText {
     final fixed = request.fixedTotalText;
     if (fixed != null) return fixed;
+    // A flat fee is known exactly, in its own currency.
+    if (request.isFlat) return request.feeText;
     final shown = money.format(request.totalUsd);
     return money.currency == 'USD' ? shown : '≈ $shown';
   }
@@ -2040,7 +2097,9 @@ class _SentRequestCard extends StatelessWidget {
                 _button(
                   key: 'sent-request-pay-${request.id}',
                   icon: Icons.lock_rounded,
-                  label: '${l.payEscrow} ($_totalText)',
+                  label: request.isFlat
+                      ? l.payNataFee(_totalText)
+                      : '${l.payEscrow} ($_totalText)',
                   color: AppColors.accent,
                   filled: true,
                   onTap: onPay ?? () {},
@@ -2049,6 +2108,17 @@ class _SentRequestCard extends StatelessWidget {
               if (deliveryCode != null && request.isPaid) ...[
                 const SizedBox(height: 12),
                 _codeBox(context, deliveryCode!),
+              ],
+              if (request.awaitingDeliveryConfirm) ...[
+                const SizedBox(height: 12),
+                _button(
+                  key: 'sent-request-confirm-delivered-${request.id}',
+                  icon: Icons.check_circle_rounded,
+                  label: l.confirmDelivered,
+                  color: _green,
+                  filled: true,
+                  onTap: onConfirmReceipt ?? () {},
+                ),
               ],
               if (request.awaitingReceipt) ...[
                 const SizedBox(height: 12),

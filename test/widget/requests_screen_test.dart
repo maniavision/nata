@@ -522,4 +522,124 @@ void main() {
     await pump(tester);
     expect(find.byIcon(Icons.filter_list_rounded), findsNothing);
   });
+
+  group('Flat Nata fees', () {
+    Future<void> pumpOutgoing(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          RequestsScreen(
+            requestService: service,
+            exchangeRates: FakeExchangeRateService(),
+            initialTab: 1,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a pending request shows its fee, exactly', (tester) async {
+      service.mine = [sampleSentRequest(id: 'f1', pricing: 'flat')];
+      await pumpOutgoing(tester);
+
+      expect(find.text(r'$4.99'), findsOneWidget);
+      expect(find.textContaining('≈'), findsNothing);
+    });
+
+    testWidgets('accepted: pay the Nata fee', (tester) async {
+      service.mine = [
+        sampleSentRequest(
+          id: 'f1',
+          status: 'accepted',
+          pricing: 'flat',
+          displayCurrency: 'USD',
+          displayCost: 0,
+          displayFee: 4.99,
+          displayTotal: 4.99,
+        ),
+      ];
+      await pumpOutgoing(tester);
+
+      expect(find.text(r'Pay the Nata fee ($4.99)'), findsOneWidget);
+    });
+
+    testWidgets('paid: the sender confirms delivery, no code', (tester) async {
+      service.mine = [
+        sampleSentRequest(
+          id: 'f1',
+          status: 'handed_off',
+          pricing: 'flat',
+          displayCurrency: 'USD',
+          displayCost: 0,
+          displayFee: 4.99,
+          displayTotal: 4.99,
+        ),
+      ];
+      service.codes['f1'] = const DeliveryCode('1234');
+      await pumpOutgoing(tester);
+
+      expect(find.text('1234'), findsNothing);
+      await tester.tap(
+        find.byKey(const ValueKey('sent-request-confirm-delivered-f1')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('confirm-delivered-dialog')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('confirm-delivered-yes')));
+      await tester.pumpAndSettle();
+
+      expect(service.deliveriesConfirmed, ['f1']);
+    });
+
+    testWidgets('"Not yet" changes nothing', (tester) async {
+      service.mine = [
+        sampleSentRequest(id: 'f1', status: 'paid', pricing: 'flat'),
+      ];
+      await pumpOutgoing(tester);
+
+      await tester.tap(
+        find.byKey(const ValueKey('sent-request-confirm-delivered-f1')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('confirm-delivered-no')));
+      await tester.pumpAndSettle();
+
+      expect(service.deliveriesConfirmed, isEmpty);
+    });
+
+    testWidgets('cancelling after paying says the fee is kept', (tester) async {
+      service.mine = [
+        sampleSentRequest(
+          id: 'f1',
+          status: 'paid',
+          pricing: 'flat',
+          displayCurrency: 'USD',
+          displayCost: 0,
+          displayFee: 4.99,
+          displayTotal: 4.99,
+        ),
+      ];
+      await pumpOutgoing(tester);
+
+      await tester.tap(find.byKey(const ValueKey('sent-request-cancel-f1')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(r"Nata's fee of $4.99 isn't refunded"),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a traveler sees the price is agreed in chat', (tester) async {
+      service.incoming = [sampleIncoming(id: 'fi', pricing: 'flat')];
+      await pump(tester);
+
+      expect(find.text('Price agreed in chat'), findsWidgets);
+    });
+  });
 }

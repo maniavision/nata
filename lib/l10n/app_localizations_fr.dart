@@ -5592,4 +5592,125 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get contactDetailsNotAllowed =>
       'Pas de numéro de téléphone, d\'e-mail ni de coordonnées ici. Une fois que le voyageur accepte, vous pouvez discuter dans Nata.';
+
+  @override
+  String errTooManyTravelers(int max) {
+    return 'Vous pouvez envoyer une demande à $max voyageurs au plus.';
+  }
+
+  @override
+  String get errDifferentDestinations =>
+      'Choisissez des voyageurs qui vont dans la même ville.';
+
+  @override
+  String get errFeesUnavailable =>
+      'Impossible de charger les frais Nata. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get feeLocal => 'Local';
+
+  @override
+  String get feeInternational => 'International';
+
+  @override
+  String get feeTotalIfAllAccept => 'S\'ils acceptent tous';
+
+  @override
+  String get nataFeeTitle => 'Frais Nata';
+
+  @override
+  String get feeNote =>
+      'Vous ne payez les frais d\'un voyageur que s\'il accepte. Ils ouvrent la discussion, où vous convenez du prix et de la remise, et vous payez le voyageur directement.';
+
+  @override
+  String sendRequestToTravelers(int count) {
+    return 'Envoyer à $count voyageurs';
+  }
+
+  @override
+  String pickTravelersHint(int max) {
+    return 'Cochez jusqu\'à $max voyageurs qui vont dans la même ville pour leur envoyer une seule demande.';
+  }
+
+  @override
+  String travelersPicked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs choisis',
+      one: '1 voyageur choisi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pickTraveler(String name) {
+    return 'Choisir $name';
+  }
+
+  @override
+  String get confirmDeliveredTitle => 'Article livré ?';
+
+  @override
+  String confirmDeliveredBody(String name) {
+    return 'Confirmez seulement une fois que $name a remis votre article. Cela clôt la livraison.';
+  }
+
+  @override
+  String get confirmDelivered => 'Confirmer la livraison';
+
+  @override
+  String cancelFlatPaidBody(String fee) {
+    return 'La discussion avec le voyageur est déjà ouverte, les frais Nata de $fee ne sont donc pas remboursés. Annuler quand même ?';
+  }
+
+  @override
+  String payNataFee(String amount) {
+    return 'Payer les frais Nata ($amount)';
+  }
+
+  @override
+  String get nataFeeCheckout => 'Payer les frais Nata';
+
+  @override
+  String get howNataFeeWorks => 'À quoi servent les frais Nata';
+
+  @override
+  String nataFeeNote(String name) {
+    return 'Ils ouvrent la discussion avec $name. Vous y convenez du prix de la livraison et de la remise, et vous payez $name directement. Si $name annule, les frais sont remboursés.';
+  }
+
+  @override
+  String get feeTotalToPay => 'Total à payer';
+
+  @override
+  String get priceAgreedInChat => 'Prix convenu dans la discussion';
+
+  @override
+  String senderConfirmsDeliveryNote(String name) {
+    return 'Convenez du prix et de la remise avec $name dans la discussion. $name vous paie directement et confirme la livraison dans l\'app une fois l\'article arrivé.';
+  }
+
+  @override
+  String notifAcceptedFeeBody(String traveler) {
+    return '$traveler a accepté votre demande. Payez les frais Nata sous 24 heures pour commencer à discuter.';
+  }
+
+  @override
+  String get notifChatOpenTitle => 'La discussion est ouverte';
+
+  @override
+  String notifFeePaidBody(String sender) {
+    return '$sender a payé les frais Nata. Convenez du prix et de la remise dans la discussion.';
+  }
+
+  @override
+  String notifFeeReceivedBody(String traveler) {
+    return 'Vous pouvez maintenant discuter avec $traveler pour convenir du prix et de la remise.';
+  }
+
+  @override
+  String notifConfirmedBySenderBody(String sender) {
+    return '$sender a confirmé que vous avez livré son article.';
+  }
 }

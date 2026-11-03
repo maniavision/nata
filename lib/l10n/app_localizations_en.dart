@@ -5503,4 +5503,125 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contactDetailsNotAllowed =>
       'No phone numbers, emails or contact details here. Once the traveler accepts, you can chat in Nata.';
+
+  @override
+  String errTooManyTravelers(int max) {
+    return 'You can send one request to $max travelers at most.';
+  }
+
+  @override
+  String get errDifferentDestinations =>
+      'Pick travelers going to the same city.';
+
+  @override
+  String get errFeesUnavailable =>
+      'Couldn\'t load Nata\'s fee. Check your connection and try again.';
+
+  @override
+  String get feeLocal => 'Local';
+
+  @override
+  String get feeInternational => 'International';
+
+  @override
+  String get feeTotalIfAllAccept => 'If they all accept';
+
+  @override
+  String get nataFeeTitle => 'Nata fee';
+
+  @override
+  String get feeNote =>
+      'You pay a traveler\'s fee only if they accept. It opens the chat, where you agree on the price and the handover and pay the traveler directly.';
+
+  @override
+  String sendRequestToTravelers(int count) {
+    return 'Send to $count travelers';
+  }
+
+  @override
+  String pickTravelersHint(int max) {
+    return 'Tick up to $max travelers going to the same city to send them one request.';
+  }
+
+  @override
+  String travelersPicked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers picked',
+      one: '1 traveler picked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pickTraveler(String name) {
+    return 'Pick $name';
+  }
+
+  @override
+  String get confirmDeliveredTitle => 'Item delivered?';
+
+  @override
+  String confirmDeliveredBody(String name) {
+    return 'Confirm only once $name has handed over your item. This closes the delivery.';
+  }
+
+  @override
+  String get confirmDelivered => 'Confirm delivery';
+
+  @override
+  String cancelFlatPaidBody(String fee) {
+    return 'The chat with the traveler is already open, so Nata\'s fee of $fee isn\'t refunded. Cancel anyway?';
+  }
+
+  @override
+  String payNataFee(String amount) {
+    return 'Pay the Nata fee ($amount)';
+  }
+
+  @override
+  String get nataFeeCheckout => 'Pay the Nata fee';
+
+  @override
+  String get howNataFeeWorks => 'What the Nata fee is for';
+
+  @override
+  String nataFeeNote(String name) {
+    return 'It opens the chat with $name. There you agree on the delivery price and the handover, and you pay $name directly. If $name cancels, the fee is refunded.';
+  }
+
+  @override
+  String get feeTotalToPay => 'Total to pay';
+
+  @override
+  String get priceAgreedInChat => 'Price agreed in chat';
+
+  @override
+  String senderConfirmsDeliveryNote(String name) {
+    return 'Agree on the price and the handover with $name in the chat. $name pays you directly and confirms the delivery in the app once the item arrives.';
+  }
+
+  @override
+  String notifAcceptedFeeBody(String traveler) {
+    return '$traveler accepted your request. Pay the Nata fee within 24 hours to start chatting.';
+  }
+
+  @override
+  String get notifChatOpenTitle => 'Chat is open';
+
+  @override
+  String notifFeePaidBody(String sender) {
+    return '$sender paid the Nata fee. Agree on the price and the handover in the chat.';
+  }
+
+  @override
+  String notifFeeReceivedBody(String traveler) {
+    return 'You can now chat with $traveler to agree on the price and the handover.';
+  }
+
+  @override
+  String notifConfirmedBySenderBody(String sender) {
+    return '$sender confirmed you delivered their item.';
+  }
 }

@@ -141,6 +141,15 @@ enum RequestFailure {
   /// A phone number or contact details in the item or recipient fields.
   contactDetails,
 
+  /// More than 5 travelers picked for one request.
+  tooManyTravelers,
+
+  /// The picked travelers don't all go to the same city.
+  differentDestinations,
+
+  /// A flat request is confirmed by the sender, not with a code.
+  senderConfirms,
+
   /// A problem was already reported on this delivery.
   alreadyReported,
 
@@ -548,8 +557,13 @@ class PriceFormatter {
   }
 
   /// [amount], already in [currency], written as "$28" or "XOF 16,400".
+  /// Whole amounts without decimals; a flat fee keeps its cents ("\$2.99").
   static String write(double amount, String currency) {
-    final text = NumberFormat('#,##0', 'en_US').format(amount);
+    final cents = (amount * 100).round() % 100 != 0;
+    final text = NumberFormat(
+      cents ? '#,##0.00' : '#,##0',
+      'en_US',
+    ).format(amount);
     final symbol = _symbols[currency];
     return symbol != null ? '$symbol$text' : '$currency $text';
   }
@@ -598,7 +612,13 @@ class RequestDraft {
   /// The most items one request can carry.
   static const maxItems = 5;
 
-  final String tripId;
+  /// The most travelers one request can be sent to.
+  static const maxTravelers = 5;
+
+  /// The trips it goes to: one per traveler, all to the same city.
+  final List<String> tripIds;
+
+  String get tripId => tripIds.first;
 
   /// What is in the parcel (at least one, at most [maxItems]).
   final List<RequestItem> items;
@@ -607,22 +627,25 @@ class RequestDraft {
   final double weightKg;
   final String dimensions;
   final RequestSizeClass sizeClass;
+
+  /// Only for requests priced by distance (made before flat fees); new ones
+  /// have no recipient.
   final String recipientName;
   final String recipientPhone;
 
-  /// The total the sender was shown. The database refuses the request if the
-  /// traveler's price has changed since, instead of charging something else.
-  final double expectedTotal;
+  /// The total the sender was shown, for a request priced by distance. The
+  /// database refuses it if the price has changed since.
+  final double? expectedTotal;
 
   const RequestDraft({
-    required this.tripId,
+    required this.tripIds,
     required this.items,
     required this.weightKg,
     required this.dimensions,
     required this.sizeClass,
-    required this.recipientName,
-    required this.recipientPhone,
-    required this.expectedTotal,
+    this.recipientName = '',
+    this.recipientPhone = '',
+    this.expectedTotal,
   });
 
   /// Stored in `item_size`; null when left blank.
@@ -631,6 +654,49 @@ class RequestDraft {
     return d.isEmpty ? null : d;
   }
 }
+
+/// Nata's flat fee for sending to one traveler (20240200): it follows where
+/// the sender lives and whether the trip stays in one country. Paid only if
+/// that traveler accepts.
+class FlatFee {
+  final double amount;
+
+  /// USD, EUR or GBP.
+  final String currency;
+
+  /// The trip starts and ends in the same country.
+  final bool isLocal;
+
+  const FlatFee({
+    required this.amount,
+    required this.currency,
+    required this.isLocal,
+  });
+
+  factory FlatFee.fromJson(Map<String, dynamic> j) => FlatFee(
+    amount: (j['amount'] as num).toDouble(),
+    currency: ((j['currency'] as String?) ?? 'USD').trim().toUpperCase(),
+    isLocal: j['is_local'] == true,
+  );
+
+  /// "\$4.99", "€1.99".
+  String get text => PriceFormatter.write(amount, currency);
+
+  /// Fees added up, by currency (they are all in one currency for a sender,
+  /// as it follows where they live): "\$7.98".
+  static String totalText(Iterable<FlatFee> fees) {
+    final byCurrency = <String, double>{};
+    for (final f in fees) {
+      byCurrency[f.currency] = (byCurrency[f.currency] ?? 0) + f.amount;
+    }
+    return byCurrency.entries
+        .map((e) => PriceFormatter.write(roundCents(e.value), e.key))
+        .join(' + ');
+  }
+}
+
+/// [amount] rounded to the cent (sums of fees like 2.99 + 4.99 drift).
+double roundCents(double amount) => (amount * 100).roundToDouble() / 100;
 
 /// A random version-4 UUID (the request gets its id before it is saved).
 String generateUuidV4([Random? random]) {
@@ -655,8 +721,19 @@ class SentRequest {
   final String status;
   final DateTime createdAt;
 
-  /// What the sender pays, in US dollars.
+  /// What the sender pays, in US dollars; for a flat fee, the fee in
+  /// [feeCurrency].
   final double totalUsd;
+
+  /// 'flat' (a Nata fee per traveler who accepts, 20240200) or 'distance'
+  /// (the earlier price held in escrow).
+  final String pricing;
+
+  /// Shared by the requests sent together to several travelers.
+  final String? groupId;
+
+  /// The currency [totalUsd] is in: USD, or EUR or GBP for a flat fee.
+  final String feeCurrency;
 
   /// Set once the sender cancelled: the fee they owe, in US dollars (0 when
   /// they cancelled before the traveler answered).
@@ -719,6 +796,9 @@ class SentRequest {
     required this.status,
     required this.createdAt,
     required this.totalUsd,
+    this.pricing = 'distance',
+    this.groupId,
+    this.feeCurrency = 'USD',
     this.cancellationFee,
     this.cancelledAt,
     this.displayCurrency,
@@ -747,6 +827,17 @@ class SentRequest {
   /// Only a request the traveler has not answered yet can be changed.
   bool get isEditable => status == 'pending';
 
+  /// A flat Nata fee: no price held, no recipient, and the sender confirms
+  /// delivery.
+  bool get isFlat => pricing == 'flat';
+
+  /// The flat fee as stored, e.g. "\$4.99" or "€1.99".
+  String get feeText => PriceFormatter.write(totalUsd, feeCurrency);
+
+  /// Paid and not confirmed yet: the sender confirms a flat request once the
+  /// item arrived.
+  bool get awaitingDeliveryConfirm => isFlat && isPaid;
+
   /// Paid, and not delivered yet: the delivery code is in use.
   bool get isPaid => status == 'paid' || status == 'handed_off';
 
@@ -759,11 +850,18 @@ class SentRequest {
   /// rounded up to whole dollars.
   /// Matches `nata.cancellation_fee_for` in the database, which has the final
   /// word.
-  double? get cancellationFeeNow => switch (status) {
-    'pending' => 0,
-    'accepted' || 'paid' => ceilWhole(totalUsd * 0.10).toDouble(),
-    _ => null,
-  };
+  double? get cancellationFeeNow => isFlat
+      ? switch (status) {
+          'pending' || 'accepted' => 0,
+          // The chat is open: the fee is kept.
+          'paid' => totalUsd,
+          _ => null,
+        }
+      : switch (status) {
+          'pending' => 0,
+          'accepted' || 'paid' => ceilWhole(totalUsd * 0.10).toDouble(),
+          _ => null,
+        };
 
   bool get isCancellable => cancellationFeeNow != null;
 
@@ -798,7 +896,11 @@ class SentRequest {
   String? get fixedCancellationFeeText {
     final usd = cancellationFeeNow;
     if (!priceFixed || usd == null) return null;
-    final fee = usd == 0 ? 0.0 : ceilWhole(displayTotal! * 0.10).toDouble();
+    final fee = usd == 0
+        ? 0.0
+        : isFlat
+        ? displayTotal!
+        : ceilWhole(displayTotal! * 0.10).toDouble();
     return PriceFormatter.write(fee, displayCurrency!);
   }
 
@@ -813,6 +915,9 @@ class SentRequest {
     status: (j['status'] as String?) ?? 'pending',
     createdAt: DateTime.parse(j['created_at'] as String),
     totalUsd: (j['total_amount'] as num?)?.toDouble() ?? 0,
+    pricing: (j['pricing'] as String?) ?? 'distance',
+    groupId: j['group_id'] as String?,
+    feeCurrency: ((j['currency'] as String?) ?? 'USD').trim().toUpperCase(),
     cancellationFee: (j['cancellation_fee'] as num?)?.toDouble(),
     cancelledAt: j['cancelled_at'] == null
         ? null
@@ -858,8 +963,12 @@ class IncomingRequest {
   /// The deadline to answer (pending) or for the sender to pay (accepted).
   final DateTime? expiresAt;
 
-  /// What the traveler earns (the delivery cost), in US dollars.
+  /// What the traveler earns (the delivery cost), in US dollars; 0 for a
+  /// flat request, where the sender pays them directly.
   final double payoutUsd;
+
+  /// 'flat' or 'distance' (see SentRequest.pricing).
+  final String pricing;
   final List<RequestItem> items;
   final double weightKg;
   final String? dimensions;
@@ -906,6 +1015,7 @@ class IncomingRequest {
     required this.createdAt,
     this.expiresAt,
     required this.payoutUsd,
+    this.pricing = 'distance',
     required this.items,
     required this.weightKg,
     this.dimensions,
@@ -931,6 +1041,10 @@ class IncomingRequest {
     this.senderRating,
     this.senderReviewed = false,
   });
+
+  /// A flat request: the sender pays the traveler directly and confirms
+  /// delivery; no code, no payout.
+  bool get isFlat => pricing == 'flat';
 
   /// Delivered, and the traveler hasn't rated the sender yet.
   bool get needsSenderReview => status == 'delivered' && !senderReviewed;
@@ -970,6 +1084,7 @@ class IncomingRequest {
       createdAt: DateTime.parse(j['created_at'] as String),
       expiresAt: time(j['expires_at']),
       payoutUsd: (j['payout_usd'] as num?)?.toDouble() ?? 0,
+      pricing: (j['pricing'] as String?) ?? 'distance',
       items: [
         for (final i in (j['items'] as List? ?? const []))
           RequestItem.fromJson(Map<String, dynamic>.from(i as Map)),
@@ -1046,8 +1161,9 @@ class RequestService {
     return id;
   }
 
-  /// Uploads the photos, then creates the request and its photo rows in one
-  /// step. Returns the request id.
+  /// Uploads the photos, then creates one request per trip in [draft] (all
+  /// in one step, sharing the photos). Returns the first request's id, which
+  /// is also the group's.
   ///
   /// [requestId] must stay the same when the user retries after a failure: the
   /// database then recognises the request and never creates a second one, and
@@ -1086,18 +1202,15 @@ class RequestService {
 
     try {
       await _client.rpc(
-        'create_delivery_request',
+        'send_delivery_request',
         params: {
           'p_id': requestId,
-          'p_trip_id': draft.tripId,
+          'p_trip_ids': draft.tripIds,
           'p_items': [for (final i in items) i.toJson()],
           'p_item_weight_kg': draft.weightKg,
           'p_item_size': draft.itemSize,
           'p_item_size_class': draft.sizeClass.dbValue,
-          'p_recipient_name': draft.recipientName.trim(),
-          'p_recipient_phone': draft.recipientPhone,
           'p_photo_paths': paths,
-          'p_expected_total': draft.expectedTotal,
         },
       );
       return requestId;
@@ -1389,6 +1502,33 @@ class RequestService {
   /// The sender confirms they received the item.
   Future<void> confirmReceipt(String requestId) =>
       _call('confirm_receipt', {'p_id': requestId});
+
+  /// The sender confirms the traveler delivered a flat request (no code).
+  Future<void> confirmDelivered(String requestId) =>
+      _call('confirm_delivered', {'p_id': requestId});
+
+  /// Nata's fee for sending to each of [tripIds], by trip id.
+  Future<Map<String, FlatFee>> quoteFees(List<String> tripIds) async {
+    _userId;
+    try {
+      final rows =
+          await _client.rpc(
+                'quote_request_fees',
+                params: {'p_trip_ids': tripIds},
+              )
+              as List;
+      return {
+        for (final r in rows)
+          (r as Map)['trip_id'] as String: FlatFee.fromJson(
+            Map<String, dynamic>.from(r),
+          ),
+      };
+    } on PostgrestException catch (e) {
+      throw RequestException(reasonFor(e.message), e);
+    } catch (e) {
+      throw RequestException(RequestFailure.other, e);
+    }
+  }
 
   /// The delivered, cancelled and expired requests the user sent or
   /// carried, by id, for the Archive (20240167).
@@ -1843,6 +1983,11 @@ class RequestService {
 
     if (has('not_signed_in')) return RequestFailure.notSignedIn;
     if (has('contact_details')) return RequestFailure.contactDetails;
+    if (has('too_many_travelers')) return RequestFailure.tooManyTravelers;
+    if (has('different_destinations')) {
+      return RequestFailure.differentDestinations;
+    }
+    if (has('sender_confirms')) return RequestFailure.senderConfirms;
     if (has('item_value_invalid')) return RequestFailure.itemValueInvalid;
     if (has('deposit_required')) return RequestFailure.depositRequired;
     if (has('not_verified')) return RequestFailure.notVerified;

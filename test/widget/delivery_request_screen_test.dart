@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:carrywise_app/screens/delivery_request_screen.dart';
-import 'package:carrywise_app/services/city_service.dart';
-import 'package:carrywise_app/services/exchange_rate_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:carrywise_app/services/traveler_service.dart';
@@ -73,6 +71,7 @@ void main() {
     WidgetTester tester, {
     Locale locale = const Locale('en'),
     TravelerTrip? tripOverride,
+    List<TravelerTrip> moreTrips = const [],
     AppCurrency currency = AppCurrency.usd,
     bool settle = true,
   }) async {
@@ -92,6 +91,7 @@ void main() {
                   MaterialPageRoute(
                     builder: (_) => DeliveryRequestScreen(
                       trip: tripOverride ?? trip,
+                      moreTrips: moreTrips,
                       service: service,
                       photoPicker: fakePicker,
                       idGenerator: () => 'req-${++idCounter}',
@@ -151,8 +151,6 @@ void main() {
   /// A completely valid form.
   Future<void> fillValid(WidgetTester tester) async {
     await enter(tester, 'request-item-0', 'Apple AirPods Max');
-    await enter(tester, 'request-recipient-name', 'Jane Doe');
-    await enter(tester, 'request-recipient-phone', '+44 7700 900123');
     await enter(tester, 'request-weight', '0.9 kg');
     await tapKey(tester, 'request-size-shoebox');
     await addPhoto(tester);
@@ -226,31 +224,26 @@ void main() {
         'WHAT IS THE ITEM?',
         'ITEM CATEGORY',
         'ITEM DESCRIPTION',
-        'Recipient Details',
-        'RECIPIENT NAME',
-        'RECIPIENT PHONE NUMBER',
         'Size and Weight',
         'PACKAGE WEIGHT',
         'PACKAGE DIMENSIONS',
         'Item Photos (Sealed Box)',
-        'Calculated Item Price',
+        'Nata fee',
       ]) {
         expect(find.text(t), findsOneWidget, reason: t);
       }
+      // No recipient any more (20240200).
+      expect(find.text('Recipient Details'), findsNothing);
       // A single page: no step counter.
       expect(find.textContaining('Step 1'), findsNothing);
     });
 
-    testWidgets('starts empty: no made-up AirPods or recipient', (
-      tester,
-    ) async {
+    testWidgets('starts empty: no made-up AirPods', (tester) async {
       await pump(tester);
 
       for (final k in [
         'request-item-0',
         'request-description-0',
-        'request-recipient-name',
-        'request-recipient-phone',
         'request-weight',
         'request-dimensions',
       ]) {
@@ -270,23 +263,8 @@ void main() {
         find.text('e.g. Sony Headphones, Sealed Cosmetics, etc.'),
         findsOneWidget,
       );
-      expect(find.text('Full name as on their ID'), findsOneWidget);
-      expect(find.text('e.g. 7700 900123'), findsOneWidget);
       expect(
         find.text('Provide details about the item and packaging...'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('says the phone is shared only after the traveler accepts', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      expect(
-        find.text(
-          'Shared with the traveler only after they accept your request',
-        ),
         findsOneWidget,
       );
     });
@@ -314,24 +292,6 @@ void main() {
       expect(find.text('Traveler limit: —'), findsNWidgets(2));
     });
 
-    testWidgets('the phone field only accepts phone characters', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      await enter(tester, 'request-recipient-phone', 'abc+44 (77)-00.9x');
-
-      expect(
-        tester
-            .widget<TextField>(
-              find.byKey(const ValueKey('request-recipient-phone')),
-            )
-            .controller!
-            .text,
-        '+44 (77)-00.9',
-      );
-    });
-
     testWidgets('back leaves without sending', (tester) async {
       await pump(tester);
 
@@ -346,8 +306,14 @@ void main() {
     String text(WidgetTester t, String key) =>
         t.widget<TextField>(find.byKey(ValueKey(key))).controller!.text;
 
-    String total(WidgetTester t) =>
-        t.widget<Text>(find.byKey(const ValueKey('request-price-total'))).data!;
+    String fee(WidgetTester t) => t
+        .widget<Text>(
+          find.descendant(
+            of: find.byKey(const ValueKey('request-fee-0')),
+            matching: find.text(r'$4.99'),
+          ),
+        )
+        .data!;
 
     Future<void> addItem(WidgetTester t) => tapKey(t, 'request-add-item');
 
@@ -582,18 +548,17 @@ void main() {
       expect(find.byKey(const ValueKey('request-error')), findsNothing);
     });
 
-    testWidgets('the price does not depend on the number of items', (
+    testWidgets('the fee does not depend on the number of items', (
       tester,
     ) async {
       await pump(tester);
-      await enter(tester, 'request-weight', '0.9 kg');
-      final one = total(tester);
+      final one = fee(tester);
 
       await addItem(tester);
       await addItem(tester);
 
-      expect(total(tester), one);
-      expect(one, r'$112');
+      expect(fee(tester), one);
+      expect(one, r'$4.99');
     });
 
     testWidgets('weight, size and photos are still for the whole parcel', (
@@ -717,60 +682,9 @@ void main() {
       expect(service.attempts, 0);
     });
 
-    testWidgets('then the recipient name', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-item-0', 'Watch');
-
-      await send(tester);
-
-      expect(errorText(tester), "Enter the recipient's full name.");
-    });
-
-    testWidgets('a one-letter name is not a name', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-recipient-name', 'J');
-
-      await send(tester);
-
-      expect(errorText(tester), "Enter the recipient's full name.");
-    });
-
-    testWidgets('then the phone number', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-recipient-name', 'Jane Doe');
-
-      await send(tester);
-
-      expect(
-        errorText(tester),
-        'Enter a valid phone number for the recipient.',
-      );
-    });
-
-    for (final bad in ['+44 12', '+0 1234567890', '12', 'hello']) {
-      testWidgets('rejects the phone "$bad"', (tester) async {
-        await pump(tester);
-        await enter(tester, 'request-item-0', 'Watch');
-        await enter(tester, 'request-recipient-name', 'Jane Doe');
-        await enter(tester, 'request-recipient-phone', bad);
-
-        await send(tester);
-
-        expect(
-          errorText(tester),
-          'Enter a valid phone number for the recipient.',
-        );
-        expect(service.attempts, 0);
-      });
-    }
-
     testWidgets('then the weight', (tester) async {
       await pump(tester);
       await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-recipient-name', 'Jane Doe');
-      await enter(tester, 'request-recipient-phone', '+447700900123');
 
       await send(tester);
 
@@ -781,8 +695,6 @@ void main() {
       testWidgets('rejects the weight "$bad"', (tester) async {
         await pump(tester);
         await enter(tester, 'request-item-0', 'Watch');
-        await enter(tester, 'request-recipient-name', 'Jane Doe');
-        await enter(tester, 'request-recipient-phone', '+447700900123');
         await enter(tester, 'request-weight', bad);
 
         await send(tester);
@@ -829,8 +741,6 @@ void main() {
     testWidgets('then at least one photo', (tester) async {
       await pump(tester);
       await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-recipient-name', 'Jane Doe');
-      await enter(tester, 'request-recipient-phone', '+447700900123');
       await enter(tester, 'request-weight', '0.5');
       await tapKey(tester, 'request-size-shoebox');
 
@@ -868,8 +778,6 @@ void main() {
     testWidgets('a size is required', (tester) async {
       await pump(tester);
       await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-recipient-name', 'Jane Doe');
-      await enter(tester, 'request-recipient-phone', '+447700900123');
       await enter(tester, 'request-weight', '0.5');
 
       await send(tester);
@@ -1121,491 +1029,11 @@ void main() {
     });
   });
 
-  group('price', () {
-    // Lagos -> London is 5,012 km; the flight is tomorrow (24 hours), so
-    // cost = 5 + 61.88 + 3 * kg + 31.25, rounded up to a whole dollar, and
-    // the fee is 10% of that, rounded up.
-    String total(WidgetTester t) =>
-        t.widget<Text>(find.byKey(const ValueKey('request-price-total'))).data!;
-
-    testWidgets('is worked out from the distance between the two cities', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      expect(
-        find.text('Based on distance (5012 km), weight & delivery date'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets(
-      'shows the cost, the fee and the total once a weight is entered',
-      (tester) async {
-        await pump(tester);
-
-        await enter(tester, 'request-weight', '0.9 kg');
-
-        // 100.83 -> 101; 10% of 101 = 10.10 -> 11
-        expect(total(tester), r'$112');
-        expect(find.text(r'$101'), findsOneWidget);
-        expect(find.text(r'$11'), findsOneWidget);
-        expect(find.text('Platform protection & escrow'), findsOneWidget);
-      },
-    );
-
-    testWidgets('updates as the weight changes', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-weight', '1');
-      final one = total(tester);
-
-      await enter(tester, 'request-weight', '2');
-
-      expect(total(tester), isNot(one));
-      expect(total(tester), r'$116'); // 104.13 -> 105, + 11
-    });
-
-    testWidgets('a heavier parcel costs more, in whole dollars', (
-      tester,
-    ) async {
-      await pump(tester);
-      await enter(tester, 'request-weight', '1');
-      expect(total(tester), r'$113'); // 101.13 -> 102, + 11
-
-      await enter(tester, 'request-weight', '3');
-      expect(total(tester), r'$119'); // 107.13 -> 108, + 11
-    });
-
-    testWidgets('before a weight is typed it asks for one', (tester) async {
-      await pump(tester);
-
-      expect(
-        find.byKey(const ValueKey('request-price-weight-hint')),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Enter the package weight to see the final price.'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('the hint goes away once there is a weight', (tester) async {
-      await pump(tester);
-
-      await enter(tester, 'request-weight', '0.9');
-
-      expect(
-        find.byKey(const ValueKey('request-price-weight-hint')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('an invalid weight is treated as not entered yet', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      await enter(tester, 'request-weight', 'abc');
-
-      expect(
-        find.byKey(const ValueKey('request-price-weight-hint')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('the closer the flight, the more it costs', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-weight', '1');
-      final tomorrow = total(tester);
-
-      // Same trip, but the flight is a month away.
-      await pump(
-        tester,
-        tripOverride: sampleTrip(
-          tripId: 'far',
-          departureDate: DateTime(2030, 7, 21),
-          maxWeightKg: 3,
-        ),
-      );
-      await enter(tester, 'request-weight', '1');
-
-      final far = double.parse(total(tester).substring(1));
-      expect(far, lessThan(double.parse(tomorrow.substring(1))));
-    });
-
-    testWidgets('a flight today is priced like tomorrow, not as free', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        tripOverride: sampleTrip(departureDate: DateTime(2030, 6, 21)),
-      );
-      await enter(tester, 'request-weight', '1');
-      final today = total(tester);
-
-      await pump(
-        tester,
-        tripOverride: sampleTrip(departureDate: DateTime(2030, 6, 22)),
-      );
-      await enter(tester, 'request-weight', '1');
-
-      expect(today, total(tester));
-    });
-
-    testWidgets('a different route costs a different amount', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-weight', '1');
-      final lagosLondon = total(tester);
-
-      await pump(
-        tester,
-        tripOverride: sampleTrip(
-          departureCity: 'Accra',
-          departureCountry: 'GH',
-          arrivalCity: 'Paris',
-          arrivalCountry: 'FR',
-          departureDate: DateTime(2030, 6, 22),
-        ),
-      );
-      await enter(tester, 'request-weight', '1');
-
-      expect(total(tester), isNot(lagosLondon));
-      expect(find.textContaining('4815 km'), findsOneWidget);
-    });
-
-    testWidgets('the send button carries the total', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-weight', '0.9');
-
-      expect(find.text(r'Send Request · $112'), findsOneWidget);
-    });
-
-    testWidgets('says nothing is charged yet', (tester) async {
-      await pump(tester);
-
-      expect(find.textContaining('Nothing is charged now'), findsOneWidget);
-    });
-
-    testWidgets('does not use the traveler\'s own price any more', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        tripOverride: sampleTrip(
-          price: 9999,
-          departureDate: DateTime(2030, 6, 22),
-        ),
-      );
-      await enter(tester, 'request-weight', '0.9');
-
-      expect(total(tester), r'$112');
-      expect(find.textContaining('9999'), findsNothing);
-      expect(find.text("Traveler's price"), findsNothing);
-    });
-
-    testWidgets('no exchange rate is asked for when the currency is dollars', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      expect(rates.calls, 0);
-      expect(find.byKey(const ValueKey('request-price-rate')), findsNothing);
-    });
-  });
-
-  group('price in the user\'s currency', () {
-    String total(WidgetTester t) =>
-        t.widget<Text>(find.byKey(const ValueKey('request-price-total'))).data!;
-
-    testWidgets('euros', (tester) async {
-      await pump(tester, currency: AppCurrency.eur);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      // 101 * 0.892438 = 90.14 -> 91 ; 11 * 0.892438 = 9.82 -> 10
-      expect(find.text('€91'), findsOneWidget);
-      expect(find.text('€10'), findsOneWidget);
-      // Converted amounts are an estimate until the traveler accepts.
-      expect(total(tester), '≈ €101');
-    });
-
-    testWidgets('pounds', (tester) async {
-      await pump(tester, currency: AppCurrency.gbp);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      // 101 * 0.755923 = 76.35 -> 77 ; 11 * 0.755923 = 8.32 -> 9
-      expect(total(tester), '≈ £86');
-    });
-
-    testWidgets('says a converted price is an estimate until accepted', (
-      tester,
-    ) async {
-      await pump(tester, currency: AppCurrency.eur);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      expect(
-        find.text(
-          "This is an estimate in EUR at today's rate. The price is fixed when the traveler accepts.",
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('dollars are exact: no estimate mark or note', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      expect(total(tester), r'$112');
-      expect(
-        find.byKey(const ValueKey('request-price-estimate-note')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('the CFA franc, without cents', (tester) async {
-      await pump(tester, currency: AppCurrency.xof);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      // 101 * 585.399478 = 59,125.35 -> 59,126 ; 11 * 585.399478 =
-      // 6,439.39 -> 6,440
-      expect(find.text('XOF 59,126'), findsOneWidget);
-      expect(find.text('XOF 6,440'), findsOneWidget);
-      expect(total(tester), '≈ XOF 65,566');
-    });
-
-    testWidgets('shows the rate used and when it was updated', (tester) async {
-      await pump(tester, currency: AppCurrency.xof);
-
-      expect(find.text('1 USD = 585.40 XOF · updated Jun 21'), findsOneWidget);
-    });
-
-    testWidgets('small rates keep four decimals', (tester) async {
-      await pump(tester, currency: AppCurrency.eur);
-
-      expect(find.text('1 USD = 0.8924 EUR · updated Jun 21'), findsOneWidget);
-    });
-
-    testWidgets('credits the rate provider', (tester) async {
-      await pump(tester, currency: AppCurrency.eur);
-
-      expect(find.text('Exchange rates by Exchange Rate API'), findsOneWidget);
-    });
-
-    testWidgets('asks for the rates once', (tester) async {
-      await pump(tester, currency: AppCurrency.eur);
-
-      expect(rates.calls, 1);
-    });
-
-    testWidgets('the send button shows the converted total', (tester) async {
-      await pump(tester, currency: AppCurrency.gbp);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      expect(find.text('Send Request · ≈ £86'), findsOneWidget);
-    });
-
-    testWidgets('but what is sent is always the dollar total', (tester) async {
-      await pump(tester, currency: AppCurrency.xof);
-      await fillValid(tester);
-
-      await send(tester);
-
-      expect(service.sent.single.draft.expectedTotal, 112);
-    });
-
-    testWidgets('when rates are unavailable it shows dollars and says why', (
-      tester,
-    ) async {
-      rates.result = null;
-      await pump(tester, currency: AppCurrency.eur);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      expect(total(tester), r'$112');
-      expect(
-        find.byKey(const ValueKey('request-price-rate-missing')),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'Exchange rate unavailable, so prices are shown in US dollars.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.byKey(const ValueKey('request-price-rate')), findsNothing);
-    });
-
-    testWidgets('a currency missing from the rates falls back to dollars', (
-      tester,
-    ) async {
-      rates.result = ExchangeRates(
-        perUsd: const {'USD': 1, 'GBP': 0.75},
-        updatedAt: DateTime.utc(2030, 6, 21),
-      );
-      await pump(tester, currency: AppCurrency.eur);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      expect(total(tester), r'$112');
-    });
-
-    testWidgets('the CFA franc works when only XAF is listed', (tester) async {
-      rates.result = ExchangeRates(
-        perUsd: const {'XAF': 600},
-        updatedAt: DateTime.utc(2030, 6, 21),
-      );
-      await pump(tester, currency: AppCurrency.xof);
-      await enter(tester, 'request-weight', '0.9 kg');
-
-      expect(find.byKey(const ValueKey('request-price-rate')), findsOneWidget);
-      expect(total(tester), startsWith('≈ XOF '));
-    });
-
-    testWidgets('shows the price loading until the rates arrive', (
-      tester,
-    ) async {
-      rates.gate = Completer<void>();
-      await pump(tester, currency: AppCurrency.eur, settle: false);
-
-      expect(
-        find.byKey(const ValueKey('request-price-loading')),
-        findsOneWidget,
-      );
-      expect(find.text('Calculating the price…'), findsOneWidget);
-      final button = tester.widget<ElevatedButton>(
-        find.byKey(const ValueKey('request-send')),
-      );
-      expect(button.onPressed, isNull);
-
-      rates.gate!.complete();
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('request-price-loading')), findsNothing);
-      expect(find.byKey(const ValueKey('request-price-total')), findsOneWidget);
-    });
-
-    testWidgets('translated', (tester) async {
-      await pump(tester, currency: AppCurrency.eur, locale: const Locale('es'));
-
-      expect(
-        find.text(
-          'Esto es una estimación en EUR al tipo de cambio de hoy. El precio se fija cuando el viajero acepta.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.textContaining('Según la distancia (5012 km)'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('1 USD = 0.8924 EUR · actualizado 21 jun'),
-        findsOneWidget,
-      );
-    });
-  });
-
-  group('when the price cannot be worked out', () {
-    testWidgets('a failed city lookup says so, with a Retry', (tester) async {
-      cities.fail = true;
-      await pump(tester);
-
-      expect(find.byKey(const ValueKey('request-quote-error')), findsOneWidget);
-      expect(
-        find.text(
-          'Could not calculate the price. Check your connection and try again.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.byKey(const ValueKey('request-price-total')), findsNothing);
-    });
-
-    testWidgets('sending is blocked until there is a price', (tester) async {
-      cities.fail = true;
-      await pump(tester);
-
-      final button = tester.widget<ElevatedButton>(
-        find.byKey(const ValueKey('request-send')),
-      );
-      expect(button.onPressed, isNull);
-      expect(find.text('Send Request'), findsOneWidget);
-    });
-
-    testWidgets('Retry works once the connection is back', (tester) async {
-      cities.fail = true;
-      await pump(tester);
-
-      cities.fail = false;
-      await tapKey(tester, 'request-quote-retry');
-
-      expect(find.byKey(const ValueKey('request-quote-error')), findsNothing);
-      expect(find.byKey(const ValueKey('request-price-total')), findsOneWidget);
-    });
-
-    testWidgets('a city that is not in the database is the same problem', (
-      tester,
-    ) async {
-      cities.cities = {};
-      await pump(tester);
-
-      expect(find.byKey(const ValueKey('request-quote-error')), findsOneWidget);
-    });
-
-    testWidgets('only one of the two cities known is not enough', (
-      tester,
-    ) async {
-      cities.cities = {'NG|Lagos': const CityCoordinates(6.5, 3.4)};
-      await pump(tester);
-
-      expect(find.byKey(const ValueKey('request-quote-error')), findsOneWidget);
-    });
-
-    testWidgets('shows the price loading while the cities are looked up', (
-      tester,
-    ) async {
-      cities.gate = Completer<void>();
-      await pump(tester, settle: false);
-
-      expect(
-        find.byKey(const ValueKey('request-price-loading')),
-        findsOneWidget,
-      );
-
-      cities.gate!.complete();
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('request-price-total')), findsOneWidget);
-    });
-
-    testWidgets('the form can still be filled in meanwhile', (tester) async {
-      cities.fail = true;
-      await pump(tester);
-
-      await enter(tester, 'request-item-0', 'Watch');
-
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const ValueKey('request-item-0')))
-            .controller!
-            .text,
-        'Watch',
-      );
-    });
-
-    testWidgets('after a retry the form can be sent', (tester) async {
-      cities.fail = true;
-      await pump(tester);
-      cities.fail = false;
-      await tapKey(tester, 'request-quote-retry');
-
-      await fillValid(tester);
-      await send(tester);
-
-      expect(service.sent.length, 1);
-    });
-  });
-
   group('sending', () {
     testWidgets('sends everything entered, for this trip', (tester) async {
       await pump(tester);
       await enter(tester, 'request-item-0', '  Apple AirPods Max  ');
       await enter(tester, 'request-description-0', 'Brand new, sealed');
-      await enter(tester, 'request-recipient-name', '  Jane Doe ');
-      await enter(tester, 'request-recipient-phone', '+44 (7700) 900-123');
       await enter(tester, 'request-weight', '900 g');
       await enter(tester, 'request-dimensions', '24 × 24 × 8 cm');
       await tapKey(tester, 'request-size-shoebox');
@@ -1614,15 +1042,15 @@ void main() {
       await send(tester);
 
       final d = service.sent.single.draft;
-      expect(d.tripId, 'trip-77');
+      expect(d.tripIds, ['trip-77']);
       expect(d.items.single.name.trim(), 'Apple AirPods Max');
       expect(d.items.single.description, 'Brand new, sealed');
       expect(d.sizeClass, RequestSizeClass.shoebox);
-      expect(d.expectedTotal, 112); // what the sender was shown, in USD
+      expect(d.expectedTotal, isNull); // a flat fee: nothing to re-check
       expect(d.weightKg, 0.9);
       expect(d.itemSize, '24 × 24 × 8 cm');
-      expect(d.recipientName.trim(), 'Jane Doe');
-      expect(d.recipientPhone, '+447700900123'); // cleaned up
+      expect(d.recipientName, isEmpty); // no recipient any more
+      expect(d.recipientPhone, isEmpty);
       expect(service.sent.single.photos.length, 1);
     });
 
@@ -1922,17 +1350,6 @@ void main() {
       expect(service.attempts, 0);
     });
 
-    testWidgets('so do they in the recipient\'s name', (tester) async {
-      await pump(tester);
-      await fillValid(tester);
-      await enter(tester, 'request-recipient-name', 'Jane +242061234567');
-
-      await send(tester);
-
-      expect(errorText(tester), note);
-      expect(service.attempts, 0);
-    });
-
     testWidgets('ordinary numbers are fine', (tester) async {
       await pump(tester);
       await fillValid(tester);
@@ -1945,11 +1362,166 @@ void main() {
     });
   });
 
+  group('Nata fee', () {
+    testWidgets('shows the fee for the traveler, and when it is paid', (
+      tester,
+    ) async {
+      service.fees = {
+        'trip-77': const FlatFee(amount: 2.99, currency: 'USD', isLocal: true),
+      };
+      await pump(tester);
+
+      expect(find.text('Nata fee'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('request-fee-0')),
+          matching: find.text(r'$2.99'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Local'), findsOneWidget);
+      expect(
+        find.textContaining("You pay a traveler's fee only if they accept"),
+        findsOneWidget,
+      );
+      // No distance price or estimate any more.
+      expect(find.text('Calculated Item Price'), findsNothing);
+      expect(service.feeCalls, 1);
+    });
+
+    testWidgets('euros and pounds keep their cents', (tester) async {
+      service.fees = {
+        'trip-77': const FlatFee(amount: 3.99, currency: 'EUR', isLocal: false),
+      };
+      await pump(tester);
+
+      expect(find.text('€3.99'), findsOneWidget);
+      expect(find.textContaining('International'), findsOneWidget);
+    });
+
+    testWidgets('no single total for one traveler', (tester) async {
+      await pump(tester);
+
+      expect(find.byKey(const ValueKey('request-fee-total')), findsNothing);
+    });
+
+    testWidgets('a failed quote can be retried, and sending waits', (
+      tester,
+    ) async {
+      service.failFees = true;
+      await pump(tester);
+
+      expect(find.byKey(const ValueKey('request-fee-error')), findsOneWidget);
+      await fillValid(tester);
+      await send(tester);
+      expect(service.attempts, 0);
+
+      service.failFees = false;
+      await tapKey(tester, 'request-fee-retry');
+
+      expect(find.byKey(const ValueKey('request-fee-0')), findsOneWidget);
+      await send(tester);
+      expect(service.sent, hasLength(1));
+    });
+
+    testWidgets('translated', (tester) async {
+      await pump(tester, locale: const Locale('fr'));
+
+      expect(find.text('Frais Nata'), findsOneWidget);
+    });
+  });
+
+  group('several travelers', () {
+    late TravelerTrip second;
+
+    setUp(() {
+      second = sampleTrip(
+        tripId: 'trip-88',
+        firstName: 'Kofi',
+        lastName: 'Mensah',
+        departureCity: 'Paris',
+        arrivalCity: 'London',
+        departureDate: DateTime(2030, 6, 25),
+        maxWeightKg: 2,
+        maxSize: 'Envelope',
+      );
+    });
+
+    Future<void> pumpBoth(WidgetTester tester) =>
+        pump(tester, moreTrips: [second]);
+
+    testWidgets('lists each traveler with their fee, and the total', (
+      tester,
+    ) async {
+      service.fees = {
+        'trip-77': const FlatFee(amount: 4.99, currency: 'USD', isLocal: false),
+        'trip-88': const FlatFee(amount: 2.99, currency: 'USD', isLocal: true),
+      };
+      await pumpBoth(tester);
+
+      expect(find.text('Amara Kalu'), findsWidgets);
+      expect(find.text('Kofi Mensah'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('request-fee-total')))
+            .data,
+        r'$7.98',
+      );
+      expect(find.text('If they all accept'), findsOneWidget);
+      expect(find.text('Send to 2 travelers'), findsOneWidget);
+    });
+
+    testWidgets('the smallest limits apply to the parcel', (tester) async {
+      await pumpBoth(tester);
+
+      expect(find.text('Traveler limit: 2.0 kg'), findsOneWidget);
+      expect(find.text('Traveler limit: Envelope'), findsOneWidget);
+
+      await enter(tester, 'request-item-0', 'Watch');
+      await enter(tester, 'request-weight', '2.5');
+      await tapKey(tester, 'request-size-envelope');
+      await addPhoto(tester);
+      await send(tester);
+
+      expect(errorText(tester), contains('2.0 kg'));
+      expect(service.attempts, 0);
+    });
+
+    testWidgets('one send goes to every trip', (tester) async {
+      await pumpBoth(tester);
+      await enter(tester, 'request-item-0', 'Passport');
+      await enter(tester, 'request-weight', '0.2');
+      await tapKey(tester, 'request-size-envelope');
+      await addPhoto(tester);
+
+      await send(tester);
+
+      expect(service.sent.single.draft.tripIds, ['trip-77', 'trip-88']);
+    });
+
+    testWidgets('different cities are refused with a clear message', (
+      tester,
+    ) async {
+      service.fail = const RequestException(
+        RequestFailure.differentDestinations,
+      );
+      await pumpBoth(tester);
+      await enter(tester, 'request-item-0', 'Passport');
+      await enter(tester, 'request-weight', '0.2');
+      await tapKey(tester, 'request-size-envelope');
+      await addPhoto(tester);
+
+      await send(tester);
+
+      expect(errorText(tester), 'Pick travelers going to the same city.');
+    });
+  });
+
   group('translations', () {
     testWidgets('Spanish', (tester) async {
       await pump(tester, locale: const Locale('es'));
 
-      expect(find.text('Datos del destinatario'), findsOneWidget);
+      expect(find.text('Tarifa de Nata'), findsOneWidget);
       expect(find.text('Tamaño y peso'), findsOneWidget);
       expect(find.text('Sin fotos'), findsOneWidget);
       expect(find.textContaining('Enviar solicitud'), findsOneWidget);
@@ -1959,7 +1531,7 @@ void main() {
     testWidgets('French', (tester) async {
       await pump(tester, locale: const Locale('fr'));
 
-      expect(find.text('Informations du destinataire'), findsOneWidget);
+      expect(find.text('Frais Nata'), findsOneWidget);
       expect(find.text('Taille et poids'), findsOneWidget);
       expect(find.text('Aucune photo'), findsOneWidget);
       expect(find.text('Max 3.0 kg'), findsOneWidget);
@@ -1973,50 +1545,6 @@ void main() {
       expect(errorText(tester), 'Indica qué es el artículo.');
     });
   });
-
-  group('recipient phone', () {
-    Future<void> fillRest(WidgetTester tester) async {
-      await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-recipient-name', 'Jane Doe');
-    }
-
-    Finder prefix() => find.byKey(const ValueKey('request-recipient-country'));
-
-    testWidgets("starts with the destination country's code", (tester) async {
-      await pump(tester); // Lagos -> London
-
-      expect(
-        find.descendant(of: prefix(), matching: find.text('+44')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: prefix(), matching: find.text('🇬🇧')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('follows the trip: a trip to France gets +33', (tester) async {
-      await pump(
-        tester,
-        tripOverride: sampleTrip(arrivalCity: 'Paris', arrivalCountry: 'FR'),
-      );
-
-      expect(
-        find.descendant(of: prefix(), matching: find.text('+33')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('a local number gets the code, without its leading 0', (
-      tester,
-    ) async {
-      await pump(tester);
-      await fillRest(tester);
-      await enter(tester, 'request-recipient-phone', '07700 900123');
-
-      expect(errorText(tester), isNull);
-    });
-  });
 }
 
 Future<void> fillValidWithoutPhoto(WidgetTester tester) async {
@@ -2027,8 +1555,6 @@ Future<void> fillValidWithoutPhoto(WidgetTester tester) async {
 
   await enter('request-item-0', 'Apple AirPods Max');
   await enter('request-item-value-0', '100');
-  await enter('request-recipient-name', 'Jane Doe');
-  await enter('request-recipient-phone', '+44 7700 900123');
   await enter('request-weight', '0.9 kg');
   await tester.tap(find.byKey(const ValueKey('request-size-shoebox')));
   await tester.pump();

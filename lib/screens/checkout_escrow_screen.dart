@@ -686,7 +686,8 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   const SizedBox(height: 16),
                   _buildBreakdownCard(),
                   const SizedBox(height: 16),
-                  _buildRefundGuaranteeCard(),
+                  // A flat fee isn't held: the guarantee is for escrow.
+                  if (!_r.isFlat) _buildRefundGuaranteeCard(),
                   const SizedBox(height: 20),
                   _buildPayButton(context),
                   const SizedBox(height: 12),
@@ -740,7 +741,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                context.l10n.secureEscrowCheckout,
+                _r.isFlat
+                    ? context.l10n.nataFeeCheckout
+                    : context.l10n.secureEscrowCheckout,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
@@ -912,7 +915,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.l10n.howEscrowWorks,
+                      _r.isFlat
+                          ? context.l10n.howNataFeeWorks
+                          : context.l10n.howEscrowWorks,
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
@@ -927,17 +932,25 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                           color: Colors.white.withValues(alpha: 0.8),
                           height: 1.5,
                         ),
-                        children: [
-                          TextSpan(text: context.l10n.escrowNotePart1),
-                          TextSpan(
-                            text: context.l10n.escrowNotePart2,
-                            style: GoogleFonts.dmSans(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                          TextSpan(text: context.l10n.escrowNotePart3),
-                        ],
+                        children: _r.isFlat
+                            ? [
+                                TextSpan(
+                                  text: context.l10n.nataFeeNote(
+                                    _r.trip.firstName,
+                                  ),
+                                ),
+                              ]
+                            : [
+                                TextSpan(text: context.l10n.escrowNotePart1),
+                                TextSpan(
+                                  text: context.l10n.escrowNotePart2,
+                                  style: GoogleFonts.dmSans(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                                TextSpan(text: context.l10n.escrowNotePart3),
+                              ],
                       ),
                     ),
                   ],
@@ -1732,7 +1745,12 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          if (_r.displayCost != null && _r.displayFee != null) ...[
+          if (_r.isFlat && _r.displayFee != null)
+            _breakdownRow(
+              context.l10n.nataFeeTitle,
+              _amount(_r.displayFee, null),
+            )
+          else if (_r.displayCost != null && _r.displayFee != null) ...[
             _breakdownRow(
               context.l10n.travelerReward,
               _amount(_r.displayCost, null),
@@ -1751,7 +1769,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             children: [
               Expanded(
                 child: Text(
-                  context.l10n.totalEscrow,
+                  _r.isFlat
+                      ? context.l10n.feeTotalToPay
+                      : context.l10n.totalEscrow,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.dmSans(
@@ -1975,7 +1995,9 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                   ),
             label: Text(
               unlocked
-                  ? l.payAmountIntoEscrow(amount)
+                  ? (_r.isFlat
+                        ? l.payNataFee(amount)
+                        : l.payAmountIntoEscrow(amount))
                   : !checked
                   ? l.validateToUnlock
                   : !countryChosen

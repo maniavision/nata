@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_gate.dart';
+import '../services/request_service.dart' show RequestDraft, RequestService;
+import '../services/verify_gate.dart';
+import 'delivery_request_screen.dart';
 import '../l10n/l10n_ext.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +12,7 @@ import '../widgets/app_bottom_nav.dart';
 import '../widgets/location_search_sheet.dart';
 import 'route_alerts_screen.dart' show formatKg;
 import 'traveler_profile_screen.dart';
+import '../widgets/nata_toast.dart';
 import '../widgets/traveler_photo.dart';
 
 class TravelerResultsScreen extends StatefulWidget {
@@ -21,12 +25,16 @@ class TravelerResultsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [TravelerService].
   final TravelerService? service;
 
+  /// Override for tests, passed on to the request form.
+  final RequestService? requestService;
+
   const TravelerResultsScreen({
     super.key,
     this.departure,
     this.destination,
     this.date,
     this.service,
+    this.requestService,
   });
 
   @override
@@ -50,6 +58,66 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
 
   /// The weight card is open (the Weight button in the sort row).
   bool _showWeight = false;
+
+  /// The trips picked to send one request to, in the order picked: all to
+  /// the same city, at most [RequestDraft.maxTravelers].
+  final List<TravelerTrip> _picked = [];
+
+  /// Whether [trip] can be added to [_picked].
+  bool _canPick(TravelerTrip trip) =>
+      _picked.length < RequestDraft.maxTravelers &&
+      (_picked.isEmpty ||
+          (_picked.first.arrivalCity == trip.arrivalCity &&
+              _picked.first.arrivalCountry == trip.arrivalCountry));
+
+  void _togglePick(TravelerTrip trip) {
+    setState(() {
+      final at = _picked.indexWhere((t) => t.tripId == trip.tripId);
+      if (at >= 0) {
+        _picked.removeAt(at);
+      } else if (_canPick(trip)) {
+        _picked.add(trip);
+      } else {
+        final l = context.l10n;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            nataToast(
+              _picked.length >= RequestDraft.maxTravelers
+                  ? l.errTooManyTravelers(RequestDraft.maxTravelers)
+                  : l.errDifferentDestinations,
+              tone: ToastTone.error,
+            ),
+          );
+      }
+    });
+  }
+
+  /// One request to every picked traveler.
+  Future<void> _sendToPicked() async {
+    final picked = List.of(_picked);
+    if (picked.isEmpty) return;
+    Widget form(BuildContext context) => DeliveryRequestScreen(
+      trip: picked.first,
+      moreTrips: picked.skip(1).toList(),
+      service: widget.requestService,
+    );
+    if (!AuthGate.check(
+      context,
+      message: context.l10n.signInPromptTraveler(picked.first.firstName),
+      next: form,
+    )) {
+      return;
+    }
+    final navigator = Navigator.of(context);
+    if (!await VerifyGate.check(
+      context,
+      message: context.l10n.verifyToSendRequest,
+    )) {
+      return;
+    }
+    navigator.push(MaterialPageRoute(builder: form));
+  }
 
   /// [_results] the traveler can carry [_minKg] for. A trip with no capacity
   /// set is kept, as for route alerts: the traveler may still take it.
@@ -141,7 +209,13 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: const AppBottomNav(current: 0, isTabRoot: false),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_picked.isNotEmpty) _buildPickedBar(),
+                  const AppBottomNav(current: 0, isTabRoot: false),
+                ],
+              ),
             ),
           ],
         ),
@@ -189,7 +263,7 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+        padding: EdgeInsets.fromLTRB(20, 0, 20, _picked.isEmpty ? 100 : 180),
         children: [
           if (_results.isEmpty)
             Padding(
@@ -227,13 +301,100 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
             _buildSortBar(),
             if (_matching.isEmpty) _buildNoneCanCarry(),
           ],
+          if (_results.length > 1) _buildPickHint(),
           ..._sorted.map(
             (r) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _TravelerCard(trip: r, service: widget.service),
+              child: _TravelerCard(
+                trip: r,
+                service: widget.service,
+                picked: _picked.any((t) => t.tripId == r.tripId),
+                canPick: _canPick(r),
+                onPick: () => _togglePick(r),
+              ),
             ),
           ),
           _buildNotifyBanner(),
+        ],
+      ),
+    );
+  }
+
+  // ── Picking several travelers ──────────────────────────────────────────────
+  Widget _buildPickHint() => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Row(
+      children: [
+        const Icon(
+          Icons.check_circle_outline_rounded,
+          size: 14,
+          color: AppColors.mutedForeground,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            context.l10n.pickTravelersHint(RequestDraft.maxTravelers),
+            key: const ValueKey('results-pick-hint'),
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppColors.mutedForeground,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildPickedBar() {
+    final l = context.l10n;
+    return Container(
+      key: const ValueKey('results-picked-bar'),
+      decoration: const BoxDecoration(
+        color: AppColors.card,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l.travelersPicked(_picked.length),
+              key: const ValueKey('results-picked-count'),
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: AppColors.foreground,
+              ),
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('results-picked-clear'),
+            onPressed: () => setState(_picked.clear),
+            child: Text(l.clear),
+          ),
+          const SizedBox(width: 4),
+          ElevatedButton.icon(
+            key: const ValueKey('results-picked-send'),
+            onPressed: _sendToPicked,
+            icon: const Icon(
+              Icons.send_outlined,
+              size: 16,
+              color: Colors.white,
+            ),
+            label: Text(
+              l.sendRequest,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              shape: const StadiumBorder(),
+            ),
+          ),
         ],
       ),
     );
@@ -685,7 +846,21 @@ class _TravelerResultsScreenState extends State<TravelerResultsScreen> {
 class _TravelerCard extends StatefulWidget {
   final TravelerTrip trip;
   final TravelerService? service;
-  const _TravelerCard({required this.trip, this.service});
+
+  /// Picked to send one request to (with others going to the same city).
+  final bool picked;
+
+  /// Whether it can be picked now (same city as the others, not too many).
+  final bool canPick;
+  final VoidCallback? onPick;
+
+  const _TravelerCard({
+    required this.trip,
+    this.service,
+    this.picked = false,
+    this.canPick = true,
+    this.onPick,
+  });
 
   @override
   State<_TravelerCard> createState() => _TravelerCardState();
@@ -729,9 +904,12 @@ class _TravelerCardState extends State<_TravelerCard> {
           color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _pressed
+            color: widget.picked
+                ? AppColors.accent
+                : _pressed
                 ? AppColors.primary.withValues(alpha: 0.4)
                 : AppColors.border,
+            width: widget.picked ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -877,7 +1055,48 @@ class _TravelerCardState extends State<_TravelerCard> {
                 ],
               ),
             ),
+            if (widget.onPick != null) _buildPick(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+extension on _TravelerCardState {
+  /// The round check to pick this traveler.
+  Widget _buildPick() {
+    final on = widget.picked;
+    final enabled = on || widget.canPick;
+    return Semantics(
+      button: true,
+      checked: on,
+      label: context.l10n.pickTraveler(widget.trip.firstName),
+      child: InkResponse(
+        key: ValueKey('results-pick-${widget.trip.tripId}'),
+        // Always taken here, so a tap never opens the profile behind it; one
+        // that can't be picked says why.
+        onTap: widget.onPick,
+        radius: 24,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: on ? AppColors.accent : Colors.transparent,
+              border: Border.all(
+                color: on
+                    ? AppColors.accent
+                    : AppColors.border.withValues(alpha: enabled ? 1 : 0.5),
+                width: 2,
+              ),
+            ),
+            child: on
+                ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                : null,
+          ),
         ),
       ),
     );
