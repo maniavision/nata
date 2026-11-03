@@ -703,6 +703,7 @@ void main() {
 
     test('maps every database error', () {
       expect(of('nata:not_signed_in'), RequestFailure.notSignedIn);
+      expect(of('nata:contact_details'), RequestFailure.contactDetails);
       expect(of('nata:trip_unavailable'), RequestFailure.tripUnavailable);
       expect(of('nata:own_trip'), RequestFailure.ownTrip);
       expect(of('nata:weight_too_heavy'), RequestFailure.weightTooHeavy);

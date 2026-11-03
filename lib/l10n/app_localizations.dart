@@ -9529,6 +9529,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In Nigeria, payouts go to your bank account through Flutterwave. The account is saved under the name your bank gives.'**
   String get payoutNigeriaBankNote;
+
+  /// No description provided for @contactDetailsNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'No phone numbers, emails or contact details here. Once the traveler accepts, you can chat in Nata.'**
+  String get contactDetailsNotAllowed;
 }
 
 class _AppLocalizationsDelegate

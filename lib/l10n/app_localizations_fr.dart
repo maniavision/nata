@@ -5588,4 +5588,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get payoutNigeriaBankNote =>
       'Au Nigeria, vos paiements arrivent sur votre compte bancaire via Flutterwave. Le compte est enregistré au nom donné par votre banque.';
+
+  @override
+  String get contactDetailsNotAllowed =>
+      'Pas de numéro de téléphone, d\'e-mail ni de coordonnées ici. Une fois que le voyageur accepte, vous pouvez discuter dans Nata.';
 }

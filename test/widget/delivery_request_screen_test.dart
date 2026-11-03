@@ -1879,6 +1879,72 @@ void main() {
     });
   });
 
+  group('contact details', () {
+    const note =
+        'No phone numbers, emails or contact details here. Once the traveler '
+        'accepts, you can chat in Nata.';
+
+    testWidgets('a number in the item name shows a note under it', (
+      tester,
+    ) async {
+      await pump(tester);
+      await enter(tester, 'request-item-0', 'Shoes, call 06 123 45 67');
+
+      expect(
+        find.byKey(const ValueKey('request-item-0-contact')),
+        findsOneWidget,
+      );
+      expect(find.text(note), findsOneWidget);
+    });
+
+    testWidgets('the note goes once the number is removed', (tester) async {
+      await pump(tester);
+      await enter(tester, 'request-item-0', 'Shoes, whatsapp me');
+      await enter(tester, 'request-item-0', 'Shoes');
+
+      expect(find.text(note), findsNothing);
+    });
+
+    testWidgets('contact details in the notes stop the request', (
+      tester,
+    ) async {
+      await pump(tester);
+      await fillValid(tester);
+      await enter(tester, 'request-description-0', 'jane.doe@gmail.com');
+
+      await send(tester);
+
+      expect(
+        find.byKey(const ValueKey('request-description-0-contact')),
+        findsOneWidget,
+      );
+      expect(errorText(tester), note);
+      expect(service.attempts, 0);
+    });
+
+    testWidgets('so do they in the recipient\'s name', (tester) async {
+      await pump(tester);
+      await fillValid(tester);
+      await enter(tester, 'request-recipient-name', 'Jane +242061234567');
+
+      await send(tester);
+
+      expect(errorText(tester), note);
+      expect(service.attempts, 0);
+    });
+
+    testWidgets('ordinary numbers are fine', (tester) async {
+      await pump(tester);
+      await fillValid(tester);
+      await enter(tester, 'request-description-0', 'Size 42, 2 pairs');
+
+      await send(tester);
+
+      expect(find.text(note), findsNothing);
+      expect(service.sent.length, 1);
+    });
+  });
+
   group('translations', () {
     testWidgets('Spanish', (tester) async {
       await pump(tester, locale: const Locale('es'));
