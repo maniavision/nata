@@ -1579,6 +1579,23 @@ void main() {
       expect(f.isLocal, isTrue);
     });
 
+    test('a franc fee (20240203) has no cents and adds up whole', () {
+      final f = FlatFee.fromJson({
+        'trip_id': 't',
+        'amount': 5200,
+        'currency': 'xof',
+        'is_local': false,
+      });
+      expect(f.text, 'XOF 5,200');
+      expect(
+        FlatFee.totalText([
+          f,
+          const FlatFee(amount: 1976, currency: 'XOF', isLocal: true),
+        ]),
+        'XOF 7,176',
+      );
+    });
+
     SentRequest flat(String status, {double? displayTotal}) =>
         SentRequest.fromJson({
           'request_id': 'r',
