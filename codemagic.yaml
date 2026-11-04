@@ -315,7 +315,7 @@ workflows:
         submit_as_draft: true
         # No changes_not_sent_for_review here: Play sends internal testing
         # changes for review on its own and refuses the setting ("must not
-        # be set"). Only the production workflow uses it.
+        # be set").
       <<: *email
 
   # ───────────────────────────────────────────────────────────────────────────
@@ -362,9 +362,6 @@ workflows:
         # draft app"). The draft is then sent for review from Play Console.
         # Set this to false after the first release is live.
         submit_as_draft: true
-        # Play won't send changes for review through the API while the app
-        # has rejected or pending changes ("Changes cannot be sent for review
-        # automatically"): the release is saved, then sent for review from
-        # Play Console › Publishing overview.
-        changes_not_sent_for_review: true
+        # No changes_not_sent_for_review: Play now sends changes for review
+        # on its own and refuses the setting ("must not be set").
       <<: *email
