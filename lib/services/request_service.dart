@@ -657,7 +657,7 @@ class RequestDraft {
 class FlatFee {
   final double amount;
 
-  /// USD, EUR or GBP.
+  /// USD, EUR, GBP, or the sender's XAF or XOF (20240203).
   final String currency;
 
   /// The trip starts and ends in the same country.
@@ -728,7 +728,7 @@ class SentRequest {
   /// Shared by the requests sent together to several travelers.
   final String? groupId;
 
-  /// The currency [totalUsd] is in: USD, or EUR or GBP for a flat fee.
+  /// The currency [totalUsd] is in: USD, or EUR, GBP, XAF or XOF for a flat fee.
   final String feeCurrency;
 
   /// Set once the sender cancelled: the fee they owe, in US dollars (0 when
