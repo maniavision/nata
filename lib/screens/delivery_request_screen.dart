@@ -754,7 +754,6 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       case RequestFailure.itemValueInvalid:
         return l.errItemValue;
       case RequestFailure.notPaid:
-      case RequestFailure.depositRequired:
       case RequestFailure.smsUnavailable:
       case RequestFailure.phoneRejected:
       case RequestFailure.amountOutOfBounds:
@@ -807,8 +806,6 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                       const SizedBox(height: 8),
                     ],
                     const SizedBox(height: 8),
-                    _buildItemRequirementBanner(),
-                    const SizedBox(height: 16),
                     _buildItemsSection(),
                     const SizedBox(height: 16),
                     if (!_flat) ...[
@@ -975,60 +972,6 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemRequirementBanner() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF6EE),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.inventory_2_rounded,
-              size: 20,
-              color: AppColors.accent,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.itemRequirement,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppColors.accent,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  context.l10n.itemRequirementBody,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: AppColors.foreground,
-                    height: 1.6,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

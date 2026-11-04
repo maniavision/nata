@@ -137,7 +137,7 @@ void main() {
       expect(inCard(r'$32'), findsOneWidget);
       expect(inCard('Jun 22, 2030'), findsOneWidget);
       expect(inCard('0.45 kg · 15 x 8 x 4 cm'), findsOneWidget);
-      expect(inCard('1 factory-sealed photo attached'), findsOneWidget);
+      expect(inCard('1 photo attached'), findsOneWidget);
     });
 
     testWidgets('empty, and a failure with Retry', (tester) async {

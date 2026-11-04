@@ -37,7 +37,6 @@ import 'package:carrywise_app/services/request_service.dart';
 import 'package:carrywise_app/screens/confirm_receipt_screen.dart';
 import 'package:carrywise_app/screens/report_problem_screen.dart';
 import 'package:carrywise_app/screens/identity_status_screen.dart';
-import 'package:carrywise_app/screens/sealed_box_policy_screen.dart';
 import 'package:carrywise_app/widgets/sign_in_prompt_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -210,7 +209,6 @@ void main() {
         'updated_at': '2025-09-30T09:00:00Z',
       },
     ),
-    'Sealed box policy': () => const SealedBoxPolicyScreen(),
     'Confirm receipt': () => ConfirmReceiptScreen(
       request: sampleSentRequest(
         status: 'delivered',

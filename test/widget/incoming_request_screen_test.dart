@@ -227,54 +227,11 @@ void main() {
       expect(find.byKey(const ValueKey('incoming-receipt')), findsOneWidget);
     });
 
-    testWidgets('within the traveler\'s limit: no note', (tester) async {
-      await pump(tester, valued(100));
+    testWidgets('a high value has no carrying-limit note', (tester) async {
+      await pump(tester, valued(4500));
 
       expect(find.byKey(const ValueKey('incoming-over-limit')), findsNothing);
-    });
-
-    testWidgets('above the traveler\'s limit: a note', (tester) async {
-      await pump(tester, valued(450));
-
-      expect(find.byKey(const ValueKey('incoming-over-limit')), findsOneWidget);
-      expect(
-        find.text(
-          "Above your \$100 carrying limit: you'll pay a refundable deposit before pickup.",
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('the note gives the limit in the traveler\'s currency', (
-      tester,
-    ) async {
-      service.carryLimit = const CarryLimit(
-        level: 1,
-        limitUsd: 255,
-        currency: 'GBP',
-        limitAmount: 200,
-      );
-      await pump(tester, valued(450));
-
-      expect(
-        find.textContaining('Above your £200 carrying limit'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('a higher level lifts the limit', (tester) async {
-      service.carryLimit = const CarryLimit(level: 2, limitUsd: 300);
-      await pump(tester, valued(250));
-
-      expect(find.byKey(const ValueKey('incoming-over-limit')), findsNothing);
-    });
-
-    testWidgets('if the limit can\'t be loaded, no note', (tester) async {
-      service.failCarryLimit = true;
-      await pump(tester, valued(450));
-
-      expect(find.byKey(const ValueKey('incoming-over-limit')), findsNothing);
-      expect(find.text(r'Declared value $450'), findsOneWidget);
+      expect(find.text(r'Declared value $4,500'), findsOneWidget);
     });
 
     testWidgets('older requests without values show none', (tester) async {

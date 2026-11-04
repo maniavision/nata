@@ -2,7 +2,6 @@ import 'package:carrywise_app/screens/delete_account_screen.dart';
 import 'package:carrywise_app/screens/identity_status_screen.dart';
 import 'package:carrywise_app/screens/identity_verification_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
-import 'package:carrywise_app/screens/sealed_box_policy_screen.dart';
 import 'package:carrywise_app/screens/payment_settings_screen.dart';
 import 'package:carrywise_app/services/account_service.dart';
 import 'package:carrywise_app/services/emergency_contact_service.dart';
@@ -13,8 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../helpers/app_wrapper.dart';
 import '../helpers/fakes.dart';
 
-/// The pages Profile opens: identity status, payment methods, the sealed box
-/// policy and the emergency contact.
+/// The pages Profile opens: identity status, payment methods and the
+/// emergency contact.
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
@@ -130,14 +129,12 @@ void main() {
       expect(find.byType(PaymentSettingsScreen), findsOneWidget);
     });
 
-    testWidgets('Sealed Box Policy opens the policy', (tester) async {
+    testWidgets('no carrying limit or sealed box policy rows', (tester) async {
       await pumpProfile(tester);
 
-      await tester.tap(find.text('Sealed Box Policy'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(SealedBoxPolicyScreen), findsOneWidget);
-      expect(find.text('Why items travel sealed'), findsOneWidget);
+      expect(find.byKey(const ValueKey('profile-carry-limit')), findsNothing);
+      expect(find.text('Carrying limit'), findsNothing);
+      expect(find.text('Sealed Box Policy'), findsNothing);
     });
 
     testWidgets('ID passed, no emergency contact: both rows say so', (

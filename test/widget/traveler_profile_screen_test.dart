@@ -211,7 +211,7 @@ void main() {
       expect(find.text('TRAVEL DATE AND ROUTE'), findsOneWidget);
       expect(find.text('ITEM SIZE & WEIGHT LIMITS ACCEPTED'), findsOneWidget);
       expect(find.text('DELIVERY HISTORY & REVIEWS'), findsOneWidget);
-      expect(find.text('Item Requirement'), findsOneWidget);
+      expect(find.text('Item Requirement'), findsNothing);
     });
 
     testWidgets('shows the stat labels', (tester) async {
