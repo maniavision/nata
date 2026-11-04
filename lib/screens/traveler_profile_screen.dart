@@ -579,55 +579,6 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF6EE),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.3),
-              ),
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 2),
-                  child: Icon(
-                    Icons.inventory_2_rounded,
-                    size: 20,
-                    color: AppColors.accent,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.itemRequirement,
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l.itemRequirementBody,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 12,
-                          color: AppColors.foreground,
-                          height: 1.625,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

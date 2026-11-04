@@ -221,13 +221,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get viewAll => 'Ver todos';
 
   @override
-  String get sealedBoxPolicy => 'Política de caja sellada';
-
-  @override
-  String get sealedBoxPolicyBody =>
-      'Los artículos siempre deben estar sellados en su caja comercial original para el cumplimiento aduanero y la seguridad en viajes.';
-
-  @override
   String get available => 'Disponible';
 
   @override
@@ -277,10 +270,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get originalPackagingTitle => 'Requisito de embalaje original';
-
-  @override
-  String get originalPackagingBody =>
-      'Los artículos deben estar sellados en su caja original. El precio se calcula automáticamente según el tamaño y peso.';
 
   @override
   String get recentSearches => 'BÚSQUEDAS RECIENTES';
@@ -375,13 +364,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get maxDimensions => 'Máx. 30 × 20 × 15 cm';
 
   @override
-  String get itemRequirement => 'Requisito del artículo';
-
-  @override
-  String get itemRequirementBody =>
-      'Los artículos deben estar sellados en su caja original. Esto permite a los viajeros transportarlos con confianza y facilita los controles aduaneros.';
-
-  @override
   String get deliveryHistoryAndReviews => 'HISTORIAL DE ENTREGAS Y RESEÑAS';
 
   @override
@@ -418,7 +400,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get packageDimensions => 'Dimensiones del paquete';
 
   @override
-  String get itemPhotos => 'Fotos del artículo (caja sellada)';
+  String get itemPhotos => 'Fotos del artículo';
 
   @override
   String get photoAttached => 'foto adjunta';
@@ -570,9 +552,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weightAndSize => 'Peso y tamaño:';
 
   @override
-  String get sealedPhotoAttached => 'foto de caja sellada adjunta';
-
-  @override
   String get viewPhoto => 'Ver foto';
 
   @override
@@ -696,13 +675,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tier1Verified => 'Nivel 1 verificado · Pasaporte y biometría';
 
   @override
-  String get sealedBoxPolicySetting => 'Política de caja sellada';
-
-  @override
-  String get originalBoxCompliance =>
-      'Cumplimiento de seguridad de caja original';
-
-  @override
   String get logOut => 'Cerrar sesión';
 
   @override
@@ -719,7 +691,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get luggageEarnings =>
-      'Convierte el espacio libre de tu equipaje en ingresos entregando paquetes sellados.';
+      'Convierte el espacio libre de tu equipaje en ingresos entregando paquetes.';
 
   @override
   String get departureDetails => 'DETALLES DE SALIDA';
@@ -1402,8 +1374,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get itemNameHint =>
-      'p. ej. auriculares Sony, cosméticos sellados, etc.';
+  String get itemNameHint => 'p. ej. auriculares Sony, cosméticos, etc.';
 
   @override
   String get itemDescHint => 'Da detalles sobre el artículo y el embalaje...';
@@ -1415,7 +1386,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dimensionsHint => 'p. ej. 24 × 24 × 8 cm';
 
   @override
-  String get photoMustShowSeal => 'La foto debe mostrar el sello de fábrica';
+  String get photoMustShowSeal => 'La foto debe mostrar bien el artículo';
 
   @override
   String get travelerPriceLine => 'Precio del viajero';
@@ -1642,7 +1613,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get itemReceivedNote =>
-      'Comprueba que el producto está completamente sellado en su caja de fábrica antes de hacerte cargo.';
+      'Comprueba que el artículo coincide con las fotos antes de hacerte cargo.';
 
   @override
   String get retake => 'Repetir';
@@ -1897,12 +1868,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noHandoffPhoto => 'Aún no hay foto de la entrega';
 
   @override
-  String get handoffPhotoHint => 'Una foto del artículo sellado al entregarlo';
-
-  @override
-  String get sealIntactPhoto => 'Precinto intacto';
-
-  @override
   String get change => 'Cambiar';
 
   @override
@@ -2070,8 +2035,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errWeight => 'Introduce el peso del paquete, p. ej. 0,9 kg.';
 
   @override
-  String get errPhotoRequired =>
-      'Añade al menos una foto del artículo sellado.';
+  String get errPhotoRequired => 'Añade al menos una foto del artículo.';
 
   @override
   String get errPhotoTooBig => 'Esa foto es demasiado grande (máx. 10 MB).';
@@ -2688,8 +2652,8 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count fotos del embalaje sellado adjuntas',
-      one: '1 foto del embalaje sellado adjunta',
+      other: '$count fotos adjuntas',
+      one: '1 foto adjunta',
     );
     return '$_temp0';
   }
@@ -2928,7 +2892,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get itemPhotosTitle => 'FOTOS DEL ARTÍCULO SELLADO';
+  String get itemPhotosTitle => 'FOTOS DEL ARTÍCULO';
 
   @override
   String get recipientHiddenNote =>
@@ -3529,31 +3493,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errWalletHistory => 'No se pudo cargar tu historial.';
 
   @override
-  String get sbpTitle => 'Por qué los artículos viajan sellados';
-
-  @override
-  String get sbpBody =>
-      'Cada artículo debe ir en su caja original, sellada de fábrica. Protege a los viajeros en la aduana y a los remitentes ante disputas.';
-
-  @override
-  String get sbpRule1 => 'Embalaje original, sin abrir';
-
-  @override
-  String get sbpRule2 => 'Mostrado en fotos antes de la solicitud';
-
-  @override
-  String get sbpRule3 =>
-      'El viajero revisa el sello al recogerlo y puede rechazar una caja abierta';
-
-  @override
-  String get sbpRule4 =>
-      'Artículos prohibidos: dinero en efectivo, medicamentos sin receta, baterías de más de 100 Wh, líquidos de más de 100 ml, cualquier cosa ilegal en el destino';
-
-  @override
-  String get sbpCustoms =>
-      'Si la aduana abre la caja, el viajero no es responsable del artículo.';
-
-  @override
   String get ecScreenBody =>
       'Alguien a quien podamos contactar si algo sale mal durante una entrega. Nunca se muestra a otros usuarios.';
 
@@ -3980,8 +3919,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chatTyping => 'escribiendo…';
 
   @override
-  String get pickupPhotoHint =>
-      'Toma una foto de la caja sellada al recibirla.';
+  String get pickupPhotoHint => 'Toma una foto del artículo al recibirlo.';
 
   @override
   String get errPhotoUpload => 'No se pudo subir la foto. Inténtalo de nuevo.';
@@ -5323,155 +5261,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String overCarryLimit(String limit) {
-    return 'Por encima de tu límite de transporte de $limit: pagarás un depósito reembolsable antes de la recogida.';
-  }
-
-  @override
-  String get carryLimitRow => 'Límite de transporte';
-
-  @override
-  String carryLimitLevel(int level) {
-    return 'Nivel $level';
-  }
-
-  @override
-  String carryLimitNextDeliveries(int count, String amount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count entregas para desbloquear $amount',
-      one: '1 entrega para desbloquear $amount',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String carryLimitNextRating(String amount) {
-    return 'Mantén una valoración de 4,5 para desbloquear $amount';
-  }
-
-  @override
-  String get carryLimitTop => 'Nivel más alto';
-
-  @override
-  String get carryLimitSheetTitle => 'Tu límite de transporte';
-
-  @override
-  String carryLimitSheetCurrent(int level, String amount) {
-    return 'Nivel $level · Límite actual $amount';
-  }
-
-  @override
-  String get carryLimitLevel1 => 'Viajero nuevo';
-
-  @override
-  String get carryLimitLevel2 => 'Después de 3 entregas';
-
-  @override
-  String get carryLimitLevel3 => 'Después de 10 entregas con 4,5+';
-
-  @override
-  String get carryLimitCurrent => 'Actual';
-
-  @override
-  String get carryLimitSheetNote =>
-      'El valor máximo de un artículo que puedes llevar. Aun así puedes llevar artículos por encima de tu límite con un depósito reembolsable.';
-
-  @override
-  String get depositRequiredTitle => 'Depósito necesario antes de la recogida';
-
-  @override
-  String depositRequiredBody(String value, String limit, String amount) {
-    return 'Estos artículos están declarados en $value, por encima de tu límite de transporte de $limit. Paga un depósito reembolsable de $amount para recogerlos.';
-  }
-
-  @override
-  String get depositRefundNote =>
-      'Se reembolsa por completo cuando el código del destinatario confirma la entrega';
-
-  @override
-  String get payDeposit => 'Pagar depósito';
-
-  @override
-  String get depositUnlockPickup =>
-      'Paga el depósito para desbloquear la recogida';
-
-  @override
-  String depositHeld(String amount) {
-    return 'Depósito retenido: $amount · se reembolsa tras la entrega';
-  }
-
-  @override
-  String depositPending(String amount) {
-    return 'Tu depósito de $amount se está confirmando';
-  }
-
-  @override
-  String depositRefunding(String amount) {
-    return 'Tu depósito de $amount se está reembolsando';
-  }
-
-  @override
-  String get depositTitle => 'Depósito';
-
-  @override
-  String get depositToPay => 'DEPÓSITO A PAGAR';
-
-  @override
-  String depositViaMobile(String amount) {
-    return '$amount por dinero móvil';
-  }
-
-  @override
-  String get depositDeclaredValue => 'VALOR DECLARADO';
-
-  @override
-  String get depositYourLimit => 'TU LÍMITE';
-
-  @override
-  String get depositHowItWorks => 'CÓMO FUNCIONA';
-
-  @override
-  String get depositStepHeld => 'Se paga ahora y Nata lo retiene';
-
-  @override
-  String get depositStepRefund =>
-      'Se reembolsa por completo cuando el código del destinatario confirma la entrega, o si se cancela la solicitud';
-
-  @override
-  String get depositStepKept =>
-      'Si el artículo no se entrega, el depósito es para el remitente';
-
-  @override
-  String get depositStepKeptBody =>
-      'Quedarse con el artículo de otra persona es un robo: Nata comparte tu identidad verificada con la policía y el remitente.';
-
-  @override
-  String get depositPaymentMethod => 'MÉTODO DE PAGO';
-
-  @override
-  String get depositCard => 'Tarjeta de crédito o débito';
-
-  @override
-  String get depositCardNote => 'Se paga en la hoja de pago segura de Stripe';
-
-  @override
-  String get depositAgree =>
-      'Acepto: Nata conecta remitentes y viajeros y no es el transportista. Entregaré estos artículos tal como se describen.';
-
-  @override
-  String payDepositAmount(String amount) {
-    return 'Pagar depósito de $amount';
-  }
-
-  @override
   String get depositReceived =>
       'Depósito recibido. Ya puedes recoger los artículos.';
-
-  @override
-  String get errDepositRequired =>
-      'Paga el depósito antes de recoger estos artículos.';
 
   @override
   String get errDepositLoad =>
@@ -5482,34 +5273,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get walletDepositReceived => 'Depósito del viajero';
-
-  @override
-  String get supportPayDeposit => 'Pagar el depósito al remitente';
-
-  @override
-  String supportPayDepositConfirm(String amount) {
-    return 'El depósito del viajero de $amount va al saldo Nata del remitente en lugar de devolverse al viajero. Hazlo solo si los artículos no se entregaron.';
-  }
-
-  @override
-  String get supportDepositPaid => 'Depósito pagado al remitente';
-
-  @override
-  String supportDepositRow(String amount, String status) {
-    return 'Depósito $amount · $status';
-  }
-
-  @override
-  String get depositStatusHeld => 'retenido';
-
-  @override
-  String get depositStatusRefunding => 'en reembolso';
-
-  @override
-  String get depositStatusRefunded => 'reembolsado';
-
-  @override
-  String get depositStatusPaidToSender => 'pagado al remitente';
 
   @override
   String get makeDefault => 'Predeterminar';
@@ -5539,10 +5302,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get paidSecurelyThroughFlutterwave =>
       'Vives en Nigeria, así que pagas con tarjeta en nairas, en la página segura de Flutterwave. Los datos de tu tarjeta nunca llegan a Nata.';
-
-  @override
-  String get depositCardFlutterwaveNote =>
-      'En nairas, en la página segura de Flutterwave';
 
   @override
   String get errPayoutAccountNotFound =>

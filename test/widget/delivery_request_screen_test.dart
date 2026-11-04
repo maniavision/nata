@@ -220,18 +220,19 @@ void main() {
 
       for (final t in [
         'Delivery Request',
-        'Item Requirement',
         'WHAT IS THE ITEM?',
         'ITEM CATEGORY',
         'ITEM DESCRIPTION',
         'Size and Weight',
         'PACKAGE WEIGHT',
         'PACKAGE DIMENSIONS',
-        'Item Photos (Sealed Box)',
+        'Item Photos',
         'Nata fee',
       ]) {
         expect(find.text(t), findsOneWidget, reason: t);
       }
+      // No sealed-box requirement any more.
+      expect(find.text('Item Requirement'), findsNothing);
       // No recipient any more (20240200).
       expect(find.text('Recipient Details'), findsNothing);
       // A single page: no step counter.
@@ -260,7 +261,7 @@ void main() {
       await pump(tester);
 
       expect(
-        find.text('e.g. Sony Headphones, Sealed Cosmetics, etc.'),
+        find.text('e.g. Sony Headphones, Cosmetics, etc.'),
         findsOneWidget,
       );
       expect(
@@ -746,7 +747,7 @@ void main() {
 
       await send(tester);
 
-      expect(errorText(tester), 'Add at least one photo of the sealed item.');
+      expect(errorText(tester), 'Add at least one photo of the item.');
       expect(service.attempts, 0);
     });
 
@@ -891,7 +892,7 @@ void main() {
 
       expect(find.text('No photos'), findsOneWidget);
       expect(find.byKey(const ValueKey('request-add-photo')), findsOneWidget);
-      expect(find.text('Photo must show sealed factory seal'), findsOneWidget);
+      expect(find.text('Photo must show the item clearly'), findsOneWidget);
     });
 
     testWidgets('adding opens a choice of camera or library', (tester) async {

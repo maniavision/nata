@@ -17,11 +17,9 @@ import '../services/screen_cache.dart';
 import '../widgets/avatar_image.dart';
 import '../services/emergency_contact_service.dart';
 import '../services/traveler_service.dart';
-import '../services/request_service.dart';
 import 'delete_account_screen.dart';
 import 'identity_status_screen.dart';
 import 'identity_verification_screen.dart';
-import 'sealed_box_policy_screen.dart';
 import 'support_screens.dart';
 import '../services/support_service.dart';
 import 'payment_settings_screen.dart';
@@ -42,16 +40,12 @@ class ProfileScreen extends StatefulWidget {
   final TravelerService? travelerService;
   final PaymentService? paymentService;
 
-  /// Override for tests; defaults to [RequestService.myCarryLimit].
-  final Future<CarryLimit> Function()? loadCarryLimit;
-
   const ProfileScreen({
     super.key,
     this.authService,
     this.emergencyService,
     this.travelerService,
     this.paymentService,
-    this.loadCarryLimit,
   });
 
   /// Where the page keeps what it showed between visits (ScreenCache).
@@ -141,9 +135,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isAdmin = false;
   bool _isLoading = true;
 
-  /// The most an item can be worth for this member to carry it (20240194).
-  CarryLimit _carryLimit = CarryLimit.starting;
-
   StreamSubscription? _profileSubscription;
   StreamSubscription? _statsSubscription;
 
@@ -203,7 +194,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _setupStreams();
     _loadEmergencyContact();
     _loadAdmin();
-    _loadCarryLimit();
     CoachTip publicNameTip() => CoachTip(
       target: _publicNameTipKey,
       icon: Icons.badge_outlined,
@@ -249,46 +239,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       debugPrint('[Profile] admin check: $e');
     }
-  }
-
-  Future<void> _loadCarryLimit() async {
-    try {
-      final limit =
-          await (widget.loadCarryLimit ?? RequestService().myCarryLimit)();
-      if (mounted) setState(() => _carryLimit = limit);
-    } catch (e) {
-      debugPrint('[Profile] carrying limit: $e');
-    }
-  }
-
-  /// "Level 1 · 3 deliveries to unlock $300".
-  String get _carryLimitSubtitle {
-    final l = context.l10n;
-    final limit = _carryLimit;
-    final next = limit.nextLimitTextIn(_shownCurrency, _rates);
-    final progress = next == null
-        ? l.carryLimitTop
-        : limit.deliveriesNeeded > 0
-        ? l.carryLimitNextDeliveries(limit.deliveriesNeeded, next)
-        : l.carryLimitNextRating(next);
-    return '${l.carryLimitLevel(limit.level)} · $progress';
-  }
-
-  /// The limits are shown in the member's display currency.
-  String get _shownCurrency => PreferencesService().currency.code;
-  ExchangeRates? get _rates => ExchangeRateService.shared.latest;
-
-  void _showCarryLimit() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => _CarryLimitSheet(
-        limit: _carryLimit,
-        currency: _shownCurrency,
-        rates: _rates,
-      ),
-    );
   }
 
   Future<void> _loadEmergencyContact() async {
@@ -1070,16 +1020,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ).push(MaterialPageRoute(builder: (_) => const RouteAlertsScreen())),
       ),
       _SettingsItem(
-        key: const ValueKey('profile-carry-limit'),
-        icon: Icons.verified_user_outlined,
-        iconBg: AppColors.secondary,
-        iconColor: AppColors.primary,
-        title: context.l10n.carryLimitRow,
-        subtitle: _carryLimitSubtitle,
-        trailing: _carryLimit.limitTextIn(_shownCurrency, _rates),
-        onTap: _showCarryLimit,
-      ),
-      _SettingsItem(
         icon: Icons.shield_rounded,
         iconBg: _verificationStatus == 'verified'
             ? const Color(0xFFE4F4EE)
@@ -1126,16 +1066,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // for the next profile poll.
           if (mounted) _loadProfile();
         },
-      ),
-      _SettingsItem(
-        icon: Icons.inventory_2_outlined,
-        iconBg: AppColors.secondary,
-        iconColor: AppColors.primary,
-        title: context.l10n.sealedBoxPolicySetting,
-        subtitle: context.l10n.originalBoxCompliance,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const SealedBoxPolicyScreen()),
-        ),
       ),
       _SettingsItem(
         key: const ValueKey('profile-emergency-contact'),
@@ -1348,171 +1278,6 @@ class _SettingsItem {
   });
 }
 
-// ── Carrying limit ─────────────────────────────────────────────────────────
-/// The three levels, the member's highlighted.
-class _CarryLimitSheet extends StatelessWidget {
-  final CarryLimit limit;
-
-  /// The member's display currency, and today's rates to convert into it.
-  final String currency;
-  final ExchangeRates? rates;
-
-  const _CarryLimitSheet({
-    required this.limit,
-    required this.currency,
-    required this.rates,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final names = [l.carryLimitLevel1, l.carryLimitLevel2, l.carryLimitLevel3];
-    return Container(
-      key: const ValueKey('carry-limit-sheet'),
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        24,
-        20,
-        24 + MediaQuery.of(context).padding.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l.carryLimitSheetTitle,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    color: AppColors.foreground,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, size: 20),
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l.carryLimitSheetCurrent(
-              limit.level,
-              limit.limitTextIn(currency, rates),
-            ),
-            style: GoogleFonts.dmSans(
-              fontSize: 14,
-              color: AppColors.mutedForeground,
-            ),
-          ),
-          const SizedBox(height: 16),
-          for (var i = 0; i < names.length; i++) ...[
-            _levelRow(
-              context,
-              i + 1,
-              names[i],
-              limit.tierTextIn(i + 1, currency, rates),
-            ),
-            const SizedBox(height: 8),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            l.carryLimitSheetNote,
-            style: GoogleFonts.dmSans(
-              fontSize: 13,
-              height: 1.4,
-              color: AppColors.mutedForeground,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _levelRow(
-    BuildContext context,
-    int level,
-    String name,
-    String amount,
-  ) {
-    final current = level == limit.level;
-    return Container(
-      key: ValueKey('carry-limit-level-$level'),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: current ? AppColors.secondary : AppColors.background,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: current ? AppColors.primary : AppColors.border,
-          width: current ? 1.5 : 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.carryLimitLevel(level),
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: AppColors.foreground,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  name,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 13,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (current) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                context.l10n.carryLimitCurrent,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-          ],
-          Text(
-            amount,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-              color: AppColors.foreground,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Language Picker ────────────────────────────────────────────────────────
 class _LanguagePickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

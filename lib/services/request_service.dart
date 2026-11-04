@@ -222,10 +222,6 @@ enum RequestFailure {
   /// An item's estimated value isn't a number from 0 to 1,000,000.
   itemValueInvalid,
 
-  /// The items are above the traveler's carrying limit: the deposit first
-  /// (20240195).
-  depositRequired,
-
   /// The mobile money network is down for now.
   networkUnavailable,
 
@@ -1387,7 +1383,6 @@ class RequestService {
     String? country,
     String? phone,
     String? network,
-    bool deposit = false,
   }) async {
     try {
       final response = await _client.functions.invoke(
@@ -1395,7 +1390,6 @@ class RequestService {
         body: {
           'request_id': requestId,
           'method': method.wire,
-          if (deposit) 'purpose': 'deposit',
           if (country != null) 'country': country,
           if (phone != null) 'phone': phone,
           if (network != null) 'network': network,
@@ -1456,32 +1450,6 @@ class RequestService {
   Future<List<MobileMoneyOption>> mobileMoneyOptions(String requestId) async {
     final rows = await _client.rpc(
       'mobile_money_options',
-      params: {'p_request_id': requestId},
-    );
-    return [
-      for (final r in (rows as List))
-        MobileMoneyOption.fromJson(Map<String, dynamic>.from(r as Map)),
-    ];
-  }
-
-  /// Where the traveler's deposit for [requestId] stands (request_deposit,
-  /// 20240195): whether one is due, how much, and whether it is held.
-  Future<RequestDeposit> requestDeposit(String requestId) async {
-    _userId;
-    final row = await _client.rpc(
-      'request_deposit',
-      params: {'p_request_id': requestId},
-    );
-    return RequestDeposit.fromJson(Map<String, dynamic>.from(row as Map));
-  }
-
-  /// The countries whose mobile money can pay the deposit for [requestId],
-  /// each with the amount in its currency at today's rate.
-  Future<List<MobileMoneyOption>> depositMobileMoneyOptions(
-    String requestId,
-  ) async {
-    final rows = await _client.rpc(
-      'deposit_mobile_money_options',
       params: {'p_request_id': requestId},
     );
     return [
@@ -1787,7 +1755,7 @@ class RequestService {
   /// At most this many photos at pickup, and at handover.
   static const maxDeliveryPhotos = 3;
 
-  /// Uploads the traveler's photos (1 to 3) of the sealed item at pickup,
+  /// Uploads the traveler's photos (1 to 3) of the item at pickup,
   /// or of the handover to the recipient, and makes them that step's photos
   /// (20240184_three_delivery_photos.sql). Each upload has its own file, so
   /// a retake never overwrites a photo someone may be looking at.
@@ -1930,14 +1898,6 @@ class RequestService {
     create: () => _client.storage.from(_bucket).createSignedUrl(path, 600),
   );
 
-  /// The signed-in traveler's carrying limit (20240194).
-  Future<CarryLimit> myCarryLimit() async {
-    _userId;
-    final rows = await _client.rpc('my_carry_limit') as List<dynamic>;
-    if (rows.isEmpty) return CarryLimit.starting;
-    return CarryLimit.fromJson(Map<String, dynamic>.from(rows.first as Map));
-  }
-
   /// The traveler accepts [requestId]. The database fixes the price in the
   /// sender's currency at that day's rate in the same step.
   Future<void> accept(String requestId) async {
@@ -2008,7 +1968,6 @@ class RequestService {
     }
     if (has('sender_confirms')) return RequestFailure.senderConfirms;
     if (has('item_value_invalid')) return RequestFailure.itemValueInvalid;
-    if (has('deposit_required')) return RequestFailure.depositRequired;
     if (has('not_verified')) return RequestFailure.notVerified;
     if (has('trip_full')) return RequestFailure.tripFull;
     if (has('sender_on_trip')) return RequestFailure.senderOnTrip;
@@ -2063,7 +2022,7 @@ enum ProblemReason {
   final String dbValue;
 }
 
-/// Which delivery photo: the sealed item at pickup, or the handover.
+/// Which delivery photo: the item at pickup, or the handover.
 enum DeliveryPhotoKind { pickup, handover }
 
 /// One message between the traveler and the recipient.
@@ -2252,211 +2211,5 @@ class BalanceCheckout {
     currency: (j['currency'] as String?) ?? 'USD',
     available: (j['available'] as num?)?.toDouble() ?? 0,
     covers: j['covers'] == true,
-  );
-}
-
-/// How much an item may be worth for a traveler to carry it without a
-/// deposit (`public.my_carry_limit`, 20240194): $100 to start, $300 after 3
-/// deliveries, $1,000 after 10 rated 4.5 or more.
-class CarryLimit {
-  /// 1, 2 or 3.
-  final int level;
-
-  /// The limit, in US dollars.
-  final double limitUsd;
-
-  /// Deliveries completed as a traveler, and their average rating.
-  final int delivered;
-  final double? rating;
-
-  /// The next level's limit (null at the highest), and what it still takes.
-  final double? nextLimitUsd;
-  final int deliveriesNeeded;
-  final double? ratingNeeded;
-
-  /// The limit in the traveler's own currency, from where they live
-  /// (20240197): \$200, £200, €200, XAF 60,000, or \$100 elsewhere. Null
-  /// from older servers: the dollar amounts are shown then.
-  final String currency;
-  final double? limitAmount;
-  final double? nextLimitAmount;
-
-  /// The three levels' limits, in [currency].
-  final List<double> tiers;
-
-  const CarryLimit({
-    required this.level,
-    required this.limitUsd,
-    this.delivered = 0,
-    this.rating,
-    this.nextLimitUsd,
-    this.deliveriesNeeded = 0,
-    this.ratingNeeded,
-    this.currency = 'USD',
-    this.limitAmount,
-    this.nextLimitAmount,
-    this.tiers = levels,
-  });
-
-  /// A new traveler's.
-  static const starting = CarryLimit(
-    level: 1,
-    limitUsd: 100,
-    nextLimitUsd: 300,
-    deliveriesNeeded: 3,
-  );
-
-  /// The limits of the three levels, in US dollars.
-  static const levels = [100.0, 300.0, 1000.0];
-
-  bool get isTop => nextLimitUsd == null;
-
-  /// "\$200", "£200" or "XAF 60,000".
-  String get limitText =>
-      PriceFormatter.write(limitAmount ?? limitUsd, currency);
-
-  String? get nextLimitText {
-    final next = nextLimitAmount ?? nextLimitUsd;
-    return next == null ? null : PriceFormatter.write(next, currency);
-  }
-
-  /// The limit in the member's display currency [to] (a round amount when
-  /// it is the limit's own currency).
-  String limitTextIn(String to, ExchangeRates? rates) => PriceFormatter.writeIn(
-    limitAmount ?? limitUsd,
-    limitAmount == null ? 'USD' : currency,
-    to,
-    rates,
-  );
-
-  String? nextLimitTextIn(String to, ExchangeRates? rates) {
-    final next = nextLimitAmount ?? nextLimitUsd;
-    if (next == null) return null;
-    return PriceFormatter.writeIn(
-      next,
-      nextLimitAmount == null ? 'USD' : currency,
-      to,
-      rates,
-    );
-  }
-
-  String tierTextIn(int level, String to, ExchangeRates? rates) =>
-      PriceFormatter.writeIn(
-        tiers[(level - 1).clamp(0, tiers.length - 1)],
-        currency,
-        to,
-        rates,
-      );
-
-  /// Level [level] (1 to 3)'s limit, written in [currency].
-  String tierText(int level) => PriceFormatter.write(
-    tiers[(level - 1).clamp(0, tiers.length - 1)],
-    currency,
-  );
-
-  factory CarryLimit.fromJson(Map<String, dynamic> j) => CarryLimit(
-    level: (j['level'] as num?)?.toInt() ?? 1,
-    limitUsd: (j['limit_usd'] as num?)?.toDouble() ?? 100,
-    delivered: (j['delivered'] as num?)?.toInt() ?? 0,
-    rating: (j['rating'] as num?)?.toDouble(),
-    nextLimitUsd: (j['next_limit_usd'] as num?)?.toDouble(),
-    deliveriesNeeded: (j['deliveries_needed'] as num?)?.toInt() ?? 0,
-    ratingNeeded: (j['rating_needed'] as num?)?.toDouble(),
-    currency: (j['currency'] as String?)?.trim() ?? 'USD',
-    limitAmount: (j['limit_amount'] as num?)?.toDouble(),
-    nextLimitAmount: (j['next_limit_amount'] as num?)?.toDouble(),
-    tiers: switch (j['tiers']) {
-      final List t when t.length == 3 => [
-        for (final v in t) (v as num).toDouble(),
-      ],
-      _ => levels,
-    },
-  );
-}
-
-/// Where a traveler's deposit stands.
-enum DepositStatus { none, pending, held, refunding, refunded, paidToSender }
-
-/// The refundable deposit a traveler pays before picking up items worth more
-/// than their carrying limit (20240195).
-class RequestDeposit {
-  /// A deposit is due: the declared value is above the traveler's limit.
-  final bool required;
-
-  /// The declared value, which the deposit is, in its currency.
-  final double? amount;
-  final String? currency;
-
-  /// The traveler's limit, in US dollars, and in their own currency
-  /// (20240197).
-  final double? limitUsd;
-  final double? limitAmount;
-  final String? limitCurrency;
-
-  final DepositStatus status;
-
-  /// What was paid, in the currency charged (mobile money converts it).
-  final double? paidAmount;
-  final String? paidCurrency;
-
-  /// How the request is paid, so the deposit too: mobile money or card.
-  final CheckoutKind kind;
-
-  const RequestDeposit({
-    this.required = false,
-    this.amount,
-    this.currency,
-    this.limitUsd,
-    this.limitAmount,
-    this.limitCurrency,
-    this.status = DepositStatus.none,
-    this.paidAmount,
-    this.paidCurrency,
-    this.kind = CheckoutKind.card,
-  });
-
-  static const notDue = RequestDeposit();
-
-  /// Pickup waits for it.
-  bool get blocksPickup => required && status != DepositStatus.held;
-
-  /// "\$450" or "XOF 271,000".
-  String? get amountText => amount == null || currency == null
-      ? null
-      : PriceFormatter.write(amount!, currency!);
-
-  /// "£200" (or the dollars, from an older server).
-  String get limitText => limitAmount != null && limitCurrency != null
-      ? PriceFormatter.write(limitAmount!, limitCurrency!)
-      : PriceFormatter.write(limitUsd ?? 100, 'USD');
-
-  /// The limit in the member's display currency [to].
-  String limitTextIn(String to, ExchangeRates? rates) =>
-      limitAmount != null && limitCurrency != null
-      ? PriceFormatter.writeIn(limitAmount!, limitCurrency!, to, rates)
-      : PriceFormatter.writeIn(limitUsd ?? 100, 'USD', to, rates);
-
-  String? get paidText => paidAmount == null || paidCurrency == null
-      ? amountText
-      : PriceFormatter.write(paidAmount!, paidCurrency!);
-
-  factory RequestDeposit.fromJson(Map<String, dynamic> j) => RequestDeposit(
-    required: j['required'] == true,
-    amount: (j['amount'] as num?)?.toDouble(),
-    currency: (j['currency'] as String?)?.trim(),
-    limitUsd: (j['limit_usd'] as num?)?.toDouble(),
-    limitAmount: (j['limit_amount'] as num?)?.toDouble(),
-    limitCurrency: (j['limit_currency'] as String?)?.trim(),
-    status: switch (j['status']) {
-      'pending' => DepositStatus.pending,
-      'held' => DepositStatus.held,
-      'refunding' => DepositStatus.refunding,
-      'refunded' => DepositStatus.refunded,
-      'paid_to_sender' => DepositStatus.paidToSender,
-      _ => DepositStatus.none,
-    },
-    paidAmount: (j['paid_amount'] as num?)?.toDouble(),
-    paidCurrency: (j['paid_currency'] as String?)?.trim(),
-    kind: CheckoutKind.fromServer(j['kind']),
   );
 }

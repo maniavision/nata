@@ -508,18 +508,6 @@ abstract class AppLocalizations {
   /// **'View all'**
   String get viewAll;
 
-  /// No description provided for @sealedBoxPolicy.
-  ///
-  /// In en, this message translates to:
-  /// **'Sealed Box Policy'**
-  String get sealedBoxPolicy;
-
-  /// No description provided for @sealedBoxPolicyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Items must always be sealed in their original retail box for customs compliance and travel security.'**
-  String get sealedBoxPolicyBody;
-
   /// No description provided for @available.
   ///
   /// In en, this message translates to:
@@ -621,12 +609,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Original Packaging Requirement'**
   String get originalPackagingTitle;
-
-  /// No description provided for @originalPackagingBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Items must be sealed in their original box. Pricing is calculated automatically based on item size and weight.'**
-  String get originalPackagingBody;
 
   /// No description provided for @recentSearches.
   ///
@@ -790,18 +772,6 @@ abstract class AppLocalizations {
   /// **'Max 30 × 20 × 15 cm'**
   String get maxDimensions;
 
-  /// No description provided for @itemRequirement.
-  ///
-  /// In en, this message translates to:
-  /// **'Item Requirement'**
-  String get itemRequirement;
-
-  /// No description provided for @itemRequirementBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Items must be sealed in their original box. This lets travelers carry items with confidence and helps with customs and security checks.'**
-  String get itemRequirementBody;
-
   /// No description provided for @deliveryHistoryAndReviews.
   ///
   /// In en, this message translates to:
@@ -877,7 +847,7 @@ abstract class AppLocalizations {
   /// No description provided for @itemPhotos.
   ///
   /// In en, this message translates to:
-  /// **'Item Photos (Sealed Box)'**
+  /// **'Item Photos'**
   String get itemPhotos;
 
   /// No description provided for @photoAttached.
@@ -1162,12 +1132,6 @@ abstract class AppLocalizations {
   /// **'Weight & Size:'**
   String get weightAndSize;
 
-  /// No description provided for @sealedPhotoAttached.
-  ///
-  /// In en, this message translates to:
-  /// **'factory-sealed photo attached'**
-  String get sealedPhotoAttached;
-
   /// No description provided for @viewPhoto.
   ///
   /// In en, this message translates to:
@@ -1378,18 +1342,6 @@ abstract class AppLocalizations {
   /// **'Tier 1 Verified · Passport & Biometrics'**
   String get tier1Verified;
 
-  /// No description provided for @sealedBoxPolicySetting.
-  ///
-  /// In en, this message translates to:
-  /// **'Sealed Box Policy'**
-  String get sealedBoxPolicySetting;
-
-  /// No description provided for @originalBoxCompliance.
-  ///
-  /// In en, this message translates to:
-  /// **'Original box security compliance'**
-  String get originalBoxCompliance;
-
   /// No description provided for @logOut.
   ///
   /// In en, this message translates to:
@@ -1423,7 +1375,7 @@ abstract class AppLocalizations {
   /// No description provided for @luggageEarnings.
   ///
   /// In en, this message translates to:
-  /// **'Turn unused luggage space into earnings by delivering sealed packages.'**
+  /// **'Turn unused luggage space into earnings by delivering packages.'**
   String get luggageEarnings;
 
   /// No description provided for @departureDetails.
@@ -1513,7 +1465,7 @@ abstract class AppLocalizations {
   /// No description provided for @howMatchingBody.
   ///
   /// In en, this message translates to:
-  /// **'Once saved, your trip will appear in search results for senders looking for this route and date. Senders will only request sealed boxes within your specified capacity.'**
+  /// **'Once saved, your trip will appear in search results for senders looking for this route and date. Senders will only request items within your specified capacity.'**
   String get howMatchingBody;
 
   /// No description provided for @saveAndPublish.
@@ -2633,7 +2585,7 @@ abstract class AppLocalizations {
   /// No description provided for @itemNameHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Sony Headphones, Sealed Cosmetics, etc.'**
+  /// **'e.g. Sony Headphones, Cosmetics, etc.'**
   String get itemNameHint;
 
   /// No description provided for @itemDescHint.
@@ -2657,7 +2609,7 @@ abstract class AppLocalizations {
   /// No description provided for @photoMustShowSeal.
   ///
   /// In en, this message translates to:
-  /// **'Photo must show sealed factory seal'**
+  /// **'Photo must show the item clearly'**
   String get photoMustShowSeal;
 
   /// No description provided for @travelerPriceLine.
@@ -3053,7 +3005,7 @@ abstract class AppLocalizations {
   /// No description provided for @itemReceivedNote.
   ///
   /// In en, this message translates to:
-  /// **'Verify that the product is completely sealed in its factory box before taking custody.'**
+  /// **'Check that the item matches the photos before taking custody.'**
   String get itemReceivedNote;
 
   /// No description provided for @retake.
@@ -3512,18 +3464,6 @@ abstract class AppLocalizations {
   /// **'No handoff photo yet'**
   String get noHandoffPhoto;
 
-  /// No description provided for @handoffPhotoHint.
-  ///
-  /// In en, this message translates to:
-  /// **'A photo of the sealed item being handed over'**
-  String get handoffPhotoHint;
-
-  /// No description provided for @sealIntactPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Package seal intact'**
-  String get sealIntactPhoto;
-
   /// No description provided for @change.
   ///
   /// In en, this message translates to:
@@ -3797,7 +3737,7 @@ abstract class AppLocalizations {
   /// No description provided for @errPhotoRequired.
   ///
   /// In en, this message translates to:
-  /// **'Add at least one photo of the sealed item.'**
+  /// **'Add at least one photo of the item.'**
   String get errPhotoRequired;
 
   /// No description provided for @errPhotoTooBig.
@@ -4733,7 +4673,7 @@ abstract class AppLocalizations {
   /// No description provided for @sealedPhotosAttached.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 factory-sealed photo attached} other{{count} factory-sealed photos attached}}'**
+  /// **'{count, plural, =1{1 photo attached} other{{count} photos attached}}'**
   String sealedPhotosAttached(int count);
 
   /// No description provided for @capturedAt.
@@ -5123,7 +5063,7 @@ abstract class AppLocalizations {
   /// No description provided for @itemPhotosTitle.
   ///
   /// In en, this message translates to:
-  /// **'PHOTOS OF THE SEALED ITEM'**
+  /// **'PHOTOS OF THE ITEM'**
   String get itemPhotosTitle;
 
   /// No description provided for @recipientHiddenNote.
@@ -6116,48 +6056,6 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load your history.'**
   String get errWalletHistory;
 
-  /// No description provided for @sbpTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Why items travel sealed'**
-  String get sbpTitle;
-
-  /// No description provided for @sbpBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Every item must be in its original, factory-sealed box. It keeps travelers safe at customs and protects senders from disputes.'**
-  String get sbpBody;
-
-  /// No description provided for @sbpRule1.
-  ///
-  /// In en, this message translates to:
-  /// **'Original packaging, unopened'**
-  String get sbpRule1;
-
-  /// No description provided for @sbpRule2.
-  ///
-  /// In en, this message translates to:
-  /// **'Shown in photos before the request'**
-  String get sbpRule2;
-
-  /// No description provided for @sbpRule3.
-  ///
-  /// In en, this message translates to:
-  /// **'Traveler checks the seal at pickup and can refuse a box that\'s been opened'**
-  String get sbpRule3;
-
-  /// No description provided for @sbpRule4.
-  ///
-  /// In en, this message translates to:
-  /// **'No prohibited items: cash, medicines without a prescription, batteries over 100Wh, liquids over 100ml, anything illegal at the destination'**
-  String get sbpRule4;
-
-  /// No description provided for @sbpCustoms.
-  ///
-  /// In en, this message translates to:
-  /// **'If customs opens the box, the traveler isn\'t responsible for the item.'**
-  String get sbpCustoms;
-
   /// No description provided for @ecScreenBody.
   ///
   /// In en, this message translates to:
@@ -6851,7 +6749,7 @@ abstract class AppLocalizations {
   /// No description provided for @pickupPhotoHint.
   ///
   /// In en, this message translates to:
-  /// **'Take a photo of the sealed box as you receive it.'**
+  /// **'Take a photo of the item as you receive it.'**
   String get pickupPhotoHint;
 
   /// No description provided for @errPhotoUpload.
@@ -9170,233 +9068,11 @@ abstract class AppLocalizations {
   /// **'Declared value {amount}'**
   String declaredValueRow(String amount);
 
-  /// No description provided for @overCarryLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'Above your {limit} carrying limit: you\'ll pay a refundable deposit before pickup.'**
-  String overCarryLimit(String limit);
-
-  /// No description provided for @carryLimitRow.
-  ///
-  /// In en, this message translates to:
-  /// **'Carrying limit'**
-  String get carryLimitRow;
-
-  /// No description provided for @carryLimitLevel.
-  ///
-  /// In en, this message translates to:
-  /// **'Level {level}'**
-  String carryLimitLevel(int level);
-
-  /// No description provided for @carryLimitNextDeliveries.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 delivery to unlock {amount}} other{{count} deliveries to unlock {amount}}}'**
-  String carryLimitNextDeliveries(int count, String amount);
-
-  /// No description provided for @carryLimitNextRating.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep a 4.5 rating to unlock {amount}'**
-  String carryLimitNextRating(String amount);
-
-  /// No description provided for @carryLimitTop.
-  ///
-  /// In en, this message translates to:
-  /// **'Highest level'**
-  String get carryLimitTop;
-
-  /// No description provided for @carryLimitSheetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your carrying limit'**
-  String get carryLimitSheetTitle;
-
-  /// No description provided for @carryLimitSheetCurrent.
-  ///
-  /// In en, this message translates to:
-  /// **'Level {level} · Current limit {amount}'**
-  String carryLimitSheetCurrent(int level, String amount);
-
-  /// No description provided for @carryLimitLevel1.
-  ///
-  /// In en, this message translates to:
-  /// **'New traveler'**
-  String get carryLimitLevel1;
-
-  /// No description provided for @carryLimitLevel2.
-  ///
-  /// In en, this message translates to:
-  /// **'After 3 deliveries'**
-  String get carryLimitLevel2;
-
-  /// No description provided for @carryLimitLevel3.
-  ///
-  /// In en, this message translates to:
-  /// **'After 10 deliveries rated 4.5+'**
-  String get carryLimitLevel3;
-
-  /// No description provided for @carryLimitCurrent.
-  ///
-  /// In en, this message translates to:
-  /// **'Current'**
-  String get carryLimitCurrent;
-
-  /// No description provided for @carryLimitSheetNote.
-  ///
-  /// In en, this message translates to:
-  /// **'The most an item can be worth for you to carry it. You can still carry items above your limit with a refundable deposit.'**
-  String get carryLimitSheetNote;
-
-  /// No description provided for @depositRequiredTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit required before pickup'**
-  String get depositRequiredTitle;
-
-  /// No description provided for @depositRequiredBody.
-  ///
-  /// In en, this message translates to:
-  /// **'These items are declared at {value}, above your {limit} carrying limit. Pay a refundable deposit of {amount} to pick them up.'**
-  String depositRequiredBody(String value, String limit, String amount);
-
-  /// No description provided for @depositRefundNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Refunded in full once the recipient\'s code confirms delivery'**
-  String get depositRefundNote;
-
-  /// No description provided for @payDeposit.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay deposit'**
-  String get payDeposit;
-
-  /// No description provided for @depositUnlockPickup.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay the deposit to unlock pickup'**
-  String get depositUnlockPickup;
-
-  /// No description provided for @depositHeld.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit held: {amount} · refunded after delivery'**
-  String depositHeld(String amount);
-
-  /// No description provided for @depositPending.
-  ///
-  /// In en, this message translates to:
-  /// **'Your deposit of {amount} is being confirmed'**
-  String depositPending(String amount);
-
-  /// No description provided for @depositRefunding.
-  ///
-  /// In en, this message translates to:
-  /// **'Your deposit of {amount} is being refunded'**
-  String depositRefunding(String amount);
-
-  /// No description provided for @depositTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit'**
-  String get depositTitle;
-
-  /// No description provided for @depositToPay.
-  ///
-  /// In en, this message translates to:
-  /// **'DEPOSIT TO PAY'**
-  String get depositToPay;
-
-  /// No description provided for @depositViaMobile.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} via mobile money'**
-  String depositViaMobile(String amount);
-
-  /// No description provided for @depositDeclaredValue.
-  ///
-  /// In en, this message translates to:
-  /// **'DECLARED VALUE'**
-  String get depositDeclaredValue;
-
-  /// No description provided for @depositYourLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'YOUR CARRYING LIMIT'**
-  String get depositYourLimit;
-
-  /// No description provided for @depositHowItWorks.
-  ///
-  /// In en, this message translates to:
-  /// **'HOW IT WORKS'**
-  String get depositHowItWorks;
-
-  /// No description provided for @depositStepHeld.
-  ///
-  /// In en, this message translates to:
-  /// **'Paid now, held by Nata'**
-  String get depositStepHeld;
-
-  /// No description provided for @depositStepRefund.
-  ///
-  /// In en, this message translates to:
-  /// **'Refunded in full when the recipient\'s code confirms delivery, or if the request is cancelled'**
-  String get depositStepRefund;
-
-  /// No description provided for @depositStepKept.
-  ///
-  /// In en, this message translates to:
-  /// **'If the item is kept, the deposit goes to the sender'**
-  String get depositStepKept;
-
-  /// No description provided for @depositStepKeptBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Keeping someone\'s item is theft: Nata shares your verified identity with the police and the sender.'**
-  String get depositStepKeptBody;
-
-  /// No description provided for @depositPaymentMethod.
-  ///
-  /// In en, this message translates to:
-  /// **'PAYMENT METHOD'**
-  String get depositPaymentMethod;
-
-  /// No description provided for @depositCard.
-  ///
-  /// In en, this message translates to:
-  /// **'Credit or debit card'**
-  String get depositCard;
-
-  /// No description provided for @depositCardNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Paid in Stripe\'s secure payment sheet'**
-  String get depositCardNote;
-
-  /// No description provided for @depositAgree.
-  ///
-  /// In en, this message translates to:
-  /// **'I agree: Nata connects senders and travelers and isn\'t the carrier. I\'ll deliver these items as described.'**
-  String get depositAgree;
-
-  /// No description provided for @payDepositAmount.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay deposit {amount}'**
-  String payDepositAmount(String amount);
-
   /// No description provided for @depositReceived.
   ///
   /// In en, this message translates to:
   /// **'Deposit received. You can pick up the items now.'**
   String get depositReceived;
-
-  /// No description provided for @errDepositRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay the deposit before picking up these items.'**
-  String get errDepositRequired;
 
   /// No description provided for @errDepositLoad.
   ///
@@ -9415,54 +9091,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deposit from traveler'**
   String get walletDepositReceived;
-
-  /// No description provided for @supportPayDeposit.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay deposit to sender'**
-  String get supportPayDeposit;
-
-  /// No description provided for @supportPayDepositConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'The traveler\'s deposit of {amount} goes to the sender\'s Nata balance instead of back to the traveler. Do this only when the items were kept.'**
-  String supportPayDepositConfirm(String amount);
-
-  /// No description provided for @supportDepositPaid.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit paid to the sender'**
-  String get supportDepositPaid;
-
-  /// No description provided for @supportDepositRow.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit {amount} · {status}'**
-  String supportDepositRow(String amount, String status);
-
-  /// No description provided for @depositStatusHeld.
-  ///
-  /// In en, this message translates to:
-  /// **'held'**
-  String get depositStatusHeld;
-
-  /// No description provided for @depositStatusRefunding.
-  ///
-  /// In en, this message translates to:
-  /// **'refunding'**
-  String get depositStatusRefunding;
-
-  /// No description provided for @depositStatusRefunded.
-  ///
-  /// In en, this message translates to:
-  /// **'refunded'**
-  String get depositStatusRefunded;
-
-  /// No description provided for @depositStatusPaidToSender.
-  ///
-  /// In en, this message translates to:
-  /// **'paid to sender'**
-  String get depositStatusPaidToSender;
 
   /// No description provided for @makeDefault.
   ///
@@ -9511,12 +9139,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You live in Nigeria, so you pay by card in naira, on Flutterwave\'s secure page. Your card details never reach Nata.'**
   String get paidSecurelyThroughFlutterwave;
-
-  /// No description provided for @depositCardFlutterwaveNote.
-  ///
-  /// In en, this message translates to:
-  /// **'In naira, on Flutterwave\'s secure page'**
-  String get depositCardFlutterwaveNote;
 
   /// No description provided for @errPayoutAccountNotFound.
   ///

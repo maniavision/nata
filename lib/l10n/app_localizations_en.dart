@@ -221,13 +221,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewAll => 'View all';
 
   @override
-  String get sealedBoxPolicy => 'Sealed Box Policy';
-
-  @override
-  String get sealedBoxPolicyBody =>
-      'Items must always be sealed in their original retail box for customs compliance and travel security.';
-
-  @override
   String get available => 'Available';
 
   @override
@@ -277,10 +270,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get originalPackagingTitle => 'Original Packaging Requirement';
-
-  @override
-  String get originalPackagingBody =>
-      'Items must be sealed in their original box. Pricing is calculated automatically based on item size and weight.';
 
   @override
   String get recentSearches => 'RECENT SEARCHES';
@@ -373,13 +362,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maxDimensions => 'Max 30 × 20 × 15 cm';
 
   @override
-  String get itemRequirement => 'Item Requirement';
-
-  @override
-  String get itemRequirementBody =>
-      'Items must be sealed in their original box. This lets travelers carry items with confidence and helps with customs and security checks.';
-
-  @override
   String get deliveryHistoryAndReviews => 'DELIVERY HISTORY & REVIEWS';
 
   @override
@@ -416,7 +398,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packageDimensions => 'Package Dimensions';
 
   @override
-  String get itemPhotos => 'Item Photos (Sealed Box)';
+  String get itemPhotos => 'Item Photos';
 
   @override
   String get photoAttached => 'photo attached';
@@ -568,9 +550,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weightAndSize => 'Weight & Size:';
 
   @override
-  String get sealedPhotoAttached => 'factory-sealed photo attached';
-
-  @override
   String get viewPhoto => 'View Photo';
 
   @override
@@ -694,12 +673,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tier1Verified => 'Tier 1 Verified · Passport & Biometrics';
 
   @override
-  String get sealedBoxPolicySetting => 'Sealed Box Policy';
-
-  @override
-  String get originalBoxCompliance => 'Original box security compliance';
-
-  @override
   String get logOut => 'Log Out';
 
   @override
@@ -716,7 +689,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get luggageEarnings =>
-      'Turn unused luggage space into earnings by delivering sealed packages.';
+      'Turn unused luggage space into earnings by delivering packages.';
 
   @override
   String get departureDetails => 'DEPARTURE DETAILS';
@@ -763,7 +736,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get howMatchingBody =>
-      'Once saved, your trip will appear in search results for senders looking for this route and date. Senders will only request sealed boxes within your specified capacity.';
+      'Once saved, your trip will appear in search results for senders looking for this route and date. Senders will only request items within your specified capacity.';
 
   @override
   String get saveAndPublish => 'Save & Publish Trip';
@@ -1387,7 +1360,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get itemNameHint => 'e.g. Sony Headphones, Sealed Cosmetics, etc.';
+  String get itemNameHint => 'e.g. Sony Headphones, Cosmetics, etc.';
 
   @override
   String get itemDescHint => 'Provide details about the item and packaging...';
@@ -1399,7 +1372,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dimensionsHint => 'e.g. 24 × 24 × 8 cm';
 
   @override
-  String get photoMustShowSeal => 'Photo must show sealed factory seal';
+  String get photoMustShowSeal => 'Photo must show the item clearly';
 
   @override
   String get travelerPriceLine => 'Traveler\'s price';
@@ -1624,7 +1597,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemReceivedNote =>
-      'Verify that the product is completely sealed in its factory box before taking custody.';
+      'Check that the item matches the photos before taking custody.';
 
   @override
   String get retake => 'Retake';
@@ -1876,12 +1849,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noHandoffPhoto => 'No handoff photo yet';
 
   @override
-  String get handoffPhotoHint => 'A photo of the sealed item being handed over';
-
-  @override
-  String get sealIntactPhoto => 'Package seal intact';
-
-  @override
   String get change => 'Change';
 
   @override
@@ -2047,7 +2014,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errWeight => 'Enter the package weight, e.g. 0.9 kg.';
 
   @override
-  String get errPhotoRequired => 'Add at least one photo of the sealed item.';
+  String get errPhotoRequired => 'Add at least one photo of the item.';
 
   @override
   String get errPhotoTooBig => 'That photo is too large (max 10 MB).';
@@ -2649,8 +2616,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count factory-sealed photos attached',
-      one: '1 factory-sealed photo attached',
+      other: '$count photos attached',
+      one: '1 photo attached',
     );
     return '$_temp0';
   }
@@ -2887,7 +2854,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get itemPhotosTitle => 'PHOTOS OF THE SEALED ITEM';
+  String get itemPhotosTitle => 'PHOTOS OF THE ITEM';
 
   @override
   String get recipientHiddenNote =>
@@ -3485,31 +3452,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errWalletHistory => 'Couldn\'t load your history.';
 
   @override
-  String get sbpTitle => 'Why items travel sealed';
-
-  @override
-  String get sbpBody =>
-      'Every item must be in its original, factory-sealed box. It keeps travelers safe at customs and protects senders from disputes.';
-
-  @override
-  String get sbpRule1 => 'Original packaging, unopened';
-
-  @override
-  String get sbpRule2 => 'Shown in photos before the request';
-
-  @override
-  String get sbpRule3 =>
-      'Traveler checks the seal at pickup and can refuse a box that\'s been opened';
-
-  @override
-  String get sbpRule4 =>
-      'No prohibited items: cash, medicines without a prescription, batteries over 100Wh, liquids over 100ml, anything illegal at the destination';
-
-  @override
-  String get sbpCustoms =>
-      'If customs opens the box, the traveler isn\'t responsible for the item.';
-
-  @override
   String get ecScreenBody =>
       'Someone we can reach if something goes wrong during a delivery. Never shown to other users.';
 
@@ -3933,8 +3875,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatTyping => 'typing…';
 
   @override
-  String get pickupPhotoHint =>
-      'Take a photo of the sealed box as you receive it.';
+  String get pickupPhotoHint => 'Take a photo of the item as you receive it.';
 
   @override
   String get errPhotoUpload => 'Couldn\'t upload the photo. Please try again.';
@@ -5274,154 +5215,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String overCarryLimit(String limit) {
-    return 'Above your $limit carrying limit: you\'ll pay a refundable deposit before pickup.';
-  }
-
-  @override
-  String get carryLimitRow => 'Carrying limit';
-
-  @override
-  String carryLimitLevel(int level) {
-    return 'Level $level';
-  }
-
-  @override
-  String carryLimitNextDeliveries(int count, String amount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count deliveries to unlock $amount',
-      one: '1 delivery to unlock $amount',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String carryLimitNextRating(String amount) {
-    return 'Keep a 4.5 rating to unlock $amount';
-  }
-
-  @override
-  String get carryLimitTop => 'Highest level';
-
-  @override
-  String get carryLimitSheetTitle => 'Your carrying limit';
-
-  @override
-  String carryLimitSheetCurrent(int level, String amount) {
-    return 'Level $level · Current limit $amount';
-  }
-
-  @override
-  String get carryLimitLevel1 => 'New traveler';
-
-  @override
-  String get carryLimitLevel2 => 'After 3 deliveries';
-
-  @override
-  String get carryLimitLevel3 => 'After 10 deliveries rated 4.5+';
-
-  @override
-  String get carryLimitCurrent => 'Current';
-
-  @override
-  String get carryLimitSheetNote =>
-      'The most an item can be worth for you to carry it. You can still carry items above your limit with a refundable deposit.';
-
-  @override
-  String get depositRequiredTitle => 'Deposit required before pickup';
-
-  @override
-  String depositRequiredBody(String value, String limit, String amount) {
-    return 'These items are declared at $value, above your $limit carrying limit. Pay a refundable deposit of $amount to pick them up.';
-  }
-
-  @override
-  String get depositRefundNote =>
-      'Refunded in full once the recipient\'s code confirms delivery';
-
-  @override
-  String get payDeposit => 'Pay deposit';
-
-  @override
-  String get depositUnlockPickup => 'Pay the deposit to unlock pickup';
-
-  @override
-  String depositHeld(String amount) {
-    return 'Deposit held: $amount · refunded after delivery';
-  }
-
-  @override
-  String depositPending(String amount) {
-    return 'Your deposit of $amount is being confirmed';
-  }
-
-  @override
-  String depositRefunding(String amount) {
-    return 'Your deposit of $amount is being refunded';
-  }
-
-  @override
-  String get depositTitle => 'Deposit';
-
-  @override
-  String get depositToPay => 'DEPOSIT TO PAY';
-
-  @override
-  String depositViaMobile(String amount) {
-    return '$amount via mobile money';
-  }
-
-  @override
-  String get depositDeclaredValue => 'DECLARED VALUE';
-
-  @override
-  String get depositYourLimit => 'YOUR CARRYING LIMIT';
-
-  @override
-  String get depositHowItWorks => 'HOW IT WORKS';
-
-  @override
-  String get depositStepHeld => 'Paid now, held by Nata';
-
-  @override
-  String get depositStepRefund =>
-      'Refunded in full when the recipient\'s code confirms delivery, or if the request is cancelled';
-
-  @override
-  String get depositStepKept =>
-      'If the item is kept, the deposit goes to the sender';
-
-  @override
-  String get depositStepKeptBody =>
-      'Keeping someone\'s item is theft: Nata shares your verified identity with the police and the sender.';
-
-  @override
-  String get depositPaymentMethod => 'PAYMENT METHOD';
-
-  @override
-  String get depositCard => 'Credit or debit card';
-
-  @override
-  String get depositCardNote => 'Paid in Stripe\'s secure payment sheet';
-
-  @override
-  String get depositAgree =>
-      'I agree: Nata connects senders and travelers and isn\'t the carrier. I\'ll deliver these items as described.';
-
-  @override
-  String payDepositAmount(String amount) {
-    return 'Pay deposit $amount';
-  }
-
-  @override
   String get depositReceived =>
       'Deposit received. You can pick up the items now.';
-
-  @override
-  String get errDepositRequired =>
-      'Pay the deposit before picking up these items.';
 
   @override
   String get errDepositLoad => 'Couldn\'t load the deposit. Try again.';
@@ -5431,34 +5226,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletDepositReceived => 'Deposit from traveler';
-
-  @override
-  String get supportPayDeposit => 'Pay deposit to sender';
-
-  @override
-  String supportPayDepositConfirm(String amount) {
-    return 'The traveler\'s deposit of $amount goes to the sender\'s Nata balance instead of back to the traveler. Do this only when the items were kept.';
-  }
-
-  @override
-  String get supportDepositPaid => 'Deposit paid to the sender';
-
-  @override
-  String supportDepositRow(String amount, String status) {
-    return 'Deposit $amount · $status';
-  }
-
-  @override
-  String get depositStatusHeld => 'held';
-
-  @override
-  String get depositStatusRefunding => 'refunding';
-
-  @override
-  String get depositStatusRefunded => 'refunded';
-
-  @override
-  String get depositStatusPaidToSender => 'paid to sender';
 
   @override
   String get makeDefault => 'Make default';
@@ -5487,10 +5254,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paidSecurelyThroughFlutterwave =>
       'You live in Nigeria, so you pay by card in naira, on Flutterwave\'s secure page. Your card details never reach Nata.';
-
-  @override
-  String get depositCardFlutterwaveNote =>
-      'In naira, on Flutterwave\'s secure page';
 
   @override
   String get errPayoutAccountNotFound =>
