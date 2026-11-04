@@ -259,12 +259,7 @@ void main() {
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
         appWrapper(
-          PaymentSettingsScreen(
-            availableBalance: 320,
-            escrowBalance: 180,
-            holderName: 'Fortune Niama',
-            service: payments,
-          ),
+          PaymentSettingsScreen(holderName: 'Fortune Niama', service: payments),
         ),
       );
       await tester.pumpAndSettle();

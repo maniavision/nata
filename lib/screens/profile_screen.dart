@@ -10,9 +10,9 @@ import '../main.dart';
 import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../services/auth_service.dart';
+import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
 import '../services/exchange_rate_service.dart';
-import '../services/wallet_money.dart';
 import '../services/screen_cache.dart';
 import '../widgets/avatar_image.dart';
 import '../services/emergency_contact_service.dart';
@@ -24,7 +24,7 @@ import 'identity_verification_screen.dart';
 import 'sealed_box_policy_screen.dart';
 import 'support_screens.dart';
 import '../services/support_service.dart';
-import 'wallet_screen.dart';
+import 'payment_settings_screen.dart';
 import 'public_name_screen.dart';
 import 'login_screen.dart';
 import '../l10n/l10n_ext.dart';
@@ -40,6 +40,7 @@ class ProfileScreen extends StatefulWidget {
   /// Overrides for tests; they default to the real services.
   final EmergencyContactService? emergencyService;
   final TravelerService? travelerService;
+  final PaymentService? paymentService;
 
   /// Override for tests; defaults to [RequestService.myCarryLimit].
   final Future<CarryLimit> Function()? loadCarryLimit;
@@ -49,6 +50,7 @@ class ProfileScreen extends StatefulWidget {
     this.authService,
     this.emergencyService,
     this.travelerService,
+    this.paymentService,
     this.loadCarryLimit,
   });
 
@@ -59,11 +61,7 @@ class ProfileScreen extends StatefulWidget {
   static Future<void> preload([AuthService? authService]) async {
     if (ScreenCache.read<Map<String, Object?>>(cacheKey) != null) return;
     final auth = authService ?? AuthService();
-    final (profile, balances, stats) = await (
-      auth.getProfile(),
-      auth.getWalletBalances(),
-      auth.getStats(),
-    ).wait;
+    final (profile, stats) = await (auth.getProfile(), auth.getStats()).wait;
     if (profile == null) return;
     final first = (profile['first_name'] ?? '') as String;
     final last = (profile['last_name'] ?? '') as String;
@@ -81,8 +79,6 @@ class ProfileScreen extends StatefulWidget {
       'avgRating': (profile['avg_rating'] as num?)?.toDouble(),
       'usePseudonym': profile['use_pseudonym'] == true,
       'pseudonym': profile['pseudonym'] as String?,
-      'available': balances['available'] ?? 0.0,
-      'escrow': balances['escrow'] ?? 0.0,
       'trips': stats['trips'] ?? 0,
       'parcels': stats['parcels'] ?? 0,
     });
@@ -94,7 +90,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   /// What the first-visit tips point at.
-  final _walletTipKey = GlobalKey();
+  final _paymentTipKey = GlobalKey();
   final _routesTipKey = GlobalKey();
   final _publicNameTipKey = GlobalKey();
 
@@ -130,8 +126,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  double _availableBalance = 0.0;
-  double _escrowBalance = 0.0;
   int _tripsCount = 0;
   int _parcelsCount = 0;
   double? _avgRating;
@@ -151,7 +145,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   CarryLimit _carryLimit = CarryLimit.starting;
 
   StreamSubscription? _profileSubscription;
-  StreamSubscription? _walletSubscription;
   StreamSubscription? _statsSubscription;
 
   void _onPrefsChanged() {
@@ -171,8 +164,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'usePseudonym': _usePseudonym,
     'pseudonym': _pseudonym,
     'reviewCount': _reviewCount,
-    'available': _availableBalance,
-    'escrow': _escrowBalance,
     'trips': _tripsCount,
     'parcels': _parcelsCount,
     'emergencyContact': _emergencyContact,
@@ -191,8 +182,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _usePseudonym = s['usePseudonym'] == true;
     _pseudonym = s['pseudonym'] as String?;
     _reviewCount = s['reviewCount'] as int?;
-    _availableBalance = s['available'] as double? ?? 0.0;
-    _escrowBalance = s['escrow'] as double? ?? 0.0;
     _tripsCount = s['trips'] as int? ?? 0;
     _parcelsCount = s['parcels'] as int? ?? 0;
     _emergencyContact = s['emergencyContact'] as EmergencyContact?;
@@ -229,10 +218,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       alsoSeen: const ['profile-public-name'],
       tips: () => [
         CoachTip(
-          target: _walletTipKey,
-          icon: Icons.account_balance_wallet_outlined,
-          title: context.l10n.tipWalletTitle,
-          body: context.l10n.tipWalletRowBody,
+          target: _paymentTipKey,
+          icon: Icons.credit_card_rounded,
+          title: context.l10n.paymentMethodsRow,
+          body: context.l10n.tipPaymentMethodsBody,
         ),
         publicNameTip(),
         CoachTip(
@@ -359,16 +348,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }, onError: (Object e) => debugPrint('[Profile] profile stream error: $e'));
 
-    _walletSubscription = auth.walletBalancesStream().listen((balances) {
-      if (mounted) {
-        setState(() {
-          _availableBalance = balances['available'] ?? 0.0;
-          _escrowBalance = balances['escrow'] ?? 0.0;
-        });
-        _saveSnapshot();
-      }
-    }, onError: (Object e) => debugPrint('[Profile] wallet stream error: $e'));
-
     _statsSubscription = auth.statsStream().listen((stats) {
       if (mounted) {
         setState(() {
@@ -384,7 +363,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final auth = _auth;
       final profile = await auth.getProfile();
-      final balances = await auth.getWalletBalances();
       final stats = await auth.getStats();
 
       if (profile != null && mounted) {
@@ -411,9 +389,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _usePseudonym = profile['use_pseudonym'] == true;
           _pseudonym = profile['pseudonym'] as String?;
 
-          _availableBalance = balances['available'] ?? 0.0;
-          _escrowBalance = balances['escrow'] ?? 0.0;
-
           _tripsCount = stats['trips'] ?? 0;
           _parcelsCount = stats['parcels'] ?? 0;
 
@@ -433,7 +408,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     PreferencesService().removeListener(_onPrefsChanged);
     _profileSubscription?.cancel();
-    _walletSubscription?.cancel();
     _statsSubscription?.cancel();
     super.dispose();
   }
@@ -964,20 +938,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// The wallet is shown in the member's currency once the rates are
-  /// here (in dollars until then).
+  /// The carrying limits are shown in the member's currency once the rates
+  /// are here (in dollars until then).
   Future<void> _loadRates() async {
     if (ExchangeRateService.shared.latest != null) return;
     await ExchangeRateService.shared.rates();
     if (mounted) setState(() {});
   }
-
-  /// The wallet's dollar figures in the member's currency.
-  String _money(double usd) => WalletMoney.format(
-    usd,
-    PreferencesService().currency.code,
-    ExchangeRateService.shared.latest,
-  );
 
   Future<void> _openEmergencyContact() async {
     final saved = await Navigator.of(context).push<bool>(
@@ -1000,7 +967,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ── Settings list ──────────────────────────────────────────────────────────
   /// The settings rows the first-visit tips point at.
   GlobalKey? _tipKeyFor(Key? row) => switch (row) {
-    ValueKey(value: 'profile-wallet') => _walletTipKey,
+    ValueKey(value: 'profile-payment-methods') => _paymentTipKey,
     ValueKey(value: 'profile-public-name') => _publicNameTipKey,
     ValueKey(value: 'profile-route-alerts') => _routesTipKey,
     _ => null,
@@ -1033,20 +1000,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ).push(MaterialPageRoute(builder: (_) => const SupportScreen())),
         ),
       _SettingsItem(
-        key: const ValueKey('profile-wallet'),
-        icon: Icons.account_balance_wallet_rounded,
+        key: const ValueKey('profile-payment-methods'),
+        icon: Icons.credit_card_rounded,
         iconBg: AppColors.secondary,
         iconColor: AppColors.primary,
-        title: context.l10n.wallet,
-        subtitle: context.l10n.walletRowAvailable(_money(_availableBalance)),
-        onTap: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => WalletScreen(authService: widget.authService),
+        title: context.l10n.paymentMethodsRow,
+        subtitle: context.l10n.paymentMethodsRowSub,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PaymentSettingsScreen(
+              holderName: _displayName,
+              service: widget.paymentService,
             ),
-          );
-          if (mounted) _loadProfile();
-        },
+          ),
+        ),
       ),
       _SettingsItem(
         key: const ValueKey('profile-public-name'),

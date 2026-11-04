@@ -1,48 +1,33 @@
-import 'wallet_history_screen.dart';
 import 'package:flutter/material.dart';
-import 'add_payout_account_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
-import '../services/exchange_rate_service.dart';
-import '../services/wallet_money.dart';
 import '../services/stripe_sheet.dart';
 import 'add_payment_method_screen.dart';
-import '../widgets/nata_toast.dart';
 
 const _green = Color(0xFF168A68);
 const _greenBg = Color(0xFFE4F4EE);
 
-/// Payment Settings, opened from Profile: the wallet balance, payment
-/// methods, the payout account, preferences and recent transactions.
+/// Payment methods, opened from Profile: the cards saved with Stripe and the
+/// mobile money wallets that pay Nata's fees, and the display currency.
+/// There is no wallet any more: senders pay travelers directly (20240201).
 ///
-/// Payment methods, payout accounts and the payout schedule are saved in
-/// nata.payment_methods / payout_accounts / payment_preferences (see
-/// [PaymentService]); the default currency is the app's. Transactions are
-/// the latest three from the wallet history, with a link to all of them.
+/// Mobile money wallets are saved in nata.payment_methods (see
+/// [PaymentService]); the default currency is the app's.
 class PaymentSettingsScreen extends StatefulWidget {
-  final double availableBalance;
-  final double escrowBalance;
-
   /// The account holder's name ("Fortune Niama").
   final String holderName;
 
   /// Override for tests; defaults to the real [PaymentService].
   final PaymentService? service;
 
-  /// Override for tests; defaults to [ExchangeRateService.shared].
-  final ExchangeRateService? exchangeRates;
-
   const PaymentSettingsScreen({
     super.key,
-    required this.availableBalance,
-    required this.escrowBalance,
     required this.holderName,
     this.service,
-    this.exchangeRates,
   });
 
   @override
@@ -56,11 +41,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
 
   /// Cards saved with Stripe (20240196), the default first.
   List<StripeCard> _cards = const [];
-  List<PayoutAccount> _payoutAccounts = const [];
-  PayoutSchedule _schedule = PayoutSchedule.automatic;
-
-  /// The Nata balance and its two switches (20240187).
-  NataBalance? _balance;
   bool _loading = true;
 
   /// A load or save failed: shown above the payment methods. (A message
@@ -74,7 +54,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     super.initState();
     PreferencesService().addListener(_onPrefsChanged);
     _load();
-    _loadRates();
   }
 
   @override
@@ -87,74 +66,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     if (mounted) setState(() {});
   }
 
-  ExchangeRateService get _exchange =>
-      widget.exchangeRates ?? ExchangeRateService.shared;
-
-  /// The wallet is shown in the member's currency once the rates are
-  /// here (in dollars until then).
-  Future<void> _loadRates() async {
-    if (_exchange.latest != null) return;
-    await _exchange.rates();
-    if (mounted) setState(() {});
-  }
-
-  /// The latest payouts and payments; null while loading.
-  List<WalletEntry>? _recent;
-
-  Future<void> _loadRecent() async {
-    try {
-      final all = await _service.walletHistory(limit: 3);
-      if (mounted) setState(() => _recent = all.take(3).toList());
-    } catch (e) {
-      debugPrint('[PaymentSettings] history error: $e');
-      if (mounted) setState(() => _recent = const []);
-    }
-  }
-
-  Future<void> _loadBalance() async {
-    try {
-      final balance = await _service.myBalance();
-      if (mounted) setState(() => _balance = balance);
-    } catch (e) {
-      debugPrint('[PaymentSettings] balance: $e');
-    }
-  }
-
-  /// Saves the balance switches; puts them back if that fails.
-  Future<void> _setBalance({bool? keepEarnings, bool? refundsToBalance}) async {
-    final before = _balance;
-    if (before == null) return;
-    final next = NataBalance(
-      availableUsd: before.availableUsd,
-      keepEarnings: keepEarnings ?? before.keepEarnings,
-      refundsToBalance: refundsToBalance ?? before.refundsToBalance,
-    );
-    setState(() {
-      _balance = next;
-      _schedule = next.keepEarnings
-          ? PayoutSchedule.manual
-          : PayoutSchedule.automatic;
-    });
-    final messenger = ScaffoldMessenger.of(context);
-    final failed = context.l10n.errRequestFailed;
-    try {
-      await _service.setBalancePreferences(
-        keepEarnings: next.keepEarnings,
-        refundsToBalance: next.refundsToBalance,
-      );
-    } catch (e) {
-      debugPrint('[PaymentSettings] balance preferences: $e');
-      if (!mounted) return;
-      setState(() {
-        _balance = before;
-        _schedule = before.keepEarnings
-            ? PayoutSchedule.manual
-            : PayoutSchedule.automatic;
-      });
-      messenger.showSnackBar(nataToast(failed, tone: ToastTone.error));
-    }
-  }
-
   Future<void> _loadCards() async {
     try {
       final cards = await _service.stripeCards();
@@ -165,25 +76,17 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
   }
 
   Future<void> _load() async {
-    _loadRecent();
-    _loadBalance();
     _loadCards();
     try {
-      final results = await Future.wait([
-        _service.methods(),
-        _service.payoutAccounts(),
-        _service.payoutSchedule(),
-      ]);
+      final methods = await _service.methods();
       if (!mounted) return;
       setState(() {
         // Cards live with Stripe now; older card rows (a brand and last 4
         // digits only) can't pay.
         _methods = [
-          for (final m in results[0] as List<PaymentMethod>)
+          for (final m in methods)
             if (m.kind != PaymentMethodKind.card) m,
         ];
-        _payoutAccounts = results[1] as List<PayoutAccount>;
-        _schedule = results[2] as PayoutSchedule;
         _loading = false;
         _error = null;
       });
@@ -196,19 +99,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       });
     }
   }
-
-  Future<void> _addPayoutAccount() async {
-    final added = await Navigator.of(context).push<PayoutAccount>(
-      MaterialPageRoute(
-        builder: (_) => AddPayoutAccountScreen(service: widget.service),
-      ),
-    );
-    if (added != null && mounted) _load();
-  }
-
-  /// With two payout accounts, the traveler picks which one is paid.
-  Future<void> _makeDefaultPayout(PayoutAccount account) =>
-      _change(() => _service.setDefaultPayoutAccount(account.id));
 
   Future<void> _addMethod() async {
     final added = await Navigator.of(context).push<PaymentMethod>(
@@ -229,35 +119,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       return;
     }
     await _change(() => _service.addMethod(added));
-  }
-
-  /// Asks first: waiting payouts then go to the default account.
-  Future<void> _removePayoutAccount(PayoutAccount account) async {
-    final l = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        key: const ValueKey('payout-account-remove-dialog'),
-        title: Text(l.removePayoutAccountTitle),
-        content: Text(
-          l.removePayoutAccountBody(account.institutionName, account.summary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l.cancel),
-          ),
-          TextButton(
-            key: const ValueKey('payout-account-remove-confirm'),
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
-            child: Text(l.remove),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    await _change(() => _service.removePayoutAccount(account.id));
   }
 
   /// Asks first: removing the default makes the latest other method the
@@ -377,15 +238,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       };
 
   /// The wallet's dollar figures in the member's currency.
-  String _money(double usd) => WalletMoney.format(
-    usd,
-    PreferencesService().currency.code,
-    _exchange.latest,
-  );
-
-  String get _shownCurrency =>
-      WalletMoney.shown(PreferencesService().currency.code, _exchange.latest);
-
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -401,19 +253,9 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
               child: ListView(
                 padding: EdgeInsets.fromLTRB(20, 16, 20, 40 + bottom),
                 children: [
-                  _walletCard(l),
-                  const SizedBox(height: 16),
-                  if (_balance != null) ...[
-                    _balanceSection(l, _balance!),
-                    const SizedBox(height: 16),
-                  ],
                   _paymentMethods(l),
                   const SizedBox(height: 16),
-                  _payoutAccount(l),
-                  const SizedBox(height: 16),
                   _preferences(l),
-                  const SizedBox(height: 16),
-                  _transactions(l),
                 ],
               ),
             ),
@@ -456,7 +298,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              l.paymentSettings,
+              l.paymentMethodsRow,
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
@@ -464,108 +306,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                 color: AppColors.foreground,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Wallet ─────────────────────────────────────────────────────────────────
-  Widget _walletCard(AppLocalizations l) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 3,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
-                  size: 18,
-                  color: AppColors.accent,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l.natawallet,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  letterSpacing: 0.6,
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l.availableForPayout,
-            style: GoogleFonts.dmSans(
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                _money(widget.availableBalance),
-                key: const ValueKey('payment-settings-available'),
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 24,
-                  letterSpacing: -0.6,
-                  color: Colors.white,
-                ),
-              ),
-              if (WalletMoney.hasSymbol(_shownCurrency)) ...[
-                const SizedBox(width: 6),
-                Text(
-                  _shownCurrency,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 14),
-          Container(height: 1, color: Colors.white.withValues(alpha: 0.1)),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(Icons.lock_rounded, size: 14, color: AppColors.accent),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  '${_money(widget.escrowBalance)} ${l.heldInEscrow}',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -737,214 +477,6 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
     );
   }
 
-  // ── Payout account ─────────────────────────────────────────────────────────
-  Widget _payoutAccount(AppLocalizations l) {
-    return _section(
-      title: l.payoutAccount,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: _cardDecoration(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l.payoutAccountNote,
-              style: GoogleFonts.dmSans(
-                fontSize: 11,
-                height: 1.6,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-            for (final a in _payoutAccounts) ...[
-              const SizedBox(height: 12),
-              _payoutAccountRow(l, a, choosing: _payoutAccounts.length > 1),
-            ],
-            if (!_loading && _payoutAccounts.isEmpty) ...[
-              const SizedBox(height: 12),
-              _empty(l.noPayoutAccount),
-            ],
-            const SizedBox(height: 12),
-            if (_payoutAccounts.length >= maxPayoutAccounts)
-              Row(
-                key: const ValueKey('payout-account-limit'),
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.info_rounded,
-                    size: 14,
-                    color: AppColors.mutedForeground,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      l.payoutAccountLimitNote(maxPayoutAccounts),
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        height: 1.5,
-                        color: AppColors.mutedForeground,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else
-              OutlinedButton.icon(
-                key: const ValueKey('payout-account-add'),
-                onPressed: _addPayoutAccount,
-                icon: const Icon(Icons.add_circle_rounded, size: 16),
-                label: Text(
-                  l.addPayoutAccount,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  backgroundColor: AppColors.card,
-                  side: const BorderSide(color: AppColors.border),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: const StadiumBorder(),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// A payout account. With more than one ([choosing]), the default shows a
-  /// Default chip and a filled check; another is made the default with a
-  /// tap.
-  Widget _payoutAccountRow(
-    AppLocalizations l,
-    PayoutAccount a, {
-    required bool choosing,
-  }) {
-    final pick = choosing && !a.isDefault;
-    return GestureDetector(
-      key: ValueKey('payout-account-${a.id}'),
-      behavior: HitTestBehavior.opaque,
-      onTap: pick ? () => _makeDefaultPayout(a) : null,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.input,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: choosing && a.isDefault ? _green : AppColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            _iconBox(
-              Icons.account_balance_rounded,
-              bg: _green.withValues(alpha: 0.15),
-              color: _green,
-              radius: 8,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _titled(a.institutionName, a.summary),
-                  if (choosing) ...[
-                    const SizedBox(height: 6),
-                    if (a.isDefault)
-                      _chip(l.defaultLabel)
-                    else
-                      Text(
-                        l.tapToMakeDefault,
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                  ],
-                ],
-              ),
-            ),
-            if (a.isDefault)
-              const Icon(Icons.check_circle_rounded, size: 18, color: _green)
-            else if (choosing)
-              const Icon(
-                Icons.radio_button_unchecked_rounded,
-                size: 18,
-                color: AppColors.mutedForeground,
-              ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              key: ValueKey('payout-account-remove-${a.id}'),
-              onTap: () => _removePayoutAccount(a),
-              child: Text(
-                l.remove,
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  color: AppColors.mutedForeground,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Nata balance ───────────────────────────────────────────────────────────
-  /// What the member keeps in Nata (designed in Sleek, "Payment Settings"):
-  /// what can be spent, and whether earnings and refunds stay in it.
-  Widget _balanceSection(AppLocalizations l, NataBalance b) {
-    return _section(
-      title: l.balanceTitle,
-      child: Column(
-        key: const ValueKey('payment-settings-balance'),
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
-            child: Text(
-              '${l.balanceAvailable(_money(b.availableUsd))} · '
-              '${l.balanceCardNote}',
-              key: const ValueKey('payment-settings-balance-available'),
-              style: GoogleFonts.dmSans(
-                fontSize: 12,
-                height: 1.4,
-                color: AppColors.mutedForeground,
-              ),
-            ),
-          ),
-          _list([
-            _row(
-              leading: _iconBox(Icons.savings_outlined),
-              title: l.keepEarningsTitle,
-              subtitle: l.keepEarningsSub,
-              trailing: Switch.adaptive(
-                key: const ValueKey('payment-settings-keep-earnings'),
-                value: b.keepEarnings,
-                activeTrackColor: AppColors.primary,
-                onChanged: (v) => _setBalance(keepEarnings: v),
-              ),
-            ),
-            _row(
-              leading: _iconBox(Icons.replay_rounded),
-              title: l.refundsToBalanceTitle,
-              subtitle: l.refundsToBalanceSub,
-              trailing: Switch.adaptive(
-                key: const ValueKey('payment-settings-refunds-to-balance'),
-                value: b.refundsToBalance,
-                activeTrackColor: AppColors.primary,
-                onChanged: (v) => _setBalance(refundsToBalance: v),
-              ),
-            ),
-          ]),
-        ],
-      ),
-    );
-  }
-
   // ── Preferences ────────────────────────────────────────────────────────────
   Widget _preferences(AppLocalizations l) {
     final currency = PreferencesService().currency;
@@ -957,74 +489,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
           subtitle: l.defaultCurrencySub,
           trailing: _accentText('${currency.code} (${currency.symbol})'),
         ),
-        _row(
-          leading: _iconBox(Icons.calendar_month_rounded),
-          title: l.payoutSchedule,
-          subtitle: l.payoutScheduleSub,
-          trailing: _accentText(switch (_schedule) {
-            PayoutSchedule.automatic => l.automatic,
-            PayoutSchedule.weekly => l.weekly,
-            PayoutSchedule.manual => l.manual,
-          }),
-        ),
       ]),
-    );
-  }
-
-  // ── Transactions ───────────────────────────────────────────────────────────
-  Widget _transactions(AppLocalizations l) {
-    final recent = _recent;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return _section(
-      title: l.transactions,
-      action: GestureDetector(
-        key: const ValueKey('payment-transactions-all'),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => WalletHistoryScreen(
-                available: _money(widget.availableBalance),
-                inEscrow: _money(widget.escrowBalance),
-                service: widget.service,
-              ),
-            ),
-          );
-        },
-        child: Text(
-          l.viewAll,
-          style: GoogleFonts.dmSans(
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-            color: AppColors.accent,
-          ),
-        ),
-      ),
-      child: recent == null
-          ? const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(
-                child: CircularProgressIndicator(color: AppColors.accent),
-              ),
-            )
-          : recent.isEmpty
-          ? Container(
-              key: const ValueKey('payment-transactions-empty'),
-              padding: const EdgeInsets.all(16),
-              decoration: _cardDecoration(),
-              child: Text(
-                l.walletEmpty,
-                style: GoogleFonts.dmSans(
-                  fontSize: 12,
-                  color: AppColors.mutedForeground,
-                ),
-              ),
-            )
-          : Column(
-              children: [
-                for (final e in recent)
-                  WalletEntryRow(entry: e, locale: locale),
-              ],
-            ),
     );
   }
 

@@ -1247,6 +1247,15 @@ class FakeRequestService extends Fake implements RequestService {
     deliveriesConfirmed.add(requestId);
   }
 
+  /// Flat requests the traveler said they delivered.
+  final List<String> travelerDeliveries = [];
+
+  @override
+  Future<void> travelerConfirmDelivered(String requestId) async {
+    if (failReview != null) throw failReview!;
+    travelerDeliveries.add(requestId);
+  }
+
   /// Nata's fee per trip; [failFees] makes quoting fail. Trips not listed
   /// get \$4.99 (international, for a sender in "anywhere else").
   Map<String, FlatFee> fees = {};
@@ -1534,9 +1543,11 @@ IncomingRequest sampleIncoming({
   bool senderReviewed = false,
   DateTime? pickedUpAt,
   String pricing = 'distance',
+  DateTime? travelerDeliveredAt,
 }) => IncomingRequest(
   id: id,
   pricing: pricing,
+  travelerDeliveredAt: travelerDeliveredAt,
   pickedUpAt: pickedUpAt,
   senderRating: senderRating,
   senderReviewed: senderReviewed,

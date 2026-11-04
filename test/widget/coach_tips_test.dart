@@ -3,7 +3,6 @@ import 'package:carrywise_app/screens/messages_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
-import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:carrywise_app/services/route_alert_service.dart';
 import 'package:carrywise_app/widgets/app_bottom_nav.dart';
 import 'package:carrywise_app/widgets/coach_tips.dart';
@@ -236,7 +235,7 @@ void main() {
     testWidgets('Profile', (tester) async {
       await show(tester, ProfileScreen(authService: FakeAuthService()));
       await walk(tester, [
-        'Your Nata Wallet',
+        'Payment methods',
         'Travel under a pseudonym',
         'Route alerts',
       ]);
@@ -255,17 +254,6 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await show(tester, ProfileScreen(authService: FakeAuthService()));
       expect(find.byType(CoachTipsOverlay), findsNothing);
-    });
-
-    testWidgets('Wallet', (tester) async {
-      await show(
-        tester,
-        WalletScreen(
-          authService: FakeAuthService(),
-          paymentService: FakePaymentService(),
-        ),
-      );
-      await walk(tester, ['Your Nata Wallet', 'Get paid']);
     });
 
     testWidgets('a tip further down scrolls its row into view first', (

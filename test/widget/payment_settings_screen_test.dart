@@ -1,9 +1,4 @@
-import 'dart:async';
-
-import 'package:carrywise_app/screens/wallet_history_screen.dart';
 import 'package:carrywise_app/screens/payment_settings_screen.dart';
-import 'package:carrywise_app/screens/wallet_screen.dart';
-import 'package:carrywise_app/services/exchange_rate_service.dart';
 import 'package:carrywise_app/services/payment_service.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:flutter/material.dart';
@@ -30,21 +25,11 @@ void main() {
     ),
   );
 
-  Future<void> pump(
-    WidgetTester tester, {
-    Locale? locale,
-    ExchangeRateService? exchangeRates,
-  }) async {
+  Future<void> pump(WidgetTester tester, {Locale? locale}) async {
     bigScreen(tester);
     await tester.pumpWidget(
       appWrapper(
-        PaymentSettingsScreen(
-          availableBalance: 320,
-          escrowBalance: 180,
-          holderName: 'Fortune Niama',
-          service: payments,
-          exchangeRates: exchangeRates ?? FakeExchangeRateService(),
-        ),
+        PaymentSettingsScreen(holderName: 'Fortune Niama', service: payments),
         locale: locale ?? const Locale('en'),
       ),
     );
@@ -52,12 +37,19 @@ void main() {
   }
 
   group('PaymentSettingsScreen', () {
-    testWidgets('shows the wallet balances it is given', (tester) async {
+    testWidgets('no wallet, payout account or transactions', (tester) async {
       await pump(tester);
+      await tester.pumpAndSettle();
 
-      expect(find.text('Payment Settings'), findsOneWidget);
-      expect(find.text('\$320.00'), findsOneWidget);
-      expect(find.text('\$180.00 held in Escrow'), findsOneWidget);
+      expect(find.text('Payment methods'), findsOneWidget);
+      for (final t in [
+        '\$320.00',
+        'PAYOUT ACCOUNT',
+        'TRANSACTIONS',
+        'Payout Schedule',
+      ]) {
+        expect(find.text(t), findsNothing, reason: t);
+      }
     });
 
     testWidgets('shows every section of the design', (tester) async {
@@ -66,55 +58,14 @@ void main() {
 
       for (final t in [
         'PAYMENT METHODS',
-        'PAYOUT ACCOUNT',
         'PREFERENCES',
-        'TRANSACTIONS',
         'Apple Pay',
         "Fortune's iPhone",
         'Visa •••• 4242',
-        'Barclays Bank',
-        'GB •••• 2093 · Fortune Niama',
-        'Add payout account',
         'Default Currency',
-        'Payout Schedule',
-        'Automatic',
       ]) {
         expect(find.text(t), findsOneWidget, reason: t);
       }
-      // No sample transactions: nothing yet.
-      expect(
-        find.byKey(const ValueKey('payment-transactions-empty')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('the latest transactions, and View all', (tester) async {
-      payments.history = [
-        for (var i = 0; i < 5; i++)
-          WalletEntry(
-            kind: WalletEntryKind.payout,
-            id: 'p$i',
-            amount: 45,
-            currency: 'USD',
-            status: WalletEntryStatus.paid,
-            date: DateTime(2030, 6, 24 - i),
-            item: 'Item $i',
-          ),
-      ];
-      await pump(tester);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Payout · Item 0'), findsOneWidget);
-      expect(find.text('Payout · Item 2'), findsOneWidget);
-      expect(find.text('Payout · Item 3'), findsNothing);
-
-      await tester.ensureVisible(
-        find.byKey(const ValueKey('payment-transactions-all')),
-      );
-      await tester.tap(find.byKey(const ValueKey('payment-transactions-all')));
-      await tester.pumpAndSettle();
-      expect(find.byType(WalletHistoryScreen), findsOneWidget);
-      expect(find.text('Payout · Item 4'), findsOneWidget);
     });
 
     testWidgets("the default currency is the user's", (tester) async {
@@ -123,29 +74,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('EUR (€)'), findsOneWidget);
-    });
-
-    testWidgets("the wallet is shown in the user's currency", (tester) async {
-      PreferencesService().setCurrency(AppCurrency.eur);
-      final rates = FakeExchangeRateService()..gate = Completer<void>();
-      await pump(tester, exchangeRates: rates);
-
-      // Dollars until the rates are here...
-      expect(find.text(r'$320.00'), findsOneWidget);
-
-      rates.gate!.complete();
-      await tester.pumpAndSettle();
-      // ...then euros (0.892438 per dollar).
-      expect(find.text('€285.58'), findsOneWidget);
-      expect(find.text('€160.64 held in Escrow'), findsOneWidget);
-      expect(find.text('EUR'), findsOneWidget);
-      expect(find.text('USD'), findsNothing);
-
-      // XOF has no symbol: its code leads, and isn't repeated after.
-      PreferencesService().setCurrency(AppCurrency.xof);
-      await tester.pumpAndSettle();
-      expect(find.textContaining('XOF '), findsWidgets);
-      expect(find.text('EUR'), findsNothing);
     });
 
     testWidgets('Remove deletes the card after confirming', (tester) async {
@@ -223,106 +151,12 @@ void main() {
       expect(find.text('Default'), findsOneWidget);
     });
 
-    testWidgets('a payout account is removed after confirming', (tester) async {
-      await pump(tester);
-      await tester.pumpAndSettle();
-      final id = payments.accounts.single.id;
-
-      await tester.ensureVisible(
-        find.byKey(ValueKey('payout-account-remove-$id')),
-      );
-      await tester.tap(find.byKey(ValueKey('payout-account-remove-$id')));
-      await tester.pumpAndSettle();
-      expect(find.text('Remove this payout account?'), findsOneWidget);
-
-      // Cancel keeps it.
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(payments.removedAccounts, isEmpty);
-
-      await tester.tap(find.byKey(ValueKey('payout-account-remove-$id')));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const ValueKey('payout-account-remove-confirm')),
-      );
-      await tester.pumpAndSettle();
-      expect(payments.removedAccounts, [id]);
-      expect(find.text('No payout account yet.'), findsOneWidget);
-    });
-
-    group('two payout accounts', () {
-      setUp(
-        () => payments.accounts = [
-          samplePayoutAccount(),
-          sampleMobilePayoutAccount(),
-        ],
-      );
-
-      testWidgets('no third one: a note instead of Add', (tester) async {
-        await pump(tester);
-        await tester.pumpAndSettle();
-
-        expect(find.byKey(const ValueKey('payout-account-add')), findsNothing);
-        expect(
-          find.text(
-            'You can have up to 2 payout accounts. Remove one to add another.',
-          ),
-          findsOneWidget,
-        );
-      });
-
-      testWidgets('a tap makes the other one the default', (tester) async {
-        await pump(tester);
-        await tester.pumpAndSettle();
-        expect(find.text('Tap to make default'), findsOneWidget);
-
-        await tester.ensureVisible(
-          find.byKey(const ValueKey('payout-account-mpesa')),
-        );
-        await tester.tap(find.byKey(const ValueKey('payout-account-mpesa')));
-        await tester.pumpAndSettle();
-
-        expect(payments.defaultAccounts, ['mpesa']);
-        expect(payments.accounts.where((a) => a.isDefault).map((a) => a.id), [
-          'mpesa',
-        ]);
-        // Barclays is now the one to tap.
-        await tester.tap(find.byKey(const ValueKey('payout-account-mpesa')));
-        await tester.pumpAndSettle();
-        expect(payments.defaultAccounts, ['mpesa']);
-      });
-
-      testWidgets('removing one brings Add back', (tester) async {
-        await pump(tester);
-        await tester.pumpAndSettle();
-
-        await tester.ensureVisible(
-          find.byKey(const ValueKey('payout-account-remove-mpesa')),
-        );
-        await tester.tap(
-          find.byKey(const ValueKey('payout-account-remove-mpesa')),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.byKey(const ValueKey('payout-account-remove-confirm')),
-        );
-        await tester.pumpAndSettle();
-
-        expect(
-          find.byKey(const ValueKey('payout-account-add')),
-          findsOneWidget,
-        );
-        expect(find.text('Tap to make default'), findsNothing);
-      });
-    });
-
-    testWidgets('no methods or payout account yet', (tester) async {
+    testWidgets('no methods yet', (tester) async {
       payments = FakePaymentService();
       await pump(tester);
       await tester.pumpAndSettle();
 
       expect(find.textContaining('No payment method yet'), findsOneWidget);
-      expect(find.text('No payout account yet.'), findsOneWidget);
     });
 
     testWidgets('a load failure says so', (tester) async {
@@ -357,53 +191,11 @@ void main() {
       );
     });
 
-    testWidgets('shows the saved payout schedule', (tester) async {
-      payments.schedule = PayoutSchedule.weekly;
-      await pump(tester);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Weekly'), findsOneWidget);
-    });
-
     testWidgets('is translated', (tester) async {
       await pump(tester, locale: const Locale('fr'));
 
-      expect(find.text('Paramètres de paiement'), findsOneWidget);
+      expect(find.text('Moyens de paiement'), findsOneWidget);
       expect(find.text('MOYENS DE PAIEMENT'), findsOneWidget);
-    });
-  });
-
-  group('from the Wallet page', () {
-    testWidgets('the Payment Settings row opens it with the balances', (
-      tester,
-    ) async {
-      bigScreen(tester);
-      await tester.pumpWidget(
-        appWrapper(
-          WalletScreen(
-            authService: FakeAuthService(),
-            paymentService: FakePaymentService(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Payment Settings'), findsOneWidget);
-      expect(find.text('Payment methods & payout account'), findsOneWidget);
-
-      await tester.tap(find.byKey(const ValueKey('wallet-payment-settings')));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(PaymentSettingsScreen), findsOneWidget);
-      // FakeAuthService: 320 available, 150 in escrow.
-      expect(
-        find.descendant(
-          of: find.byType(PaymentSettingsScreen),
-          matching: find.text('\$320.00'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('\$150.00 held in Escrow'), findsWidgets);
     });
   });
 

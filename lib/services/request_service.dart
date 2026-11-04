@@ -834,9 +834,11 @@ class SentRequest {
   /// The flat fee as stored, e.g. "\$4.99" or "€1.99".
   String get feeText => PriceFormatter.write(totalUsd, feeCurrency);
 
-  /// Paid and not confirmed yet: the sender confirms a flat request once the
-  /// item arrived.
-  bool get awaitingDeliveryConfirm => isFlat && isPaid;
+  /// Paid (or closed by the traveler) and not confirmed yet: the sender
+  /// confirms a flat request once the item arrived (20240201).
+  bool get awaitingDeliveryConfirm =>
+      isFlat &&
+      (isPaid || (status == 'delivered' && receiptConfirmedAt == null));
 
   /// Paid, and not delivered yet: the delivery code is in use.
   bool get isPaid => status == 'paid' || status == 'handed_off';
@@ -876,9 +878,10 @@ class SentRequest {
   /// Accepted and waiting for the sender's payment.
   bool get awaitingPayment => status == 'accepted';
 
-  /// Delivered, and the sender hasn't confirmed receipt yet.
+  /// Delivered, and the sender hasn't confirmed receipt yet (a flat request
+  /// is confirmed with [awaitingDeliveryConfirm]).
   bool get awaitingReceipt =>
-      status == 'delivered' && receiptConfirmedAt == null;
+      !isFlat && status == 'delivered' && receiptConfirmedAt == null;
 
   /// Delivered and confirmed, but not reviewed yet.
   bool get canReview =>
@@ -1000,6 +1003,9 @@ class IncomingRequest {
   final DateTime? pickedUpAt;
   final DateTime? deliveredAt;
 
+  /// When the traveler said they delivered a flat request (20240201).
+  final DateTime? travelerDeliveredAt;
+
   /// Wrong delivery codes the traveler can still enter (5 at first).
   final int codeAttemptsLeft;
 
@@ -1037,6 +1043,7 @@ class IncomingRequest {
     required this.arrivalDate,
     this.pickedUpAt,
     this.deliveredAt,
+    this.travelerDeliveredAt,
     this.codeAttemptsLeft = 5,
     this.senderRating,
     this.senderReviewed = false,
@@ -1045,6 +1052,12 @@ class IncomingRequest {
   /// A flat request: the sender pays the traveler directly and confirms
   /// delivery; no code, no payout.
   bool get isFlat => pricing == 'flat';
+
+  /// A flat request the traveler hasn't said they delivered yet: paid, or
+  /// closed by the sender (20240201).
+  bool get awaitingTravelerConfirm =>
+      isFlat &&
+      (isPaid || (status == 'delivered' && travelerDeliveredAt == null));
 
   /// Delivered, and the traveler hasn't rated the sender yet.
   bool get needsSenderReview => status == 'delivered' && !senderReviewed;
@@ -1111,6 +1124,7 @@ class IncomingRequest {
       arrivalDate: DateTime.parse(j['arrival_date'] as String),
       pickedUpAt: time(j['picked_up_at']),
       deliveredAt: time(j['delivered_at']),
+      travelerDeliveredAt: time(j['traveler_delivered_at']),
       codeAttemptsLeft: (j['code_attempts_left'] as num?)?.toInt() ?? 5,
       senderRating: (j['sender_rating'] as num?)?.toDouble(),
       senderReviewed: j['sender_reviewed'] == true,
@@ -1506,6 +1520,11 @@ class RequestService {
   /// The sender confirms the traveler delivered a flat request (no code).
   Future<void> confirmDelivered(String requestId) =>
       _call('confirm_delivered', {'p_id': requestId});
+
+  /// The traveler says they delivered a flat request: it closes as delivered
+  /// (20240201).
+  Future<void> travelerConfirmDelivered(String requestId) =>
+      _call('traveler_confirm_delivered', {'p_id': requestId});
 
   /// Nata's fee for sending to each of [tripIds], by trip id.
   Future<Map<String, FlatFee>> quoteFees(List<String> tripIds) async {

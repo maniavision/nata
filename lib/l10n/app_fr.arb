@@ -2244,5 +2244,16 @@
   "notifChatOpenTitle": "La discussion est ouverte",
   "notifFeePaidBody": "{sender} a payé les frais Nata. Convenez du prix et de la remise dans la discussion.",
   "notifFeeReceivedBody": "Vous pouvez maintenant discuter avec {traveler} pour convenir du prix et de la remise.",
-  "notifConfirmedBySenderBody": "{sender} a confirmé que vous avez livré son article."
+  "notifConfirmedBySenderBody": "{sender} a confirmé que vous avez livré son article.",
+  "paymentMethodsRow": "Moyens de paiement",
+  "paymentMethodsRowSub": "Cartes et mobile money pour les frais Nata",
+  "tipPaymentMethodsBody": "Enregistrez ici une carte ou un portefeuille mobile money pour payer les frais Nata plus vite.",
+  "travelerDeliveredTitle": "Avez-vous livré l'article ?",
+  "travelerDeliveredBody": "Confirmez seulement une fois l'article de {name} remis. Cela clôt la livraison.",
+  "iDeliveredIt": "Je l'ai livré",
+  "notifCheckSenderTitle": "Votre article a-t-il été livré ?",
+  "notifCheckSenderBody": "Dites-nous si {traveler} a livré votre article, puis laissez un avis.",
+  "notifCheckTravelerTitle": "Avez-vous livré l'article ?",
+  "notifCheckTravelerBody": "Dites-nous si vous avez livré l'article de {sender}, puis laissez un avis.",
+  "notifDeliveredByTravelerBody": "{traveler} indique avoir livré votre article. Confirmez-le et laissez un avis."
 }

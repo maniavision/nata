@@ -1,5 +1,6 @@
 import 'package:carrywise_app/screens/incoming_request_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
+import 'package:carrywise_app/screens/review_screen.dart';
 import 'package:carrywise_app/services/screen_cache.dart';
 import 'package:carrywise_app/services/request_service.dart';
 import 'package:flutter/material.dart';
@@ -640,6 +641,143 @@ void main() {
       await pump(tester);
 
       expect(find.text('Price agreed in chat'), findsWidgets);
+    });
+  });
+
+  group('Delivery check-ins', () {
+    Future<void> pumpAsking(
+      WidgetTester tester, {
+      required int tab,
+      String? ask,
+    }) async {
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          RequestsScreen(
+            requestService: service,
+            exchangeRates: FakeExchangeRateService(),
+            initialTab: tab,
+            askDeliveredFor: ask,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('the traveler says they delivered, then rates the sender', (
+      tester,
+    ) async {
+      service.incoming = [
+        sampleIncoming(id: 'fi', status: 'paid', pricing: 'flat'),
+      ];
+      await pump(tester);
+
+      await tester.tap(find.byKey(const ValueKey('traveler-delivered-fi')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('traveler-delivered-dialog')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('traveler-delivered-yes')));
+      await tester.pumpAndSettle();
+
+      expect(service.travelerDeliveries, ['fi']);
+      expect(find.byType(ReviewScreen), findsOneWidget);
+    });
+
+    testWidgets('"Not yet" changes nothing', (tester) async {
+      service.incoming = [
+        sampleIncoming(id: 'fi', status: 'handed_off', pricing: 'flat'),
+      ];
+      await pump(tester);
+
+      await tester.tap(find.byKey(const ValueKey('traveler-delivered-fi')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('traveler-delivered-no')));
+      await tester.pumpAndSettle();
+
+      expect(service.travelerDeliveries, isEmpty);
+      expect(find.byType(ReviewScreen), findsNothing);
+    });
+
+    testWidgets('no "I delivered it" on a request with a code', (tester) async {
+      service.incoming = [sampleIncoming(id: 'di', status: 'paid')];
+      await pump(tester);
+
+      expect(find.byKey(const ValueKey('traveler-delivered-di')), findsNothing);
+    });
+
+    testWidgets("a sender's check-in asks about that request", (tester) async {
+      service.mine = [
+        sampleSentRequest(id: 'f1', status: 'paid', pricing: 'flat'),
+        sampleSentRequest(id: 'f2', status: 'paid', pricing: 'flat'),
+      ];
+      await pumpAsking(tester, tab: 1, ask: 'f2');
+
+      expect(
+        find.byKey(const ValueKey('confirm-delivered-dialog')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('confirm-delivered-yes')));
+      await tester.pumpAndSettle();
+
+      expect(service.deliveriesConfirmed, ['f2']);
+      expect(find.byType(ReviewScreen), findsOneWidget);
+    });
+
+    testWidgets("a traveler's check-in asks about that request", (
+      tester,
+    ) async {
+      service.incoming = [
+        sampleIncoming(id: 'fi', status: 'paid', pricing: 'flat'),
+      ];
+      await pumpAsking(tester, tab: 0, ask: 'fi');
+
+      expect(
+        find.byKey(const ValueKey('traveler-delivered-dialog')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('traveler-delivered-yes')));
+      await tester.pumpAndSettle();
+      expect(service.travelerDeliveries, ['fi']);
+    });
+
+    testWidgets('the traveler closed it: the sender still confirms', (
+      tester,
+    ) async {
+      service.mine = [
+        sampleSentRequest(id: 'f1', status: 'delivered', pricing: 'flat'),
+      ];
+      await pumpAsking(tester, tab: 1);
+
+      await tester.tap(
+        find.byKey(const ValueKey('sent-request-confirm-delivered-f1')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('confirm-delivered-yes')));
+      await tester.pumpAndSettle();
+      expect(service.deliveriesConfirmed, ['f1']);
+    });
+
+    testWidgets('already answered: the check-in asks nothing', (tester) async {
+      service.incoming = [
+        sampleIncoming(
+          id: 'fi',
+          status: 'delivered',
+          pricing: 'flat',
+          senderReviewed: true,
+          travelerDeliveredAt: DateTime(2030, 6, 25),
+        ),
+      ];
+      await pumpAsking(tester, tab: 0, ask: 'fi');
+
+      expect(
+        find.byKey(const ValueKey('traveler-delivered-dialog')),
+        findsNothing,
+      );
+      expect(find.byType(ReviewScreen), findsNothing);
     });
   });
 }

@@ -34,12 +34,17 @@ class RequestsScreen extends StatefulWidget {
   /// Override for tests; defaults to [DateTime.now].
   final DateTime Function()? now;
 
+  /// A request to ask about once it is loaded, from a tapped delivery
+  /// check-in (20240201): was it delivered? Then the review.
+  final String? askDeliveredFor;
+
   const RequestsScreen({
     super.key,
     this.requestService,
     this.exchangeRates,
     this.initialTab = 0,
     this.now,
+    this.askDeliveredFor,
   });
 
   /// Where this page keeps what it showed between visits (ScreenCache).
@@ -267,6 +272,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       ScreenCache.write(RequestsScreen._kSent, sent);
       if (mounted) setState(() => _sent = sent);
       _loadCodes(sent);
+      _maybeAsk();
       if (mounted && sent.any((r) => _closes(r.status))) {
         _loadClosed();
       }
@@ -430,6 +436,90 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
   }
 
+  /// Whether [RequestsScreen.askDeliveredFor] was asked about already.
+  bool _asked = false;
+
+  /// Asks about the request a delivery check-in was about, once it is
+  /// loaded: the sender or the traveler confirms, then reviews.
+  void _maybeAsk() {
+    final id = widget.askDeliveredFor;
+    if (_asked || id == null || !mounted) return;
+    final sent = _sent?.where((r) => r.id == id).firstOrNull;
+    final incoming = _incomingAll?.where((r) => r.id == id).firstOrNull;
+    if (sent == null && incoming == null) return;
+    _asked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (sent != null) {
+        if (_tab != 1) setState(() => _tab = 1);
+        if (sent.awaitingDeliveryConfirm) {
+          _confirmDelivered(sent);
+        } else if (sent.canReview) {
+          _review(sent);
+        }
+      } else if (incoming != null) {
+        if (_tab != 0) setState(() => _tab = 0);
+        if (incoming.awaitingTravelerConfirm) {
+          _travelerConfirmDelivered(incoming);
+        } else if (incoming.needsSenderReview) {
+          _openIncoming(incoming);
+        }
+      }
+    });
+  }
+
+  /// A flat request: the traveler says they delivered it (it closes as
+  /// delivered), then rates the sender.
+  Future<void> _travelerConfirmDelivered(IncomingRequest request) async {
+    final l = context.l10n;
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('traveler-delivered-dialog'),
+        title: Text(l.travelerDeliveredTitle),
+        content: Text(l.travelerDeliveredBody(request.senderFirstName)),
+        actions: [
+          TextButton(
+            key: const ValueKey('traveler-delivered-no'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.notYet),
+          ),
+          TextButton(
+            key: const ValueKey('traveler-delivered-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.iDeliveredIt),
+          ),
+        ],
+      ),
+    );
+    if (yes != true || !mounted) return;
+    setState(() => _busy.add(request.id));
+    final messenger = ScaffoldMessenger.of(context);
+    final service = widget.requestService ?? RequestService();
+    try {
+      await service.travelerConfirmDelivered(request.id);
+      if (!mounted) return;
+      setState(() => _busy.remove(request.id));
+      if (!request.senderReviewed) {
+        await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) =>
+                ReviewScreen.sender(request: request, service: service),
+          ),
+        );
+      }
+      if (mounted) _loadIncoming();
+    } catch (e) {
+      debugPrint('[Requests] traveler delivered: $e');
+      if (!mounted) return;
+      setState(() => _busy.remove(request.id));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
+      _loadIncoming();
+    }
+  }
+
   /// Opens a pending request in the request form; reloads once it is saved.
   Future<void> _edit(SentRequest request) async {
     final saved = await Navigator.of(context).push<bool>(
@@ -541,6 +631,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
           _incomingFailed = false;
         });
       }
+      _maybeAsk();
       if (mounted && list.any((r) => _closes(r.status))) {
         _loadClosed();
       }
@@ -639,6 +730,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
     setState(() => _busy.remove(r.id));
     if (changed) _loadIncoming();
   }
+
+  /// "I delivered it" on a flat request the traveler hasn't closed yet.
+  VoidCallback? _deliveredAction(IncomingRequest r) =>
+      r.isFlat && r.isPaid && !_busy.contains(r.id)
+      ? () => _travelerConfirmDelivered(r)
+      : null;
 
   _AcceptedView _acceptedView(IncomingRequest r) {
     final l = context.l10n;
@@ -1186,11 +1283,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       child: _AcceptedCard(
                         request: _acceptedView(r),
                         onOpen: () => _openIncoming(r),
+                        onDelivered: _deliveredAction(r),
                       ),
                     )
                   : _AcceptedCard(
                       request: _acceptedView(r),
                       onOpen: () => _openIncoming(r),
+                      onDelivered: _deliveredAction(r),
                     ),
             ),
         ],
@@ -2245,7 +2344,14 @@ class _AcceptedCard extends StatelessWidget {
 
   /// Opens the request.
   final VoidCallback onOpen;
-  const _AcceptedCard({required this.request, required this.onOpen});
+
+  /// A flat request the traveler can say they delivered (20240201).
+  final VoidCallback? onDelivered;
+  const _AcceptedCard({
+    required this.request,
+    required this.onOpen,
+    this.onDelivered,
+  });
 
   void _open(BuildContext context) => onOpen();
 
@@ -2417,6 +2523,29 @@ class _AcceptedCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            if (onDelivered != null) ...[
+              OutlinedButton.icon(
+                key: ValueKey('traveler-delivered-${request.id}'),
+                onPressed: onDelivered,
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+                label: Text(
+                  l.iDeliveredIt,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _green,
+                  side: BorderSide(color: _green.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             Material(
               color: AppColors.primary,
               borderRadius: BorderRadius.circular(12),

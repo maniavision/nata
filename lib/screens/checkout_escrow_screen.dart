@@ -74,11 +74,6 @@ class CheckoutEscrowScreen extends StatefulWidget {
 class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   int _paymentMethod = 0; // 0=Apple Pay, 1=Card, 2=Mobile Money
 
-  /// The Nata balance (20240187): offered when it has something in it, and
-  /// usable when it covers the whole price.
-  BalanceCheckout? _balance;
-  bool _useBalance = false;
-  bool _payingFromBalance = false;
   static const _payMethods = [
     PayMethod.applePay,
     PayMethod.card,
@@ -134,7 +129,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       setState(() {
         _savedCard = card;
         // The saved card first, unless the sender picked something already.
-        if (_paymentMethod == 0 && !_useBalance && _payment == null) {
+        if (_paymentMethod == 0 && _payment == null) {
           _paymentMethod = 1;
         }
       });
@@ -310,53 +305,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
     }
     if (_hasTicketImage) _loadTicket();
     _loadKind();
-    _loadBalance();
-  }
-
-  Future<void> _loadBalance() async {
-    try {
-      final balance = await _service.balanceCheckout(_r.id);
-      if (!mounted) return;
-      setState(() {
-        _balance = balance;
-        // Enough to pay it all: offered first.
-        _useBalance = balance != null && balance.covers;
-      });
-    } catch (e) {
-      debugPrint('[Checkout] balance: $e');
-    }
-  }
-
-  /// Pays it all from the Nata balance: into escrow at once.
-  Future<void> _payFromBalance() async {
-    if (_payingFromBalance) return;
-    setState(() => _payingFromBalance = true);
-    final l = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await _service.payWithBalance(_r.id);
-      if (!mounted) return;
-      _paid(messenger, l);
-    } on RequestException catch (e) {
-      if (!mounted) return;
-      setState(() => _payingFromBalance = false);
-      messenger.showSnackBar(
-        nataToast(
-          e.reason == RequestFailure.balanceTooLow
-              ? l.errBalanceTooLow
-              : l.errPaymentFailed,
-          tone: ToastTone.error,
-        ),
-      );
-      _loadBalance();
-    } catch (e) {
-      debugPrint('[Checkout] pay from balance: $e');
-      if (!mounted) return;
-      setState(() => _payingFromBalance = false);
-      messenger.showSnackBar(
-        nataToast(l.errPaymentFailed, tone: ToastTone.error),
-      );
-    }
   }
 
   /// Paid (any way): the code to the recipient, then the chat with the
@@ -1082,85 +1030,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   }
 
   // ── Payment method ─────────────────────────────────────────────────────────
-  /// The Nata balance as a way to pay (designed in Sleek, "Checkout &
-  /// Escrow Payment"): greyed out when it doesn't cover the price.
-  Widget _balanceTile(BalanceCheckout b) {
-    final l = context.l10n;
-    final available = PriceFormatter.write(b.available, b.currency);
-    final selected = _useBalance && b.covers;
-    return GestureDetector(
-      key: const ValueKey('checkout-method-balance'),
-      onTap: b.covers ? () => setState(() => _useBalance = true) : null,
-      child: Opacity(
-        opacity: b.covers ? 1 : 0.55,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.accent.withValues(alpha: 0.05)
-                : AppColors.input.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? AppColors.accent : AppColors.border,
-              width: selected ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
-                  size: 20,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.balanceTitle,
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.foreground,
-                      ),
-                    ),
-                    Text(
-                      b.covers
-                          ? l.balanceAvailable(available)
-                          : l.balanceNotEnough(available),
-                      key: const ValueKey('checkout-balance-available'),
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        color: AppColors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                selected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                size: 20,
-                color: selected ? AppColors.accent : AppColors.mutedForeground,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildPaymentMethodCard() {
     final methods = [
       _PayMethod(
@@ -1230,14 +1099,10 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 ),
               ),
             ),
-          if ((_balance?.available ?? 0) > 0) ...[
-            _balanceTile(_balance!),
-            const SizedBox(height: 8),
-          ],
           ...methods.asMap().entries.where((e) => _offered.contains(e.key)).map(
             (e) {
               final m = e.value;
-              final selected = !_useBalance && _paymentMethod == e.key;
+              final selected = _paymentMethod == e.key;
               return Padding(
                 key: ValueKey('checkout-method-${e.key}'),
                 padding: EdgeInsets.only(
@@ -1245,10 +1110,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
                 ),
                 child: GestureDetector(
                   onTap: () {
-                    setState(() {
-                      _paymentMethod = e.key;
-                      _useBalance = false;
-                    });
+                    setState(() => _paymentMethod = e.key);
                     if (e.key == 2) _loadMobileOptions();
                   },
                   child: AnimatedContainer(
@@ -1918,46 +1780,6 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
       return payment.direct
           ? _buildApproveOnPhone(l)
           : _buildPaymentInProgress(l);
-    }
-    if (_useBalance) {
-      // From the balance: nothing else to fill in.
-      return SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton.icon(
-          key: const ValueKey('checkout-pay-balance'),
-          onPressed: checked && !_payingFromBalance ? _payFromBalance : null,
-          icon: _payingFromBalance
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.mutedForeground,
-                  ),
-                )
-              : Icon(
-                  Icons.account_balance_wallet_rounded,
-                  size: 18,
-                  color: checked ? Colors.white : AppColors.mutedForeground,
-                ),
-          label: Text(
-            checked ? l.payFromBalance(_totalText) : l.validateToUnlock,
-            style: GoogleFonts.dmSans(
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
-              color: checked ? Colors.white : AppColors.mutedForeground,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.muted,
-            elevation: checked ? 3 : 0,
-            shape: const StadiumBorder(),
-          ),
-        ),
-      );
     }
     return Column(
       children: [

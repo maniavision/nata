@@ -9703,6 +9703,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{sender} confirmed you delivered their item.'**
   String notifConfirmedBySenderBody(String sender);
+
+  /// No description provided for @paymentMethodsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment methods'**
+  String get paymentMethodsRow;
+
+  /// No description provided for @paymentMethodsRowSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards and mobile money for Nata\'s fees'**
+  String get paymentMethodsRowSub;
+
+  /// No description provided for @tipPaymentMethodsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a card or a mobile money wallet here to pay Nata\'s fees faster.'**
+  String get tipPaymentMethodsBody;
+
+  /// No description provided for @travelerDeliveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you deliver it?'**
+  String get travelerDeliveredTitle;
+
+  /// No description provided for @travelerDeliveredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm only once you\'ve handed over {name}\'s item. This closes the delivery.'**
+  String travelerDeliveredBody(String name);
+
+  /// No description provided for @iDeliveredIt.
+  ///
+  /// In en, this message translates to:
+  /// **'I delivered it'**
+  String get iDeliveredIt;
+
+  /// No description provided for @notifCheckSenderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Was your item delivered?'**
+  String get notifCheckSenderTitle;
+
+  /// No description provided for @notifCheckSenderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Let us know if {traveler} delivered your item, then leave a review.'**
+  String notifCheckSenderBody(String traveler);
+
+  /// No description provided for @notifCheckTravelerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you deliver the item?'**
+  String get notifCheckTravelerTitle;
+
+  /// No description provided for @notifCheckTravelerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Let us know if you delivered {sender}\'s item, then leave a review.'**
+  String notifCheckTravelerBody(String sender);
+
+  /// No description provided for @notifDeliveredByTravelerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{traveler} says they delivered your item. Confirm it and leave a review.'**
+  String notifDeliveredByTravelerBody(String traveler);
 }
 
 class _AppLocalizationsDelegate

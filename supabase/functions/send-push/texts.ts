@@ -99,6 +99,34 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "message_photo": [
       "New message from {name}",
       "Sent you a photo"
+    ],
+    "request_accepted_fee": [
+      "Request accepted",
+      "{traveler} accepted your request. Pay the Nata fee within 24 hours to start chatting."
+    ],
+    "contact_fee_paid": [
+      "Chat is open",
+      "{sender} paid the Nata fee. Agree on the price and the handover in the chat."
+    ],
+    "contact_fee_received": [
+      "Chat is open",
+      "You can now chat with {traveler} to agree on the price and the handover."
+    ],
+    "delivery_confirmed_by_sender": [
+      "Delivery confirmed",
+      "{sender} confirmed you delivered their item."
+    ],
+    "delivery_check_sender": [
+      "Was your item delivered?",
+      "Let us know if {traveler} delivered your item, then leave a review."
+    ],
+    "delivery_check_traveler": [
+      "Did you deliver the item?",
+      "Let us know if you delivered {sender}'s item, then leave a review."
+    ],
+    "delivered_by_traveler": [
+      "Item delivered",
+      "{traveler} says they delivered your item. Confirm it and leave a review."
     ]
   },
   "es": {
@@ -197,6 +225,34 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "message_photo": [
       "Nuevo mensaje de {name}",
       "Te envió una foto"
+    ],
+    "request_accepted_fee": [
+      "Solicitud aceptada",
+      "{traveler} aceptó tu solicitud. Paga la tarifa de Nata en 24 horas para empezar a chatear."
+    ],
+    "contact_fee_paid": [
+      "El chat está abierto",
+      "{sender} pagó la tarifa de Nata. Acordad el precio y la entrega en el chat."
+    ],
+    "contact_fee_received": [
+      "El chat está abierto",
+      "Ya puedes chatear con {traveler} para acordar el precio y la entrega."
+    ],
+    "delivery_confirmed_by_sender": [
+      "Entrega confirmada",
+      "{sender} confirmó que entregaste su artículo."
+    ],
+    "delivery_check_sender": [
+      "¿Se entregó tu artículo?",
+      "Dinos si {traveler} entregó tu artículo y deja una reseña."
+    ],
+    "delivery_check_traveler": [
+      "¿Entregaste el artículo?",
+      "Dinos si entregaste el artículo de {sender} y deja una reseña."
+    ],
+    "delivered_by_traveler": [
+      "Artículo entregado",
+      "{traveler} dice que entregó tu artículo. Confírmalo y deja una reseña."
     ]
   },
   "fr": {
@@ -295,6 +351,34 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "message_photo": [
       "Nouveau message de {name}",
       "Vous a envoyé une photo"
+    ],
+    "request_accepted_fee": [
+      "Demande acceptée",
+      "{traveler} a accepté votre demande. Payez les frais Nata sous 24 heures pour commencer à discuter."
+    ],
+    "contact_fee_paid": [
+      "La discussion est ouverte",
+      "{sender} a payé les frais Nata. Convenez du prix et de la remise dans la discussion."
+    ],
+    "contact_fee_received": [
+      "La discussion est ouverte",
+      "Vous pouvez maintenant discuter avec {traveler} pour convenir du prix et de la remise."
+    ],
+    "delivery_confirmed_by_sender": [
+      "Livraison confirmée",
+      "{sender} a confirmé que vous avez livré son article."
+    ],
+    "delivery_check_sender": [
+      "Votre article a-t-il été livré ?",
+      "Dites-nous si {traveler} a livré votre article, puis laissez un avis."
+    ],
+    "delivery_check_traveler": [
+      "Avez-vous livré l'article ?",
+      "Dites-nous si vous avez livré l'article de {sender}, puis laissez un avis."
+    ],
+    "delivered_by_traveler": [
+      "Objet livré",
+      "{traveler} indique avoir livré votre article. Confirmez-le et laissez un avis."
     ]
   }
 };

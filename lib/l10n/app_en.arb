@@ -2428,5 +2428,20 @@
   "notifFeeReceivedBody": "You can now chat with {traveler} to agree on the price and the handover.",
   "@notifFeeReceivedBody": {"placeholders": {"traveler": {"type": "String"}}},
   "notifConfirmedBySenderBody": "{sender} confirmed you delivered their item.",
-  "@notifConfirmedBySenderBody": {"placeholders": {"sender": {"type": "String"}}}
+  "@notifConfirmedBySenderBody": {"placeholders": {"sender": {"type": "String"}}},
+  "paymentMethodsRow": "Payment methods",
+  "paymentMethodsRowSub": "Cards and mobile money for Nata's fees",
+  "tipPaymentMethodsBody": "Save a card or a mobile money wallet here to pay Nata's fees faster.",
+  "travelerDeliveredTitle": "Did you deliver it?",
+  "travelerDeliveredBody": "Confirm only once you've handed over {name}'s item. This closes the delivery.",
+  "@travelerDeliveredBody": {"placeholders": {"name": {"type": "String"}}},
+  "iDeliveredIt": "I delivered it",
+  "notifCheckSenderTitle": "Was your item delivered?",
+  "notifCheckSenderBody": "Let us know if {traveler} delivered your item, then leave a review.",
+  "@notifCheckSenderBody": {"placeholders": {"traveler": {"type": "String"}}},
+  "notifCheckTravelerTitle": "Did you deliver the item?",
+  "notifCheckTravelerBody": "Let us know if you delivered {sender}'s item, then leave a review.",
+  "@notifCheckTravelerBody": {"placeholders": {"sender": {"type": "String"}}},
+  "notifDeliveredByTravelerBody": "{traveler} says they delivered your item. Confirm it and leave a review.",
+  "@notifDeliveredByTravelerBody": {"placeholders": {"traveler": {"type": "String"}}}
 }

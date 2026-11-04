@@ -2244,5 +2244,16 @@
   "notifChatOpenTitle": "El chat está abierto",
   "notifFeePaidBody": "{sender} pagó la tarifa de Nata. Acordad el precio y la entrega en el chat.",
   "notifFeeReceivedBody": "Ya puedes chatear con {traveler} para acordar el precio y la entrega.",
-  "notifConfirmedBySenderBody": "{sender} confirmó que entregaste su artículo."
+  "notifConfirmedBySenderBody": "{sender} confirmó que entregaste su artículo.",
+  "paymentMethodsRow": "Métodos de pago",
+  "paymentMethodsRowSub": "Tarjetas y dinero móvil para las tarifas de Nata",
+  "tipPaymentMethodsBody": "Guarda aquí una tarjeta o una billetera de dinero móvil para pagar las tarifas de Nata más rápido.",
+  "travelerDeliveredTitle": "¿Entregaste el artículo?",
+  "travelerDeliveredBody": "Confirma solo cuando hayas entregado el artículo de {name}. Esto cierra la entrega.",
+  "iDeliveredIt": "Lo entregué",
+  "notifCheckSenderTitle": "¿Se entregó tu artículo?",
+  "notifCheckSenderBody": "Dinos si {traveler} entregó tu artículo y deja una reseña.",
+  "notifCheckTravelerTitle": "¿Entregaste el artículo?",
+  "notifCheckTravelerBody": "Dinos si entregaste el artículo de {sender} y deja una reseña.",
+  "notifDeliveredByTravelerBody": "{traveler} dice que entregó tu artículo. Confírmalo y deja una reseña."
 }

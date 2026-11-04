@@ -42,6 +42,26 @@ void main() {
     expect(requestsTabForEvent('delivery_confirmed'), 0);
   });
 
+  test('delivery check-ins ask each side, and open their tab', () {
+    expect(notificationText(en, notification('delivery_check_sender')), (
+      'Was your item delivered?',
+      'Let us know if Fortune delivered your item, then leave a review.',
+    ));
+    expect(notificationText(en, notification('delivery_check_traveler')), (
+      'Did you deliver the item?',
+      "Let us know if you delivered Amara's item, then leave a review.",
+    ));
+    expect(
+      notificationText(en, notification('delivered_by_traveler')).$2,
+      'Fortune says they delivered your item. Confirm it and leave a review.',
+    );
+    expect(requestsTabForEvent('delivery_check_sender'), 1);
+    expect(requestsTabForEvent('delivered_by_traveler'), 1);
+    expect(requestsTabForEvent('delivery_check_traveler'), 0);
+    expect(asksDelivered('delivery_check_traveler'), isTrue);
+    expect(asksDelivered('payment_received'), isFalse);
+  });
+
   test('in the user\'s language', () {
     expect(
       notificationText(
@@ -54,7 +74,14 @@ void main() {
 
   test('pushes have the same words (texts.ts is up to date)', () {
     final ts = File('supabase/functions/send-push/texts.ts').readAsStringSync();
-    for (final event in ['payment_received', 'delivery_confirmed']) {
+    for (final event in [
+      'payment_received',
+      'delivery_confirmed',
+      'delivery_check_sender',
+      'delivery_check_traveler',
+      'delivered_by_traveler',
+      'contact_fee_paid',
+    ]) {
       expect(RegExp('"$event"').allMatches(ts).length, 3, reason: event);
     }
     expect(ts, contains('"Paiement reçu"'));

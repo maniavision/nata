@@ -34,6 +34,15 @@ EVENTS = {
     "recipient_message_in": ("notifMessageTitle", "notifMessageBody"),
     "trip_match": ("notifTripMatchTitle", "notifTripMatchBody"),
     "message_photo": ("notifMessageTitle", "notifMessagePhotoBody"),
+    # Flat Nata fees (20240200).
+    "request_accepted_fee": ("notifAcceptedTitle", "notifAcceptedFeeBody"),
+    "contact_fee_paid": ("notifChatOpenTitle", "notifFeePaidBody"),
+    "contact_fee_received": ("notifChatOpenTitle", "notifFeeReceivedBody"),
+    "delivery_confirmed_by_sender": ("notifDeliveryConfirmedTitle", "notifConfirmedBySenderBody"),
+    # Delivery check-ins (20240201).
+    "delivery_check_sender": ("notifCheckSenderTitle", "notifCheckSenderBody"),
+    "delivery_check_traveler": ("notifCheckTravelerTitle", "notifCheckTravelerBody"),
+    "delivered_by_traveler": ("notifDeliveredTitle", "notifDeliveredByTravelerBody"),
 }
 
 out = {}

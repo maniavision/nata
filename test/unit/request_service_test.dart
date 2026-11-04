@@ -1801,7 +1801,9 @@ void main() {
       expect(flat('paid').awaitingDeliveryConfirm, isTrue);
       expect(flat('handed_off').awaitingDeliveryConfirm, isTrue);
       expect(flat('accepted').awaitingDeliveryConfirm, isFalse);
-      expect(flat('delivered').awaitingDeliveryConfirm, isFalse);
+      // Closed by the traveler: the sender still confirms (20240201).
+      expect(flat('delivered').awaitingDeliveryConfirm, isTrue);
+      expect(flat('delivered').awaitingReceipt, isFalse);
     });
 
     test('older requests stay priced by distance', () {

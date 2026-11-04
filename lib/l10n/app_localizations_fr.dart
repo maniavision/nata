@@ -5713,4 +5713,47 @@ class AppLocalizationsFr extends AppLocalizations {
   String notifConfirmedBySenderBody(String sender) {
     return '$sender a confirmé que vous avez livré son article.';
   }
+
+  @override
+  String get paymentMethodsRow => 'Moyens de paiement';
+
+  @override
+  String get paymentMethodsRowSub =>
+      'Cartes et mobile money pour les frais Nata';
+
+  @override
+  String get tipPaymentMethodsBody =>
+      'Enregistrez ici une carte ou un portefeuille mobile money pour payer les frais Nata plus vite.';
+
+  @override
+  String get travelerDeliveredTitle => 'Avez-vous livré l\'article ?';
+
+  @override
+  String travelerDeliveredBody(String name) {
+    return 'Confirmez seulement une fois l\'article de $name remis. Cela clôt la livraison.';
+  }
+
+  @override
+  String get iDeliveredIt => 'Je l\'ai livré';
+
+  @override
+  String get notifCheckSenderTitle => 'Votre article a-t-il été livré ?';
+
+  @override
+  String notifCheckSenderBody(String traveler) {
+    return 'Dites-nous si $traveler a livré votre article, puis laissez un avis.';
+  }
+
+  @override
+  String get notifCheckTravelerTitle => 'Avez-vous livré l\'article ?';
+
+  @override
+  String notifCheckTravelerBody(String sender) {
+    return 'Dites-nous si vous avez livré l\'article de $sender, puis laissez un avis.';
+  }
+
+  @override
+  String notifDeliveredByTravelerBody(String traveler) {
+    return '$traveler indique avoir livré votre article. Confirmez-le et laissez un avis.';
+  }
 }

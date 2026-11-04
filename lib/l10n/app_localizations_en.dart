@@ -5624,4 +5624,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifConfirmedBySenderBody(String sender) {
     return '$sender confirmed you delivered their item.';
   }
+
+  @override
+  String get paymentMethodsRow => 'Payment methods';
+
+  @override
+  String get paymentMethodsRowSub => 'Cards and mobile money for Nata\'s fees';
+
+  @override
+  String get tipPaymentMethodsBody =>
+      'Save a card or a mobile money wallet here to pay Nata\'s fees faster.';
+
+  @override
+  String get travelerDeliveredTitle => 'Did you deliver it?';
+
+  @override
+  String travelerDeliveredBody(String name) {
+    return 'Confirm only once you\'ve handed over $name\'s item. This closes the delivery.';
+  }
+
+  @override
+  String get iDeliveredIt => 'I delivered it';
+
+  @override
+  String get notifCheckSenderTitle => 'Was your item delivered?';
+
+  @override
+  String notifCheckSenderBody(String traveler) {
+    return 'Let us know if $traveler delivered your item, then leave a review.';
+  }
+
+  @override
+  String get notifCheckTravelerTitle => 'Did you deliver the item?';
+
+  @override
+  String notifCheckTravelerBody(String sender) {
+    return 'Let us know if you delivered $sender\'s item, then leave a review.';
+  }
+
+  @override
+  String notifDeliveredByTravelerBody(String traveler) {
+    return '$traveler says they delivered your item. Confirm it and leave a review.';
+  }
 }
