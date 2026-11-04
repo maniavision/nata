@@ -2,10 +2,8 @@ import 'dart:async';
 
 import 'package:carrywise_app/screens/chat_thread_screen.dart';
 import 'package:carrywise_app/screens/notifications_screen.dart';
-import 'package:carrywise_app/screens/wallet_screen.dart';
 import 'package:carrywise_app/services/message_service.dart';
 import 'package:carrywise_app/services/notification_service.dart';
-import 'package:carrywise_app/services/payment_service.dart';
 import 'package:carrywise_app/services/screen_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,16 +35,6 @@ class _SlowMessages extends FakeMessageService {
   }) async {
     await gate.future;
     return super.messages(conversationId, limit: limit);
-  }
-}
-
-class _SlowPayments extends FakePaymentService {
-  Completer<void> gate = Completer<void>();
-
-  @override
-  Future<List<WalletEntry>> walletHistory({int limit = 100}) async {
-    await gate.future;
-    return super.walletHistory(limit: limit);
   }
 }
 
@@ -148,42 +136,6 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('the Wallet shows its balance and activity at once', (
-    tester,
-  ) async {
-    bigScreen(tester);
-    final payments = _SlowPayments()
-      ..history = [
-        WalletEntry(
-          kind: WalletEntryKind.payout,
-          id: 'p1',
-          amount: 45,
-          currency: 'USD',
-          status: WalletEntryStatus.paid,
-          date: DateTime(2025, 6, 20),
-          item: 'iPad Mini',
-        ),
-      ]
-      ..gate.complete();
-    Widget wallet(FakeAuthService auth) =>
-        appWrapper(WalletScreen(authService: auth, paymentService: payments));
-    await tester.pumpWidget(wallet(FakeAuthService()));
-    await tester.pumpAndSettle();
-    expect(find.text(r'$320.00'), findsOneWidget);
-    expect(find.textContaining('iPad Mini'), findsOneWidget);
-
-    // Reopened: the balance and the activity are there before any answer.
-    payments.gate = Completer<void>();
-    await tester.pumpWidget(const SizedBox());
-    await tester.pumpWidget(wallet(_NeverAnswers()));
-    await tester.pump();
-    expect(find.text(r'$320.00'), findsOneWidget);
-    expect(find.textContaining('iPad Mini'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    payments.gate.complete();
-    await tester.pumpWidget(const SizedBox());
-  });
-
   testWidgets('a different member starts with nothing kept', (tester) async {
     ScreenCache.write(NotificationsScreen.cacheKey, [
       sampleNotification(title: 'Someone else'),
@@ -197,11 +149,4 @@ void main() {
     slow.gate.complete();
     await tester.pumpAndSettle();
   });
-}
-
-/// An account whose balance never arrives (the server is slow).
-class _NeverAnswers extends FakeAuthService {
-  @override
-  Future<Map<String, double>> getWalletBalances() =>
-      Completer<Map<String, double>>().future;
 }

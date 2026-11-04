@@ -5555,4 +5555,168 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get contactDetailsNotAllowed =>
       'Nada de números de teléfono, correos ni datos de contacto aquí. Cuando el viajero acepte, podrán chatear en Nata.';
+
+  @override
+  String errTooManyTravelers(int max) {
+    return 'Puedes enviar una solicitud a $max viajeros como máximo.';
+  }
+
+  @override
+  String get errDifferentDestinations =>
+      'Elige viajeros que vayan a la misma ciudad.';
+
+  @override
+  String get errFeesUnavailable =>
+      'No se pudo cargar la tarifa de Nata. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get feeLocal => 'Local';
+
+  @override
+  String get feeInternational => 'Internacional';
+
+  @override
+  String get feeTotalIfAllAccept => 'Si todos aceptan';
+
+  @override
+  String get nataFeeTitle => 'Tarifa de Nata';
+
+  @override
+  String get feeNote =>
+      'Solo pagas la tarifa de un viajero si acepta. Abre el chat, donde acordáis el precio y la entrega, y le pagas directamente.';
+
+  @override
+  String sendRequestToTravelers(int count) {
+    return 'Enviar a $count viajeros';
+  }
+
+  @override
+  String pickTravelersHint(int max) {
+    return 'Marca hasta $max viajeros que vayan a la misma ciudad para enviarles una sola solicitud.';
+  }
+
+  @override
+  String travelersPicked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count viajeros elegidos',
+      one: '1 viajero elegido',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pickTraveler(String name) {
+    return 'Elegir a $name';
+  }
+
+  @override
+  String get confirmDeliveredTitle => '¿Artículo entregado?';
+
+  @override
+  String confirmDeliveredBody(String name) {
+    return 'Confirma solo cuando $name haya entregado tu artículo. Esto cierra la entrega.';
+  }
+
+  @override
+  String get confirmDelivered => 'Confirmar la entrega';
+
+  @override
+  String cancelFlatPaidBody(String fee) {
+    return 'El chat con el viajero ya está abierto, así que la tarifa de Nata de $fee no se reembolsa. ¿Cancelar de todos modos?';
+  }
+
+  @override
+  String payNataFee(String amount) {
+    return 'Pagar la tarifa de Nata ($amount)';
+  }
+
+  @override
+  String get nataFeeCheckout => 'Pagar la tarifa de Nata';
+
+  @override
+  String get howNataFeeWorks => 'Para qué es la tarifa de Nata';
+
+  @override
+  String nataFeeNote(String name) {
+    return 'Abre el chat con $name. Allí acordáis el precio de la entrega y el lugar, y pagas a $name directamente. Si $name cancela, la tarifa se reembolsa.';
+  }
+
+  @override
+  String get feeTotalToPay => 'Total a pagar';
+
+  @override
+  String get priceAgreedInChat => 'Precio acordado en el chat';
+
+  @override
+  String senderConfirmsDeliveryNote(String name) {
+    return 'Acuerda el precio y la entrega con $name en el chat. $name te paga directamente y confirma la entrega en la app cuando llegue el artículo.';
+  }
+
+  @override
+  String notifAcceptedFeeBody(String traveler) {
+    return '$traveler aceptó tu solicitud. Paga la tarifa de Nata en 24 horas para empezar a chatear.';
+  }
+
+  @override
+  String get notifChatOpenTitle => 'El chat está abierto';
+
+  @override
+  String notifFeePaidBody(String sender) {
+    return '$sender pagó la tarifa de Nata. Acordad el precio y la entrega en el chat.';
+  }
+
+  @override
+  String notifFeeReceivedBody(String traveler) {
+    return 'Ya puedes chatear con $traveler para acordar el precio y la entrega.';
+  }
+
+  @override
+  String notifConfirmedBySenderBody(String sender) {
+    return '$sender confirmó que entregaste su artículo.';
+  }
+
+  @override
+  String get paymentMethodsRow => 'Métodos de pago';
+
+  @override
+  String get paymentMethodsRowSub =>
+      'Tarjetas y dinero móvil para las tarifas de Nata';
+
+  @override
+  String get tipPaymentMethodsBody =>
+      'Guarda aquí una tarjeta o una billetera de dinero móvil para pagar las tarifas de Nata más rápido.';
+
+  @override
+  String get travelerDeliveredTitle => '¿Entregaste el artículo?';
+
+  @override
+  String travelerDeliveredBody(String name) {
+    return 'Confirma solo cuando hayas entregado el artículo de $name. Esto cierra la entrega.';
+  }
+
+  @override
+  String get iDeliveredIt => 'Lo entregué';
+
+  @override
+  String get notifCheckSenderTitle => '¿Se entregó tu artículo?';
+
+  @override
+  String notifCheckSenderBody(String traveler) {
+    return 'Dinos si $traveler entregó tu artículo y deja una reseña.';
+  }
+
+  @override
+  String get notifCheckTravelerTitle => '¿Entregaste el artículo?';
+
+  @override
+  String notifCheckTravelerBody(String sender) {
+    return 'Dinos si entregaste el artículo de $sender y deja una reseña.';
+  }
+
+  @override
+  String notifDeliveredByTravelerBody(String traveler) {
+    return '$traveler dice que entregó tu artículo. Confírmalo y deja una reseña.';
+  }
 }

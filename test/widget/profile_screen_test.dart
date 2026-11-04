@@ -46,15 +46,13 @@ void main() {
       expect(find.byIcon(Icons.verified_rounded), findsOneWidget);
     });
 
-    testWidgets('renders the Wallet row with the balance', (tester) async {
+    testWidgets('a Payment methods row, no wallet', (tester) async {
       await tester.pumpWidget(buildProfile());
       await tester.pump();
 
-      expect(find.text('Wallet'), findsOneWidget);
-      expect(find.text('\$320.00 available'), findsOneWidget);
-      // The wallet card and Payment Settings moved to the Wallet page.
-      expect(find.text('NATA WALLET'), findsNothing);
-      expect(find.text('Payment Settings'), findsNothing);
+      expect(find.text('Payment methods'), findsOneWidget);
+      expect(find.text('Wallet'), findsNothing);
+      expect(find.text('\$320.00 available'), findsNothing);
     });
 
     testWidgets('renders settings list items', (tester) async {
@@ -171,20 +169,17 @@ void main() {
   group('ProfileScreen data and actions', () {
     setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
-    testWidgets('shows the name and the available balance from the account', (
-      tester,
-    ) async {
+    testWidgets('shows the name from the account', (tester) async {
       tester.view.physicalSize = const Size(900, 3200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      final auth = FakeAuthService()
-        ..balances = {'available': 1234.5, 'escrow': 99.0};
 
-      await tester.pumpWidget(appWrapper(ProfileScreen(authService: auth)));
+      await tester.pumpWidget(
+        appWrapper(ProfileScreen(authService: FakeAuthService())),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Fortune Niama'), findsOneWidget);
-      expect(find.text('\$1,234.50 available'), findsOneWidget);
     });
 
     testWidgets('keeps working when the profile cannot be loaded', (

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../firebase_options.dart';
-import '../l10n/notification_text.dart' show requestsTabForEvent;
+import '../l10n/notification_text.dart' show asksDelivered, requestsTabForEvent;
 import '../screens/notifications_screen.dart';
 import '../screens/requests_screen.dart';
 import '../screens/chat_thread_screen.dart';
@@ -208,7 +208,10 @@ class PushService {
       MaterialPageRoute(
         builder: (_) => tab == null
             ? const NotificationsScreen()
-            : RequestsScreen(initialTab: tab),
+            : RequestsScreen(
+                initialTab: tab,
+                askDeliveredFor: asksDelivered(event) ? request : null,
+              ),
       ),
     );
   }

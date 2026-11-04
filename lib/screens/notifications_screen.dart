@@ -194,7 +194,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       MaterialPageRoute(
         builder: (_) =>
             widget.requestsBuilder?.call(tab) ??
-            RequestsScreen(initialTab: tab),
+            RequestsScreen(
+              initialTab: tab,
+              askDeliveredFor: asksDelivered(n.event) ? request : null,
+            ),
       ),
     );
   }

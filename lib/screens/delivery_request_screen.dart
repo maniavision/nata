@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -32,6 +33,10 @@ class DeliveryRequestScreen extends StatefulWidget {
   /// The trip (and traveler) the parcel is for.
   final TravelerTrip trip;
 
+  /// Other travelers going to the same city: the request goes to each of
+  /// them too (a Nata fee for each one who accepts).
+  final List<TravelerTrip> moreTrips;
+
   /// Overrides for tests.
   final RequestService? service;
   final RequestPhotoPicker? photoPicker;
@@ -47,6 +52,7 @@ class DeliveryRequestScreen extends StatefulWidget {
   const DeliveryRequestScreen({
     super.key,
     required this.trip,
+    this.moreTrips = const [],
     this.editing,
     this.service,
     this.photoPicker,
@@ -96,6 +102,33 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
 
   TravelerTrip get _trip => widget.trip;
 
+  /// Every trip the request goes to.
+  List<TravelerTrip> get _trips => [widget.trip, ...widget.moreTrips];
+
+  /// A flat Nata fee and no recipient: every new request, and requests made
+  /// that way. Only an older request priced by distance is edited as it was.
+  bool get _flat => _editing == null || _editing!.isFlat;
+
+  /// Nata's fee for each trip, by trip id (null until loaded).
+  Map<String, FlatFee>? _fees;
+  bool _feesFailed = false;
+
+  /// The trip taking the smallest parcels: its size limit is the request's.
+  TravelerTrip get _sizeLimitTrip {
+    int rank(TravelerTrip t) =>
+        RequestSizeClass.fromTripSize(t.maxSize)?.rank ?? 1 << 20;
+    return _trips.reduce((a, b) => rank(b) < rank(a) ? b : a);
+  }
+
+  /// The lowest weight limit among the trips (null when none has one).
+  double? get _maxWeightKg {
+    final limits = [
+      for (final t in _trips)
+        if (t.maxWeightKg != null) t.maxWeightKg!,
+    ];
+    return limits.isEmpty ? null : limits.reduce(min);
+  }
+
   static const _categoryIcons = {
     RequestCategory.electronics: Icons.devices_rounded,
     RequestCategory.apparel: Icons.checkroom_rounded,
@@ -123,9 +156,13 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDistance();
-    _loadRates();
-    _loadRecipientCountry();
+    if (_flat) {
+      if (_editing == null) _loadFees();
+    } else {
+      _loadDistance();
+      _loadRates();
+      _loadRecipientCountry();
+    }
     final editing = _editing;
     if (editing != null) _startFrom(editing);
   }
@@ -170,6 +207,24 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       if (mounted) setState(() => _loadingPhotos = false);
     }
   }
+
+  Future<void> _loadFees() async {
+    if (_feesFailed) setState(() => _feesFailed = false);
+    try {
+      final fees = await (widget.service ?? RequestService()).quoteFees([
+        for (final t in _trips) t.tripId,
+      ]);
+      if (!mounted) return;
+      setState(() => _fees = fees);
+    } catch (e) {
+      debugPrint('[DeliveryRequest] fees: $e');
+      if (mounted) setState(() => _feesFailed = true);
+    }
+  }
+
+  /// Ready to send: the fees are known (or, editing, the price was fixed).
+  bool get _ready =>
+      _flat ? (_editing != null || _fees != null) : _pricing != null;
 
   Future<void> _loadRecipientCountry() async {
     try {
@@ -529,27 +584,31 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return _items.length == 1 ? l.errItemValue : l.errItemValueN(i + 1);
       }
     }
-    if (_recipientNameCtrl.text.trim().length < 2) return l.errRecipientName;
+    if (!_flat && _recipientNameCtrl.text.trim().length < 2) {
+      return l.errRecipientName;
+    }
     // No swapping contacts before the traveler accepts (the database checks
     // the same).
     if (ContactCheck.anyHasContactDetails([
       for (final item in _items) ...[item.name.text, item.description.text],
-      _recipientNameCtrl.text,
+      if (!_flat) _recipientNameCtrl.text,
     ])) {
       return l.contactDetailsNotAllowed;
     }
-    if (_recipientPhone == null) {
+    if (!_flat && _recipientPhone == null) {
       return l.errRecipientPhone;
     }
     final weight = RequestInput.parseWeightKg(_weightCtrl.text);
     if (weight == null) return l.errWeight;
-    final max = _trip.maxWeightKg;
+    final max = _maxWeightKg;
     if (max != null && weight > max) {
       return l.errWeightTooHeavy(max.toStringAsFixed(1));
     }
     final size = _sizeClass;
     if (size == null) return l.errSizeRequired;
-    if (!size.fitsIn(RequestSizeClass.fromTripSize(_trip.maxSize))) {
+    if (_trips.any(
+      (t) => !size.fitsIn(RequestSizeClass.fromTripSize(t.maxSize)),
+    )) {
       return l.errSizeTooBig;
     }
     // While editing, the request's photos may still be downloading.
@@ -573,14 +632,14 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       return;
     }
 
-    final quote = _quote;
-    if (quote == null) {
+    final quote = _flat ? null : _quote;
+    if (!_flat && quote == null) {
       setState(() => _error = context.l10n.errQuoteUnavailable);
       return;
     }
 
     final draft = RequestDraft(
-      tripId: _trip.tripId,
+      tripIds: [for (final t in _trips) t.tripId],
       items: [
         for (final item in _items)
           RequestItem(
@@ -593,10 +652,10 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       weightKg: RequestInput.parseWeightKg(_weightCtrl.text)!,
       dimensions: _dimsCtrl.text,
       sizeClass: _sizeClass!,
-      recipientName: _recipientNameCtrl.text,
-      recipientPhone: _recipientPhone!,
+      recipientName: _flat ? '' : _recipientNameCtrl.text,
+      recipientPhone: _flat ? '' : _recipientPhone!,
       // Always in US dollars: that is what the database calculates and stores.
-      expectedTotal: quote.totalUsd,
+      expectedTotal: quote?.totalUsd,
     );
 
     setState(() {
@@ -667,7 +726,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       case RequestFailure.ownTrip:
         return l.errOwnTrip;
       case RequestFailure.weightTooHeavy:
-        return l.errWeightTooHeavy((_trip.maxWeightKg ?? 0).toStringAsFixed(1));
+        return l.errWeightTooHeavy((_maxWeightKg ?? 0).toStringAsFixed(1));
       case RequestFailure.duplicate:
         return l.errDuplicate;
       case RequestFailure.destinationLimit:
@@ -715,6 +774,11 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return l.errAlreadyReviewed;
       case RequestFailure.contactDetails:
         return l.contactDetailsNotAllowed;
+      case RequestFailure.tooManyTravelers:
+        return l.errTooManyTravelers(RequestDraft.maxTravelers);
+      case RequestFailure.differentDestinations:
+        return l.errDifferentDestinations;
+      case RequestFailure.senderConfirms:
       case RequestFailure.balanceTooLow:
       case RequestFailure.other:
         return l.errRequestFailed;
@@ -738,19 +802,24 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 160),
                 child: Column(
                   children: [
-                    _buildTravelerSummary(),
-                    const SizedBox(height: 16),
+                    for (final t in _trips) ...[
+                      _buildTravelerSummary(t),
+                      const SizedBox(height: 8),
+                    ],
+                    const SizedBox(height: 8),
                     _buildItemRequirementBanner(),
                     const SizedBox(height: 16),
                     _buildItemsSection(),
                     const SizedBox(height: 16),
-                    _buildRecipientCard(),
-                    const SizedBox(height: 16),
+                    if (!_flat) ...[
+                      _buildRecipientCard(),
+                      const SizedBox(height: 16),
+                    ],
                     _buildSizeWeightCard(),
                     const SizedBox(height: 16),
                     _buildPhotosCard(),
                     const SizedBox(height: 16),
-                    _buildPricingCard(),
+                    _flat ? _buildFeeCard() : _buildPricingCard(),
                   ],
                 ),
               ),
@@ -806,9 +875,9 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
   }
 
   // ── Selected traveler ──────────────────────────────────────────────────────
-  Widget _buildTravelerSummary() {
+  Widget _buildTravelerSummary(TravelerTrip trip) {
     final l = context.l10n;
-    final max = _trip.maxWeightKg;
+    final max = trip.maxWeightKg;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -829,8 +898,8 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               border: Border.all(color: AppColors.border, width: 2),
             ),
             child: TravelerPhoto(
-              path: _trip.avatarPath,
-              revealed: _trip.photoRevealed,
+              path: trip.avatarPath,
+              revealed: trip.photoRevealed,
               size: 44,
             ),
           ),
@@ -851,8 +920,12 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                   ),
                 ),
                 Text(
-                  _trip.fullName,
-                  key: const ValueKey('request-traveler-name'),
+                  trip.fullName,
+                  key: ValueKey(
+                    trip == _trip
+                        ? 'request-traveler-name'
+                        : 'request-traveler-name-${trip.tripId}',
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.manrope(
@@ -862,9 +935,13 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                   ),
                 ),
                 Text(
-                  '${_trip.departureCity} → ${_trip.arrivalCity} · '
-                  '${DateFormat('MMM d').format(_trip.departureDate)}',
-                  key: const ValueKey('request-traveler-route'),
+                  '${trip.departureCity} → ${trip.arrivalCity} · '
+                  '${DateFormat('MMM d').format(trip.departureDate)}',
+                  key: ValueKey(
+                    trip == _trip
+                        ? 'request-traveler-route'
+                        : 'request-traveler-route-${trip.tripId}',
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.dmSans(
@@ -885,7 +962,11 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               ),
               child: Text(
                 l.travelerMaxKg(max.toStringAsFixed(1)),
-                key: const ValueKey('request-max-chip'),
+                key: ValueKey(
+                  trip == _trip
+                      ? 'request-max-chip'
+                      : 'request-max-chip-${trip.tripId}',
+                ),
                 style: GoogleFonts.dmSans(
                   fontWeight: FontWeight.w600,
                   fontSize: 11,
@@ -1537,7 +1618,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
   // ── Size and weight ────────────────────────────────────────────────────────
   Widget _buildSizeWeightCard() {
     final l = context.l10n;
-    final max = _trip.maxWeightKg;
+    final max = _maxWeightKg;
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1603,7 +1684,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l.travelerLimitLabel(l.tripSize(_trip.maxSize)),
+                      l.travelerLimitLabel(l.tripSize(_sizeLimitTrip.maxSize)),
                       key: const ValueKey('request-size-limit'),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -1644,7 +1725,9 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
 
   Widget _sizeTile(RequestSizeClass c) {
     final active = _sizeClass == c;
-    final tooBig = !c.fitsIn(RequestSizeClass.fromTripSize(_trip.maxSize));
+    final tooBig = !c.fitsIn(
+      RequestSizeClass.fromTripSize(_sizeLimitTrip.maxSize),
+    );
     return GestureDetector(
       key: ValueKey('request-size-${c.dbValue}'),
       onTap: () => setState(() {
@@ -2081,6 +2164,199 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     );
   }
 
+  /// Nata's fee for each traveler, what they add up to, and when it's paid.
+  Widget _buildFeeCard() {
+    final l = context.l10n;
+    final editing = _editing;
+    final fees = _fees;
+
+    TextStyle muted([double size = 12]) =>
+        GoogleFonts.dmSans(fontSize: size, color: AppColors.mutedForeground);
+
+    final Widget lines;
+    if (editing != null) {
+      lines = _feeLine(
+        editing.trip.fullName,
+        null,
+        editing.feeText,
+        const ValueKey('request-fee-0'),
+      );
+    } else if (_feesFailed) {
+      lines = Column(
+        children: [
+          Text(
+            l.errFeesUnavailable,
+            key: const ValueKey('request-fee-error'),
+            textAlign: TextAlign.center,
+            style: muted(),
+          ),
+          TextButton(
+            key: const ValueKey('request-fee-retry'),
+            onPressed: _loadFees,
+            child: Text(l.retry),
+          ),
+        ],
+      );
+    } else if (fees == null) {
+      lines = Row(
+        key: const ValueKey('request-fee-loading'),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accent,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(child: Text(l.priceCalculating, style: muted())),
+        ],
+      );
+    } else {
+      final shown = [
+        for (final t in _trips)
+          if (fees[t.tripId] != null) fees[t.tripId]!,
+      ];
+      lines = Column(
+        children: [
+          for (var i = 0; i < _trips.length; i++)
+            if (fees[_trips[i].tripId] case final fee?) ...[
+              if (i > 0) const SizedBox(height: 8),
+              _feeLine(
+                _trips[i].fullName,
+                fee.isLocal ? l.feeLocal : l.feeInternational,
+                fee.text,
+                ValueKey('request-fee-$i'),
+              ),
+            ],
+          if (shown.length > 1) ...[
+            const SizedBox(height: 10),
+            const Divider(color: AppColors.border, height: 1),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l.feeTotalIfAllAccept,
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.secondaryForeground,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  FlatFee.totalText(shown),
+                  key: const ValueKey('request-fee-total'),
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      );
+    }
+
+    return Container(
+      key: const ValueKey('request-fee-card'),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.nataFeeTitle,
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              color: AppColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 10),
+          lines,
+          const SizedBox(height: 10),
+          const Divider(color: AppColors.border, height: 1),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.info_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l.feeNote,
+                  key: const ValueKey('request-fee-note'),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    height: 1.6,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _feeLine(String name, String? kind, String fee, Key key) => Row(
+    key: key,
+    children: [
+      Expanded(
+        child: Text.rich(
+          TextSpan(
+            text: name,
+            style: GoogleFonts.dmSans(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: AppColors.foreground,
+            ),
+            children: [
+              if (kind != null)
+                TextSpan(
+                  text: ' · $kind',
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.mutedForeground,
+                  ),
+                ),
+            ],
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      const SizedBox(width: 12),
+      Text(
+        fee,
+        style: GoogleFonts.dmSans(
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          color: AppColors.foreground,
+        ),
+      ),
+    ],
+  );
+
   // ── Send bar ───────────────────────────────────────────────────────────────
   Widget _buildSendBar(BuildContext context) {
     final l = context.l10n;
@@ -2140,7 +2416,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                 height: 48,
                 child: ElevatedButton.icon(
                   key: const ValueKey('request-send'),
-                  onPressed: (_sending || _pricing == null) ? null : _send,
+                  onPressed: (_sending || !_ready) ? null : _send,
                   icon: _sending
                       ? const SizedBox(
                           width: 18,
@@ -2156,7 +2432,13 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                           color: Colors.white,
                         ),
                   label: Text(
-                    _editing != null
+                    _flat
+                        ? (_editing != null
+                              ? l.saveChanges
+                              : _trips.length > 1
+                              ? l.sendRequestToTravelers(_trips.length)
+                              : l.sendDeliveryRequest)
+                        : _editing != null
                         ? (_pricing == null
                               ? l.saveChanges
                               : l.saveChangesWithPrice(

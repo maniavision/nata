@@ -51,7 +51,7 @@ RequestDraft draft({
   String dims = '24 × 24 × 8 cm',
   List<RequestItem>? items,
 }) => RequestDraft(
-  tripId: 'trip-1',
+  tripIds: const ['trip-1'],
   items:
       items ??
       [RequestItem(name: name, category: category, description: description)],
@@ -704,6 +704,12 @@ void main() {
     test('maps every database error', () {
       expect(of('nata:not_signed_in'), RequestFailure.notSignedIn);
       expect(of('nata:contact_details'), RequestFailure.contactDetails);
+      expect(of('nata:too_many_travelers'), RequestFailure.tooManyTravelers);
+      expect(
+        of('nata:different_destinations'),
+        RequestFailure.differentDestinations,
+      );
+      expect(of('nata:sender_confirms'), RequestFailure.senderConfirms);
       expect(of('nata:trip_unavailable'), RequestFailure.tripUnavailable);
       expect(of('nata:own_trip'), RequestFailure.ownTrip);
       expect(of('nata:weight_too_heavy'), RequestFailure.weightTooHeavy);
@@ -767,14 +773,14 @@ void main() {
 
     void rpcOk() => when(
       () => client.rpc<dynamic>(
-        'create_delivery_request',
+        'send_delivery_request',
         params: any(named: 'params'),
       ),
     ).thenAnswer((_) => FakeRpc());
 
     void rpcFails(Object error) => when(
       () => client.rpc<dynamic>(
-        'create_delivery_request',
+        'send_delivery_request',
         params: any(named: 'params'),
       ),
     ).thenAnswer((_) => FakeRpc(error: error));
@@ -782,7 +788,7 @@ void main() {
     Map<dynamic, dynamic> sentParams() =>
         verify(
               () => client.rpc<dynamic>(
-                'create_delivery_request',
+                'send_delivery_request',
                 params: captureAny(named: 'params'),
               ),
             ).captured.single
@@ -853,7 +859,7 @@ void main() {
         expect(id, 'req-9');
         expect(sentParams(), {
           'p_id': 'req-9',
-          'p_trip_id': 'trip-1',
+          'p_trip_ids': ['trip-1'],
           'p_items': [
             {
               'name': 'Apple AirPods Max',
@@ -864,10 +870,7 @@ void main() {
           'p_item_weight_kg': 0.9,
           'p_item_size': '24 × 24 × 8 cm',
           'p_item_size_class': 'shoebox',
-          'p_recipient_name': 'Jane Doe',
-          'p_recipient_phone': '+447700900123',
           'p_photo_paths': ['user-1/req-9/0.jpg'],
-          'p_expected_total': 110.75,
         });
       },
     );
@@ -918,7 +921,7 @@ void main() {
       });
       when(
         () => client.rpc<dynamic>(
-          'create_delivery_request',
+          'send_delivery_request',
           params: any(named: 'params'),
         ),
       ).thenAnswer((_) {
@@ -953,7 +956,7 @@ void main() {
 
       verifyNever(
         () => client.rpc<dynamic>(
-          'create_delivery_request',
+          'send_delivery_request',
           params: any(named: 'params'),
         ),
       );
@@ -1720,6 +1723,103 @@ void main() {
 
     test('delivered, cancelled and expired are the closed statuses', () {
       expect(ClosedRequest.statuses, {'delivered', 'cancelled', 'expired'});
+    });
+  });
+
+  group('flat Nata fees (20240200)', () {
+    test('prices keep their cents, whole amounts none', () {
+      expect(PriceFormatter.write(2.99, 'USD'), r'$2.99');
+      expect(PriceFormatter.write(1.99, 'EUR'), '€1.99');
+      expect(PriceFormatter.write(3.99, 'GBP'), '£3.99');
+      expect(PriceFormatter.write(112, 'USD'), r'$112');
+      expect(PriceFormatter.write(1306, 'XAF'), 'XAF 1,306');
+    });
+
+    test('fees add up to the cent', () {
+      const fees = [
+        FlatFee(amount: 4.99, currency: 'USD', isLocal: false),
+        FlatFee(amount: 2.99, currency: 'USD', isLocal: true),
+        FlatFee(amount: 4.99, currency: 'USD', isLocal: false),
+      ];
+      expect(FlatFee.totalText(fees), r'$12.97');
+    });
+
+    test('a fee reads from the database row', () {
+      final f = FlatFee.fromJson({
+        'trip_id': 't',
+        'amount': 1.99,
+        'currency': 'eur',
+        'is_local': true,
+      });
+      expect(f.text, '€1.99');
+      expect(f.isLocal, isTrue);
+    });
+
+    SentRequest flat(String status, {double? displayTotal}) =>
+        SentRequest.fromJson({
+          'request_id': 'r',
+          'status': status,
+          'created_at': '2030-06-01T00:00:00Z',
+          'total_amount': 3.99,
+          'currency': 'EUR',
+          'pricing': 'flat',
+          'group_id': 'g',
+          'display_currency': 'EUR',
+          'display_total': displayTotal,
+          'items': const [],
+          'item_weight_kg': 1,
+          'trip_id': 't',
+          'traveler_id': 'u',
+          'first_name': 'Amara',
+          'last_name': 'Kalu',
+          'departure_city': 'Paris',
+          'departure_country': 'FR',
+          'arrival_city': 'London',
+          'arrival_country': 'GB',
+          'departure_date': '2030-06-22',
+          'arrival_date': '2030-06-22',
+        });
+
+    test('a flat request reads its pricing, group and fee currency', () {
+      final r = flat('pending');
+      expect(r.isFlat, isTrue);
+      expect(r.groupId, 'g');
+      expect(r.feeText, '€3.99');
+      expect(r.recipientName, isEmpty);
+    });
+
+    test('free to cancel until paid; the paid fee is kept', () {
+      expect(flat('pending').cancellationFeeNow, 0);
+      expect(flat('accepted', displayTotal: 3.99).cancellationFeeNow, 0);
+      final paid = flat('paid', displayTotal: 3.99);
+      expect(paid.cancellationFeeNow, 3.99);
+      expect(paid.fixedCancellationFeeText, '€3.99');
+      expect(flat('handed_off').cancellationFeeNow, isNull);
+    });
+
+    test('the sender confirms a paid flat request', () {
+      expect(flat('paid').awaitingDeliveryConfirm, isTrue);
+      expect(flat('handed_off').awaitingDeliveryConfirm, isTrue);
+      expect(flat('accepted').awaitingDeliveryConfirm, isFalse);
+      // Closed by the traveler: the sender still confirms (20240201).
+      expect(flat('delivered').awaitingDeliveryConfirm, isTrue);
+      expect(flat('delivered').awaitingReceipt, isFalse);
+    });
+
+    test('older requests stay priced by distance', () {
+      final r = SentRequest.fromJson({
+        'request_id': 'r',
+        'status': 'accepted',
+        'created_at': '2030-06-01T00:00:00Z',
+        'total_amount': 110,
+        'items': const [],
+        'trip_id': 't',
+        'traveler_id': 'u',
+        'departure_date': '2030-06-22',
+        'arrival_date': '2030-06-22',
+      });
+      expect(r.isFlat, isFalse);
+      expect(r.cancellationFeeNow, 11);
     });
   });
 }

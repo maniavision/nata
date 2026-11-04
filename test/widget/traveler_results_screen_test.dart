@@ -420,4 +420,93 @@ void main() {
       }
     });
   });
+
+  group('picking several travelers', () {
+    setUp(() {
+      service.trips = [
+        sampleTrip(tripId: 't1', firstName: 'Amara', lastName: 'Kalu'),
+        sampleTrip(tripId: 't2', firstName: 'Daniel', lastName: 'Okafor'),
+        sampleTrip(
+          tripId: 't3',
+          firstName: 'Maya',
+          lastName: 'Tariq',
+          arrivalCity: 'Paris',
+        ),
+      ];
+    });
+
+    testWidgets('says travelers can be picked together', (tester) async {
+      await pumpResults(tester);
+
+      expect(find.byKey(const ValueKey('results-pick-hint')), findsOneWidget);
+      expect(find.byKey(const ValueKey('results-picked-bar')), findsNothing);
+    });
+
+    testWidgets('picking shows how many, and Clear starts again', (
+      tester,
+    ) async {
+      await pumpResults(tester);
+
+      await tester.tap(find.byKey(const ValueKey('results-pick-t1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('results-pick-t2')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 travelers picked'), findsOneWidget);
+      // Picking doesn't open the traveler's profile.
+      expect(find.byType(TravelerProfileScreen), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('results-picked-clear')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('results-picked-bar')), findsNothing);
+    });
+
+    testWidgets('a second tap unpicks', (tester) async {
+      await pumpResults(tester);
+
+      await tester.tap(find.byKey(const ValueKey('results-pick-t1')));
+      await tester.pumpAndSettle();
+      expect(find.text('1 traveler picked'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('results-pick-t1')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('results-picked-bar')), findsNothing);
+    });
+
+    testWidgets('only travelers going to the same city can join', (
+      tester,
+    ) async {
+      await pumpResults(tester);
+
+      await tester.tap(find.byKey(const ValueKey('results-pick-t1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('results-pick-t3')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 traveler picked'), findsOneWidget);
+      expect(
+        find.text('Pick travelers going to the same city.'),
+        findsOneWidget,
+      );
+      expect(find.byType(TravelerProfileScreen), findsNothing);
+    });
+
+    testWidgets('translated', (tester) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      tester.view.physicalSize = const Size(900, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          TravelerResultsScreen(service: service),
+          locale: const Locale('fr'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('results-pick-t1')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 voyageur choisi'), findsOneWidget);
+    });
+  });
 }

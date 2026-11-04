@@ -1238,6 +1238,42 @@ class FakeRequestService extends Fake implements RequestService {
     receiptsConfirmed.add(requestId);
   }
 
+  /// Flat requests the sender confirmed delivered.
+  final List<String> deliveriesConfirmed = [];
+
+  @override
+  Future<void> confirmDelivered(String requestId) async {
+    if (failReview != null) throw failReview!;
+    deliveriesConfirmed.add(requestId);
+  }
+
+  /// Flat requests the traveler said they delivered.
+  final List<String> travelerDeliveries = [];
+
+  @override
+  Future<void> travelerConfirmDelivered(String requestId) async {
+    if (failReview != null) throw failReview!;
+    travelerDeliveries.add(requestId);
+  }
+
+  /// Nata's fee per trip; [failFees] makes quoting fail. Trips not listed
+  /// get \$4.99 (international, for a sender in "anywhere else").
+  Map<String, FlatFee> fees = {};
+  bool failFees = false;
+  int feeCalls = 0;
+
+  @override
+  Future<Map<String, FlatFee>> quoteFees(List<String> tripIds) async {
+    feeCalls++;
+    if (failFees) throw const RequestException(RequestFailure.other);
+    return {
+      for (final id in tripIds)
+        id:
+            fees[id] ??
+            const FlatFee(amount: 4.99, currency: 'USD', isLocal: false),
+    };
+  }
+
   /// How many times refunds were asked for.
   int refundCalls = 0;
 
@@ -1506,8 +1542,12 @@ IncomingRequest sampleIncoming({
   double? senderRating,
   bool senderReviewed = false,
   DateTime? pickedUpAt,
+  String pricing = 'distance',
+  DateTime? travelerDeliveredAt,
 }) => IncomingRequest(
   id: id,
+  pricing: pricing,
+  travelerDeliveredAt: travelerDeliveredAt,
   pickedUpAt: pickedUpAt,
   senderRating: senderRating,
   senderReviewed: senderReviewed,
@@ -1564,11 +1604,16 @@ SentRequest sampleSentRequest({
   bool hasBookingReference = false,
   DateTime? receiptConfirmedAt,
   bool reviewed = false,
+  String pricing = 'distance',
+  double? totalUsd,
+  String feeCurrency = 'USD',
 }) => SentRequest(
   id: id,
   status: status,
   createdAt: DateTime(2030, 6, 1),
-  totalUsd: 110.91,
+  totalUsd: totalUsd ?? (pricing == 'flat' ? 4.99 : 110.91),
+  pricing: pricing,
+  feeCurrency: feeCurrency,
   cancellationFee: cancellationFee,
   cancelledAt: cancelledAt,
   displayCurrency: displayCurrency,

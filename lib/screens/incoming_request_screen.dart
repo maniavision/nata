@@ -295,6 +295,8 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
   }
 
   String get _payoutText {
+    // Flat: the sender pays the traveler directly, at a price agreed in chat.
+    if (_r.isFlat) return context.l10n.priceAgreedInChat;
     final shown = widget.money.format(_r.payoutUsd);
     return widget.money.currency == 'USD' ? shown : '≈ $shown';
   }
@@ -542,23 +544,26 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
                     _photos(),
                     const SizedBox(height: 12),
                   ],
-                  _sectionTitle(l.recipientDetails.toUpperCase()),
-                  _card(
-                    child: _r.recipientName == null
-                        ? Text(
-                            l.recipientHiddenNote,
-                            key: const ValueKey('recipient-hidden'),
-                            style: GoogleFonts.dmSans(
-                              fontSize: 12,
-                              color: AppColors.mutedForeground,
+                  // Flat requests have no recipient (20240200).
+                  if (!_r.isFlat)
+                    _sectionTitle(l.recipientDetails.toUpperCase()),
+                  if (!_r.isFlat)
+                    _card(
+                      child: _r.recipientName == null
+                          ? Text(
+                              l.recipientHiddenNote,
+                              key: const ValueKey('recipient-hidden'),
+                              style: GoogleFonts.dmSans(
+                                fontSize: 12,
+                                color: AppColors.mutedForeground,
+                              ),
+                            )
+                          : Column(
+                              children: [
+                                _row(l.recipientNameLabel, _r.recipientName!),
+                              ],
                             ),
-                          )
-                        : Column(
-                            children: [
-                              _row(l.recipientNameLabel, _r.recipientName!),
-                            ],
-                          ),
-                  ),
+                    ),
                 ],
               ),
             ),

@@ -40,6 +40,33 @@ import 'app_localizations.dart';
       l.notifCancelledBySenderBody(sender, route),
     ),
     'request_paid' => (l.notifPaidTitle, l.notifPaidBody(sender)),
+    // Flat Nata fees (20240200).
+    'request_accepted_fee' => (
+      l.notifAcceptedTitle,
+      l.notifAcceptedFeeBody(traveler),
+    ),
+    'contact_fee_paid' => (l.notifChatOpenTitle, l.notifFeePaidBody(sender)),
+    'contact_fee_received' => (
+      l.notifChatOpenTitle,
+      l.notifFeeReceivedBody(traveler),
+    ),
+    'delivery_confirmed_by_sender' => (
+      l.notifDeliveryConfirmedTitle,
+      l.notifConfirmedBySenderBody(sender),
+    ),
+    // Delivery check-ins (20240201).
+    'delivery_check_sender' => (
+      l.notifCheckSenderTitle,
+      l.notifCheckSenderBody(traveler),
+    ),
+    'delivery_check_traveler' => (
+      l.notifCheckTravelerTitle,
+      l.notifCheckTravelerBody(sender),
+    ),
+    'delivered_by_traveler' => (
+      l.notifDeliveredTitle,
+      l.notifDeliveredByTravelerBody(traveler),
+    ),
     'payment_received' => (
       l.notifPaymentReceivedTitle,
       l.notifPaymentReceivedBody(traveler),
@@ -111,11 +138,18 @@ int? requestsTabFor(AppNotification n) => requestsTabForEvent(n.event);
 int? requestsTabForEvent(String? event) => switch (event) {
   'request_new' ||
   'request_paid' ||
+  'contact_fee_paid' ||
+  'delivery_confirmed_by_sender' ||
+  'delivery_check_traveler' ||
   'request_cancelled_by_sender' ||
   'request_expired_unpaid_traveler' ||
   'delivery_confirmed' ||
   'payout_paid' => 0,
   'request_accepted' ||
+  'request_accepted_fee' ||
+  'contact_fee_received' ||
+  'delivery_check_sender' ||
+  'delivered_by_traveler' ||
   'request_declined' ||
   'request_expired_unanswered' ||
   'request_expired_unpaid' ||
@@ -126,3 +160,10 @@ int? requestsTabForEvent(String? event) => switch (event) {
   'refund_sent' => 1,
   _ => null,
 };
+
+/// Events that ask whether a request was delivered (20240201): tapping one
+/// asks about that request.
+bool asksDelivered(String? event) =>
+    event == 'delivery_check_sender' ||
+    event == 'delivery_check_traveler' ||
+    event == 'delivered_by_traveler';

@@ -34,12 +34,17 @@ class RequestsScreen extends StatefulWidget {
   /// Override for tests; defaults to [DateTime.now].
   final DateTime Function()? now;
 
+  /// A request to ask about once it is loaded, from a tapped delivery
+  /// check-in (20240201): was it delivered? Then the review.
+  final String? askDeliveredFor;
+
   const RequestsScreen({
     super.key,
     this.requestService,
     this.exchangeRates,
     this.initialTab = 0,
     this.now,
+    this.askDeliveredFor,
   });
 
   /// Where this page keeps what it showed between visits (ScreenCache).
@@ -267,6 +272,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       ScreenCache.write(RequestsScreen._kSent, sent);
       if (mounted) setState(() => _sent = sent);
       _loadCodes(sent);
+      _maybeAsk();
       if (mounted && sent.any((r) => _closes(r.status))) {
         _loadClosed();
       }
@@ -284,7 +290,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _loadCodes(List<SentRequest> sent) async {
     final service = widget.requestService ?? RequestService();
     final codes = <String, DeliveryCode>{};
-    for (final r in sent.where((r) => r.isPaid)) {
+    // Flat requests have no recipient and no code (20240200).
+    for (final r in sent.where((r) => r.isPaid && !r.isFlat)) {
       try {
         final code = await service.deliveryCode(r.id);
         if (code != null) codes[r.id] = code;
@@ -384,6 +391,135 @@ class _RequestsScreenState extends State<RequestsScreen> {
   /// Requests whose receipt is being confirmed.
   final Set<String> _confirming = {};
 
+  /// A flat request: the sender confirms the traveler delivered (there is no
+  /// code), then rates them.
+  Future<void> _confirmDelivered(SentRequest request) async {
+    final l = context.l10n;
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('confirm-delivered-dialog'),
+        title: Text(l.confirmDeliveredTitle),
+        content: Text(l.confirmDeliveredBody(request.trip.firstName)),
+        actions: [
+          TextButton(
+            key: const ValueKey('confirm-delivered-no'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.notYet),
+          ),
+          TextButton(
+            key: const ValueKey('confirm-delivered-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.confirmDelivered),
+          ),
+        ],
+      ),
+    );
+    if (yes != true || !mounted) return;
+    setState(() => _confirming.add(request.id));
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await (widget.requestService ?? RequestService()).confirmDelivered(
+        request.id,
+      );
+      if (!mounted) return;
+      setState(() => _confirming.remove(request.id));
+      await _review(request);
+    } catch (e) {
+      debugPrint('[Requests] confirm delivered: $e');
+      if (!mounted) return;
+      setState(() => _confirming.remove(request.id));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
+      _loadSent();
+    }
+  }
+
+  /// Whether [RequestsScreen.askDeliveredFor] was asked about already.
+  bool _asked = false;
+
+  /// Asks about the request a delivery check-in was about, once it is
+  /// loaded: the sender or the traveler confirms, then reviews.
+  void _maybeAsk() {
+    final id = widget.askDeliveredFor;
+    if (_asked || id == null || !mounted) return;
+    final sent = _sent?.where((r) => r.id == id).firstOrNull;
+    final incoming = _incomingAll?.where((r) => r.id == id).firstOrNull;
+    if (sent == null && incoming == null) return;
+    _asked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (sent != null) {
+        if (_tab != 1) setState(() => _tab = 1);
+        if (sent.awaitingDeliveryConfirm) {
+          _confirmDelivered(sent);
+        } else if (sent.canReview) {
+          _review(sent);
+        }
+      } else if (incoming != null) {
+        if (_tab != 0) setState(() => _tab = 0);
+        if (incoming.awaitingTravelerConfirm) {
+          _travelerConfirmDelivered(incoming);
+        } else if (incoming.needsSenderReview) {
+          _openIncoming(incoming);
+        }
+      }
+    });
+  }
+
+  /// A flat request: the traveler says they delivered it (it closes as
+  /// delivered), then rates the sender.
+  Future<void> _travelerConfirmDelivered(IncomingRequest request) async {
+    final l = context.l10n;
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('traveler-delivered-dialog'),
+        title: Text(l.travelerDeliveredTitle),
+        content: Text(l.travelerDeliveredBody(request.senderFirstName)),
+        actions: [
+          TextButton(
+            key: const ValueKey('traveler-delivered-no'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.notYet),
+          ),
+          TextButton(
+            key: const ValueKey('traveler-delivered-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.iDeliveredIt),
+          ),
+        ],
+      ),
+    );
+    if (yes != true || !mounted) return;
+    setState(() => _busy.add(request.id));
+    final messenger = ScaffoldMessenger.of(context);
+    final service = widget.requestService ?? RequestService();
+    try {
+      await service.travelerConfirmDelivered(request.id);
+      if (!mounted) return;
+      setState(() => _busy.remove(request.id));
+      if (!request.senderReviewed) {
+        await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) =>
+                ReviewScreen.sender(request: request, service: service),
+          ),
+        );
+      }
+      if (mounted) _loadIncoming();
+    } catch (e) {
+      debugPrint('[Requests] traveler delivered: $e');
+      if (!mounted) return;
+      setState(() => _busy.remove(request.id));
+      messenger.showSnackBar(
+        nataToast(l.errRequestFailed, tone: ToastTone.error),
+      );
+      _loadIncoming();
+    }
+  }
+
   /// Opens a pending request in the request form; reloads once it is saved.
   Future<void> _edit(SentRequest request) async {
     final saved = await Navigator.of(context).push<bool>(
@@ -417,7 +553,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
         key: const ValueKey('cancel-request-dialog'),
         title: Text(l.cancelRequestTitle),
         content: Text(
-          fee > 0 ? l.cancelRequestFeeBody(feeText) : l.cancelRequestFreeBody,
+          fee > 0
+              ? (request.isFlat
+                    ? l.cancelFlatPaidBody(feeText)
+                    : l.cancelRequestFeeBody(feeText))
+              : l.cancelRequestFreeBody,
         ),
         actions: [
           TextButton(
@@ -445,7 +585,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       );
       // Paid: the money (less the fee) goes back right away. If this call
       // fails the refund stays queued and is sent later.
-      if (request.isPaid) {
+      if (request.isPaid && !request.isFlat) {
         unawaited(
           service.sendRefunds().catchError(
             (Object e) => debugPrint('[Requests] refunds: $e'),
@@ -491,6 +631,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
           _incomingFailed = false;
         });
       }
+      _maybeAsk();
       if (mounted && list.any((r) => _closes(r.status))) {
         _loadClosed();
       }
@@ -531,6 +672,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       (_incomingAll ?? const []).where((r) => r.isPending).toList();
 
   String _payoutText(IncomingRequest r) {
+    if (r.isFlat) return context.l10n.priceAgreedInChat;
     final shown = _money.format(r.payoutUsd);
     return _money.currency == 'USD' ? shown : '≈ $shown';
   }
@@ -588,6 +730,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
     setState(() => _busy.remove(r.id));
     if (changed) _loadIncoming();
   }
+
+  /// "I delivered it" on a flat request the traveler hasn't closed yet.
+  VoidCallback? _deliveredAction(IncomingRequest r) =>
+      r.isFlat && r.isPaid && !_busy.contains(r.id)
+      ? () => _travelerConfirmDelivered(r)
+      : null;
 
   _AcceptedView _acceptedView(IncomingRequest r) {
     final l = context.l10n;
@@ -1135,11 +1283,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       child: _AcceptedCard(
                         request: _acceptedView(r),
                         onOpen: () => _openIncoming(r),
+                        onDelivered: _deliveredAction(r),
                       ),
                     )
                   : _AcceptedCard(
                       request: _acceptedView(r),
                       onOpen: () => _openIncoming(r),
+                      onDelivered: _deliveredAction(r),
                     ),
             ),
         ],
@@ -1277,7 +1427,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
     onTap: r.isEditable ? () => _edit(r) : null,
     onCancel: r.isCancellable ? () => _cancel(r) : null,
     onPay: r.awaitingPayment ? () => _pay(r) : null,
-    onConfirmReceipt: r.awaitingReceipt && !_confirming.contains(r.id)
+    onConfirmReceipt: _confirming.contains(r.id)
+        ? null
+        : r.awaitingDeliveryConfirm
+        ? () => _confirmDelivered(r)
+        : r.awaitingReceipt
         ? () => _confirmReceipt(r)
         : null,
     onReview: r.canReview ? () => _review(r) : null,
@@ -1639,6 +1793,8 @@ class _SentRequestCard extends StatelessWidget {
   String get _totalText {
     final fixed = request.fixedTotalText;
     if (fixed != null) return fixed;
+    // A flat fee is known exactly, in its own currency.
+    if (request.isFlat) return request.feeText;
     final shown = money.format(request.totalUsd);
     return money.currency == 'USD' ? shown : '≈ $shown';
   }
@@ -2040,7 +2196,9 @@ class _SentRequestCard extends StatelessWidget {
                 _button(
                   key: 'sent-request-pay-${request.id}',
                   icon: Icons.lock_rounded,
-                  label: '${l.payEscrow} ($_totalText)',
+                  label: request.isFlat
+                      ? l.payNataFee(_totalText)
+                      : '${l.payEscrow} ($_totalText)',
                   color: AppColors.accent,
                   filled: true,
                   onTap: onPay ?? () {},
@@ -2049,6 +2207,17 @@ class _SentRequestCard extends StatelessWidget {
               if (deliveryCode != null && request.isPaid) ...[
                 const SizedBox(height: 12),
                 _codeBox(context, deliveryCode!),
+              ],
+              if (request.awaitingDeliveryConfirm) ...[
+                const SizedBox(height: 12),
+                _button(
+                  key: 'sent-request-confirm-delivered-${request.id}',
+                  icon: Icons.check_circle_rounded,
+                  label: l.confirmDelivered,
+                  color: _green,
+                  filled: true,
+                  onTap: onConfirmReceipt ?? () {},
+                ),
               ],
               if (request.awaitingReceipt) ...[
                 const SizedBox(height: 12),
@@ -2175,7 +2344,14 @@ class _AcceptedCard extends StatelessWidget {
 
   /// Opens the request.
   final VoidCallback onOpen;
-  const _AcceptedCard({required this.request, required this.onOpen});
+
+  /// A flat request the traveler can say they delivered (20240201).
+  final VoidCallback? onDelivered;
+  const _AcceptedCard({
+    required this.request,
+    required this.onOpen,
+    this.onDelivered,
+  });
 
   void _open(BuildContext context) => onOpen();
 
@@ -2347,6 +2523,29 @@ class _AcceptedCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            if (onDelivered != null) ...[
+              OutlinedButton.icon(
+                key: ValueKey('traveler-delivered-${request.id}'),
+                onPressed: onDelivered,
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+                label: Text(
+                  l.iDeliveredIt,
+                  style: GoogleFonts.dmSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _green,
+                  side: BorderSide(color: _green.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             Material(
               color: AppColors.primary,
               borderRadius: BorderRadius.circular(12),
