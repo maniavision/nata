@@ -2300,6 +2300,7 @@
   "errCardSave": "Couldn't save the card. Try again.",
   "savedCardCheckoutNote": "You can pick another card or add one in the secure payment sheet.",
   "useAnotherWallet": "Use another wallet",
+  "useSavedWallet": "Use a saved wallet",
   "paidSecurelyThroughFlutterwave": "You live in Nigeria, so you pay by card in naira, on Flutterwave's secure page. Your card details never reach Nata.",
   "errPayoutAccountNotFound": "Flutterwave couldn't find this account. Check the bank and the 10-digit account number.",
   "payoutNigeriaBankNote": "In Nigeria, payouts go to your bank account through Flutterwave. The account is saved under the name your bank gives.",

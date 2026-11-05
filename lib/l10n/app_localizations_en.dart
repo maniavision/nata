@@ -5233,6 +5233,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useAnotherWallet => 'Use another wallet';
 
   @override
+  String get useSavedWallet => 'Use a saved wallet';
+
+  @override
   String get paidSecurelyThroughFlutterwave =>
       'You live in Nigeria, so you pay by card in naira, on Flutterwave\'s secure page. Your card details never reach Nata.';
 

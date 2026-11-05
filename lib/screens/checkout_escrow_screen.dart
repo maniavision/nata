@@ -116,8 +116,22 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   /// when paying by card.
   StripeCard? _savedCard;
 
-  /// Mobile money: a saved wallet shows as a summary until Change.
+  /// Mobile money: the saved wallets show as a list (the default chosen)
+  /// until Change.
   bool _editingWallet = true;
+
+  /// The member's saved wallets this request can be paid with, the default
+  /// first, and the one chosen.
+  List<_SavedWallet> _savedWallets = const [];
+  String? _savedWalletId;
+
+  void _useSavedWallet(_SavedWallet w) {
+    _savedWalletId = w.id;
+    _mobileChoice = w.option;
+    _pickedNetwork = w.network;
+    _mobilePhoneCtrl.text = w.localNumber;
+    _editingWallet = false;
+  }
 
   Future<void> _loadSavedCard() async {
     try {
@@ -241,6 +255,7 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
               )
               .toList()
             ..sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      final saved = <_SavedWallet>[];
       for (final w in wallets) {
         final option = options
             .where((o) => o.networks.any((n) => n.code == w.mobileNetwork))
@@ -248,17 +263,24 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
         if (option == null) continue;
         final code = option.dialCode.replaceAll(RegExp(r'\D'), '');
         final digits = w.mobileNumber!.replaceAll(RegExp(r'\D'), '');
-        if (!mounted || _mobilePhoneCtrl.text.isNotEmpty) return;
-        setState(() {
-          _mobileChoice = option;
-          _pickedNetwork = w.mobileNetwork;
-          _mobilePhoneCtrl.text = digits.startsWith(code)
-              ? digits.substring(code.length)
-              : digits;
-          _editingWallet = false;
-        });
+        saved.add(
+          _SavedWallet(
+            id: w.id,
+            option: option,
+            network: w.mobileNetwork!,
+            localNumber: digits.startsWith(code)
+                ? digits.substring(code.length)
+                : digits,
+          ),
+        );
+      }
+      if (!mounted || saved.isEmpty || _mobilePhoneCtrl.text.isNotEmpty) {
         return;
       }
+      setState(() {
+        _savedWallets = saved;
+        _useSavedWallet(saved.first);
+      });
     } catch (e) {
       debugPrint('[Checkout] saved wallet: $e');
     }
@@ -1334,62 +1356,17 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             TextButton(onPressed: _loadMobileOptions, child: Text(l.retry)),
         ],
       );
-    } else if (!_editingWallet && _mobileChoice != null && _directReady) {
-      // The saved wallet, with Change to use another.
-      final choice = _mobileChoice!;
-      final network = choice.networks
-          .where((n) => n.code == _mobileNetwork)
-          .firstOrNull;
+    } else if (!_editingWallet && _savedWallets.isNotEmpty) {
+      // The saved wallets, the chosen one first selected; Change to use one
+      // that isn't saved.
       body = Column(
+        key: const ValueKey('mobile-money-saved-wallet'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            key: const ValueKey('mobile-money-saved-wallet'),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accent, width: 1.5),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        [
-                          ?network?.name,
-                          '${choice.dialCode} ${_mobilePhoneCtrl.text}',
-                        ].join(' · '),
-                        style: GoogleFonts.dmSans(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: AppColors.foreground,
-                        ),
-                      ),
-                      Text(
-                        choice.countryName,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 11,
-                          color: AppColors.mutedForeground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  choice.amountText,
-                  style: GoogleFonts.dmSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: AppColors.foreground,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
+          for (final w in _savedWallets) ...[
+            _savedWalletTile(w),
+            const SizedBox(height: 8),
+          ],
           TextButton.icon(
             key: const ValueKey('mobile-money-change'),
             onPressed: () => setState(() => _editingWallet = true),
@@ -1449,10 +1426,97 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
             ),
           ],
           if (_direct != null) _buildDirectWallet(_direct!),
+          if (_savedWallets.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            TextButton.icon(
+              key: const ValueKey('mobile-money-use-saved'),
+              onPressed: () => setState(() {
+                _useSavedWallet(
+                  _savedWallets
+                          .where((w) => w.id == _savedWalletId)
+                          .firstOrNull ??
+                      _savedWallets.first,
+                );
+              }),
+              icon: const Icon(Icons.account_balance_wallet_outlined, size: 16),
+              label: Text(l.useSavedWallet),
+            ),
+          ],
         ],
       );
     }
     return Padding(padding: const EdgeInsets.only(top: 12), child: body);
+  }
+
+  /// One saved wallet: the chosen one is outlined and ticked; tapping
+  /// another pays with it instead.
+  Widget _savedWalletTile(_SavedWallet w) {
+    final selected = w.id == _savedWalletId;
+    final network = w.option.networks
+        .where((n) => n.code == w.network)
+        .firstOrNull;
+    return GestureDetector(
+      key: ValueKey('mobile-money-saved-wallet-${w.id}'),
+      onTap: () => setState(() => _useSavedWallet(w)),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.accent.withValues(alpha: 0.05)
+              : AppColors.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.accent : AppColors.border,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              size: 18,
+              color: selected ? AppColors.accent : AppColors.mutedForeground,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    [
+                      ?network?.name,
+                      '${w.option.dialCode} ${w.localNumber}',
+                    ].join(' · '),
+                    style: GoogleFonts.dmSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                  Text(
+                    w.option.countryName,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              w.option.amountText,
+              style: GoogleFonts.dmSans(
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+                color: AppColors.foreground,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// The network and number to charge directly, with no payment page.
@@ -2463,5 +2527,22 @@ class _PayMethod {
     required this.title,
     required this.subtitle,
     this.iconBorder,
+  });
+}
+
+/// A saved mobile money wallet this request can be paid with.
+class _SavedWallet {
+  final String id;
+  final MobileMoneyOption option;
+  final String network;
+
+  /// The number without the country's calling code.
+  final String localNumber;
+
+  const _SavedWallet({
+    required this.id,
+    required this.option,
+    required this.network,
+    required this.localNumber,
   });
 }
