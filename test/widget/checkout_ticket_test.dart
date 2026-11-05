@@ -305,6 +305,128 @@ void main() {
         expect(phone.controller!.text, '201234567');
       });
 
+      testWidgets('every saved wallet is offered, the default chosen', (
+        tester,
+      ) async {
+        service.kind = CheckoutKind.mobileMoney;
+        await pumpPayable(
+          tester,
+          payments: FakePaymentService(
+            methods: const [
+              PaymentMethod(
+                id: 'pm_mtn',
+                kind: PaymentMethodKind.mobileMoney,
+                mobileProvider: 'MTN Mobile Money',
+                mobileNetwork: 'MTN_MOMO_GHA',
+                mobileNumber: '+233241112222',
+              ),
+              PaymentMethod(
+                id: 'pm_telecel',
+                kind: PaymentMethodKind.mobileMoney,
+                mobileProvider: 'Telecel Cash',
+                mobileNetwork: 'VODAFONE_GHA',
+                mobileNumber: '+233201234567',
+                isDefault: true,
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.byKey(const ValueKey('mobile-money-saved-wallet-pm_telecel')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('mobile-money-saved-wallet-pm_mtn')),
+          findsOneWidget,
+        );
+
+        // The default is used unless another is picked.
+        await pay(tester);
+        expect(service.paymentsStarted.last.network, 'VODAFONE_GHA');
+        expect(service.paymentsStarted.last.phone, '+233201234567');
+      });
+
+      testWidgets('another saved wallet is one tap away', (tester) async {
+        service.kind = CheckoutKind.mobileMoney;
+        await pumpPayable(
+          tester,
+          payments: FakePaymentService(
+            methods: const [
+              PaymentMethod(
+                id: 'pm_telecel',
+                kind: PaymentMethodKind.mobileMoney,
+                mobileProvider: 'Telecel Cash',
+                mobileNetwork: 'VODAFONE_GHA',
+                mobileNumber: '+233201234567',
+                isDefault: true,
+              ),
+              PaymentMethod(
+                id: 'pm_mtn',
+                kind: PaymentMethodKind.mobileMoney,
+                mobileProvider: 'MTN Mobile Money',
+                mobileNetwork: 'MTN_MOMO_GHA',
+                mobileNumber: '+233241112222',
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        final mtn = find.byKey(
+          const ValueKey('mobile-money-saved-wallet-pm_mtn'),
+        );
+        await tester.ensureVisible(mtn);
+        await tester.tap(mtn);
+        await tester.pump();
+        await pay(tester);
+
+        expect(service.paymentsStarted.last.network, 'MTN_MOMO_GHA');
+        expect(service.paymentsStarted.last.phone, '+233241112222');
+      });
+
+      testWidgets('a wallet that isn\'t saved can be typed, then undone', (
+        tester,
+      ) async {
+        service.kind = CheckoutKind.mobileMoney;
+        await pumpPayable(
+          tester,
+          payments: FakePaymentService(
+            methods: const [
+              PaymentMethod(
+                id: 'pm_telecel',
+                kind: PaymentMethodKind.mobileMoney,
+                mobileProvider: 'Telecel Cash',
+                mobileNetwork: 'VODAFONE_GHA',
+                mobileNumber: '+233201234567',
+                isDefault: true,
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        final change = find.byKey(const ValueKey('mobile-money-change'));
+        await tester.ensureVisible(change);
+        await tester.tap(change);
+        await tester.pump();
+        expect(
+          find.byKey(const ValueKey('mobile-money-phone')),
+          findsOneWidget,
+        );
+
+        final back = find.byKey(const ValueKey('mobile-money-use-saved'));
+        await tester.ensureVisible(back);
+        await tester.tap(back);
+        await tester.pump();
+        expect(
+          find.byKey(const ValueKey('mobile-money-saved-wallet-pm_telecel')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('mobile-money-phone')), findsNothing);
+      });
+
       testWidgets('paying by card: the saved default card comes first', (
         tester,
       ) async {

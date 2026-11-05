@@ -9104,6 +9104,12 @@ abstract class AppLocalizations {
   /// **'Use another wallet'**
   String get useAnotherWallet;
 
+  /// No description provided for @useSavedWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a saved wallet'**
+  String get useSavedWallet;
+
   /// No description provided for @paidSecurelyThroughFlutterwave.
   ///
   /// In en, this message translates to:
