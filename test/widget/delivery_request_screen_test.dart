@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:carrywise_app/screens/delivery_request_screen.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:carrywise_app/services/request_service.dart';
+import 'package:carrywise_app/services/screen_cache.dart';
 import 'package:carrywise_app/services/traveler_service.dart';
 import 'package:carrywise_app/services/trip_service.dart' show PickedReceipt;
 import 'package:flutter/material.dart';
@@ -306,6 +307,68 @@ void main() {
 
       expect(popped, isTrue);
       expect(service.sent, isEmpty);
+    });
+  });
+
+  group('coming back to the form', () {
+    String text(WidgetTester t, String key) =>
+        t.widget<TextField>(find.byKey(ValueKey(key))).controller!.text;
+
+    Future<void> leaveAndReopen(WidgetTester tester) async {
+      await tapKey(tester, 'request-back');
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('keeps what was entered', (tester) async {
+      await pump(tester);
+      await enter(tester, 'request-item-0', 'Watch');
+      await enter(tester, 'request-description-0', 'In its box');
+      await tapKey(tester, 'request-category-0-apparel');
+      await tapKey(tester, 'request-add-item');
+      await enter(tester, 'request-item-1', 'Shirt');
+      await enter(tester, 'request-weight', '1.5');
+      await addPhoto(tester);
+
+      await leaveAndReopen(tester);
+
+      expect(text(tester, 'request-item-0'), 'Watch');
+      expect(text(tester, 'request-description-0'), 'In its box');
+      expect(text(tester, 'request-item-1'), 'Shirt');
+      expect(text(tester, 'request-weight'), '1.5');
+      expect(find.byKey(const ValueKey('request-photo-0')), findsOneWidget);
+
+      await send(tester);
+
+      final d = service.sent.single.draft;
+      expect(d.items.map((i) => i.name), ['Watch', 'Shirt']);
+      expect(d.items.first.category, RequestCategory.apparel);
+      expect(service.sent.single.photos, hasLength(1));
+    });
+
+    testWidgets('a sent request starts the next form empty', (tester) async {
+      await pump(tester);
+      await fillValid(tester);
+      await send(tester);
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(text(tester, 'request-item-0'), isEmpty);
+      expect(text(tester, 'request-weight'), isEmpty);
+      expect(find.byKey(const ValueKey('request-photo-0')), findsNothing);
+    });
+
+    testWidgets('is forgotten when signing out', (tester) async {
+      await pump(tester);
+      await enter(tester, 'request-item-0', 'Watch');
+      await tapKey(tester, 'request-back');
+
+      ScreenCache.clear(); // what signing out does
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(text(tester, 'request-item-0'), isEmpty);
     });
   });
 

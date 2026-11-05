@@ -15,6 +15,7 @@ import '../services/delivery_pricing.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/preferences_service.dart';
 import '../services/request_service.dart';
+import '../services/screen_cache.dart';
 import '../services/traveler_service.dart';
 import '../services/trip_service.dart' show PickedReceipt;
 import '../widgets/country_code_picker_sheet.dart' show flagEmoji;
@@ -159,7 +160,56 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       _loadRecipientCountry();
     }
     final editing = _editing;
-    if (editing != null) _startFrom(editing);
+    if (editing != null) {
+      _startFrom(editing);
+    } else {
+      _restoreDraft();
+    }
+  }
+
+  // ── Unsent entries ─────────────────────────────────────────────────────────
+  // Leaving a new request's form keeps what was entered, for this app session
+  // and this member (ScreenCache, cleared on sign-out): coming back, from the
+  // same traveler or another, starts where they left off. Sending clears it.
+
+  static const _draftKey = 'delivery-request-draft';
+  bool _sent = false;
+
+  void _restoreDraft() {
+    final d = ScreenCache.read<_FormDraft>(_draftKey);
+    if (d == null) return;
+    for (final item in _items) {
+      item.dispose();
+    }
+    _items
+      ..clear()
+      ..addAll([
+        for (final i in d.items)
+          _ItemForm(_nextItemId++)
+            ..name.text = i.name
+            ..description.text = i.description
+            ..category = i.category,
+      ]);
+    if (_items.isEmpty) _items.add(_ItemForm(_nextItemId++));
+    _weightCtrl.text = d.weight;
+    _photos.addAll(d.photos);
+  }
+
+  void _saveDraft() {
+    if (_editing != null) return;
+    final draft = _FormDraft(
+      items: [
+        for (final item in _items)
+          RequestItem(
+            name: item.name.text,
+            category: item.category,
+            description: item.description.text,
+          ),
+      ],
+      weight: _weightCtrl.text,
+      photos: List.of(_photos),
+    );
+    ScreenCache.write(_draftKey, _sent || draft.isEmpty ? null : draft);
   }
 
   /// Fills the form with the request being edited.
@@ -323,6 +373,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
 
   @override
   void dispose() {
+    _saveDraft();
     for (final item in _items) {
       item.dispose();
     }
@@ -584,6 +635,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
         return;
       }
       await service.send(_requestId, draft, List.of(_photos));
+      _sent = true;
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -2153,6 +2205,29 @@ class _Card extends StatelessWidget {
       child: child,
     );
   }
+}
+
+/// A new request's entries, kept when the form is left before sending.
+class _FormDraft {
+  final List<RequestItem> items;
+  final String weight;
+  final List<PickedReceipt> photos;
+
+  const _FormDraft({
+    required this.items,
+    required this.weight,
+    required this.photos,
+  });
+
+  bool get isEmpty =>
+      weight.trim().isEmpty &&
+      photos.isEmpty &&
+      items.every(
+        (i) =>
+            i.name.trim().isEmpty &&
+            i.description.trim().isEmpty &&
+            i.category == RequestCategory.electronics,
+      );
 }
 
 /// What is typed for one item of the parcel.
