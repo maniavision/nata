@@ -5412,7 +5412,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String confirmDeliveredBody(String name) {
-    return 'Confirmez seulement une fois que $name a remis votre article. Cela clôt la livraison.';
+    return 'Confirmez seulement une fois que $name a délivré votre article. Cela clôt la livraison.';
   }
 
   @override

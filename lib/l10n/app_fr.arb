@@ -2167,7 +2167,7 @@
   "travelersPicked": "{count, plural, =1{1 voyageur choisi} other{{count} voyageurs choisis}}",
   "pickTraveler": "Choisir {name}",
   "confirmDeliveredTitle": "Article livré ?",
-  "confirmDeliveredBody": "Confirmez seulement une fois que {name} a remis votre article. Cela clôt la livraison.",
+  "confirmDeliveredBody": "Confirmez seulement une fois que {name} a délivré votre article. Cela clôt la livraison.",
   "confirmDelivered": "Confirmer la livraison",
   "cancelFlatPaidBody": "La discussion avec le voyageur est déjà ouverte, les frais Nata de {fee} ne sont donc pas remboursés. Annuler quand même ?",
   "payNataFee": "Payer les frais Nata ({amount})",
