@@ -622,7 +622,9 @@ class RequestDraft {
   /// The weight and size are those of the whole parcel.
   final double weightKg;
   final String dimensions;
-  final RequestSizeClass sizeClass;
+
+  /// No longer asked (20240204): only an older request being edited has one.
+  final RequestSizeClass? sizeClass;
 
   /// Only for requests priced by distance (made before flat fees); new ones
   /// have no recipient.
@@ -637,8 +639,8 @@ class RequestDraft {
     required this.tripIds,
     required this.items,
     required this.weightKg,
-    required this.dimensions,
-    required this.sizeClass,
+    this.dimensions = '',
+    this.sizeClass,
     this.recipientName = '',
     this.recipientPhone = '',
     this.expectedTotal,
@@ -1219,7 +1221,7 @@ class RequestService {
           'p_items': [for (final i in items) i.toJson()],
           'p_item_weight_kg': draft.weightKg,
           'p_item_size': draft.itemSize,
-          'p_item_size_class': draft.sizeClass.dbValue,
+          'p_item_size_class': draft.sizeClass?.dbValue,
           'p_photo_paths': paths,
         },
       );
@@ -1314,7 +1316,7 @@ class RequestService {
           'p_items': [for (final i in items) i.toJson()],
           'p_item_weight_kg': draft.weightKg,
           'p_item_size': draft.itemSize,
-          'p_item_size_class': draft.sizeClass.dbValue,
+          'p_item_size_class': draft.sizeClass?.dbValue,
           'p_recipient_name': draft.recipientName.trim(),
           'p_recipient_phone': draft.recipientPhone,
           'p_photo_paths': paths,

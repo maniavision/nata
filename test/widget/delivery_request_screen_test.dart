@@ -123,16 +123,6 @@ void main() {
   Future<void> enter(WidgetTester tester, String key, String text) async {
     await tester.enterText(find.byKey(ValueKey(key)), text);
     await tester.pump();
-    // Naming an item also gives it a value, so tests about other fields
-    // get past the value check; the value tests clear it again.
-    final item = RegExp(r'^request-item-(\d+)$').firstMatch(key);
-    if (item != null && text.trim().isNotEmpty) {
-      final value = find.byKey(ValueKey('request-item-value-${item[1]}'));
-      if (value.evaluate().isNotEmpty) {
-        await tester.enterText(value, '100');
-        await tester.pump();
-      }
-    }
   }
 
   Future<void> tapKey(WidgetTester tester, String key) async {
@@ -152,7 +142,6 @@ void main() {
   Future<void> fillValid(WidgetTester tester) async {
     await enter(tester, 'request-item-0', 'Apple AirPods Max');
     await enter(tester, 'request-weight', '0.9 kg');
-    await tapKey(tester, 'request-size-shoebox');
     await addPhoto(tester);
   }
 
@@ -223,9 +212,7 @@ void main() {
         'WHAT IS THE ITEM?',
         'ITEM CATEGORY',
         'ITEM DESCRIPTION',
-        'Size and Weight',
-        'PACKAGE WEIGHT',
-        'PACKAGE DIMENSIONS',
+        'Package Weight',
         'Item Photos',
         'Nata fee',
       ]) {
@@ -239,6 +226,29 @@ void main() {
       expect(find.textContaining('Step 1'), findsNothing);
     });
 
+    testWidgets('asks for no value, receipt, dimensions or size', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      for (final k in [
+        'request-item-value-0',
+        'request-item-receipt-add-0',
+        'request-dimensions',
+        'request-size-shoebox',
+      ]) {
+        expect(find.byKey(ValueKey(k)), findsNothing, reason: k);
+      }
+      for (final t in [
+        'ESTIMATED VALUE *',
+        'PACKAGE DIMENSIONS',
+        'PACKAGE SIZE',
+        'Size and Weight',
+      ]) {
+        expect(find.text(t), findsNothing, reason: t);
+      }
+    });
+
     testWidgets('starts empty: no made-up AirPods', (tester) async {
       await pump(tester);
 
@@ -246,7 +256,6 @@ void main() {
         'request-item-0',
         'request-description-0',
         'request-weight',
-        'request-dimensions',
       ]) {
         expect(
           tester.widget<TextField>(find.byKey(ValueKey(k))).controller!.text,
@@ -270,16 +279,13 @@ void main() {
       );
     });
 
-    testWidgets('shows the traveler\'s limits next to weight and size', (
+    testWidgets('shows the traveler\'s weight limit, and no size limit', (
       tester,
     ) async {
       await pump(tester);
 
       expect(find.text('Traveler limit: 3.0 kg'), findsOneWidget);
-      expect(
-        find.text('Traveler limit: Shoebox (30×20×15 cm)'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Shoebox'), findsNothing);
     });
 
     testWidgets('limits show a dash when the traveler set none', (
@@ -290,7 +296,7 @@ void main() {
         tripOverride: sampleTrip(maxWeightKg: null, maxSize: null),
       );
 
-      expect(find.text('Traveler limit: —'), findsNWidgets(2));
+      expect(find.text('Traveler limit: —'), findsOneWidget);
     });
 
     testWidgets('back leaves without sending', (tester) async {
@@ -562,7 +568,7 @@ void main() {
       expect(one, r'$4.99');
     });
 
-    testWidgets('weight, size and photos are still for the whole parcel', (
+    testWidgets('weight and photos are still for the whole parcel', (
       tester,
     ) async {
       await pump(tester);
@@ -571,7 +577,6 @@ void main() {
       await addItem(tester);
 
       expect(find.byKey(const ValueKey('request-weight')), findsOneWidget);
-      expect(find.byKey(const ValueKey('request-dimensions')), findsOneWidget);
       expect(find.byKey(const ValueKey('request-add-photo')), findsOneWidget);
     });
 
@@ -743,7 +748,6 @@ void main() {
       await pump(tester);
       await enter(tester, 'request-item-0', 'Watch');
       await enter(tester, 'request-weight', '0.5');
-      await tapKey(tester, 'request-size-shoebox');
 
       await send(tester);
 
@@ -761,128 +765,6 @@ void main() {
       await enter(tester, 'request-item-0', 'W');
 
       expect(errorText(tester), isNull);
-    });
-  });
-
-  group('package size', () {
-    testWidgets('three sizes to choose from, none chosen at first', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      expect(find.text('PACKAGE SIZE'), findsOneWidget);
-      for (final t in ['Envelope / Document', 'Shoebox', 'Backpack']) {
-        expect(find.text(t), findsOneWidget, reason: t);
-      }
-    });
-
-    testWidgets('a size is required', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-weight', '0.5');
-
-      await send(tester);
-
-      expect(errorText(tester), 'Choose the package size.');
-      expect(service.attempts, 0);
-    });
-
-    testWidgets('the chosen size is what is sent', (tester) async {
-      await pump(tester); // traveler accepts up to a shoebox
-      await fillValid(tester);
-      await tapKey(tester, 'request-size-envelope');
-
-      await send(tester);
-
-      expect(service.sent.single.draft.sizeClass, RequestSizeClass.envelope);
-    });
-
-    testWidgets('a parcel bigger than the traveler accepts is refused', (
-      tester,
-    ) async {
-      await pump(tester); // shoebox limit
-      await fillValid(tester);
-      await tapKey(tester, 'request-size-backpack');
-
-      await send(tester);
-
-      expect(
-        errorText(tester),
-        'This package is bigger than the traveler accepts.',
-      );
-      expect(service.attempts, 0);
-    });
-
-    testWidgets('the traveler\'s own size is fine', (tester) async {
-      await pump(tester);
-      await fillValid(tester); // shoebox
-
-      await send(tester);
-
-      expect(service.sent.single.draft.sizeClass, RequestSizeClass.shoebox);
-    });
-
-    testWidgets('a traveler who accepts a backpack accepts everything', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        tripOverride: sampleTrip(maxSize: 'Backpack size', maxWeightKg: 10),
-      );
-      await fillValid(tester);
-      await tapKey(tester, 'request-size-backpack');
-
-      await send(tester);
-
-      expect(service.sent.single.draft.sizeClass, RequestSizeClass.backpack);
-    });
-
-    testWidgets('a traveler who accepts only envelopes refuses a shoebox', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        tripOverride: sampleTrip(maxSize: 'Envelope / Document'),
-      );
-      await fillValid(tester);
-
-      await send(tester);
-
-      expect(
-        errorText(tester),
-        'This package is bigger than the traveler accepts.',
-      );
-    });
-
-    testWidgets('a trip with no recognisable size limit accepts any size', (
-      tester,
-    ) async {
-      await pump(tester, tripOverride: sampleTrip(maxSize: null));
-      await fillValid(tester);
-      await tapKey(tester, 'request-size-backpack');
-
-      await send(tester);
-
-      expect(service.sent.single.draft.sizeClass, RequestSizeClass.backpack);
-    });
-
-    testWidgets('choosing again clears the message', (tester) async {
-      await pump(tester);
-      await fillValid(tester);
-      await tapKey(tester, 'request-size-backpack');
-      await send(tester);
-      expect(errorText(tester), isNotNull);
-
-      await tapKey(tester, 'request-size-envelope');
-
-      expect(errorText(tester), isNull);
-    });
-
-    testWidgets('is translated', (tester) async {
-      await pump(tester, locale: const Locale('es'));
-
-      expect(find.text('TAMAÑO DEL PAQUETE'), findsOneWidget);
-      expect(find.text('Caja de zapatos'), findsOneWidget);
     });
   });
 
@@ -1036,8 +918,6 @@ void main() {
       await enter(tester, 'request-item-0', '  Apple AirPods Max  ');
       await enter(tester, 'request-description-0', 'Brand new, sealed');
       await enter(tester, 'request-weight', '900 g');
-      await enter(tester, 'request-dimensions', '24 × 24 × 8 cm');
-      await tapKey(tester, 'request-size-shoebox');
       await addPhoto(tester);
 
       await send(tester);
@@ -1046,16 +926,17 @@ void main() {
       expect(d.tripIds, ['trip-77']);
       expect(d.items.single.name.trim(), 'Apple AirPods Max');
       expect(d.items.single.description, 'Brand new, sealed');
-      expect(d.sizeClass, RequestSizeClass.shoebox);
+      expect(d.sizeClass, isNull); // no size asked any more (20240204)
+      expect(d.items.single.value, isNull);
       expect(d.expectedTotal, isNull); // a flat fee: nothing to re-check
       expect(d.weightKg, 0.9);
-      expect(d.itemSize, '24 × 24 × 8 cm');
+      expect(d.itemSize, isNull);
       expect(d.recipientName, isEmpty); // no recipient any more
       expect(d.recipientPhone, isEmpty);
       expect(service.sent.single.photos.length, 1);
     });
 
-    testWidgets('dimensions and description are optional', (tester) async {
+    testWidgets('the description is optional', (tester) async {
       await pump(tester);
       await fillValid(tester);
 
@@ -1233,81 +1114,6 @@ void main() {
     });
   });
 
-  group('item values', () {
-    testWidgets('each item needs a value', (tester) async {
-      await pump(tester);
-      await fillValid(tester);
-      await enter(tester, 'request-item-value-0', '');
-      await send(tester);
-
-      expect(errorText(tester), 'Enter what the item is worth.');
-      expect(service.sent, isEmpty);
-    });
-
-    for (final bad in ['abc', '12.345', '2000000']) {
-      testWidgets('rejects the value "$bad"', (tester) async {
-        await pump(tester);
-        await fillValid(tester);
-        await enter(tester, 'request-item-value-0', bad);
-        await send(tester);
-
-        expect(errorText(tester), 'Enter what the item is worth.');
-        expect(service.sent, isEmpty);
-      });
-    }
-
-    testWidgets('the value is sent with the item', (tester) async {
-      await pump(tester);
-      await fillValid(tester);
-      await enter(tester, 'request-item-value-0', '450.50');
-      await send(tester);
-
-      expect(service.sent.single.draft.items.single.value, 450.5);
-    });
-
-    testWidgets('the declared total adds up every item', (tester) async {
-      await pump(tester);
-      await enter(tester, 'request-item-0', 'Watch');
-      await enter(tester, 'request-item-value-0', '100');
-      await tapKey(tester, 'request-add-item');
-      await enter(tester, 'request-item-1', 'Shirt');
-      await enter(tester, 'request-item-value-1', '250');
-
-      expect(find.text(r'Declared value: $350'), findsOneWidget);
-    });
-
-    testWidgets('a receipt can be attached, removed and sent', (tester) async {
-      await pump(tester);
-      await fillValid(tester);
-      nextPhoto = photo(name: 'receipt.jpg');
-      await tapKey(tester, 'request-item-receipt-add-0');
-      await tapKey(tester, 'request-photo-library');
-
-      expect(find.byKey(const ValueKey('request-item-receipt-0')), findsOne);
-      await tapKey(tester, 'request-item-receipt-remove-0');
-      expect(
-        find.byKey(const ValueKey('request-item-receipt-0')),
-        findsNothing,
-      );
-
-      await tapKey(tester, 'request-item-receipt-add-0');
-      await tapKey(tester, 'request-photo-library');
-      await send(tester);
-
-      expect(service.receipts.keys, [0]);
-      expect(service.receipts[0]!.name, 'receipt.jpg');
-    });
-
-    testWidgets('no receipt is fine', (tester) async {
-      await pump(tester);
-      await fillValid(tester);
-      await send(tester);
-
-      expect(service.sent, hasLength(1));
-      expect(service.receipts, isEmpty);
-    });
-  });
-
   group('contact details', () {
     const note =
         'No phone numbers, emails or contact details here. Once the traveler '
@@ -1476,11 +1282,9 @@ void main() {
       await pumpBoth(tester);
 
       expect(find.text('Traveler limit: 2.0 kg'), findsOneWidget);
-      expect(find.text('Traveler limit: Envelope'), findsOneWidget);
 
       await enter(tester, 'request-item-0', 'Watch');
       await enter(tester, 'request-weight', '2.5');
-      await tapKey(tester, 'request-size-envelope');
       await addPhoto(tester);
       await send(tester);
 
@@ -1492,7 +1296,6 @@ void main() {
       await pumpBoth(tester);
       await enter(tester, 'request-item-0', 'Passport');
       await enter(tester, 'request-weight', '0.2');
-      await tapKey(tester, 'request-size-envelope');
       await addPhoto(tester);
 
       await send(tester);
@@ -1509,7 +1312,6 @@ void main() {
       await pumpBoth(tester);
       await enter(tester, 'request-item-0', 'Passport');
       await enter(tester, 'request-weight', '0.2');
-      await tapKey(tester, 'request-size-envelope');
       await addPhoto(tester);
 
       await send(tester);
@@ -1523,7 +1325,7 @@ void main() {
       await pump(tester, locale: const Locale('es'));
 
       expect(find.text('Tarifa de Nata'), findsOneWidget);
-      expect(find.text('Tamaño y peso'), findsOneWidget);
+      expect(find.text('Peso del paquete'), findsOneWidget);
       expect(find.text('Sin fotos'), findsOneWidget);
       expect(find.textContaining('Enviar solicitud'), findsOneWidget);
       expect(find.text('Máx. 3.0 kg'), findsOneWidget);
@@ -1533,7 +1335,7 @@ void main() {
       await pump(tester, locale: const Locale('fr'));
 
       expect(find.text('Frais Nata'), findsOneWidget);
-      expect(find.text('Taille et poids'), findsOneWidget);
+      expect(find.text('Poids du colis'), findsOneWidget);
       expect(find.text('Aucune photo'), findsOneWidget);
       expect(find.text('Max 3.0 kg'), findsOneWidget);
     });
@@ -1555,10 +1357,7 @@ Future<void> fillValidWithoutPhoto(WidgetTester tester) async {
   }
 
   await enter('request-item-0', 'Apple AirPods Max');
-  await enter('request-item-value-0', '100');
   await enter('request-weight', '0.9 kg');
-  await tester.tap(find.byKey(const ValueKey('request-size-shoebox')));
-  await tester.pump();
 }
 
 class _ThrowingService extends FakeRequestService {
