@@ -10,7 +10,9 @@
 #   add --push to push the commit and the tag straight away
 #
 # The build number (after the +) isn't yours to manage: Codemagic sets it to
-# one more than the highest already in each store.
+# one more than the highest already in each store, and uses it as the last
+# part of the version (1.3.57), so store builds raise the version by
+# themselves and only minor or major need this script.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -19,7 +21,7 @@ BUMP="${1:-}"
 PUSH=false
 [ "${2:-}" = "--push" ] && PUSH=true
 if [ -z "$BUMP" ]; then
-  sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
   exit 1
 fi
 
