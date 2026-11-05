@@ -5327,7 +5327,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String confirmDeliveredBody(String name) {
-    return 'Confirm only once $name has handed over your item. This closes the delivery.';
+    return 'Confirm only once $name has delivered your item. This closes the delivery.';
   }
 
   @override
