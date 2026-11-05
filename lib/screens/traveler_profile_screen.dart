@@ -938,7 +938,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       color: Colors.white,
                     ),
                     label: Text(
-                      context.l10n.sendRequest,
+                      context.l10n.createRequest,
                       style: GoogleFonts.dmSans(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,

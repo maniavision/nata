@@ -784,6 +784,12 @@ abstract class AppLocalizations {
   /// **'Send Request'**
   String get sendRequest;
 
+  /// No description provided for @createRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Request'**
+  String get createRequest;
+
   /// No description provided for @deliveryRequest.
   ///
   /// In en, this message translates to:
@@ -6649,6 +6655,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Face ID didn\'t recognise you. Try again.'**
   String get faceIdEnableFailed;
+
+  /// No description provided for @profileFaceIdOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get profileFaceIdOn;
+
+  /// No description provided for @profileFaceIdOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get profileFaceIdOff;
+
+  /// No description provided for @profileFaceIdOnSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your face signs you in on this phone'**
+  String get profileFaceIdOnSub;
+
+  /// No description provided for @profileFaceIdOffSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your face on this phone'**
+  String get profileFaceIdOffSub;
+
+  /// No description provided for @faceIdTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID is off. Sign in with your phone number next time.'**
+  String get faceIdTurnedOff;
 
   /// No description provided for @nameEditTooltip.
   ///

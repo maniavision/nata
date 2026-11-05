@@ -143,7 +143,7 @@ void main() {
       await tester.pumpWidget(buildTravelerProfile());
       await tester.pump();
 
-      expect(find.text('Send Request'), findsOneWidget);
+      expect(find.text('Create Request'), findsOneWidget);
     });
 
     testWidgets('Message is locked until payment', (tester) async {
@@ -325,12 +325,12 @@ void main() {
       expect(find.text('—'), findsNWidgets(2));
     });
 
-    testWidgets('Send Request opens the delivery request screen', (
+    testWidgets('Create Request opens the delivery request screen', (
       tester,
     ) async {
       await pump(tester);
 
-      await tester.tap(find.text('Send Request'));
+      await tester.tap(find.text('Create Request'));
       await tester.pumpAndSettle();
 
       expect(find.byType(DeliveryRequestScreen), findsOneWidget);
@@ -463,7 +463,7 @@ void main() {
         expect(find.text('Amara Kalu'), findsNothing);
       });
 
-      testWidgets('Send Request carries the trip that is selected', (
+      testWidgets('Create Request carries the trip that is selected', (
         tester,
       ) async {
         await pump(
@@ -475,7 +475,7 @@ void main() {
         // Switch to the second trip, then send a request.
         await tester.tap(find.byKey(const ValueKey('upcoming-trip-trip-b')));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Send Request'));
+        await tester.tap(find.text('Create Request'));
         await tester.pumpAndSettle();
 
         expect(find.byType(DeliveryRequestScreen), findsOneWidget);

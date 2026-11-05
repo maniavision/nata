@@ -370,6 +370,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sendRequest => 'Enviar solicitud';
 
   @override
+  String get createRequest => 'Crear solicitud';
+
+  @override
   String get deliveryRequest => 'Solicitud de entrega';
 
   @override
@@ -3861,6 +3864,23 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get faceIdEnableFailed =>
       'Face ID no te reconoció. Inténtalo de nuevo.';
+
+  @override
+  String get profileFaceIdOn => 'Activado';
+
+  @override
+  String get profileFaceIdOff => 'Desactivado';
+
+  @override
+  String get profileFaceIdOnSub => 'Tu cara inicia sesión en este teléfono';
+
+  @override
+  String get profileFaceIdOffSub =>
+      'Inicia sesión con tu cara en este teléfono';
+
+  @override
+  String get faceIdTurnedOff =>
+      'Face ID está desactivado. Inicia sesión con tu número la próxima vez.';
 
   @override
   String get nameEditTooltip => 'Editar nombre';

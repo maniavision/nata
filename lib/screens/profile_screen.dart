@@ -10,6 +10,7 @@ import '../main.dart';
 import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_service.dart';
 import '../services/payment_service.dart';
 import '../services/preferences_service.dart';
 import '../services/exchange_rate_service.dart';
@@ -39,6 +40,7 @@ class ProfileScreen extends StatefulWidget {
   final EmergencyContactService? emergencyService;
   final TravelerService? travelerService;
   final PaymentService? paymentService;
+  final BiometricService? biometrics;
 
   const ProfileScreen({
     super.key,
@@ -46,6 +48,7 @@ class ProfileScreen extends StatefulWidget {
     this.emergencyService,
     this.travelerService,
     this.paymentService,
+    this.biometrics,
   });
 
   /// Where the page keeps what it showed between visits (ScreenCache).
@@ -89,6 +92,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _publicNameTipKey = GlobalKey();
 
   AuthService get _auth => widget.authService ?? AuthService();
+  BiometricService get _biometrics => widget.biometrics ?? BiometricService();
+
+  /// The phone has Face ID / a fingerprint set up, so the Face ID row shows.
+  bool _biometricsReady = false;
+  bool _switchingFaceId = false;
 
   String? _imagePath;
   String? _avatarPath;
@@ -194,6 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _setupStreams();
     _loadEmergencyContact();
     _loadAdmin();
+    _loadBiometrics();
     CoachTip publicNameTip() => CoachTip(
       target: _publicNameTipKey,
       icon: Icons.badge_outlined,
@@ -933,6 +942,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : '${_firstName.trim()} ${last[0].toUpperCase()}.';
   }
 
+  Future<void> _loadBiometrics() async {
+    final ready =
+        await _biometrics.availability() == BiometricAvailability.available;
+    if (mounted) setState(() => _biometricsReady = ready);
+  }
+
+  /// The Face ID row: turning it on asks for the face once (as on Home);
+  /// turning it off just stops signing in with it on this phone.
+  Future<void> _toggleFaceId() async {
+    if (_switchingFaceId) return;
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final prefs = PreferencesService();
+    if (prefs.faceIdEnabled) {
+      prefs.setFaceIdEnabled(false);
+      messenger.showSnackBar(nataToast(l.faceIdTurnedOff));
+      return;
+    }
+    setState(() => _switchingFaceId = true);
+    try {
+      final result = await _biometrics.authenticate(l.faceIdEnableReason);
+      if (!mounted) return;
+      switch (result) {
+        case BiometricResult.success:
+          prefs.setFaceIdEnabled(true);
+          messenger.showSnackBar(
+            nataToast(l.faceIdTurnedOn, tone: ToastTone.success),
+          );
+        case BiometricResult.cancelled:
+          break;
+        case BiometricResult.failed:
+          messenger.showSnackBar(
+            nataToast(l.faceIdEnableFailed, tone: ToastTone.error),
+          );
+        case BiometricResult.lockedOut:
+          messenger.showSnackBar(
+            nataToast(l.faceIdLocked, tone: ToastTone.error),
+          );
+        case BiometricResult.notEnrolled:
+        case BiometricResult.notAvailable:
+          messenger.showSnackBar(
+            nataToast(l.faceIdUnavailable, tone: ToastTone.error),
+          );
+          setState(() => _biometricsReady = false);
+      }
+    } finally {
+      if (mounted) setState(() => _switchingFaceId = false);
+    }
+  }
+
   Widget _buildSettingsList() {
     final prefs = PreferencesService();
     final items = [
@@ -1008,6 +1067,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         trailing: '${prefs.currency.code} (${prefs.currency.symbol})',
         onTap: _showCurrencyPicker,
       ),
+      if (_biometricsReady || prefs.faceIdEnabled)
+        _SettingsItem(
+          key: const ValueKey('profile-face-id'),
+          icon: Icons.face_rounded,
+          iconBg: AppColors.secondary,
+          iconColor: AppColors.primary,
+          title: context.l10n.faceId,
+          subtitle: prefs.faceIdEnabled
+              ? context.l10n.profileFaceIdOnSub
+              : context.l10n.profileFaceIdOffSub,
+          trailing: prefs.faceIdEnabled
+              ? context.l10n.profileFaceIdOn
+              : context.l10n.profileFaceIdOff,
+          onTap: _toggleFaceId,
+        ),
       _SettingsItem(
         key: const ValueKey('profile-route-alerts'),
         icon: Icons.notification_add_rounded,
