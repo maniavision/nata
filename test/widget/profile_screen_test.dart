@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:carrywise_app/screens/login_screen.dart';
 import 'package:carrywise_app/screens/profile_screen.dart';
+import 'package:carrywise_app/services/biometric_service.dart';
+import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../helpers/app_wrapper.dart';
 import '../helpers/fakes.dart';
 
@@ -222,6 +225,90 @@ void main() {
       for (final l in ['Home', 'Requests', 'Trips', 'Messages', 'Profile']) {
         expect(find.text(l), findsWidgets);
       }
+    });
+  });
+
+  group('Face ID row', () {
+    setUp(() async {
+      GoogleFonts.config.allowRuntimeFetching = false;
+      SharedPreferences.setMockInitialValues({});
+      await PreferencesService().resetAll();
+    });
+    tearDown(() => PreferencesService().resetAll());
+
+    Future<void> show(WidgetTester tester, FakeBiometricService bio) async {
+      tester.view.physicalSize = const Size(900, 3200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(
+          ProfileScreen(authService: FakeAuthService(), biometrics: bio),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Finder row() => find.byKey(const ValueKey('profile-face-id'));
+
+    testWidgets('says Off, and turning it on asks for the face', (
+      tester,
+    ) async {
+      final bio = FakeBiometricService();
+      await show(tester, bio);
+
+      expect(
+        find.descendant(of: row(), matching: find.text('Off')),
+        findsOneWidget,
+      );
+      await tester.tap(row());
+      await tester.pumpAndSettle();
+
+      expect(bio.authenticateCalls, 1);
+      expect(PreferencesService().faceIdEnabled, isTrue);
+      expect(
+        find.descendant(of: row(), matching: find.text('On')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('says On when enabled, and tapping turns it off', (
+      tester,
+    ) async {
+      PreferencesService().setFaceIdEnabled(true);
+      final bio = FakeBiometricService();
+      await show(tester, bio);
+
+      expect(
+        find.descendant(of: row(), matching: find.text('On')),
+        findsOneWidget,
+      );
+      await tester.tap(row());
+      await tester.pumpAndSettle();
+
+      expect(bio.authenticateCalls, 0);
+      expect(PreferencesService().faceIdEnabled, isFalse);
+      expect(
+        find.descendant(of: row(), matching: find.text('Off')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('stays off when the face is not recognised', (tester) async {
+      final bio = FakeBiometricService()..result = BiometricResult.failed;
+      await show(tester, bio);
+
+      await tester.tap(row());
+      await tester.pumpAndSettle();
+
+      expect(PreferencesService().faceIdEnabled, isFalse);
+    });
+
+    testWidgets('is hidden on a phone without Face ID', (tester) async {
+      final bio = FakeBiometricService()
+        ..availabilityResult = BiometricAvailability.unsupported;
+      await show(tester, bio);
+
+      expect(row(), findsNothing);
     });
   });
 }

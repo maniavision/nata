@@ -368,6 +368,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendRequest => 'Send Request';
 
   @override
+  String get createRequest => 'Create Request';
+
+  @override
   String get deliveryRequest => 'Delivery Request';
 
   @override
@@ -3818,6 +3821,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faceIdEnableFailed => 'Face ID didn\'t recognise you. Try again.';
+
+  @override
+  String get profileFaceIdOn => 'On';
+
+  @override
+  String get profileFaceIdOff => 'Off';
+
+  @override
+  String get profileFaceIdOnSub => 'Your face signs you in on this phone';
+
+  @override
+  String get profileFaceIdOffSub => 'Sign in with your face on this phone';
+
+  @override
+  String get faceIdTurnedOff =>
+      'Face ID is off. Sign in with your phone number next time.';
 
   @override
   String get nameEditTooltip => 'Edit name';
