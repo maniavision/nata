@@ -395,9 +395,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packageWeight => 'Package Weight';
 
   @override
-  String get packageDimensions => 'Package Dimensions';
-
-  @override
   String get itemPhotos => 'Item Photos';
 
   @override
@@ -1352,9 +1349,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'By adding this number, you confirm the recipient agreed to get their delivery code from Nata by SMS.';
 
   @override
-  String get sizeAndWeight => 'Size and Weight';
-
-  @override
   String travelerLimitLabel(String limit) {
     return 'Traveler limit: $limit';
   }
@@ -1367,9 +1361,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weightHint => 'e.g. 0.9 kg';
-
-  @override
-  String get dimensionsHint => 'e.g. 24 × 24 × 8 cm';
 
   @override
   String get photoMustShowSeal => 'Photo must show the item clearly';
@@ -2146,9 +2137,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get packageSize => 'Package Size';
-
-  @override
   String get sizeEnvelope => 'Envelope / Document';
 
   @override
@@ -2156,9 +2144,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sizeBackpack => 'Backpack';
-
-  @override
-  String get errSizeRequired => 'Choose the package size.';
 
   @override
   String get errSizeTooBig =>
@@ -5176,33 +5161,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t restore your account. Try again.';
 
   @override
-  String get itemValueLabel => 'Estimated value';
-
-  @override
-  String get itemValueHelp =>
-      'What it would cost to replace. It sets how much the item is covered for.';
-
-  @override
-  String get itemReceiptLabel => 'Receipt (optional)';
-
-  @override
-  String get itemReceiptAdd => 'Attach a receipt or listing photo';
-
-  @override
   String get itemReceiptAttached => 'Receipt attached';
 
   @override
   String get errItemValue => 'Enter what the item is worth.';
-
-  @override
-  String errItemValueN(int n) {
-    return 'Enter what item $n is worth.';
-  }
-
-  @override
-  String declaredValueTotal(String amount) {
-    return 'Declared value: $amount';
-  }
 
   @override
   String itemValueShort(String amount) {

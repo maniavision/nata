@@ -397,9 +397,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get packageWeight => 'Peso del paquete';
 
   @override
-  String get packageDimensions => 'Dimensiones del paquete';
-
-  @override
   String get itemPhotos => 'Fotos del artículo';
 
   @override
@@ -1366,9 +1363,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Al añadir este número, confirmas que el destinatario aceptó recibir su código de entrega de Nata por SMS.';
 
   @override
-  String get sizeAndWeight => 'Tamaño y peso';
-
-  @override
   String travelerLimitLabel(String limit) {
     return 'Límite del viajero: $limit';
   }
@@ -1381,9 +1375,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get weightHint => 'p. ej. 0,9 kg';
-
-  @override
-  String get dimensionsHint => 'p. ej. 24 × 24 × 8 cm';
 
   @override
   String get photoMustShowSeal => 'La foto debe mostrar bien el artículo';
@@ -2167,9 +2158,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get packageSize => 'Tamaño del paquete';
-
-  @override
   String get sizeEnvelope => 'Sobre / Documento';
 
   @override
@@ -2177,9 +2165,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sizeBackpack => 'Mochila';
-
-  @override
-  String get errSizeRequired => 'Elige el tamaño del paquete.';
 
   @override
   String get errSizeTooBig =>
@@ -5222,33 +5207,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo restaurar tu cuenta. Inténtalo de nuevo.';
 
   @override
-  String get itemValueLabel => 'Valor estimado';
-
-  @override
-  String get itemValueHelp =>
-      'Lo que costaría reemplazarlo. Es el importe por el que el artículo está cubierto.';
-
-  @override
-  String get itemReceiptLabel => 'Recibo (opcional)';
-
-  @override
-  String get itemReceiptAdd => 'Adjunta un recibo o una foto del anuncio';
-
-  @override
   String get itemReceiptAttached => 'Recibo adjunto';
 
   @override
   String get errItemValue => 'Indica cuánto vale el artículo.';
-
-  @override
-  String errItemValueN(int n) {
-    return 'Indica cuánto vale el artículo $n.';
-  }
-
-  @override
-  String declaredValueTotal(String amount) {
-    return 'Valor declarado: $amount';
-  }
 
   @override
   String itemValueShort(String amount) {

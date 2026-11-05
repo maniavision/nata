@@ -838,12 +838,6 @@ abstract class AppLocalizations {
   /// **'Package Weight'**
   String get packageWeight;
 
-  /// No description provided for @packageDimensions.
-  ///
-  /// In en, this message translates to:
-  /// **'Package Dimensions'**
-  String get packageDimensions;
-
   /// No description provided for @itemPhotos.
   ///
   /// In en, this message translates to:
@@ -2570,12 +2564,6 @@ abstract class AppLocalizations {
   /// **'By adding this number, you confirm the recipient agreed to get their delivery code from Nata by SMS.'**
   String get recipientSmsConsent;
 
-  /// No description provided for @sizeAndWeight.
-  ///
-  /// In en, this message translates to:
-  /// **'Size and Weight'**
-  String get sizeAndWeight;
-
   /// No description provided for @travelerLimitLabel.
   ///
   /// In en, this message translates to:
@@ -2599,12 +2587,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'e.g. 0.9 kg'**
   String get weightHint;
-
-  /// No description provided for @dimensionsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. 24 × 24 × 8 cm'**
-  String get dimensionsHint;
 
   /// No description provided for @photoMustShowSeal.
   ///
@@ -3920,12 +3902,6 @@ abstract class AppLocalizations {
   /// **'Send Request · {price}'**
   String sendRequestWithPrice(String price);
 
-  /// No description provided for @packageSize.
-  ///
-  /// In en, this message translates to:
-  /// **'Package Size'**
-  String get packageSize;
-
   /// No description provided for @sizeEnvelope.
   ///
   /// In en, this message translates to:
@@ -3943,12 +3919,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backpack'**
   String get sizeBackpack;
-
-  /// No description provided for @errSizeRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose the package size.'**
-  String get errSizeRequired;
 
   /// No description provided for @errSizeTooBig.
   ///
@@ -9008,30 +8978,6 @@ abstract class AppLocalizations {
   /// **'Couldn\'t restore your account. Try again.'**
   String get restoreAccountFailed;
 
-  /// No description provided for @itemValueLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated value'**
-  String get itemValueLabel;
-
-  /// No description provided for @itemValueHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'What it would cost to replace. It sets how much the item is covered for.'**
-  String get itemValueHelp;
-
-  /// No description provided for @itemReceiptLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Receipt (optional)'**
-  String get itemReceiptLabel;
-
-  /// No description provided for @itemReceiptAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Attach a receipt or listing photo'**
-  String get itemReceiptAdd;
-
   /// No description provided for @itemReceiptAttached.
   ///
   /// In en, this message translates to:
@@ -9043,18 +8989,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter what the item is worth.'**
   String get errItemValue;
-
-  /// No description provided for @errItemValueN.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter what item {n} is worth.'**
-  String errItemValueN(int n);
-
-  /// No description provided for @declaredValueTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'Declared value: {amount}'**
-  String declaredValueTotal(String amount);
 
   /// No description provided for @itemValueShort.
   ///
