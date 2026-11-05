@@ -20,13 +20,16 @@
 # with pdfrx when upgrading Flutter.
 #
 # Versions (see docs/RELEASING.md):
-#   * Version name (1.2.3): pubspec.yaml. Release with scripts/release.sh,
-#     which raises it, commits and tags v1.2.3. A tag build fails if the tag
-#     and pubspec.yaml disagree.
 #   * Build number: always one more than the highest already in the store
 #     (TestFlight + App Store for iOS, every Google Play track for Android),
 #     and never below Codemagic's own counter. So testing and production
 #     builds never clash, and a hand-uploaded build is accounted for.
+#   * Version name: MAJOR.MINOR from pubspec.yaml, then the build number
+#     (1.0.29, then 1.0.30...). So every store build, production included,
+#     raises the version by itself; nothing is committed back. iOS and
+#     Android count separately, so their versions can differ. Raise MAJOR or
+#     MINOR with scripts/release.sh. A tag build fails if the tag and
+#     pubspec.yaml disagree.
 
 definitions:
   ios_bundle_id: &ios_bundle_id com.nata.nataApp
@@ -90,13 +93,16 @@ definitions:
         AS=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
         LATEST=$(( ${TF:-0} > ${AS:-0} ? ${TF:-0} : ${AS:-0} ))
         NEXT=$(( LATEST + 1 > BUILD_NUMBER ? LATEST + 1 : BUILD_NUMBER ))
-        echo "Latest in App Store Connect: $LATEST -> building $NEXT"
+        BASE=$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+)\.([0-9]+).*/\1.\2/')
+        echo "Latest in App Store Connect: $LATEST -> building $BASE.$NEXT ($NEXT)"
         echo "NEXT_BUILD_NUMBER=$NEXT" >> "$CM_ENV"
+        echo "NEXT_BUILD_NAME=$BASE.$NEXT" >> "$CM_ENV"
 
     - &ios_build
       name: Build IPA
       script: |
         flutter build ipa --release \
+          --build-name=$NEXT_BUILD_NAME \
           --build-number=$NEXT_BUILD_NUMBER \
           --export-options-plist=/Users/builder/export_options.plist
 
@@ -123,13 +129,16 @@ definitions:
         LATEST=$(google-play get-latest-build-number \
           --package-name "$PACKAGE_NAME" 2>/dev/null || echo 0)
         NEXT=$(( ${LATEST:-0} + 1 > BUILD_NUMBER ? ${LATEST:-0} + 1 : BUILD_NUMBER ))
-        echo "Latest on Google Play: ${LATEST:-0} -> building $NEXT"
+        BASE=$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+)\.([0-9]+).*/\1.\2/')
+        echo "Latest on Google Play: ${LATEST:-0} -> building $BASE.$NEXT ($NEXT)"
         echo "NEXT_BUILD_NUMBER=$NEXT" >> "$CM_ENV"
+        echo "NEXT_BUILD_NAME=$BASE.$NEXT" >> "$CM_ENV"
 
     - &android_build
       name: Build App Bundle (AAB)
       script: |
         flutter build appbundle --release \
+          --build-name=$NEXT_BUILD_NAME \
           --build-number=$NEXT_BUILD_NUMBER
 
 workflows:
