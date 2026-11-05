@@ -2329,7 +2329,7 @@
   "pickTraveler": "Pick {name}",
   "@pickTraveler": {"placeholders": {"name": {"type": "String"}}},
   "confirmDeliveredTitle": "Item delivered?",
-  "confirmDeliveredBody": "Confirm only once {name} has handed over your item. This closes the delivery.",
+  "confirmDeliveredBody": "Confirm only once {name} has delivered your item. This closes the delivery.",
   "@confirmDeliveredBody": {"placeholders": {"name": {"type": "String"}}},
   "confirmDelivered": "Confirm delivery",
   "cancelFlatPaidBody": "The chat with the traveler is already open, so Nata's fee of {fee} isn't refunded. Cancel anyway?",

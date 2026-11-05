@@ -9239,7 +9239,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmDeliveredBody.
   ///
   /// In en, this message translates to:
-  /// **'Confirm only once {name} has handed over your item. This closes the delivery.'**
+  /// **'Confirm only once {name} has delivered your item. This closes the delivery.'**
   String confirmDeliveredBody(String name);
 
   /// No description provided for @confirmDelivered.
