@@ -1313,6 +1313,7 @@
   "nextWaitPayment": "Attendre le paiement de l'expéditeur",
   "nextPickUp": "Récupérer l'article",
   "nextDeliver": "Livrer et saisir le code",
+  "nextDeliverFlat": "Livrer l'article",
   "nextDone": "Paiement versé",
   "viewRequest": "Voir la demande",
   "requestAcceptedSnack": "Demande acceptée. L'expéditeur a 24 heures pour payer.",
@@ -1772,8 +1773,6 @@
   "notifRefundTitle": "Remboursement envoyé",
   "notifRefundBody": "Votre remboursement de {amount} est en route.",
 
-  "viewCode": "Voir le code",
-  "chatCodeNote": "Votre destinataire donne ce code au voyageur lors de la remise. Ne le partagez pas avant.",
   "close": "Fermer",
   "supportTitle": "Support",
   "supportSubtitle": "Équipe Nata · Signalements, blocages et paiements échoués",

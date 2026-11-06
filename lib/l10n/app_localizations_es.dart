@@ -2833,6 +2833,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nextDeliver => 'Entregar e introducir el código';
 
   @override
+  String get nextDeliverFlat => 'Entregar el artículo';
+
+  @override
   String get nextDone => 'Pago liberado';
 
   @override
@@ -4006,13 +4009,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String notifRefundBody(String amount) {
     return 'Tu reembolso de $amount está en camino.';
   }
-
-  @override
-  String get viewCode => 'Ver código';
-
-  @override
-  String get chatCodeNote =>
-      'Tu destinatario le da este código al viajero en la entrega. No lo compartas antes.';
 
   @override
   String get close => 'Cerrar';

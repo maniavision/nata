@@ -1313,6 +1313,7 @@
   "nextWaitPayment": "Esperar el pago del remitente",
   "nextPickUp": "Recoger el artículo",
   "nextDeliver": "Entregar e introducir el código",
+  "nextDeliverFlat": "Entregar el artículo",
   "nextDone": "Pago liberado",
   "viewRequest": "Ver la solicitud",
   "requestAcceptedSnack": "Solicitud aceptada. El remitente tiene 24 horas para pagar.",
@@ -1772,8 +1773,6 @@
   "notifRefundTitle": "Reembolso enviado",
   "notifRefundBody": "Tu reembolso de {amount} está en camino.",
 
-  "viewCode": "Ver código",
-  "chatCodeNote": "Tu destinatario le da este código al viajero en la entrega. No lo compartas antes.",
   "close": "Cerrar",
   "supportTitle": "Soporte",
   "supportSubtitle": "Equipo de Nata · Informes, bloqueos y pagos fallidos",
