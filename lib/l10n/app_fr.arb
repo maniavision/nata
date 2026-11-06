@@ -27,6 +27,7 @@
   "currEUR": "Euro",
   "currGBP": "Livre sterling",
   "currXOF": "Franc CFA",
+  "currLocal": "Monnaie locale",
 
   "signIn": "Se connecter",
   "signUp": "S'inscrire",

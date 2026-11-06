@@ -56,8 +56,17 @@ void main() {
       expect(AppCurrency.fromCode('XOF'), AppCurrency.xof);
     });
 
-    test('fromCode defaults to USD for unknown code', () {
-      expect(AppCurrency.fromCode('ZZZ'), AppCurrency.usd);
+    test('fromCode takes any local currency code', () {
+      final naira = AppCurrency.fromCode('ngn');
+      expect(naira.code, 'NGN');
+      expect(naira, AppCurrency.fromCode('NGN'));
+      expect(naira.display, 'NGN');
+      expect(AppCurrency.usd.display, r'USD ($)');
+    });
+
+    test('fromCode defaults to USD for what is not a code', () {
+      expect(AppCurrency.fromCode('ZZ'), AppCurrency.usd);
+      expect(AppCurrency.fromCode('N1N'), AppCurrency.usd);
       expect(AppCurrency.fromCode(''), AppCurrency.usd);
     });
   });
