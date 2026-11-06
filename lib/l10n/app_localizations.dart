@@ -6383,13 +6383,13 @@ abstract class AppLocalizations {
   /// No description provided for @costEstimateSub.
   ///
   /// In en, this message translates to:
-  /// **'A fair price to suggest to a traveler'**
+  /// **'Work out a fair price for a delivery'**
   String get costEstimateSub;
 
   /// No description provided for @costEstimateIntro.
   ///
   /// In en, this message translates to:
-  /// **'Pick where the item leaves from, where it goes and how much it weighs to see a fair price for the traveler.'**
+  /// **'Pick where the item leaves from, where it goes and how much it weighs to see a fair price for the delivery.'**
   String get costEstimateIntro;
 
   /// No description provided for @costEstimateFrom.
@@ -6449,7 +6449,7 @@ abstract class AppLocalizations {
   /// No description provided for @costEstimateResult.
   ///
   /// In en, this message translates to:
-  /// **'Suggested price for the traveler'**
+  /// **'Suggested delivery price'**
   String get costEstimateResult;
 
   /// No description provided for @costEstimateDetails.
@@ -6461,7 +6461,7 @@ abstract class AppLocalizations {
   /// No description provided for @costEstimateGuide.
   ///
   /// In en, this message translates to:
-  /// **'This is only a guide to help you come up with a fair price for the traveler. You don\'t have to use it: you and the traveler agree on the price together in the chat. Nata\'s fee isn\'t included.'**
+  /// **'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata\'s fee isn\'t included.'**
   String get costEstimateGuide;
 
   /// No description provided for @costEstimateLocal.

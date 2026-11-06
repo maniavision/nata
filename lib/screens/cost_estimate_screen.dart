@@ -16,9 +16,9 @@ import 'route_alerts_screen.dart' show RoutePlacePicker, formatKg;
 /// The weight's unit on the estimate page.
 enum WeightUnit { kg, lb }
 
-/// "Estimate a delivery", from Profile: a fair price to suggest to the
-/// traveler for a route and a weight. Nata's fee is left out, and nobody has
-/// to use the price: sender and traveler agree it together in the chat.
+/// "Estimate a delivery", from Profile: a fair price for a route and a
+/// weight, to help the sender and the traveler agree on one. Nata's fee is
+/// left out, and nobody has to use it: they agree the price in the chat.
 ///
 /// Not designed in Sleek yet (signed out); it follows the Route Alerts sheet.
 class CostEstimateScreen extends StatefulWidget {

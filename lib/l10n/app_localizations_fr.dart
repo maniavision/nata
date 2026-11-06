@@ -3716,11 +3716,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get costEstimate => 'Estimer une livraison';
 
   @override
-  String get costEstimateSub => 'Un prix juste à proposer à un voyageur';
+  String get costEstimateSub => 'Trouver un prix juste pour une livraison';
 
   @override
   String get costEstimateIntro =>
-      'Choisissez d\'où part l\'article, où il va et combien il pèse pour voir un prix juste pour le voyageur.';
+      'Choisissez d\'où part l\'article, où il va et combien il pèse pour voir un prix juste pour la livraison.';
 
   @override
   String get costEstimateFrom => 'Départ';
@@ -3752,7 +3752,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Choisissez les deux villes et saisissez un poids pour voir l\'estimation.';
 
   @override
-  String get costEstimateResult => 'Prix suggéré pour le voyageur';
+  String get costEstimateResult => 'Prix de livraison suggéré';
 
   @override
   String costEstimateDetails(String km, String weight) {
@@ -3761,7 +3761,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get costEstimateGuide =>
-      'Ce n\'est qu\'un repère pour vous aider à trouver un prix juste pour le voyageur. Vous n\'êtes pas obligé de l\'utiliser : vous fixez le prix ensemble dans le chat. Les frais Nata ne sont pas inclus.';
+      'Ce n\'est qu\'un repère pour aider l\'expéditeur et le voyageur à trouver ensemble un prix juste. Aucun de vous n\'est obligé de l\'utiliser : vous fixez le prix dans le chat. Les frais Nata ne sont pas inclus.';
 
   @override
   String costEstimateLocal(int percent) {

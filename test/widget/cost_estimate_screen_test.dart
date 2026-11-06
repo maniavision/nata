@@ -75,7 +75,12 @@ void main() {
       find.text('Choose both cities and enter a weight to see the estimate.'),
       findsOneWidget,
     );
-    expect(find.textContaining("You don't have to use it"), findsOneWidget);
+    expect(
+      find.textContaining(
+        'help the sender and the traveler come up with a fair price',
+      ),
+      findsOneWidget,
+    );
     expect(find.textContaining("Nata's fee isn't included"), findsOneWidget);
     expect(find.byKey(const ValueKey('estimate-price')), findsNothing);
   });
@@ -234,7 +239,7 @@ void main() {
     await open(tester, locale: const Locale('fr'));
     expect(find.text('Estimer une livraison'), findsOneWidget);
     expect(
-      find.textContaining("Vous n'êtes pas obligé de l'utiliser"),
+      find.textContaining("Aucun de vous n'est obligé de l'utiliser"),
       findsOneWidget,
     );
   });

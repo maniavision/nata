@@ -3651,11 +3651,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get costEstimate => 'Estimate a delivery';
 
   @override
-  String get costEstimateSub => 'A fair price to suggest to a traveler';
+  String get costEstimateSub => 'Work out a fair price for a delivery';
 
   @override
   String get costEstimateIntro =>
-      'Pick where the item leaves from, where it goes and how much it weighs to see a fair price for the traveler.';
+      'Pick where the item leaves from, where it goes and how much it weighs to see a fair price for the delivery.';
 
   @override
   String get costEstimateFrom => 'From';
@@ -3687,7 +3687,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose both cities and enter a weight to see the estimate.';
 
   @override
-  String get costEstimateResult => 'Suggested price for the traveler';
+  String get costEstimateResult => 'Suggested delivery price';
 
   @override
   String costEstimateDetails(String km, String weight) {
@@ -3696,7 +3696,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get costEstimateGuide =>
-      'This is only a guide to help you come up with a fair price for the traveler. You don\'t have to use it: you and the traveler agree on the price together in the chat. Nata\'s fee isn\'t included.';
+      'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata\'s fee isn\'t included.';
 
   @override
   String costEstimateLocal(int percent) {
