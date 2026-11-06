@@ -3704,6 +3704,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get priceTipTitle => 'Agree on a fair price';
+
+  @override
+  String get priceTipSender =>
+      'Not sure what to offer for this delivery? The cost calculator suggests a fair price from the distance and the weight. It\'s only a guide: you and the traveler decide together.';
+
+  @override
+  String get priceTipTraveler =>
+      'Not sure what to charge for this delivery? The cost calculator suggests a fair price from the distance and the weight. It\'s only a guide: you and the sender decide together.';
+
+  @override
+  String get priceTipOpen => 'Open the cost calculator';
+
+  @override
   String get routeAlertsIntro =>
       'Save the routes you often send on. When a verified traveler posts a trip on one of them, we\'ll notify you.';
 

@@ -3769,6 +3769,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get priceTipTitle => 'Fixez un prix juste';
+
+  @override
+  String get priceTipSender =>
+      'Vous ne savez pas combien proposer pour cette livraison ? Le calculateur de coût suggère un prix juste selon la distance et le poids. Ce n\'est qu\'un repère : vous décidez ensemble avec le voyageur.';
+
+  @override
+  String get priceTipTraveler =>
+      'Vous ne savez pas combien demander pour cette livraison ? Le calculateur de coût suggère un prix juste selon la distance et le poids. Ce n\'est qu\'un repère : vous décidez ensemble avec l\'expéditeur.';
+
+  @override
+  String get priceTipOpen => 'Ouvrir le calculateur';
+
+  @override
   String get routeAlertsIntro =>
       'Enregistrez les trajets sur lesquels vous envoyez souvent. Quand un voyageur vérifié publie un voyage sur l\'un d\'eux, nous vous prévenons.';
 
