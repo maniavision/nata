@@ -621,8 +621,6 @@ class _TripsScreenState extends State<TripsScreen> {
                     l.maxWeightLabel,
                   ),
                   const SizedBox(width: 8),
-                  _statTile(l.tripSizeShort(t.maxSize), l.maxSizeLabel),
-                  const SizedBox(width: 8),
                   _statTile(
                     '${t.requestsCount}',
                     l.requests,

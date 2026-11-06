@@ -742,23 +742,17 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Deliver in 1 day} other{Deliver in {count} days}}'**
   String deliverInDays(int count);
 
-  /// No description provided for @itemSizeAndWeight.
+  /// No description provided for @weightLimitAccepted.
   ///
   /// In en, this message translates to:
-  /// **'ITEM SIZE & WEIGHT LIMITS ACCEPTED'**
-  String get itemSizeAndWeight;
+  /// **'WEIGHT LIMIT ACCEPTED'**
+  String get weightLimitAccepted;
 
   /// No description provided for @weightLimit.
   ///
   /// In en, this message translates to:
   /// **'Weight Limit'**
   String get weightLimit;
-
-  /// No description provided for @sizeLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'Size Limit'**
-  String get sizeLimit;
 
   /// No description provided for @checkBaggage.
   ///
@@ -1450,12 +1444,6 @@ abstract class AppLocalizations {
   /// **'Max Weight'**
   String get maxWeight;
 
-  /// No description provided for @maxItemSize.
-  ///
-  /// In en, this message translates to:
-  /// **'Max Item Size'**
-  String get maxItemSize;
-
   /// No description provided for @howMatchingWorks.
   ///
   /// In en, this message translates to:
@@ -2067,12 +2055,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Max weight'**
   String get maxWeightLabel;
-
-  /// No description provided for @maxSizeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Max size'**
-  String get maxSizeLabel;
 
   /// No description provided for @noUpcomingTrips.
   ///
@@ -4753,12 +4735,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Escrow funded'**
   String get escrowFunded;
-
-  /// No description provided for @maxDims.
-  ///
-  /// In en, this message translates to:
-  /// **'Max {dims}'**
-  String maxDims(String dims);
 
   /// No description provided for @errRequestNotPayable.
   ///
@@ -8702,24 +8678,6 @@ abstract class AppLocalizations {
   /// **'Don\'t share your handover code in the chat or before the parcel is in your hands. Always meet {name} in a public place.'**
   String recipientSafetyNote(String name);
 
-  /// No description provided for @customSizeOption.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom size…'**
-  String get customSizeOption;
-
-  /// No description provided for @customSizeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your max item size'**
-  String get customSizeTitle;
-
-  /// No description provided for @customSizeBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The largest parcel you can take, in centimetres.'**
-  String get customSizeBody;
-
   /// No description provided for @lengthCm.
   ///
   /// In en, this message translates to:
@@ -8737,18 +8695,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Height'**
   String get heightCm;
-
-  /// No description provided for @customSizeInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter each size in cm, from 1 to 300.'**
-  String get customSizeInvalid;
-
-  /// No description provided for @customSizeSave.
-  ///
-  /// In en, this message translates to:
-  /// **'Use this size'**
-  String get customSizeSave;
 
   /// No description provided for @sizeCustom.
   ///

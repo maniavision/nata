@@ -154,13 +154,6 @@ class Trip {
     return active &&
         !arrival.isBefore(DateTime(today.year, today.month, today.day));
   }
-
-  /// "Envelope / Document" -> "Envelope", "Shoebox (30×20×15 cm)" -> "Shoebox".
-  String get sizeShortLabel {
-    final s = (maxSize ?? '').trim();
-    if (s.isEmpty) return '—';
-    return s.split(RegExp(r'[\s/(]')).first;
-  }
 }
 
 /// A receipt (PDF or image) the traveler picked, before it is uploaded.
@@ -200,7 +193,6 @@ class TripDraft {
   final double price;
   final String currency;
   final double maxWeightKg;
-  final String maxSize;
 
   /// Storage path of the uploaded receipt.
   final String ticketReceiptPath;
@@ -234,7 +226,6 @@ class TripDraft {
     required this.price,
     required this.currency,
     required this.maxWeightKg,
-    required this.maxSize,
     required this.ticketReceiptPath,
     this.ticketSharedPath,
     this.bookingReference,
@@ -253,7 +244,6 @@ class TripDraft {
     'price': price,
     'currency': currency,
     'max_weight_kg': maxWeightKg,
-    'max_size': maxSize,
     'ticket_receipt_path': ticketReceiptPath,
     'ticket_shared_path': ticketSharedPath,
     // null clears the reference when a traveler removes it while editing.

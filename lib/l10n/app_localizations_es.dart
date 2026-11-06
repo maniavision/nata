@@ -349,13 +349,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get itemSizeAndWeight => 'LÍMITES DE TAMAÑO Y PESO ACEPTADOS';
+  String get weightLimitAccepted => 'LÍMITE DE PESO ACEPTADO';
 
   @override
   String get weightLimit => 'Límite de peso';
-
-  @override
-  String get sizeLimit => 'Límite de tamaño';
 
   @override
   String get checkBaggage => 'Espacio en equipaje facturado';
@@ -732,9 +729,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get maxWeight => 'Peso máximo';
 
   @override
-  String get maxItemSize => 'Tamaño máximo del artículo';
-
-  @override
   String get howMatchingWorks => 'Cómo funciona la búsqueda';
 
   @override
@@ -1061,9 +1055,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get maxWeightLabel => 'Peso máx.';
-
-  @override
-  String get maxSizeLabel => 'Tamaño máx.';
 
   @override
   String get noUpcomingTrips => 'No hay viajes próximos';
@@ -2711,11 +2702,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get escrowFunded => 'Depósito realizado';
-
-  @override
-  String maxDims(String dims) {
-    return 'Máx. $dims';
-  }
 
   @override
   String get errRequestNotPayable => 'Esta solicitud ya no se puede pagar.';
@@ -5045,16 +5031,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get customSizeOption => 'Otro tamaño…';
-
-  @override
-  String get customSizeTitle => 'Tamaño máx. del artículo';
-
-  @override
-  String get customSizeBody =>
-      'El paquete más grande que puedes llevar, en centímetros.';
-
-  @override
   String get lengthCm => 'Largo';
 
   @override
@@ -5062,12 +5038,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get heightCm => 'Alto';
-
-  @override
-  String get customSizeInvalid => 'Escribe cada medida en cm, de 1 a 300.';
-
-  @override
-  String get customSizeSave => 'Usar este tamaño';
 
   @override
   String get sizeCustom => 'Personalizado';

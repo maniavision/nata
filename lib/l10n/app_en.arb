@@ -125,9 +125,8 @@
       }
     }
   },
-  "itemSizeAndWeight": "ITEM SIZE & WEIGHT LIMITS ACCEPTED",
+  "weightLimitAccepted": "WEIGHT LIMIT ACCEPTED",
   "weightLimit": "Weight Limit",
-  "sizeLimit": "Size Limit",
   "checkBaggage": "Checked baggage space",
   "maxDimensions": "Max 30 × 20 × 15 cm",
   "deliveryHistoryAndReviews": "DELIVERY HISTORY & REVIEWS",
@@ -265,7 +264,6 @@
   "replaceFlightReceipt": "Replace Flight Receipt (PDF / Image)",
   "luggageCapacity": "LUGGAGE CAPACITY YOU CAN CARRY",
   "maxWeight": "Max Weight",
-  "maxItemSize": "Max Item Size",
   "howMatchingWorks": "How search matching works",
   "howMatchingBody": "Once saved, your trip will appear in search results for senders looking for this route and date. Senders will only request items within your specified capacity.",
   "saveAndPublish": "Save & Publish Trip",
@@ -391,7 +389,6 @@
   "editTrip": "Edit Trip",
   "viewRequests": "View Requests",
   "maxWeightLabel": "Max weight",
-  "maxSizeLabel": "Max size",
   "noUpcomingTrips": "No upcoming trips",
   "noPastTrips": "No past trips yet",
   "addTripPrompt": "Add a trip to start earning from your luggage space.",
@@ -1259,14 +1256,6 @@
   "messageLocked": "Message",
   "messageUnlocksAfterPayment": "Messaging unlocks after payment.",
   "escrowFunded": "Escrow funded",
-  "maxDims": "Max {dims}",
-  "@maxDims": {
-    "placeholders": {
-      "dims": {
-        "type": "String"
-      }
-    }
-  },
 
   "errRequestNotPayable": "This request can no longer be paid.",
   "step1ValidateTicket": "STEP 1 · VALIDATE FLIGHT TICKET",
@@ -2230,14 +2219,9 @@
   "@notifRefundToBalanceBody": {"placeholders": {"amount": {"type": "String"}}},
   "recipientSafetyNote": "Don't share your handover code in the chat or before the parcel is in your hands. Always meet {name} in a public place.",
   "@recipientSafetyNote": {"placeholders": {"name": {"type": "String"}}},
-  "customSizeOption": "Custom size…",
-  "customSizeTitle": "Your max item size",
-  "customSizeBody": "The largest parcel you can take, in centimetres.",
   "lengthCm": "Length",
   "widthCm": "Width",
   "heightCm": "Height",
-  "customSizeInvalid": "Enter each size in cm, from 1 to 300.",
-  "customSizeSave": "Use this size",
   "sizeCustom": "Custom",
   "photoShownOnceAccepted": "Photo shown once they accept your request",
   "feedbackTitle": "Thanks! One more thing",

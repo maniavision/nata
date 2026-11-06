@@ -125,9 +125,8 @@
       }
     }
   },
-  "itemSizeAndWeight": "LÍMITES DE TAMAÑO Y PESO ACEPTADOS",
+  "weightLimitAccepted": "LÍMITE DE PESO ACEPTADO",
   "weightLimit": "Límite de peso",
-  "sizeLimit": "Límite de tamaño",
   "checkBaggage": "Espacio en equipaje facturado",
   "maxDimensions": "Máx. 30 × 20 × 15 cm",
   "deliveryHistoryAndReviews": "HISTORIAL DE ENTREGAS Y RESEÑAS",
@@ -256,7 +255,6 @@
   "replaceFlightReceipt": "Reemplazar recibo de vuelo (PDF / Imagen)",
   "luggageCapacity": "CAPACIDAD DE EQUIPAJE QUE PUEDES LLEVAR",
   "maxWeight": "Peso máximo",
-  "maxItemSize": "Tamaño máximo del artículo",
   "howMatchingWorks": "Cómo funciona la búsqueda",
   "howMatchingBody": "Una vez guardado, tu viaje aparecerá en los resultados de búsqueda para remitentes que buscan esta ruta y fecha.",
   "saveAndPublish": "Guardar y publicar viaje",
@@ -382,7 +380,6 @@
   "editTrip": "Editar viaje",
   "viewRequests": "Ver solicitudes",
   "maxWeightLabel": "Peso máx.",
-  "maxSizeLabel": "Tamaño máx.",
   "noUpcomingTrips": "No hay viajes próximos",
   "noPastTrips": "Aún no hay viajes pasados",
   "addTripPrompt": "Añade un viaje para empezar a ganar con el espacio de tu equipaje.",
@@ -1237,14 +1234,6 @@
   "messageLocked": "Mensaje",
   "messageUnlocksAfterPayment": "Los mensajes se desbloquean después del pago.",
   "escrowFunded": "Depósito realizado",
-  "maxDims": "Máx. {dims}",
-  "@maxDims": {
-    "placeholders": {
-      "dims": {
-        "type": "String"
-      }
-    }
-  },
 
   "errRequestNotPayable": "Esta solicitud ya no se puede pagar.",
   "step1ValidateTicket": "PASO 1 · VERIFICAR EL BILLETE DE AVIÓN",
@@ -2078,14 +2067,9 @@
   "notifRefundToBalanceTitle": "Reembolso añadido a tu saldo Nata",
   "notifRefundToBalanceBody": "{amount} de tu solicitud cancelada están en tu saldo Nata.",
   "recipientSafetyNote": "No compartas tu código de entrega en el chat ni antes de tener el paquete en tus manos. Reúnete siempre con {name} en un lugar público.",
-  "customSizeOption": "Otro tamaño…",
-  "customSizeTitle": "Tamaño máx. del artículo",
-  "customSizeBody": "El paquete más grande que puedes llevar, en centímetros.",
   "lengthCm": "Largo",
   "widthCm": "Ancho",
   "heightCm": "Alto",
-  "customSizeInvalid": "Escribe cada medida en cm, de 1 a 300.",
-  "customSizeSave": "Usar este tamaño",
   "sizeCustom": "Personalizado",
   "photoShownOnceAccepted": "La foto se verá cuando acepte tu solicitud",
   "feedbackTitle": "¡Gracias! Una cosa más",

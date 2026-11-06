@@ -777,10 +777,6 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Up to 5.0 kg').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('add-trip-size')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Backpack size').last);
-      await tester.pumpAndSettle();
 
       await save(tester);
 
@@ -793,15 +789,15 @@ void main() {
       expect(d.price, 0);
       expect(d.currency, 'USD');
       expect(d.maxWeightKg, 5.0);
-      expect(d.maxSize, 'Backpack size');
+      // No size is asked for any more.
+      expect(find.byKey(const ValueKey('add-trip-size')), findsNothing);
+      expect(d.toInsertJson('u').containsKey('max_size'), isFalse);
       expect(d.ticketReceiptPath, FakeTripService.uploadedPath);
       // And it is published straight away.
       expect(d.toInsertJson('u')['status'], 'live');
     });
 
-    testWidgets('a traveler can take up to 25 kg and type their own size', (
-      tester,
-    ) async {
+    testWidgets('a traveler can take up to 25 kg', (tester) async {
       await pump(tester);
       await tapKey(tester, 'add-trip-departure-country');
       await tapKey(tester, 'add-trip-arrival-country');
@@ -812,44 +808,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Up to 25.0 kg').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('add-trip-size')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Custom size…').last);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('custom-size-dialog')), findsOneWidget);
-
-      // Every side is needed.
-      await tester.enterText(find.byKey(const ValueKey('custom-size-0')), '50');
-      await tester.tap(find.byKey(const ValueKey('custom-size-save')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('custom-size-error')), findsOneWidget);
-
-      await tester.enterText(find.byKey(const ValueKey('custom-size-1')), '40');
-      await tester.enterText(find.byKey(const ValueKey('custom-size-2')), '20');
-      await tester.tap(find.byKey(const ValueKey('custom-size-save')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('custom-size-dialog')), findsNothing);
-      expect(find.text('Custom (50×40×20 cm)'), findsOneWidget);
 
       await save(tester);
 
-      final d = service.created.single;
-      expect(d.maxWeightKg, 25.0);
-      expect(d.maxSize, 'Custom (50×40×20 cm)');
-    });
-
-    testWidgets('cancelling the custom size keeps the size chosen before', (
-      tester,
-    ) async {
-      await pump(tester);
-      await tester.tap(find.byKey(const ValueKey('add-trip-size')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Custom size…').last);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Shoebox (30×20×15 cm)'), findsOneWidget);
+      expect(service.created.single.maxWeightKg, 25.0);
     });
 
     testWidgets('uses the user\'s preferred currency', (tester) async {
@@ -1154,14 +1116,19 @@ void main() {
       expect(service.updated.single.draft.maxWeightKg, 7.5);
     });
 
-    testWidgets('a size that is not in the list is preserved', (tester) async {
+    testWidgets('saving leaves the size of an older trip alone', (
+      tester,
+    ) async {
       trip = sampleMyTrip(maxSize: 'Large suitcase');
       await pump(tester, trip: trip);
 
-      expect(find.text('Large suitcase'), findsOneWidget);
+      expect(find.text('Large suitcase'), findsNothing);
 
       await save(tester);
-      expect(service.updated.single.draft.maxSize, 'Large suitcase');
+      expect(
+        service.updated.single.draft.toInsertJson('u').containsKey('max_size'),
+        isFalse,
+      );
     });
   });
 

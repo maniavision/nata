@@ -135,8 +135,8 @@ void main() {
       expect(find.text('USD 35.00'), findsNothing);
       expect(find.text('Up to 3.0 kg'), findsOneWidget);
       // The size over its dimensions, as in the design.
-      expect(find.text('Shoebox'), findsOneWidget);
-      expect(find.text('Max 30×20×15 cm'), findsOneWidget);
+      expect(find.text('Shoebox'), findsNothing);
+      expect(find.byKey(const ValueKey('capacity-size')), findsNothing);
     });
 
     testWidgets('renders send request button', (tester) async {
@@ -209,7 +209,7 @@ void main() {
       await pump(tester);
 
       expect(find.text('TRAVEL DATE AND ROUTE'), findsOneWidget);
-      expect(find.text('ITEM SIZE & WEIGHT LIMITS ACCEPTED'), findsOneWidget);
+      expect(find.text('WEIGHT LIMIT ACCEPTED'), findsOneWidget);
       expect(find.text('DELIVERY HISTORY & REVIEWS'), findsOneWidget);
       expect(find.text('Item Requirement'), findsNothing);
     });

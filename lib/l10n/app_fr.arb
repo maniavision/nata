@@ -125,9 +125,8 @@
       }
     }
   },
-  "itemSizeAndWeight": "LIMITES DE TAILLE ET DE POIDS ACCEPTÉES",
+  "weightLimitAccepted": "LIMITE DE POIDS ACCEPTÉE",
   "weightLimit": "Limite de poids",
-  "sizeLimit": "Limite de taille",
   "checkBaggage": "Espace en bagage enregistré",
   "maxDimensions": "Max. 30 × 20 × 15 cm",
   "deliveryHistoryAndReviews": "HISTORIQUE DES LIVRAISONS ET AVIS",
@@ -256,7 +255,6 @@
   "replaceFlightReceipt": "Remplacer le reçu de vol (PDF / Image)",
   "luggageCapacity": "CAPACITÉ DE BAGAGES QUE VOUS POUVEZ TRANSPORTER",
   "maxWeight": "Poids maximum",
-  "maxItemSize": "Taille maximale de l'article",
   "howMatchingWorks": "Comment fonctionne la mise en relation",
   "howMatchingBody": "Une fois enregistré, votre voyage apparaîtra dans les résultats de recherche pour les expéditeurs cherchant cet itinéraire et cette date.",
   "saveAndPublish": "Enregistrer et publier le voyage",
@@ -382,7 +380,6 @@
   "editTrip": "Modifier le trajet",
   "viewRequests": "Voir les demandes",
   "maxWeightLabel": "Poids max.",
-  "maxSizeLabel": "Taille max.",
   "noUpcomingTrips": "Aucun trajet à venir",
   "noPastTrips": "Aucun trajet passé",
   "addTripPrompt": "Ajoutez un trajet pour rentabiliser l'espace de vos bagages.",
@@ -1237,14 +1234,6 @@
   "messageLocked": "Message",
   "messageUnlocksAfterPayment": "La messagerie se débloque après le paiement.",
   "escrowFunded": "Séquestre financé",
-  "maxDims": "Max {dims}",
-  "@maxDims": {
-    "placeholders": {
-      "dims": {
-        "type": "String"
-      }
-    }
-  },
 
   "errRequestNotPayable": "Cette demande ne peut plus être payée.",
   "step1ValidateTicket": "ÉTAPE 1 · VÉRIFIER LE BILLET D'AVION",
@@ -2078,14 +2067,9 @@
   "notifRefundToBalanceTitle": "Remboursement ajouté à votre solde Nata",
   "notifRefundToBalanceBody": "{amount} de votre demande annulée sont dans votre solde Nata.",
   "recipientSafetyNote": "Ne partagez pas votre code de remise dans le chat ni avant d'avoir le colis en main. Retrouvez toujours {name} dans un lieu public.",
-  "customSizeOption": "Autre taille…",
-  "customSizeTitle": "Taille max. de l'objet",
-  "customSizeBody": "Le plus grand colis que vous pouvez prendre, en centimètres.",
   "lengthCm": "Longueur",
   "widthCm": "Largeur",
   "heightCm": "Hauteur",
-  "customSizeInvalid": "Saisissez chaque dimension en cm, de 1 à 300.",
-  "customSizeSave": "Utiliser cette taille",
   "sizeCustom": "Sur mesure",
   "photoShownOnceAccepted": "Photo visible une fois votre demande acceptée",
   "feedbackTitle": "Merci ! Encore une chose",

@@ -210,22 +210,6 @@ void main() {
     });
   });
 
-  group('Trip.sizeShortLabel', () {
-    String label(String? size) =>
-        Trip.fromJson(tripRow()..['max_size'] = size).sizeShortLabel;
-
-    test('shortens the known size options', () {
-      expect(label('Envelope / Document'), 'Envelope');
-      expect(label('Shoebox (30×20×15 cm)'), 'Shoebox');
-      expect(label('Backpack size'), 'Backpack');
-    });
-
-    test('shows a dash when there is no size', () {
-      expect(label(null), '—');
-      expect(label(''), '—');
-    });
-  });
-
   group('TripDraft', () {
     final draft = TripDraft(
       departureCityId: 1,
@@ -235,7 +219,6 @@ void main() {
       price: 30.5,
       currency: 'EUR',
       maxWeightKg: 5,
-      maxSize: 'Backpack size',
       ticketReceiptPath: 'user-1/1.pdf',
     );
 
@@ -249,7 +232,6 @@ void main() {
         'price': 30.5,
         'currency': 'EUR',
         'max_weight_kg': 5.0,
-        'max_size': 'Backpack size',
         'ticket_receipt_path': 'user-1/1.pdf',
         'ticket_shared_path': null,
         'booking_reference': null,
@@ -324,7 +306,6 @@ void main() {
       price: 30,
       currency: 'USD',
       maxWeightKg: 3,
-      maxSize: 'Backpack size',
       ticketReceiptPath: 'user-1/1.pdf',
       bookingReference: ref,
     );
@@ -388,7 +369,6 @@ void main() {
       price: 30,
       currency: 'USD',
       maxWeightKg: 3,
-      maxSize: 'Backpack size',
       ticketReceiptPath: 'user-1/1.pdf',
     );
 
