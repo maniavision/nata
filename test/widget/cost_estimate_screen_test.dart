@@ -119,15 +119,18 @@ void main() {
     expect(find.text('Within one country: 65% less'), findsOneWidget);
   });
 
-  test('45% less in the US, the UK and Europe; none elsewhere', () {
+  test('65% less in Africa, 45% anywhere else', () {
     expect(CostEstimateScreen.localDiscountPercent('NG'), 65);
     expect(CostEstimateScreen.localDiscountPercent('CG'), 65);
     expect(CostEstimateScreen.localDiscountPercent('US'), 45);
     expect(CostEstimateScreen.localDiscountPercent('GB'), 45);
     expect(CostEstimateScreen.localDiscountPercent('FR'), 45);
     expect(CostEstimateScreen.localDiscountPercent('CH'), 45);
-    expect(CostEstimateScreen.localDiscountPercent('CA'), 0);
-    expect(CostEstimateScreen.localDiscountPercent('IN'), 0);
+    expect(CostEstimateScreen.localDiscountPercent('CA'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('BR'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('IN'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('AE'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('AU'), 45);
     expect(
       CostEstimateScreen.priceUsd(distanceKm: 400, kg: 5, discountPercent: 45),
       ceilWhole(

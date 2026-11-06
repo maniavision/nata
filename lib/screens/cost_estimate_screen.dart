@@ -47,15 +47,9 @@ class CostEstimateScreen extends StatefulWidget {
   static const maxWeightKg = 999.0;
 
   /// How much less a trip within the country [isoCode] costs, in percent:
-  /// 65 in Africa, 45 in the US, the UK and the rest of Europe, else none.
-  static int localDiscountPercent(String isoCode) {
-    if (RegionService.isAfrican(isoCode)) return 65;
-    if (isoCode.trim().toUpperCase() == 'US' ||
-        RegionService.isEuropean(isoCode)) {
-      return 45;
-    }
-    return 0;
-  }
+  /// 65 in Africa, 45 anywhere else.
+  static int localDiscountPercent(String isoCode) =>
+      RegionService.isAfrican(isoCode) ? 65 : 45;
 
   /// The suggested price in US dollars, rounded up to whole dollars, less
   /// [discountPercent] percent.

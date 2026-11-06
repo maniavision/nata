@@ -299,68 +299,9 @@ class RegionService {
     'FK',
   };
 
-  /// European countries and territories, the UK included (as
-  /// `nata.countries.continent` = 'EU').
-  static const _europe = {
-    'AD',
-    'AL',
-    'AT',
-    'BA',
-    'BE',
-    'BG',
-    'BY',
-    'CH',
-    'CZ',
-    'DE',
-    'DK',
-    'EE',
-    'ES',
-    'FI',
-    'FO',
-    'FR',
-    'GB',
-    'GG',
-    'GI',
-    'GR',
-    'HR',
-    'HU',
-    'IE',
-    'IM',
-    'IS',
-    'IT',
-    'JE',
-    'LI',
-    'LT',
-    'LU',
-    'LV',
-    'MC',
-    'MD',
-    'ME',
-    'MK',
-    'MT',
-    'NL',
-    'NO',
-    'PL',
-    'PT',
-    'RO',
-    'RS',
-    'RU',
-    'SE',
-    'SI',
-    'SK',
-    'SM',
-    'UA',
-    'VA',
-    'XK',
-  };
-
   /// True for a country in Africa.
   static bool isAfrican(String isoCode) =>
       _africa.contains(isoCode.trim().toUpperCase());
-
-  /// True for a country in Europe, the UK included.
-  static bool isEuropean(String isoCode) =>
-      _europe.contains(isoCode.trim().toUpperCase());
 
   /// True for a country in Africa or South America.
   static bool isAfricanOrSouthAmerican(String isoCode) {
