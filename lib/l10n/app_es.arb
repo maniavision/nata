@@ -1697,7 +1697,7 @@
   "costEstimateResult": "Precio sugerido para el viajero",
   "costEstimateDetails": "Unos {km} km · {weight}",
   "costEstimateGuide": "Es solo una referencia para ayudarte a encontrar un precio justo para el viajero. No tienes que usarla: tú y el viajero acordáis el precio juntos en el chat. La comisión de Nata no está incluida.",
-  "costEstimateLocal": "Dentro de un mismo país: 65 % menos",
+  "costEstimateLocal": "Dentro de un mismo país: {percent} % menos",
   "routeAlertsIntro": "Guarda las rutas en las que sueles enviar. Cuando un viajero verificado publique un viaje en una de ellas, te avisaremos.",
   "routeAlertsSaved": "RUTAS GUARDADAS",
   "routeAlertsCount": "{count} de 5",

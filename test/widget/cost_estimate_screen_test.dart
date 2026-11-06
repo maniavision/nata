@@ -92,7 +92,7 @@ void main() {
     expect(find.textContaining('5 kg'), findsOneWidget);
   });
 
-  testWidgets('within one country it is 65% less', (tester) async {
+  testWidgets('within an African country it is 65% less', (tester) async {
     const abuja = LocationSelection(
       country: 'Nigeria',
       countryCode: 'NG',
@@ -112,11 +112,65 @@ void main() {
     final usd = CostEstimateScreen.priceUsd(
       distanceKm: local,
       kg: 5,
-      local: true,
+      discountPercent: 65,
     );
     expect(usd, ceilWhole(full * 0.35).toDouble());
     expect(price(), '\$${usd.toInt()}');
     expect(find.text('Within one country: 65% less'), findsOneWidget);
+  });
+
+  test('45% less in the US, the UK and Europe; none elsewhere', () {
+    expect(CostEstimateScreen.localDiscountPercent('NG'), 65);
+    expect(CostEstimateScreen.localDiscountPercent('CG'), 65);
+    expect(CostEstimateScreen.localDiscountPercent('US'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('GB'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('FR'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('CH'), 45);
+    expect(CostEstimateScreen.localDiscountPercent('CA'), 0);
+    expect(CostEstimateScreen.localDiscountPercent('IN'), 0);
+    expect(
+      CostEstimateScreen.priceUsd(distanceKm: 400, kg: 5, discountPercent: 45),
+      ceilWhole(
+        CostCalculator.calculateCost(
+              distanceKm: 400,
+              deliveryTimeInHours: CostEstimateScreen.assumedHours,
+              weightKg: 5,
+            ) *
+            0.55,
+      ).toDouble(),
+    );
+  });
+
+  testWidgets('within France it says 45% less', (tester) async {
+    const paris = LocationSelection(
+      country: 'France',
+      countryCode: 'FR',
+      city: 'Paris',
+      displayLabel: 'Paris, France',
+      cityId: 4,
+    );
+    const lyon = LocationSelection(
+      country: 'France',
+      countryCode: 'FR',
+      city: 'Lyon',
+      displayLabel: 'Lyon, France',
+      cityId: 5,
+    );
+    final cities = FakeCityService()
+      ..cities['FR|Lyon'] = const CityCoordinates(45.764, 4.8357);
+    await tester.pumpWidget(
+      appWrapper(
+        CostEstimateScreen(
+          currency: 'USD',
+          cityService: cities,
+          exchangeRates: FakeExchangeRateService(),
+          pickPlace: (context, title) async => title == 'From' ? paris : lyon,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await fill(tester, '5');
+    expect(find.text('Within one country: 45% less'), findsOneWidget);
   });
 
   testWidgets('between two countries there is no discount', (tester) async {

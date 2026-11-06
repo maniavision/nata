@@ -3741,7 +3741,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Es solo una referencia para ayudarte a encontrar un precio justo para el viajero. No tienes que usarla: tú y el viajero acordáis el precio juntos en el chat. La comisión de Nata no está incluida.';
 
   @override
-  String get costEstimateLocal => 'Dentro de un mismo país: 65 % menos';
+  String costEstimateLocal(int percent) {
+    return 'Dentro de un mismo país: $percent % menos';
+  }
 
   @override
   String get routeAlertsIntro =>

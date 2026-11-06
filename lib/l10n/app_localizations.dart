@@ -6467,8 +6467,8 @@ abstract class AppLocalizations {
   /// No description provided for @costEstimateLocal.
   ///
   /// In en, this message translates to:
-  /// **'Within one country: 65% less'**
-  String get costEstimateLocal;
+  /// **'Within one country: {percent}% less'**
+  String costEstimateLocal(int percent);
 
   /// No description provided for @routeAlertsIntro.
   ///

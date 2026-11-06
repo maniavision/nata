@@ -8,6 +8,7 @@ import '../services/city_service.dart';
 import '../services/delivery_pricing.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/preferences_service.dart';
+import '../services/region_service.dart';
 import '../services/request_service.dart' show PriceFormatter;
 import '../widgets/location_search_sheet.dart';
 import 'route_alerts_screen.dart' show RoutePlacePicker, formatKg;
@@ -45,22 +46,30 @@ class CostEstimateScreen extends StatefulWidget {
   /// The heaviest weight the page prices, in kg (as the request form).
   static const maxWeightKg = 999.0;
 
-  /// A trip within one country costs this share of the price (65% less).
-  static const localShare = 0.35;
+  /// How much less a trip within the country [isoCode] costs, in percent:
+  /// 65 in Africa, 45 in the US, the UK and the rest of Europe, else none.
+  static int localDiscountPercent(String isoCode) {
+    if (RegionService.isAfrican(isoCode)) return 65;
+    if (isoCode.trim().toUpperCase() == 'US' ||
+        RegionService.isEuropean(isoCode)) {
+      return 45;
+    }
+    return 0;
+  }
 
-  /// The suggested price in US dollars, rounded up to whole dollars; 65%
-  /// less when [local] (departure and arrival in the same country).
+  /// The suggested price in US dollars, rounded up to whole dollars, less
+  /// [discountPercent] percent.
   static double priceUsd({
     required double distanceKm,
     required double kg,
-    bool local = false,
+    int discountPercent = 0,
   }) {
     final cost = CostCalculator.calculateCost(
       distanceKm: distanceKm,
       deliveryTimeInHours: assumedHours,
       weightKg: kg,
     );
-    return ceilWhole(local ? cost * localShare : cost).toDouble();
+    return ceilWhole(cost * (100 - discountPercent) / 100).toDouble();
   }
 
   /// [input] in kg, or null unless it is a weight above 0 and up to
@@ -473,11 +482,13 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         ),
       );
     } else {
-      final local = _from!.countryCode == _to!.countryCode;
+      final discount = _from!.countryCode == _to!.countryCode
+          ? CostEstimateScreen.localDiscountPercent(_from!.countryCode)
+          : 0;
       final usd = CostEstimateScreen.priceUsd(
         distanceKm: km,
         kg: kg,
-        local: local,
+        discountPercent: discount,
       );
       final money = PriceFormatter.forCurrency(_currency, _rate);
       final locale = Localizations.localeOf(context).toString();
@@ -512,10 +523,10 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
               color: AppColors.mutedForeground,
             ),
           ),
-          if (local) ...[
+          if (discount > 0) ...[
             const SizedBox(height: 4),
             Text(
-              l.costEstimateLocal,
+              l.costEstimateLocal(discount),
               key: const ValueKey('estimate-local'),
               style: GoogleFonts.dmSans(
                 fontSize: 13,
