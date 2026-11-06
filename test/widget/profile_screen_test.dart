@@ -66,6 +66,58 @@ void main() {
       expect(find.text('Identity Verification'), findsOneWidget);
     });
 
+    group('currency picker', () {
+      tearDown(() => PreferencesService().setCurrency(AppCurrency.usd));
+
+      Future<void> openPicker(WidgetTester tester, String? local) async {
+        tester.view.physicalSize = const Size(900, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          appWrapper(
+            ProfileScreen(
+              authService: FakeAuthService(),
+              localCurrencyLookup: (iso) async => iso == 'NG' ? local : null,
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.tap(find.text('Currency'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('offers the currency of the country of residence', (
+        tester,
+      ) async {
+        await openPicker(tester, 'NGN');
+        expect(find.text('USD, EUR, GBP, NGN'), findsOneWidget);
+        expect(find.byKey(const ValueKey('currency-XOF')), findsNothing);
+        expect(find.text('Local currency'), findsOneWidget);
+
+        await tester.tap(find.byKey(const ValueKey('currency-NGN')));
+        await tester.pumpAndSettle();
+        expect(PreferencesService().currency.code, 'NGN');
+      });
+
+      testWidgets('no fourth choice when it is already offered', (
+        tester,
+      ) async {
+        await openPicker(tester, 'EUR');
+        expect(find.text('USD, EUR, GBP'), findsOneWidget);
+        expect(find.byKey(const ValueKey('currency-EUR')), findsOneWidget);
+        expect(find.text('Local currency'), findsNothing);
+      });
+
+      testWidgets('three choices when the country has no known currency', (
+        tester,
+      ) async {
+        await openPicker(tester, null);
+        expect(find.byKey(const ValueKey('currency-GBP')), findsOneWidget);
+        expect(find.text('Local currency'), findsNothing);
+      });
+    });
+
     testWidgets('renders logout button', (tester) async {
       await tester.pumpWidget(buildProfile());
       await tester.pump();

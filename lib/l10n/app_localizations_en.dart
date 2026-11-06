@@ -79,6 +79,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currXOF => 'Franc CFA';
 
   @override
+  String get currLocal => 'Local currency';
+
+  @override
   String get signIn => 'Sign In';
 
   @override

@@ -21,20 +21,39 @@ enum AppLanguage {
       values.firstWhere((l) => l.code == code, orElse: () => english);
 }
 
-/// Supported currencies.
-enum AppCurrency {
-  usd('USD', 'US Dollar', '\$'),
-  eur('EUR', 'Euro', '€'),
-  gbp('GBP', 'British Pound', '£'),
-  xof('XOF', 'Franc CFA', 'CFA');
-
+/// A currency: one of the four offered at first launch, or a member's local
+/// currency (any code in nata.countries.currency_code).
+class AppCurrency {
   const AppCurrency(this.code, this.label, this.symbol);
   final String code;
   final String label;
   final String symbol;
 
-  static AppCurrency fromCode(String code) =>
-      values.firstWhere((c) => c.code == code, orElse: () => usd);
+  static const usd = AppCurrency('USD', 'US Dollar', '\$');
+  static const eur = AppCurrency('EUR', 'Euro', '€');
+  static const gbp = AppCurrency('GBP', 'British Pound', '£');
+  static const xof = AppCurrency('XOF', 'Franc CFA', 'CFA');
+
+  /// The ones offered on the splash screen.
+  static const values = [usd, eur, gbp, xof];
+
+  /// The currency with this code; US dollars if it isn't a currency code.
+  static AppCurrency fromCode(String code) {
+    final c = code.trim().toUpperCase();
+    for (final known in values) {
+      if (known.code == c) return known;
+    }
+    return RegExp(r'^[A-Z]{3}$').hasMatch(c) ? AppCurrency(c, c, c) : usd;
+  }
+
+  /// "USD (\$)", or just "NGN" for a currency with no symbol of its own.
+  String get display => symbol == code ? code : '$code ($symbol)';
+
+  @override
+  bool operator ==(Object other) => other is AppCurrency && other.code == code;
+
+  @override
+  int get hashCode => code.hashCode;
 }
 
 /// The user's language and currency, and what this device remembers.

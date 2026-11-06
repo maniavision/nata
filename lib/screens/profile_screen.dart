@@ -12,6 +12,7 @@ import '../widgets/app_bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/biometric_service.dart';
 import '../services/payment_service.dart';
+import '../services/country_service.dart';
 import '../services/preferences_service.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/screen_cache.dart';
@@ -42,6 +43,7 @@ class ProfileScreen extends StatefulWidget {
   final TravelerService? travelerService;
   final PaymentService? paymentService;
   final BiometricService? biometrics;
+  final Future<String?> Function(String isoCode)? localCurrencyLookup;
 
   const ProfileScreen({
     super.key,
@@ -50,6 +52,7 @@ class ProfileScreen extends StatefulWidget {
     this.travelerService,
     this.paymentService,
     this.biometrics,
+    this.localCurrencyLookup,
   });
 
   /// Where the page keeps what it showed between visits (ScreenCache).
@@ -87,6 +90,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  /// The local currency of the member's country of residence, once known.
+  String? _localCurrency;
+
   /// What the first-visit tips point at.
   final _paymentTipKey = GlobalKey();
   final _routesTipKey = GlobalKey();
@@ -319,11 +325,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }, onError: (Object e) => debugPrint('[Profile] stats stream error: $e'));
   }
 
+  /// The currency of the country the member lives in, offered in the picker.
+  /// For older accounts, of the country remembered on this device.
+  Future<void> _loadLocalCurrency(String? residence) async {
+    final saved = residence?.trim() ?? '';
+    final iso = saved.isNotEmpty ? saved : PreferencesService().countryIsoCode;
+    final code =
+        await (widget.localCurrencyLookup ?? CountryService().currencyCode)(
+          iso,
+        );
+    if (code != null && mounted) setState(() => _localCurrency = code);
+  }
+
   Future<void> _loadProfile() async {
     try {
       final auth = _auth;
       final profile = await auth.getProfile();
       final stats = await auth.getStats();
+      unawaited(
+        _loadLocalCurrency(profile?['country_of_residence'] as String?),
+      );
 
       if (profile != null && mounted) {
         setState(() {
@@ -453,7 +474,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _CurrencyPickerSheet(),
+      builder: (context) => _CurrencyPickerSheet(localCurrency: _localCurrency),
     );
   }
 
@@ -1064,8 +1085,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         iconBg: AppColors.secondary,
         iconColor: AppColors.primary,
         title: context.l10n.currency,
-        subtitle: 'USD, EUR, GBP, XOF',
-        trailing: '${prefs.currency.code} (${prefs.currency.symbol})',
+        subtitle: _CurrencyPickerSheet.codes(_localCurrency).join(', '),
+        trailing: prefs.currency.display,
         onTap: _showCurrencyPicker,
       ),
       if (_biometricsReady || prefs.faceIdEnabled)
@@ -1473,6 +1494,19 @@ class _LanguagePickerSheet extends StatelessWidget {
 
 // ── Currency Picker ────────────────────────────────────────────────────────
 class _CurrencyPickerSheet extends StatelessWidget {
+  /// The member's local currency: a fourth choice, unless it is one of the
+  /// first three.
+  final String? localCurrency;
+
+  const _CurrencyPickerSheet({this.localCurrency});
+
+  static List<String> codes(String? local) => [
+    'USD',
+    'EUR',
+    'GBP',
+    if (local != null && !const {'USD', 'EUR', 'GBP'}.contains(local)) local,
+  ];
+
   @override
   Widget build(BuildContext context) {
     final prefs = PreferencesService();
@@ -1482,7 +1516,8 @@ class _CurrencyPickerSheet extends StatelessWidget {
       (AppCurrency.usd, l.currUSD),
       (AppCurrency.eur, l.currEUR),
       (AppCurrency.gbp, l.currGBP),
-      (AppCurrency.xof, l.currXOF),
+      if (codes(localCurrency).length > 3)
+        (AppCurrency.fromCode(localCurrency!), l.currLocal),
     ];
 
     return Container(
@@ -1529,6 +1564,7 @@ class _CurrencyPickerSheet extends StatelessWidget {
               final opt = options[i];
               final selected = prefs.currency == opt.$1;
               return GestureDetector(
+                key: ValueKey('currency-${opt.$1.code}'),
                 onTap: () async {
                   prefs.setCurrency(opt.$1);
                   await prefs.saveToProfile();
@@ -1555,7 +1591,7 @@ class _CurrencyPickerSheet extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              '${opt.$1.code} (${opt.$1.symbol})',
+                              opt.$1.display,
                               style: GoogleFonts.dmSans(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 13,

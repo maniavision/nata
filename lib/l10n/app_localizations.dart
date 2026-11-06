@@ -232,6 +232,12 @@ abstract class AppLocalizations {
   /// **'Franc CFA'**
   String get currXOF;
 
+  /// No description provided for @currLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local currency'**
+  String get currLocal;
+
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:

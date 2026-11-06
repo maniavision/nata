@@ -487,7 +487,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
           leading: _iconBox(Icons.credit_card_rounded),
           title: l.defaultCurrency,
           subtitle: l.defaultCurrencySub,
-          trailing: _accentText('${currency.code} (${currency.symbol})'),
+          trailing: _accentText(currency.display),
         ),
       ]),
     );

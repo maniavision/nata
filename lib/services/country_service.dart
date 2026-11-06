@@ -32,6 +32,7 @@ class CountryService {
 
   /// Cached full list after first load.
   List<Country>? _cache;
+  final Map<String, String> _currencies = {};
 
   /// Every known country, alphabetically. Used to list them all before the
   /// user types anything (including the one currently selected).
@@ -57,6 +58,27 @@ class CountryService {
       if (c.isoCode.toUpperCase() == iso) return c;
     }
     return null;
+  }
+
+  /// The local currency of a country (nata.countries.currency_code), or null
+  /// if it can't be found.
+  Future<String?> currencyCode(String isoCode) async {
+    final iso = isoCode.trim().toUpperCase();
+    final known = _currencies[iso];
+    if (known != null) return known;
+    try {
+      final row = await Supabase.instance.client
+          .schema('nata')
+          .from('countries')
+          .select('currency_code')
+          .eq('iso_code', iso)
+          .maybeSingle();
+      final code = (row?['currency_code'] as String?)?.trim().toUpperCase();
+      if (code == null || code.isEmpty) return null;
+      return _currencies[iso] = code;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<List<Country>> _loadAll() async {
