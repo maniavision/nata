@@ -63,10 +63,8 @@ const _alignedGroups = [
   ['add-trip-take-photo', 'add-trip-upload-receipt'],
   ['add-trip-departure-country', 'add-trip-departure-city'],
   ['add-trip-arrival-country', 'add-trip-arrival-city'],
-  ['add-trip-weight', 'add-trip-size'],
   ['add-payment-card-expiry', 'add-payment-card-cvv'],
   ['request-size-envelope', 'request-size-shoebox', 'request-size-backpack'],
-  ['capacity-weight', 'capacity-size'],
   ['profile-stat-trips', 'profile-stat-parcels'],
 ];
 

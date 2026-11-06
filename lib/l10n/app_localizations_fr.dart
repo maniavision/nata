@@ -349,13 +349,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get itemSizeAndWeight => 'LIMITES DE TAILLE ET DE POIDS ACCEPTÉES';
+  String get weightLimitAccepted => 'LIMITE DE POIDS ACCEPTÉE';
 
   @override
   String get weightLimit => 'Limite de poids';
-
-  @override
-  String get sizeLimit => 'Limite de taille';
 
   @override
   String get checkBaggage => 'Espace en bagage enregistré';
@@ -735,9 +732,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get maxWeight => 'Poids maximum';
 
   @override
-  String get maxItemSize => 'Taille maximale de l\'article';
-
-  @override
   String get howMatchingWorks => 'Comment fonctionne la mise en relation';
 
   @override
@@ -1066,9 +1060,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get maxWeightLabel => 'Poids max.';
-
-  @override
-  String get maxSizeLabel => 'Taille max.';
 
   @override
   String get noUpcomingTrips => 'Aucun trajet à venir';
@@ -2727,11 +2718,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get escrowFunded => 'Séquestre financé';
-
-  @override
-  String maxDims(String dims) {
-    return 'Max $dims';
-  }
 
   @override
   String get errRequestNotPayable => 'Cette demande ne peut plus être payée.';
@@ -5080,16 +5066,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get customSizeOption => 'Autre taille…';
-
-  @override
-  String get customSizeTitle => 'Taille max. de l\'objet';
-
-  @override
-  String get customSizeBody =>
-      'Le plus grand colis que vous pouvez prendre, en centimètres.';
-
-  @override
   String get lengthCm => 'Longueur';
 
   @override
@@ -5097,13 +5073,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get heightCm => 'Hauteur';
-
-  @override
-  String get customSizeInvalid =>
-      'Saisissez chaque dimension en cm, de 1 à 300.';
-
-  @override
-  String get customSizeSave => 'Utiliser cette taille';
 
   @override
   String get sizeCustom => 'Sur mesure';

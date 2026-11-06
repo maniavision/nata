@@ -544,40 +544,18 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionTitle(
-            Icons.straighten_rounded,
+            Icons.scale_rounded,
             AppColors.primary,
-            l.itemSizeAndWeight,
+            l.weightLimitAccepted,
           ),
           const SizedBox(height: 12),
-          // Both cards the same height, whatever the language.
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _capacityTile(
-                    key: 'capacity-weight',
-                    label: l.weightLimit.toUpperCase(),
-                    value: _trip.maxWeightKg == null
-                        ? '—'
-                        : l.upToKg(_trip.maxWeightKg!.toStringAsFixed(1)),
-                    sub: l.checkBaggage,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _capacityTile(
-                    key: 'capacity-size',
-                    label: l.sizeLimit.toUpperCase(),
-                    // "Shoebox" over "Max 30×20×15 cm", as in the design.
-                    value: l
-                        .tripSize(_trip.maxSize)
-                        .replaceAll(RegExp(r'\s*\(.*\)'), ''),
-                    sub: _sizeDims == null ? '' : l.maxDims(_sizeDims!),
-                  ),
-                ),
-              ],
-            ),
+          _capacityTile(
+            key: 'capacity-weight',
+            label: l.weightLimit.toUpperCase(),
+            value: _trip.maxWeightKg == null
+                ? '—'
+                : l.upToKg(_trip.maxWeightKg!.toStringAsFixed(1)),
+            sub: l.checkBaggage,
           ),
         ],
       ),
@@ -840,10 +818,6 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
       ],
     );
   }
-
-  /// "30×20×15 cm" from "Shoebox (30×20×15 cm)", if the size has them.
-  String? get _sizeDims =>
-      RegExp(r'\((.*)\)').firstMatch(_trip.maxSize ?? '')?.group(1)?.trim();
 
   // ── Send request bar ───────────────────────────────────────────────────────
   /// Messaging stays locked until the sender has paid for a delivery; chat

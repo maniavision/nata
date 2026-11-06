@@ -190,17 +190,16 @@ void main() {
 
       expect(find.text('3.0 kg'), findsOneWidget);
       expect(find.text('Max weight'), findsOneWidget);
-      expect(find.text('Shoebox'), findsOneWidget);
-      expect(find.text('Max size'), findsOneWidget);
+      expect(find.text('Max size'), findsNothing);
       expect(find.text('3'), findsOneWidget);
       expect(find.text('Requests'), findsWidgets);
     });
 
     testWidgets('a trip without a weight shows a dash', (tester) async {
-      service.trips = [sampleMyTrip(maxWeightKg: null, maxSize: null)];
+      service.trips = [sampleMyTrip(maxWeightKg: null)];
       await pump(tester);
 
-      expect(find.text('—'), findsNWidgets(2));
+      expect(find.text('—'), findsOneWidget);
     });
 
     testWidgets('status chips: Published', (tester) async {

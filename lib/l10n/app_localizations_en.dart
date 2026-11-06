@@ -347,13 +347,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get itemSizeAndWeight => 'ITEM SIZE & WEIGHT LIMITS ACCEPTED';
+  String get weightLimitAccepted => 'WEIGHT LIMIT ACCEPTED';
 
   @override
   String get weightLimit => 'Weight Limit';
-
-  @override
-  String get sizeLimit => 'Size Limit';
 
   @override
   String get checkBaggage => 'Checked baggage space';
@@ -729,9 +726,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maxWeight => 'Max Weight';
 
   @override
-  String get maxItemSize => 'Max Item Size';
-
-  @override
   String get howMatchingWorks => 'How search matching works';
 
   @override
@@ -1053,9 +1047,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maxWeightLabel => 'Max weight';
-
-  @override
-  String get maxSizeLabel => 'Max size';
 
   @override
   String get noUpcomingTrips => 'No upcoming trips';
@@ -2674,11 +2665,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get escrowFunded => 'Escrow funded';
-
-  @override
-  String maxDims(String dims) {
-    return 'Max $dims';
-  }
 
   @override
   String get errRequestNotPayable => 'This request can no longer be paid.';
@@ -4995,16 +4981,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get customSizeOption => 'Custom size…';
-
-  @override
-  String get customSizeTitle => 'Your max item size';
-
-  @override
-  String get customSizeBody =>
-      'The largest parcel you can take, in centimetres.';
-
-  @override
   String get lengthCm => 'Length';
 
   @override
@@ -5012,12 +4988,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heightCm => 'Height';
-
-  @override
-  String get customSizeInvalid => 'Enter each size in cm, from 1 to 300.';
-
-  @override
-  String get customSizeSave => 'Use this size';
 
   @override
   String get sizeCustom => 'Custom';
