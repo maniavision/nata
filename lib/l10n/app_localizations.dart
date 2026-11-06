@@ -6470,6 +6470,30 @@ abstract class AppLocalizations {
   /// **'Within one country: {percent}% less'**
   String costEstimateLocal(int percent);
 
+  /// No description provided for @priceTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agree on a fair price'**
+  String get priceTipTitle;
+
+  /// No description provided for @priceTipSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure what to offer for this delivery? The cost calculator suggests a fair price from the distance and the weight. It\'s only a guide: you and the traveler decide together.'**
+  String get priceTipSender;
+
+  /// No description provided for @priceTipTraveler.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure what to charge for this delivery? The cost calculator suggests a fair price from the distance and the weight. It\'s only a guide: you and the sender decide together.'**
+  String get priceTipTraveler;
+
+  /// No description provided for @priceTipOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the cost calculator'**
+  String get priceTipOpen;
+
   /// No description provided for @routeAlertsIntro.
   ///
   /// In en, this message translates to:

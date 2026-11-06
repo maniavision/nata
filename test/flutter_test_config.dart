@@ -8,6 +8,7 @@ import 'package:carrywise_app/services/signed_urls.dart';
 import 'package:carrywise_app/services/support_service.dart';
 import 'package:carrywise_app/services/verify_gate.dart';
 import 'package:carrywise_app/widgets/coach_tips.dart';
+import 'package:carrywise_app/widgets/price_calculator_tip.dart';
 import 'package:carrywise_app/widgets/storage_photo.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -25,6 +26,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     HomeScreen.tabPreloads = [];
     // ...nor covers itself with first-visit tips.
     CoachTips.enabled = false;
+    PriceCalculatorTip.enabled = false;
     // Tests have no disk for photos, and links start fresh.
     StoragePhoto.diskCache = false;
     SignedUrls.clear();

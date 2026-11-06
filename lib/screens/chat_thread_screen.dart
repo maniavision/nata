@@ -15,6 +15,7 @@ import '../widgets/camera_denied_sheet.dart';
 import '../widgets/chat_report_sheet.dart';
 import 'messages_screen.dart';
 import '../widgets/nata_toast.dart';
+import '../widgets/price_calculator_tip.dart';
 import '../services/app_badge.dart';
 import '../widgets/storage_photo.dart';
 import '../services/screen_cache.dart';
@@ -67,6 +68,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
   /// The "meet in a public place" advice, hidden with its ✕ until the chat
   /// is opened again.
   bool _safetyHidden = false;
+
+  /// Whether the cost calculator was offered in this visit (it is offered
+  /// once both people have written, and only once per conversation).
+  bool _priceTipOffered = false;
 
   final _inputCtrl = TextEditingController();
 
@@ -201,6 +206,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
         // icon badge goes down with them.
         unawaited(_service.markRead(_c.id).whenComplete(AppBadge.refresh));
       }
+      _offerPriceCalculator(messages);
     } catch (_) {
       if (!mounted || quiet) return;
       setState(() {
@@ -210,6 +216,27 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
     } finally {
       _loadingNow = false;
     }
+  }
+
+  /// Once the sender and the traveler have both written, suggests the cost
+  /// calculator to help them agree on a price.
+  void _offerPriceCalculator(List<ChatMessage> messages) {
+    final me = _me;
+    if (_priceTipOffered || me == null || !_c.chatUnlocked) return;
+    if (_block.blocked) return;
+    final both =
+        messages.any((m) => m.authorId == me) &&
+        messages.any((m) => m.authorId != me);
+    if (!both) return;
+    _priceTipOffered = true;
+    unawaited(
+      PriceCalculatorTip.showOnce(
+        context,
+        conversationId: _c.id,
+        userId: me,
+        iAmTraveler: _c.iAmTraveler,
+      ),
+    );
   }
 
   Future<void> _loadBlock() async {

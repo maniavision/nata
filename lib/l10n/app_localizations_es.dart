@@ -3746,6 +3746,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get priceTipTitle => 'Acuerden un precio justo';
+
+  @override
+  String get priceTipSender =>
+      '¿No sabes cuánto ofrecer por esta entrega? La calculadora de costos sugiere un precio justo según la distancia y el peso. Es solo una guía: tú y el viajero deciden juntos.';
+
+  @override
+  String get priceTipTraveler =>
+      '¿No sabes cuánto cobrar por esta entrega? La calculadora de costos sugiere un precio justo según la distancia y el peso. Es solo una guía: tú y el remitente deciden juntos.';
+
+  @override
+  String get priceTipOpen => 'Abrir la calculadora';
+
+  @override
   String get routeAlertsIntro =>
       'Guarda las rutas en las que sueles enviar. Cuando un viajero verificado publique un viaje en una de ellas, te avisaremos.';
 
