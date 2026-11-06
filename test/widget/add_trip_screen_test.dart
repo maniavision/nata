@@ -180,11 +180,10 @@ void main() {
       expect(find.byKey(const ValueKey('add-trip-receipt-card')), findsNothing);
     });
 
-    testWidgets('capacity defaults to 3.0 kg and a shoebox', (tester) async {
+    testWidgets('capacity defaults to 3.0 kg', (tester) async {
       await pump(tester);
 
       expect(find.text('Up to 3.0 kg'), findsOneWidget);
-      expect(find.text('Shoebox (30×20×15 cm)'), findsOneWidget);
     });
 
     testWidgets('back button leaves without saving', (tester) async {
@@ -966,7 +965,6 @@ void main() {
       expect(find.text(longDate(trip.departureDate)), findsOneWidget);
       expect(find.text(longDate(trip.arrivalDate)), findsOneWidget);
       expect(find.text('Up to 5.0 kg'), findsOneWidget);
-      expect(find.text('Backpack size'), findsOneWidget);
       expect(find.text('old.pdf'), findsOneWidget);
       expect(find.textContaining('Receipt on file'), findsOneWidget);
     });

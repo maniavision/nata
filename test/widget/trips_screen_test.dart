@@ -196,10 +196,10 @@ void main() {
     });
 
     testWidgets('a trip without a weight shows a dash', (tester) async {
-      service.trips = [sampleMyTrip(maxWeightKg: null, maxSize: null)];
+      service.trips = [sampleMyTrip(maxWeightKg: null)];
       await pump(tester);
 
-      expect(find.text('—'), findsNWidgets(2));
+      expect(find.text('—'), findsOneWidget);
     });
 
     testWidgets('status chips: Published', (tester) async {

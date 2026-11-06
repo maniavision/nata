@@ -319,10 +319,10 @@ void main() {
       expect(find.text('100%'), findsNothing);
     });
 
-    testWidgets('missing weight and size show a dash', (tester) async {
-      await pump(tester, trip: sampleTrip(maxWeightKg: null, maxSize: null));
+    testWidgets('a missing weight shows a dash', (tester) async {
+      await pump(tester, trip: sampleTrip(maxWeightKg: null));
 
-      expect(find.text('—'), findsNWidgets(2));
+      expect(find.text('—'), findsOneWidget);
     });
 
     testWidgets('Create Request opens the delivery request screen', (
@@ -436,7 +436,6 @@ void main() {
           expect(find.text('Deliver in 1 day'), findsOneWidget);
           expect(find.text('USD 50.00'), findsNothing);
           expect(find.text('Up to 10.0 kg'), findsOneWidget);
-          expect(find.text('Backpack size'), findsOneWidget);
           expect(find.text('AE · Jul 5'), findsOneWidget);
           // Subtitle follows the selected trip too.
           expect(
