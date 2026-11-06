@@ -6374,6 +6374,96 @@ abstract class AppLocalizations {
   /// **'Get notified when a traveler flies your routes'**
   String get routeAlertsSub;
 
+  /// No description provided for @costEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate a delivery'**
+  String get costEstimate;
+
+  /// No description provided for @costEstimateSub.
+  ///
+  /// In en, this message translates to:
+  /// **'A fair price to suggest to a traveler'**
+  String get costEstimateSub;
+
+  /// No description provided for @costEstimateIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick where the item leaves from, where it goes and how much it weighs to see a fair price for the traveler.'**
+  String get costEstimateIntro;
+
+  /// No description provided for @costEstimateFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get costEstimateFrom;
+
+  /// No description provided for @costEstimateTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get costEstimateTo;
+
+  /// No description provided for @costEstimateChooseCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a country and city'**
+  String get costEstimateChooseCity;
+
+  /// No description provided for @costEstimateWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get costEstimateWeight;
+
+  /// No description provided for @costEstimateWeightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 5'**
+  String get costEstimateWeightHint;
+
+  /// No description provided for @costEstimateErrWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a weight, for example 5.'**
+  String get costEstimateErrWeight;
+
+  /// No description provided for @costEstimateErrSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose two different cities.'**
+  String get costEstimateErrSame;
+
+  /// No description provided for @costEstimateErrDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t work out the distance between these cities. Try other cities or try again later.'**
+  String get costEstimateErrDistance;
+
+  /// No description provided for @costEstimateEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose both cities and enter a weight to see the estimate.'**
+  String get costEstimateEmpty;
+
+  /// No description provided for @costEstimateResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested price for the traveler'**
+  String get costEstimateResult;
+
+  /// No description provided for @costEstimateDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'About {km} km · {weight}'**
+  String costEstimateDetails(String km, String weight);
+
+  /// No description provided for @costEstimateGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'This is only a guide to help you come up with a fair price for the traveler. You don\'t have to use it: you and the traveler agree on the price together in the chat. Nata\'s fee isn\'t included.'**
+  String get costEstimateGuide;
+
   /// No description provided for @routeAlertsIntro.
   ///
   /// In en, this message translates to:

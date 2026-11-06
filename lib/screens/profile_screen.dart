@@ -30,6 +30,7 @@ import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
 import '../widgets/nata_toast.dart';
 import 'route_alerts_screen.dart';
+import 'cost_estimate_screen.dart';
 import '../widgets/name_sheets.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -1092,6 +1093,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const RouteAlertsScreen())),
+      ),
+      _SettingsItem(
+        key: const ValueKey('profile-cost-estimate'),
+        icon: Icons.calculate_rounded,
+        iconBg: AppColors.secondary,
+        iconColor: AppColors.primary,
+        title: context.l10n.costEstimate,
+        subtitle: context.l10n.costEstimateSub,
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const CostEstimateScreen())),
       ),
       _SettingsItem(
         icon: Icons.shield_rounded,

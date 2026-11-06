@@ -3690,6 +3690,57 @@ class AppLocalizationsEs extends AppLocalizations {
       'Recibe un aviso cuando un viajero haga tus rutas';
 
   @override
+  String get costEstimate => 'Estimar un envío';
+
+  @override
+  String get costEstimateSub => 'Un precio justo para proponer a un viajero';
+
+  @override
+  String get costEstimateIntro =>
+      'Elige de dónde sale el artículo, adónde va y cuánto pesa para ver un precio justo para el viajero.';
+
+  @override
+  String get costEstimateFrom => 'Origen';
+
+  @override
+  String get costEstimateTo => 'Destino';
+
+  @override
+  String get costEstimateChooseCity => 'Elige un país y una ciudad';
+
+  @override
+  String get costEstimateWeight => 'Peso';
+
+  @override
+  String get costEstimateWeightHint => 'p. ej. 5';
+
+  @override
+  String get costEstimateErrWeight => 'Escribe un peso, por ejemplo 5.';
+
+  @override
+  String get costEstimateErrSame => 'Elige dos ciudades distintas.';
+
+  @override
+  String get costEstimateErrDistance =>
+      'No pudimos calcular la distancia entre estas ciudades. Prueba otras ciudades o inténtalo más tarde.';
+
+  @override
+  String get costEstimateEmpty =>
+      'Elige las dos ciudades y escribe un peso para ver la estimación.';
+
+  @override
+  String get costEstimateResult => 'Precio sugerido para el viajero';
+
+  @override
+  String costEstimateDetails(String km, String weight) {
+    return 'Unos $km km · $weight';
+  }
+
+  @override
+  String get costEstimateGuide =>
+      'Es solo una referencia para ayudarte a encontrar un precio justo para el viajero. No tienes que usarla: tú y el viajero acordáis el precio juntos en el chat. La comisión de Nata no está incluida.';
+
+  @override
   String get routeAlertsIntro =>
       'Guarda las rutas en las que sueles enviar. Cuando un viajero verificado publique un viaje en una de ellas, te avisaremos.';
 
