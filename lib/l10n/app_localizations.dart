@@ -4958,6 +4958,12 @@ abstract class AppLocalizations {
   /// **'Deliver and enter the code'**
   String get nextDeliver;
 
+  /// No description provided for @nextDeliverFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver the item'**
+  String get nextDeliverFlat;
+
   /// No description provided for @nextDone.
   ///
   /// In en, this message translates to:
@@ -6895,18 +6901,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your refund of {amount} is on its way.'**
   String notifRefundBody(String amount);
-
-  /// No description provided for @viewCode.
-  ///
-  /// In en, this message translates to:
-  /// **'View code'**
-  String get viewCode;
-
-  /// No description provided for @chatCodeNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Your recipient gives this code to the traveler at handover. Don\'t share it before then.'**
-  String get chatCodeNote;
 
   /// No description provided for @close.
   ///

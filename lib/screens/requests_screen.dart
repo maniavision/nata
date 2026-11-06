@@ -753,8 +753,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
       'handed_off' => (
         l.statusInTransit,
         l.senderItemWithYou,
-        l.nextDeliver,
-        Icons.pin_rounded,
+        // Flat requests have no recipient and no code (20240200).
+        r.isFlat ? l.nextDeliverFlat : l.nextDeliver,
+        r.isFlat ? Icons.local_shipping_rounded : Icons.pin_rounded,
       ),
       'delivered' => (
         l.statusDelivered,

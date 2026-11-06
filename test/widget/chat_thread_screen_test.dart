@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:carrywise_app/screens/chat_thread_screen.dart';
 import 'package:carrywise_app/services/message_service.dart';
 import 'package:carrywise_app/services/trip_service.dart' show PickedReceipt;
-import 'package:carrywise_app/services/request_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1032,7 +1031,7 @@ void main() {
   });
 
   group('delivery card', () {
-    Future<FakeRequestService> pumpCard(
+    Future<void> pumpCard(
       WidgetTester tester, {
       required String status,
       bool iAmTraveler = false,
@@ -1040,8 +1039,6 @@ void main() {
       tester.view.physicalSize = const Size(900, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      final requests = FakeRequestService()
-        ..codes = {'req-conv-1': const DeliveryCode('4827')};
       await tester.pumpWidget(
         appWrapper(
           ChatThreadScreen(
@@ -1050,19 +1047,15 @@ void main() {
               iAmTraveler: iAmTraveler,
             ),
             service: service,
-            requestService: requests,
             photoPicker: fakePicker,
             now: () => now,
           ),
         ),
       );
       await tester.pumpAndSettle();
-      return requests;
     }
 
-    testWidgets('paid: the steps, and the sender can see the code', (
-      tester,
-    ) async {
+    testWidgets('paid: the steps, and no delivery code', (tester) async {
       await pumpCard(tester, status: 'paid');
 
       final card = find.byKey(const ValueKey('chat-delivery-card'));
@@ -1074,22 +1067,14 @@ void main() {
         );
       }
 
-      await tester.tap(find.byKey(const ValueKey('chat-view-code')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('chat-code-dialog')), findsOneWidget);
-      expect(find.text('4 8 2 7'), findsOneWidget);
+      expect(find.byKey(const ValueKey('chat-view-code')), findsNothing);
+      expect(find.text('View code'), findsNothing);
     });
 
-    testWidgets('the traveler never sees the code', (tester) async {
+    testWidgets('the traveler sees the same card', (tester) async {
       await pumpCard(tester, status: 'handed_off', iAmTraveler: true);
 
       expect(find.byKey(const ValueKey('chat-delivery-card')), findsOneWidget);
-      expect(find.byKey(const ValueKey('chat-view-code')), findsNothing);
-    });
-
-    testWidgets('delivered: no code any more', (tester) async {
-      await pumpCard(tester, status: 'delivered');
-
       expect(find.byKey(const ValueKey('chat-view-code')), findsNothing);
     });
 

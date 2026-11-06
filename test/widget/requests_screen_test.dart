@@ -113,6 +113,23 @@ void main() {
       expect(find.text('View Request'), findsOneWidget);
     });
 
+    testWidgets('in transit: entering the code only on distance requests', (
+      tester,
+    ) async {
+      service.incoming = [sampleIncoming(id: 'a', status: 'handed_off')];
+      await pump(tester);
+      expect(find.text('Deliver and enter the code'), findsOneWidget);
+
+      service.incoming = [
+        sampleIncoming(id: 'a', status: 'handed_off', pricing: 'flat'),
+      ];
+      await tester.pumpWidget(const SizedBox.shrink());
+      ScreenCache.clear();
+      await pump(tester);
+      expect(find.text('Deliver and enter the code'), findsNothing);
+      expect(find.text('Deliver the item'), findsOneWidget);
+    });
+
     testWidgets('the badge counts accepted and pending', (tester) async {
       await pump(tester);
 

@@ -330,15 +330,18 @@ class _CheckoutEscrowScreenState extends State<CheckoutEscrowScreen> {
   }
 
   /// Paid (any way): the code to the recipient, then the chat with the
-  /// traveler to arrange the pickup.
+  /// traveler to arrange the pickup. Flat requests have no recipient and no
+  /// code (20240206).
   void _paid(ScaffoldMessengerState messenger, AppLocalizations l) {
     // Text the delivery code to the recipient straight away; the sender can
     // also do it, or resend it, from the request card.
-    unawaited(
-      _service.sendDeliveryCode(_r.id).catchError((Object e) {
-        debugPrint('[Checkout] delivery code SMS: $e');
-      }),
-    );
+    if (!_r.isFlat) {
+      unawaited(
+        _service.sendDeliveryCode(_r.id).catchError((Object e) {
+          debugPrint('[Checkout] delivery code SMS: $e');
+        }),
+      );
+    }
     messenger.showSnackBar(
       nataToast(l.paymentReceived, tone: ToastTone.success),
     );

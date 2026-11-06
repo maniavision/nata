@@ -26,8 +26,10 @@ void main() {
     bool verified = true,
     bool? onFile,
     DateTime? expiresAt,
+    String pricing = 'distance',
   }) => sampleSentRequest(
     status: 'accepted',
+    pricing: pricing,
     displayCurrency: 'XOF',
     displayCost: 59126,
     displayFee: 6440,
@@ -148,6 +150,7 @@ void main() {
       WidgetTester tester, {
       PaymentService? payments,
       FakeMessageService? messages,
+      String pricing = 'distance',
     }) async {
       opened.clear();
       sheets.clear();
@@ -166,7 +169,10 @@ void main() {
                   popped = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
                       builder: (_) => CheckoutEscrowScreen(
-                        request: accepted(checkedAt: DateTime(2030, 6, 21, 9)),
+                        request: accepted(
+                          checkedAt: DateTime(2030, 6, 21, 9),
+                          pricing: pricing,
+                        ),
                         service: service,
                         paymentService: payments,
                         now: () => now,
@@ -653,6 +659,28 @@ void main() {
         expect(popped, isTrue);
         expect(closed, 0); // no page to close
         expect(find.textContaining('Payment received'), findsOneWidget);
+      });
+
+      Future<void> payInSheet(WidgetTester tester, String pricing) async {
+        service.paymentStatuses = [PaymentStatus.successful];
+        await pumpPayable(tester, pricing: pricing);
+        await chooseCard(tester);
+        await pay(tester);
+        await tester.pump();
+        await tester.pumpAndSettle();
+        expect(popped, isTrue);
+      }
+
+      testWidgets('paid: the delivery code goes to the recipient', (
+        tester,
+      ) async {
+        await payInSheet(tester, 'distance');
+        expect(service.codesTexted, ['req-1']);
+      });
+
+      testWidgets('paid, flat fee: no delivery code to send', (tester) async {
+        await payInSheet(tester, 'flat');
+        expect(service.codesTexted, isEmpty);
       });
 
       testWidgets('closing the sheet goes back to choosing, quietly', (

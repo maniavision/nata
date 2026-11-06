@@ -1340,6 +1340,7 @@
   "nextWaitPayment": "Wait for the sender's payment",
   "nextPickUp": "Pick up the item",
   "nextDeliver": "Deliver and enter the code",
+  "nextDeliverFlat": "Deliver the item",
   "nextDone": "Payout released",
   "viewRequest": "View Request",
   "requestAcceptedSnack": "Request accepted. The sender has 24 hours to pay.",
@@ -1867,8 +1868,6 @@
   "notifRefundBody": "Your refund of {amount} is on its way.",
   "@notifRefundBody": {"placeholders": {"amount": {"type": "String"}}},
 
-  "viewCode": "View code",
-  "chatCodeNote": "Your recipient gives this code to the traveler at handover. Don't share it before then.",
   "close": "Close",
   "supportTitle": "Support",
   "supportSubtitle": "Nata staff · Reports, locks and failed payments",
