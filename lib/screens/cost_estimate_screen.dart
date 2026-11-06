@@ -9,6 +9,7 @@ import '../services/delivery_pricing.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/preferences_service.dart';
 import '../services/region_service.dart';
+import '../services/screen_cache.dart';
 import '../services/request_service.dart' show PriceFormatter;
 import '../widgets/location_search_sheet.dart';
 import 'route_alerts_screen.dart' show RoutePlacePicker, formatKg;
@@ -96,13 +97,41 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
   @override
   void initState() {
     super.initState();
+    _restoreEntries();
     _loadRate();
   }
 
   @override
   void dispose() {
+    _saveEntries();
     _weight.dispose();
     super.dispose();
+  }
+
+  // ── Entries kept ───────────────────────────────────────────────────────────
+  // Leaving the page keeps the cities, weight and unit for this app session
+  // and this member (ScreenCache, cleared on sign-out), so coming back shows
+  // them again.
+
+  static const _entriesKey = 'cost-estimate-entries';
+
+  void _restoreEntries() {
+    final e = ScreenCache.read<_Entries>(_entriesKey);
+    if (e == null) return;
+    _from = e.from;
+    _to = e.to;
+    _weight.text = e.weight;
+    _unit = e.unit;
+    if (_from != null && _to != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadDistance();
+      });
+    }
+  }
+
+  void _saveEntries() {
+    final e = _Entries(from: _from, to: _to, weight: _weight.text, unit: _unit);
+    ScreenCache.write(_entriesKey, e.isEmpty ? null : e);
   }
 
   Future<void> _loadRate() async {
@@ -578,4 +607,21 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
       ),
     );
   }
+}
+
+/// What was entered on the estimate page, kept while away from it.
+class _Entries {
+  final LocationSelection? from;
+  final LocationSelection? to;
+  final String weight;
+  final WeightUnit unit;
+
+  const _Entries({
+    required this.from,
+    required this.to,
+    required this.weight,
+    required this.unit,
+  });
+
+  bool get isEmpty => from == null && to == null && weight.trim().isEmpty;
 }

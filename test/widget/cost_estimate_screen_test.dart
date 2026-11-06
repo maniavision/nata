@@ -1,6 +1,7 @@
 import 'package:carrywise_app/screens/cost_estimate_screen.dart';
 import 'package:carrywise_app/services/city_service.dart';
 import 'package:carrywise_app/services/delivery_pricing.dart';
+import 'package:carrywise_app/services/screen_cache.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -233,6 +234,72 @@ void main() {
       find.textContaining("We couldn't work out the distance"),
       findsOneWidget,
     );
+  });
+
+  group('coming back to the page', () {
+    Future<void> openFrom(WidgetTester tester, FakeCityService cities) async {
+      final nav = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        appWrapper(const Scaffold(body: Text('profile')), navigatorKey: nav),
+      );
+      nav.currentState!.push(
+        MaterialPageRoute(
+          builder: (_) => CostEstimateScreen(
+            currency: 'USD',
+            cityService: cities,
+            exchangeRates: FakeExchangeRateService(),
+            pickPlace: (context, title) async =>
+                title == 'From' ? lagos : london,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> back(WidgetTester tester) async {
+      await tester.tap(find.byKey(const ValueKey('estimate-back')));
+      await tester.pumpAndSettle();
+      expect(find.text('profile'), findsOneWidget);
+    }
+
+    testWidgets('keeps the cities, the weight and the unit', (tester) async {
+      final cities = FakeCityService();
+      await openFrom(tester, cities);
+      await fill(tester, '11');
+      await tester.tap(find.byKey(const ValueKey('estimate-unit-lb')));
+      await tester.pumpAndSettle();
+      final shown = price();
+      await back(tester);
+
+      await openFrom(tester, cities);
+      expect(find.text('Lagos, Nigeria'), findsOneWidget);
+      expect(find.text('London, United Kingdom'), findsOneWidget);
+      expect(find.text('11'), findsOneWidget);
+      expect(price(), shown);
+      expect(find.textContaining('11 lb'), findsOneWidget);
+    });
+
+    testWidgets('an untouched page keeps nothing', (tester) async {
+      final cities = FakeCityService();
+      await openFrom(tester, cities);
+      await back(tester);
+      await openFrom(tester, cities);
+      expect(
+        find.text('Choose both cities and enter a weight to see the estimate.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('signing out forgets them', (tester) async {
+      final cities = FakeCityService();
+      await openFrom(tester, cities);
+      await fill(tester, '5');
+      await back(tester);
+      ScreenCache.clear();
+      await openFrom(tester, cities);
+      expect(find.text('Lagos, Nigeria'), findsNothing);
+      expect(find.byKey(const ValueKey('estimate-price')), findsNothing);
+    });
   });
 
   testWidgets('in French', (tester) async {
