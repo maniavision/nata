@@ -3648,6 +3648,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routeAlertsSub => 'Get notified when a traveler flies your routes';
 
   @override
+  String get costEstimate => 'Estimate a delivery';
+
+  @override
+  String get costEstimateSub => 'Work out a fair price for a delivery';
+
+  @override
+  String get costEstimateIntro =>
+      'Pick where the item leaves from, where it goes and how much it weighs to see a fair price for the delivery.';
+
+  @override
+  String get costEstimateFrom => 'From';
+
+  @override
+  String get costEstimateTo => 'To';
+
+  @override
+  String get costEstimateChooseCity => 'Choose a country and city';
+
+  @override
+  String get costEstimateWeight => 'Weight';
+
+  @override
+  String get costEstimateWeightHint => 'e.g. 5';
+
+  @override
+  String get costEstimateErrWeight => 'Enter a weight, for example 5.';
+
+  @override
+  String get costEstimateErrSame => 'Choose two different cities.';
+
+  @override
+  String get costEstimateErrDistance =>
+      'We couldn\'t work out the distance between these cities. Try other cities or try again later.';
+
+  @override
+  String get costEstimateEmpty =>
+      'Choose both cities and enter a weight to see the estimate.';
+
+  @override
+  String get costEstimateResult => 'Suggested delivery price';
+
+  @override
+  String costEstimateDetails(String km, String weight) {
+    return 'About $km km · $weight';
+  }
+
+  @override
+  String get costEstimateGuide =>
+      'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata\'s fee isn\'t included.';
+
+  @override
+  String costEstimateLocal(int percent) {
+    return 'Within one country: $percent% less';
+  }
+
+  @override
   String get routeAlertsIntro =>
       'Save the routes you often send on. When a verified traveler posts a trip on one of them, we\'ll notify you.';
 

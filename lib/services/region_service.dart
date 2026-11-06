@@ -299,6 +299,10 @@ class RegionService {
     'FK',
   };
 
+  /// True for a country in Africa.
+  static bool isAfrican(String isoCode) =>
+      _africa.contains(isoCode.trim().toUpperCase());
+
   /// True for a country in Africa or South America.
   static bool isAfricanOrSouthAmerican(String isoCode) {
     final iso = isoCode.trim().toUpperCase();

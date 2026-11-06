@@ -3713,6 +3713,62 @@ class AppLocalizationsFr extends AppLocalizations {
       'Soyez averti quand un voyageur fait vos trajets';
 
   @override
+  String get costEstimate => 'Estimer une livraison';
+
+  @override
+  String get costEstimateSub => 'Trouver un prix juste pour une livraison';
+
+  @override
+  String get costEstimateIntro =>
+      'Choisissez d\'où part l\'article, où il va et combien il pèse pour voir un prix juste pour la livraison.';
+
+  @override
+  String get costEstimateFrom => 'Départ';
+
+  @override
+  String get costEstimateTo => 'Arrivée';
+
+  @override
+  String get costEstimateChooseCity => 'Choisir un pays et une ville';
+
+  @override
+  String get costEstimateWeight => 'Poids';
+
+  @override
+  String get costEstimateWeightHint => 'ex. 5';
+
+  @override
+  String get costEstimateErrWeight => 'Saisissez un poids, par exemple 5.';
+
+  @override
+  String get costEstimateErrSame => 'Choisissez deux villes différentes.';
+
+  @override
+  String get costEstimateErrDistance =>
+      'Impossible de calculer la distance entre ces villes. Essayez d\'autres villes ou réessayez plus tard.';
+
+  @override
+  String get costEstimateEmpty =>
+      'Choisissez les deux villes et saisissez un poids pour voir l\'estimation.';
+
+  @override
+  String get costEstimateResult => 'Prix de livraison suggéré';
+
+  @override
+  String costEstimateDetails(String km, String weight) {
+    return 'Environ $km km · $weight';
+  }
+
+  @override
+  String get costEstimateGuide =>
+      'Ce n\'est qu\'un repère pour aider l\'expéditeur et le voyageur à trouver ensemble un prix juste. Aucun de vous n\'est obligé de l\'utiliser : vous fixez le prix dans le chat. Les frais Nata ne sont pas inclus.';
+
+  @override
+  String costEstimateLocal(int percent) {
+    return 'Dans un même pays : $percent % de moins';
+  }
+
+  @override
   String get routeAlertsIntro =>
       'Enregistrez les trajets sur lesquels vous envoyez souvent. Quand un voyageur vérifié publie un voyage sur l\'un d\'eux, nous vous prévenons.';
 

@@ -1727,6 +1727,33 @@
   "notifTripMatchBody": "{name} is flying {route}. Send your item with them.",
   "routeAlerts": "Route alerts",
   "routeAlertsSub": "Get notified when a traveler flies your routes",
+  "costEstimate": "Estimate a delivery",
+  "costEstimateSub": "Work out a fair price for a delivery",
+  "costEstimateIntro": "Pick where the item leaves from, where it goes and how much it weighs to see a fair price for the delivery.",
+  "costEstimateFrom": "From",
+  "costEstimateTo": "To",
+  "costEstimateChooseCity": "Choose a country and city",
+  "costEstimateWeight": "Weight",
+  "costEstimateWeightHint": "e.g. 5",
+  "costEstimateErrWeight": "Enter a weight, for example 5.",
+  "costEstimateErrSame": "Choose two different cities.",
+  "costEstimateErrDistance": "We couldn't work out the distance between these cities. Try other cities or try again later.",
+  "costEstimateEmpty": "Choose both cities and enter a weight to see the estimate.",
+  "costEstimateResult": "Suggested delivery price",
+  "costEstimateDetails": "About {km} km · {weight}",
+  "@costEstimateDetails": {
+    "placeholders": {
+      "km": {"type": "String"},
+      "weight": {"type": "String"}
+    }
+  },
+  "costEstimateGuide": "This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata's fee isn't included.",
+  "costEstimateLocal": "Within one country: {percent}% less",
+  "@costEstimateLocal": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
   "routeAlertsIntro": "Save the routes you often send on. When a verified traveler posts a trip on one of them, we'll notify you.",
   "routeAlertsSaved": "SAVED ROUTES",
   "routeAlertsCount": "{count} of 5",
