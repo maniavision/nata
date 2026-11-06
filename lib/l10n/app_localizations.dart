@@ -6464,6 +6464,12 @@ abstract class AppLocalizations {
   /// **'This is only a guide to help you come up with a fair price for the traveler. You don\'t have to use it: you and the traveler agree on the price together in the chat. Nata\'s fee isn\'t included.'**
   String get costEstimateGuide;
 
+  /// No description provided for @costEstimateLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Within one country: 65% less'**
+  String get costEstimateLocal;
+
   /// No description provided for @routeAlertsIntro.
   ///
   /// In en, this message translates to:

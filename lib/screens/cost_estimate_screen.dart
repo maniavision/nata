@@ -45,15 +45,23 @@ class CostEstimateScreen extends StatefulWidget {
   /// The heaviest weight the page prices, in kg (as the request form).
   static const maxWeightKg = 999.0;
 
-  /// The suggested price in US dollars, rounded up to whole dollars.
-  static double priceUsd({required double distanceKm, required double kg}) =>
-      ceilWhole(
-        CostCalculator.calculateCost(
-          distanceKm: distanceKm,
-          deliveryTimeInHours: assumedHours,
-          weightKg: kg,
-        ),
-      ).toDouble();
+  /// A trip within one country costs this share of the price (65% less).
+  static const localShare = 0.35;
+
+  /// The suggested price in US dollars, rounded up to whole dollars; 65%
+  /// less when [local] (departure and arrival in the same country).
+  static double priceUsd({
+    required double distanceKm,
+    required double kg,
+    bool local = false,
+  }) {
+    final cost = CostCalculator.calculateCost(
+      distanceKm: distanceKm,
+      deliveryTimeInHours: assumedHours,
+      weightKg: kg,
+    );
+    return ceilWhole(local ? cost * localShare : cost).toDouble();
+  }
 
   /// [input] in kg, or null unless it is a weight above 0 and up to
   /// [maxWeightKg].
@@ -465,7 +473,12 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
         ),
       );
     } else {
-      final usd = CostEstimateScreen.priceUsd(distanceKm: km, kg: kg);
+      final local = _from!.countryCode == _to!.countryCode;
+      final usd = CostEstimateScreen.priceUsd(
+        distanceKm: km,
+        kg: kg,
+        local: local,
+      );
       final money = PriceFormatter.forCurrency(_currency, _rate);
       final locale = Localizations.localeOf(context).toString();
       final typed = double.parse(_weight.text.trim().replaceAll(',', '.'));
@@ -499,6 +512,18 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
               color: AppColors.mutedForeground,
             ),
           ),
+          if (local) ...[
+            const SizedBox(height: 4),
+            Text(
+              l.costEstimateLocal,
+              key: const ValueKey('estimate-local'),
+              style: GoogleFonts.dmSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
         ],
       );
     }

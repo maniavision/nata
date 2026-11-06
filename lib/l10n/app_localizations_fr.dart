@@ -3764,6 +3764,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce n\'est qu\'un repère pour vous aider à trouver un prix juste pour le voyageur. Vous n\'êtes pas obligé de l\'utiliser : vous fixez le prix ensemble dans le chat. Les frais Nata ne sont pas inclus.';
 
   @override
+  String get costEstimateLocal => 'Dans un même pays : 65 % de moins';
+
+  @override
   String get routeAlertsIntro =>
       'Enregistrez les trajets sur lesquels vous envoyez souvent. Quand un voyageur vérifié publie un voyage sur l\'un d\'eux, nous vous prévenons.';
 

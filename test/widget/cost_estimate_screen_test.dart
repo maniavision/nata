@@ -1,4 +1,5 @@
 import 'package:carrywise_app/screens/cost_estimate_screen.dart';
+import 'package:carrywise_app/services/city_service.dart';
 import 'package:carrywise_app/services/delivery_pricing.dart';
 import 'package:carrywise_app/widgets/location_search_sheet.dart';
 import 'package:flutter/material.dart';
@@ -89,6 +90,39 @@ void main() {
     expect(usd, ceilWhole(5 + km * 0.0123456789 + 15 + 4.4643).toDouble());
     expect(price(), '\$${usd.toInt()}');
     expect(find.textContaining('5 kg'), findsOneWidget);
+  });
+
+  testWidgets('within one country it is 65% less', (tester) async {
+    const abuja = LocationSelection(
+      country: 'Nigeria',
+      countryCode: 'NG',
+      city: 'Abuja',
+      displayLabel: 'Abuja, Nigeria',
+      cityId: 3,
+    );
+    final cities = await open(tester, to: abuja);
+    cities.cities['NG|Abuja'] = const CityCoordinates(9.0765, 7.3986);
+    await fill(tester, '5');
+    final local = DistanceCalculator.haversine(6.5244, 3.3792, 9.0765, 7.3986);
+    final full = CostCalculator.calculateCost(
+      distanceKm: local,
+      deliveryTimeInHours: CostEstimateScreen.assumedHours,
+      weightKg: 5,
+    );
+    final usd = CostEstimateScreen.priceUsd(
+      distanceKm: local,
+      kg: 5,
+      local: true,
+    );
+    expect(usd, ceilWhole(full * 0.35).toDouble());
+    expect(price(), '\$${usd.toInt()}');
+    expect(find.text('Within one country: 65% less'), findsOneWidget);
+  });
+
+  testWidgets('between two countries there is no discount', (tester) async {
+    await open(tester);
+    await fill(tester, '5');
+    expect(find.byKey(const ValueKey('estimate-local')), findsNothing);
   });
 
   testWidgets('pounds are turned into kg', (tester) async {

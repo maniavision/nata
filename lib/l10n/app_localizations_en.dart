@@ -3699,6 +3699,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is only a guide to help you come up with a fair price for the traveler. You don\'t have to use it: you and the traveler agree on the price together in the chat. Nata\'s fee isn\'t included.';
 
   @override
+  String get costEstimateLocal => 'Within one country: 65% less';
+
+  @override
   String get routeAlertsIntro =>
       'Save the routes you often send on. When a verified traveler posts a trip on one of them, we\'ll notify you.';
 
