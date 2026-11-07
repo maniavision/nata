@@ -115,8 +115,6 @@
   "departure": "Départ",
   "destination": "Destination",
   "directFlight": "Vol direct",
-  "pricingLabel": "Tarif :",
-  "pricingValue": "Calculé selon la distance, la taille et le poids de l'article",
   "sameDayDelivery": "Livraison le même jour",
   "deliverInDays": "{count, plural, =1{Livraison en 1 jour} other{Livraison en {count} jours}}",
   "@deliverInDays": {

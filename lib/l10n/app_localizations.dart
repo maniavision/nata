@@ -724,18 +724,6 @@ abstract class AppLocalizations {
   /// **'Direct flight'**
   String get directFlight;
 
-  /// No description provided for @pricingLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Pricing:'**
-  String get pricingLabel;
-
-  /// No description provided for @pricingValue.
-  ///
-  /// In en, this message translates to:
-  /// **'Calculated per distance, item size & weight'**
-  String get pricingValue;
-
   /// No description provided for @sameDayDelivery.
   ///
   /// In en, this message translates to:

@@ -331,13 +331,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get directFlight => 'Vuelo directo';
 
   @override
-  String get pricingLabel => 'Precio:';
-
-  @override
-  String get pricingValue =>
-      'Calculado por distancia, tamaño y peso del artículo';
-
-  @override
   String get sameDayDelivery => 'Entrega el mismo día';
 
   @override

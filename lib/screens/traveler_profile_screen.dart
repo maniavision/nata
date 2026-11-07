@@ -498,37 +498,6 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(
-                Icons.local_offer_rounded,
-                size: 16,
-                color: AppColors.accent,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(text: '${l.pricingLabel} '),
-                      TextSpan(
-                        text: l.pricingValue,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.foreground,
-                        ),
-                      ),
-                    ],
-                  ),
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: AppColors.mutedForeground,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
