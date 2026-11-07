@@ -1737,12 +1737,6 @@
     }
   },
   "costEstimateGuide": "This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat.",
-  "costEstimateLocal": "Within one country: {percent}% less",
-  "@costEstimateLocal": {
-    "placeholders": {
-      "percent": {"type": "int"}
-    }
-  },
   "priceTipTitle": "Agree on a fair price",
   "priceTipSender": "Not sure what to offer for this delivery? The cost calculator suggests a fair price from the distance and the weight. It's only a guide: you and the traveler decide together.",
   "priceTipTraveler": "Not sure what to charge for this delivery? The cost calculator suggests a fair price from the distance and the weight. It's only a guide: you and the sender decide together.",

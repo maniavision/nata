@@ -6440,12 +6440,6 @@ abstract class AppLocalizations {
   /// **'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat.'**
   String get costEstimateGuide;
 
-  /// No description provided for @costEstimateLocal.
-  ///
-  /// In en, this message translates to:
-  /// **'Within one country: {percent}% less'**
-  String costEstimateLocal(int percent);
-
   /// No description provided for @priceTipTitle.
   ///
   /// In en, this message translates to:

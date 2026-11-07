@@ -3749,11 +3749,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce n\'est qu\'un repère pour aider l\'expéditeur et le voyageur à trouver ensemble un prix juste. Aucun de vous n\'est obligé de l\'utiliser : vous fixez le prix dans le chat.';
 
   @override
-  String costEstimateLocal(int percent) {
-    return 'Dans un même pays : $percent % de moins';
-  }
-
-  @override
   String get priceTipTitle => 'Fixez un prix juste';
 
   @override
