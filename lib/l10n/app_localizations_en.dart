@@ -3685,11 +3685,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat.';
 
   @override
-  String costEstimateLocal(int percent) {
-    return 'Within one country: $percent% less';
-  }
-
-  @override
   String get priceTipTitle => 'Agree on a fair price';
 
   @override

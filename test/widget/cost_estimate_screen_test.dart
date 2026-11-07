@@ -98,7 +98,9 @@ void main() {
     expect(find.textContaining('5 kg'), findsOneWidget);
   });
 
-  testWidgets('within an African country it is 65% less', (tester) async {
+  testWidgets('within an African country it is 65% less, unmentioned', (
+    tester,
+  ) async {
     const abuja = LocationSelection(
       country: 'Nigeria',
       countryCode: 'NG',
@@ -122,7 +124,7 @@ void main() {
     );
     expect(usd, ceilWhole(full * 0.35).toDouble());
     expect(price(), '\$${usd.toInt()}');
-    expect(find.text('Within one country: 65% less'), findsOneWidget);
+    expect(find.textContaining('Within one country'), findsNothing);
   });
 
   test('65% less in Africa, 45% anywhere else', () {
@@ -150,7 +152,7 @@ void main() {
     );
   });
 
-  testWidgets('within France it says 45% less', (tester) async {
+  testWidgets('within France nothing is said about a discount', (tester) async {
     const paris = LocationSelection(
       country: 'France',
       countryCode: 'FR',
@@ -179,13 +181,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     await fill(tester, '5');
-    expect(find.text('Within one country: 45% less'), findsOneWidget);
-  });
-
-  testWidgets('between two countries there is no discount', (tester) async {
-    await open(tester);
-    await fill(tester, '5');
-    expect(find.byKey(const ValueKey('estimate-local')), findsNothing);
+    expect(find.textContaining('Within one country'), findsNothing);
   });
 
   testWidgets('pounds are turned into kg', (tester) async {

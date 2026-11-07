@@ -546,18 +546,6 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
               color: AppColors.mutedForeground,
             ),
           ),
-          if (discount > 0) ...[
-            const SizedBox(height: 4),
-            Text(
-              l.costEstimateLocal(discount),
-              key: const ValueKey('estimate-local'),
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
         ],
       );
     }

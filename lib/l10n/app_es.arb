@@ -1686,7 +1686,6 @@
   "costEstimateResult": "Precio de envío sugerido",
   "costEstimateDetails": "Unos {km} km · {weight}",
   "costEstimateGuide": "Es solo una referencia para ayudar al remitente y al viajero a encontrar juntos un precio justo. Ninguno de los dos tiene que usarla: acordáis el precio en el chat.",
-  "costEstimateLocal": "Dentro de un mismo país: {percent} % menos",
   "priceTipTitle": "Acuerden un precio justo",
   "priceTipSender": "¿No sabes cuánto ofrecer por esta entrega? La calculadora de costos sugiere un precio justo según la distancia y el peso. Es solo una guía: tú y el viajero deciden juntos.",
   "priceTipTraveler": "¿No sabes cuánto cobrar por esta entrega? La calculadora de costos sugiere un precio justo según la distancia y el peso. Es solo una guía: tú y el remitente deciden juntos.",
