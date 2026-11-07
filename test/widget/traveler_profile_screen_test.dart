@@ -222,17 +222,14 @@ void main() {
       expect(find.text('Upcoming trips'), findsOneWidget);
     });
 
-    testWidgets('shows how pricing is calculated but no price amount', (
+    testWidgets('says nothing about pricing and shows no price amount', (
       tester,
     ) async {
       await pump(tester);
 
       expect(
-        find.textContaining(
-          'Pricing: Calculated per distance, item size & weight',
-          findRichText: true,
-        ),
-        findsOneWidget,
+        find.textContaining('Calculated per distance', findRichText: true),
+        findsNothing,
       );
       expect(find.textContaining('USD'), findsNothing);
       expect(find.textContaining('35'), findsNothing);

@@ -82,7 +82,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.textContaining("Nata's fee isn't included"), findsOneWidget);
+    expect(find.textContaining("Nata's fee"), findsNothing);
     expect(find.byKey(const ValueKey('estimate-price')), findsNothing);
   });
 

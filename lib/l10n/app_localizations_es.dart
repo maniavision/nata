@@ -331,13 +331,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get directFlight => 'Vuelo directo';
 
   @override
-  String get pricingLabel => 'Precio:';
-
-  @override
-  String get pricingValue =>
-      'Calculado por distancia, tamaño y peso del artículo';
-
-  @override
   String get sameDayDelivery => 'Entrega el mismo día';
 
   @override
@@ -3730,7 +3723,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get costEstimateGuide =>
-      'Es solo una referencia para ayudar al remitente y al viajero a encontrar juntos un precio justo. Ninguno de los dos tiene que usarla: acordáis el precio en el chat. La comisión de Nata no está incluida.';
+      'Es solo una referencia para ayudar al remitente y al viajero a encontrar juntos un precio justo. Ninguno de los dos tiene que usarla: acordáis el precio en el chat.';
 
   @override
   String costEstimateLocal(int percent) {

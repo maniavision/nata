@@ -724,18 +724,6 @@ abstract class AppLocalizations {
   /// **'Direct flight'**
   String get directFlight;
 
-  /// No description provided for @pricingLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Pricing:'**
-  String get pricingLabel;
-
-  /// No description provided for @pricingValue.
-  ///
-  /// In en, this message translates to:
-  /// **'Calculated per distance, item size & weight'**
-  String get pricingValue;
-
   /// No description provided for @sameDayDelivery.
   ///
   /// In en, this message translates to:
@@ -6449,7 +6437,7 @@ abstract class AppLocalizations {
   /// No description provided for @costEstimateGuide.
   ///
   /// In en, this message translates to:
-  /// **'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata\'s fee isn\'t included.'**
+  /// **'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat.'**
   String get costEstimateGuide;
 
   /// No description provided for @costEstimateLocal.

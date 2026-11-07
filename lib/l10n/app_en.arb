@@ -115,8 +115,6 @@
   "departure": "Departure",
   "destination": "Destination",
   "directFlight": "Direct flight",
-  "pricingLabel": "Pricing:",
-  "pricingValue": "Calculated per distance, item size & weight",
   "sameDayDelivery": "Same day delivery",
   "deliverInDays": "{count, plural, =1{Deliver in 1 day} other{Deliver in {count} days}}",
   "@deliverInDays": {
@@ -1738,7 +1736,7 @@
       "weight": {"type": "String"}
     }
   },
-  "costEstimateGuide": "This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata's fee isn't included.",
+  "costEstimateGuide": "This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat.",
   "costEstimateLocal": "Within one country: {percent}% less",
   "@costEstimateLocal": {
     "placeholders": {
