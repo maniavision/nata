@@ -3688,7 +3688,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get costEstimateGuide =>
-      'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata\'s fee isn\'t included.';
+      'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat.';
 
   @override
   String costEstimateLocal(int percent) {

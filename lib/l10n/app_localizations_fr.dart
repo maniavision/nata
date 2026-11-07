@@ -3753,7 +3753,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get costEstimateGuide =>
-      'Ce n\'est qu\'un repère pour aider l\'expéditeur et le voyageur à trouver ensemble un prix juste. Aucun de vous n\'est obligé de l\'utiliser : vous fixez le prix dans le chat. Les frais Nata ne sont pas inclus.';
+      'Ce n\'est qu\'un repère pour aider l\'expéditeur et le voyageur à trouver ensemble un prix juste. Aucun de vous n\'est obligé de l\'utiliser : vous fixez le prix dans le chat.';
 
   @override
   String costEstimateLocal(int percent) {

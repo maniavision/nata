@@ -1687,7 +1687,7 @@
   "costEstimateEmpty": "Choisissez les deux villes et saisissez un poids pour voir l'estimation.",
   "costEstimateResult": "Prix de livraison suggéré",
   "costEstimateDetails": "Environ {km} km · {weight}",
-  "costEstimateGuide": "Ce n'est qu'un repère pour aider l'expéditeur et le voyageur à trouver ensemble un prix juste. Aucun de vous n'est obligé de l'utiliser : vous fixez le prix dans le chat. Les frais Nata ne sont pas inclus.",
+  "costEstimateGuide": "Ce n'est qu'un repère pour aider l'expéditeur et le voyageur à trouver ensemble un prix juste. Aucun de vous n'est obligé de l'utiliser : vous fixez le prix dans le chat.",
   "costEstimateLocal": "Dans un même pays : {percent} % de moins",
   "priceTipTitle": "Fixez un prix juste",
   "priceTipSender": "Vous ne savez pas combien proposer pour cette livraison ? Le calculateur de coût suggère un prix juste selon la distance et le poids. Ce n'est qu'un repère : vous décidez ensemble avec le voyageur.",

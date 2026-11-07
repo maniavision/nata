@@ -6449,7 +6449,7 @@ abstract class AppLocalizations {
   /// No description provided for @costEstimateGuide.
   ///
   /// In en, this message translates to:
-  /// **'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat. Nata\'s fee isn\'t included.'**
+  /// **'This is only a guide to help the sender and the traveler come up with a fair price together. Neither of you has to use it: you agree on the price in the chat.'**
   String get costEstimateGuide;
 
   /// No description provided for @costEstimateLocal.
