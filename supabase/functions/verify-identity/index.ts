@@ -134,14 +134,24 @@ Deno.serve(async (req: Request) => {
 
   if (!noFace && similarity >= THRESHOLD) {
     const now = new Date().toISOString();
-    await db
+    // The record first: a profile is only marked verified once its record
+    // says so, so the two can't disagree.
+    const { error: recordError } = await db
       .from("identity_verifications")
       .update({ status: "verified", face_similarity: similarity, verified_at: now })
       .eq("id", row.id);
-    await db
+    if (recordError) {
+      console.error("[verify-identity] record:", recordError.message);
+      return json({ error: "server_error" }, 500);
+    }
+    const { error: profileError } = await db
       .from("profiles")
       .update({ verification_status: "verified" })
       .eq("id", user.id);
+    if (profileError) {
+      console.error("[verify-identity] profile:", profileError.message);
+      return json({ error: "server_error" }, 500);
+    }
     console.log(`[verify-identity] ${user.id} verified (${similarity}%)`);
     return json({ verdict: "match", similarity, attemptsLeft });
   }
