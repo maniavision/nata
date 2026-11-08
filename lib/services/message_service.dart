@@ -30,6 +30,10 @@ class ConversationSummary {
   final int unreadCount;
   final DateTime createdAt;
 
+  /// The day the chat closes: the trip's arrival date + 5 days (UTC), from
+  /// `nata.chat_closes_on`. Null when the server didn't send it.
+  final DateTime? chatClosesOn;
+
   const ConversationSummary({
     required this.id,
     required this.requestId,
@@ -49,6 +53,7 @@ class ConversationSummary {
     required this.lastAuthorId,
     required this.unreadCount,
     required this.createdAt,
+    this.chatClosesOn,
   });
 
   factory ConversationSummary.fromJson(Map<String, dynamic> j) {
@@ -78,6 +83,9 @@ class ConversationSummary {
       lastAuthorId: j['last_author_id'] as String?,
       unreadCount: (j['unread_count'] as num?)?.toInt() ?? 0,
       createdAt: DateTime.parse(j['created_at'] as String).toLocal(),
+      chatClosesOn: j['chat_closes_on'] == null
+          ? null
+          : _utcDay(DateTime.parse(j['chat_closes_on'] as String)),
     );
   }
 
@@ -103,10 +111,23 @@ class ConversationSummary {
 
   bool get isCompleted => requestStatus == 'delivered';
 
-  /// Chat opens once the sender has paid (the money is then in escrow) and
-  /// closes once the item is delivered; what was said stays readable. The
-  /// database enforces the same (nata.chat_unlocked, 20240164).
-  bool get chatUnlocked => const {'paid', 'handed_off'}.contains(requestStatus);
+  static DateTime _utcDay(DateTime d) => DateTime.utc(d.year, d.month, d.day);
+
+  /// True from the trip's arrival date + 5 days (UTC), whatever the
+  /// delivery's status.
+  bool closedAfterArrival(DateTime now) {
+    final closes = chatClosesOn;
+    if (closes == null) return false;
+    return !_utcDay(now.toUtc()).isBefore(closes);
+  }
+
+  /// Chat opens once the sender has paid and closes once the item is
+  /// delivered, or 5 days after the trip's arrival date; what was said
+  /// stays readable. The database enforces the same (nata.chat_unlocked,
+  /// 20240164 and 20240208).
+  bool chatUnlockedAt(DateTime now) =>
+      const {'paid', 'handed_off'}.contains(requestStatus) &&
+      !closedAfterArrival(now);
 
   /// Paid, and the money is held until delivery is confirmed.
   bool get escrowFunded => const {'paid', 'handed_off'}.contains(requestStatus);

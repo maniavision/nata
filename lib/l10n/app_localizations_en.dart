@@ -2652,6 +2652,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delivery complete. This chat is closed, but you can still read it.';
 
   @override
+  String get chatClosedAfterArrival =>
+      'This chat closed 5 days after the trip arrived. You can still read it.';
+
+  @override
   String get hide => 'Hide';
 
   @override

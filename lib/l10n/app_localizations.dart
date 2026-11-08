@@ -4706,6 +4706,12 @@ abstract class AppLocalizations {
   /// **'Delivery complete. This chat is closed, but you can still read it.'**
   String get chatClosedAfterDelivery;
 
+  /// No description provided for @chatClosedAfterArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat closed 5 days after the trip arrived. You can still read it.'**
+  String get chatClosedAfterArrival;
+
   /// No description provided for @hide.
   ///
   /// In en, this message translates to:

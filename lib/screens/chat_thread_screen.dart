@@ -219,7 +219,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
   /// calculator to help them agree on a price.
   void _offerPriceCalculator(List<ChatMessage> messages) {
     final me = _me;
-    if (_priceTipOffered || me == null || !_c.chatUnlocked) return;
+    if (_priceTipOffered || me == null || !_c.chatUnlockedAt(_now)) return;
     if (_block.blocked) return;
     final both =
         messages.any((m) => m.authorId == me) &&
@@ -383,7 +383,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
         children: [
           _buildHeader(),
           _buildDeliveryCard(),
-          if (_c.chatUnlocked && !_safetyHidden) _buildSafetyNote(),
+          if (_c.chatUnlockedAt(_now) && !_safetyHidden) _buildSafetyNote(),
           Expanded(child: _buildBody()),
           _buildFooter(),
         ],
@@ -1072,9 +1072,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
   }
 
   // ── Input bar ──────────────────────────────────────────────────────────────
-  /// Before payment, or once delivered: no input, just why.
+  /// Before payment, once delivered, or 5 days after the trip's arrival:
+  /// no input, just why.
   Widget _buildLockedFooter() {
-    final closed = _c.isCompleted;
+    final afterArrival = !_c.isCompleted && _c.closedAfterArrival(_now);
+    final closed = _c.isCompleted || afterArrival;
     return SafeArea(
       top: false,
       child: Container(
@@ -1095,7 +1097,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                closed
+                afterArrival
+                    ? context.l10n.chatClosedAfterArrival
+                    : closed
                     ? context.l10n.chatClosedAfterDelivery
                     : context.l10n.chatLockedUntilPayment,
                 style: GoogleFonts.dmSans(
@@ -1205,7 +1209,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen>
 
   Widget _buildFooter() {
     final l = context.l10n;
-    if (!_c.chatUnlocked) return _buildLockedFooter();
+    if (!_c.chatUnlockedAt(_now)) return _buildLockedFooter();
     if (_block.blocked) return _buildBlockedFooter();
     return SafeArea(
       top: false,

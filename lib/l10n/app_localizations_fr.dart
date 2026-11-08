@@ -2703,6 +2703,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Livraison terminée. Cette discussion est fermée, mais vous pouvez toujours la lire.';
 
   @override
+  String get chatClosedAfterArrival =>
+      'Cette discussion s\'est fermée 5 jours après l\'arrivée du voyage. Vous pouvez toujours la lire.';
+
+  @override
   String get hide => 'Masquer';
 
   @override

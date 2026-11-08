@@ -1251,6 +1251,7 @@
   "chatMeetInPublicTitle": "Meet in a public place",
   "chatMeetInPublicBody": "For pickup and handover, always meet somewhere busy and public, like an airport, a station or a café. Never go to a private address.",
   "chatClosedAfterDelivery": "Delivery complete. This chat is closed, but you can still read it.",
+  "chatClosedAfterArrival": "This chat closed 5 days after the trip arrived. You can still read it.",
   "hide": "Hide",
   "messageLocked": "Message",
   "messageUnlocksAfterPayment": "Messaging unlocks after payment.",
