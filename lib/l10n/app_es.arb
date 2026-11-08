@@ -1229,6 +1229,7 @@
   "chatMeetInPublicTitle": "Encuéntrense en un lugar público",
   "chatMeetInPublicBody": "Para la recogida y la entrega, encuéntrense siempre en un lugar público y concurrido, como un aeropuerto, una estación o un café. Nunca vayas a una dirección privada.",
   "chatClosedAfterDelivery": "Entrega completada. Este chat está cerrado, pero aún puedes leerlo.",
+  "chatClosedAfterArrival": "Este chat se cerró 5 días después de la llegada del viaje. Aún puedes leerlo.",
   "hide": "Ocultar",
   "messageLocked": "Mensaje",
   "messageUnlocksAfterPayment": "Los mensajes se desbloquean después del pago.",

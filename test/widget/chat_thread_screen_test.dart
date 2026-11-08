@@ -1024,6 +1024,55 @@ void main() {
       expect(find.text('See you at the airport'), findsOneWidget);
     });
 
+    Future<void> pumpClosesOn(WidgetTester tester, DateTime closesOn) async {
+      final conv = sampleConversation(
+        status: 'handed_off',
+        chatClosesOn: closesOn,
+      );
+      service = FakeMessageService(
+        conversations: [conv],
+        messages: {
+          'conv-1': [sampleMessage(body: 'See you at the airport')],
+        },
+      );
+      await tester.pumpWidget(
+        appWrapper(
+          ChatThreadScreen(
+            conversation: conv,
+            service: service,
+            now: () => now,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('5 days after the trip arrived: closed, still readable', (
+      tester,
+    ) async {
+      // now is 15 June 2030; the trip arrived on 10 June.
+      await pumpClosesOn(tester, DateTime.utc(2030, 6, 15));
+
+      expect(find.byKey(const ValueKey('chat-input')), findsNothing);
+      expect(find.byKey(const ValueKey('chat-closed')), findsOneWidget);
+      expect(
+        find.text(
+          'This chat closed 5 days after the trip arrived. You can still read it.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('chat-safety-note')), findsNothing);
+      expect(find.text('See you at the airport'), findsOneWidget);
+    });
+
+    testWidgets('the day before it closes, the chat is still open', (
+      tester,
+    ) async {
+      await pumpClosesOn(tester, DateTime.utc(2030, 6, 16));
+      expect(find.byKey(const ValueKey('chat-input')), findsOneWidget);
+      expect(find.byKey(const ValueKey('chat-closed')), findsNothing);
+    });
+
     testWidgets('pending and accepted show no advice yet', (tester) async {
       await pumpStatus(tester, 'accepted');
       expect(find.byKey(const ValueKey('chat-safety-note')), findsNothing);

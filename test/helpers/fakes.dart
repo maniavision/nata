@@ -620,6 +620,7 @@ ConversationSummary sampleConversation({
   String? lastAuthor = 'other-1',
   int unread = 0,
   DateTime? createdAt,
+  DateTime? chatClosesOn,
 }) {
   final created = createdAt ?? DateTime(2030, 6, 10, 9);
   final hasLast = lastBody != null || lastAttachment != null;
@@ -642,6 +643,7 @@ ConversationSummary sampleConversation({
     lastAuthorId: hasLast ? lastAuthor : null,
     unreadCount: unread,
     createdAt: created,
+    chatClosesOn: chatClosesOn,
   );
 }
 

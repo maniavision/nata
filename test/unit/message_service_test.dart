@@ -251,13 +251,36 @@ void main() {
       }
     });
 
+    final now = DateTime.utc(2030, 6, 15, 12);
+
     test('chat is open only while the delivery is under way', () {
       for (final s in ['paid', 'handed_off']) {
-        expect(of(status: s).chatUnlocked, isTrue, reason: s);
+        expect(of(status: s).chatUnlockedAt(now), isTrue, reason: s);
       }
       for (final s in ['pending', 'accepted', 'delivered', 'cancelled']) {
-        expect(of(status: s).chatUnlocked, isFalse, reason: s);
+        expect(of(status: s).chatUnlockedAt(now), isFalse, reason: s);
       }
+    });
+
+    test('chat closes on the day the server gives (arrival + 5)', () {
+      final c = ConversationSummary.fromJson(
+        convRow()
+          ..['request_status'] = 'paid'
+          ..['chat_closes_on'] = '2030-06-16',
+      );
+      expect(c.chatClosesOn, DateTime.utc(2030, 6, 16));
+      expect(c.chatUnlockedAt(DateTime.utc(2030, 6, 15, 23, 59)), isTrue);
+      expect(c.closedAfterArrival(DateTime.utc(2030, 6, 16)), isTrue);
+      expect(c.chatUnlockedAt(DateTime.utc(2030, 6, 16)), isFalse);
+      expect(c.chatUnlockedAt(DateTime.utc(2030, 7, 1)), isFalse);
+    });
+
+    test('without a closing day, only the status counts', () {
+      final c = ConversationSummary.fromJson(
+        convRow()..['request_status'] = 'paid',
+      );
+      expect(c.chatClosesOn, isNull);
+      expect(c.chatUnlockedAt(DateTime.utc(2099)), isTrue);
     });
 
     test('completed is "delivered"', () {
