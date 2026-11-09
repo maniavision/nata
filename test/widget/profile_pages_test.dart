@@ -421,6 +421,57 @@ void main() {
       expect(find.textContaining('Tier'), findsNothing);
     });
 
+    testWidgets('approved by the team: finish with a face scan', (
+      tester,
+    ) async {
+      tallScreen(tester);
+      await tester.pumpWidget(
+        appWrapper(
+          IdentityStatusScreen(
+            verified: false,
+            loadVerification: () async => {
+              'status': 'pending',
+              'id_document_type': 'drivers_license',
+              'updated_at': '2025-03-10T09:00:00Z',
+              'needs_review': false,
+              'id_approved_at': '2025-03-11T09:00:00Z',
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('ID approved'), findsOneWidget);
+      expect(find.text('Approved'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('identity-status-face-scan')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('identity-status-back')), findsNothing);
+    });
+
+    testWidgets('waiting for the team says so', (tester) async {
+      tallScreen(tester);
+      await tester.pumpWidget(
+        appWrapper(
+          IdentityStatusScreen(
+            verified: false,
+            loadVerification: () async => {
+              'status': 'pending',
+              'id_document_type': 'passport',
+              'updated_at': '2025-03-10T09:00:00Z',
+              'needs_review': true,
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Our team is checking your ID'),
+        findsOneWidget,
+      );
+      expect(find.text('Waiting'), findsOneWidget);
+    });
+
     testWidgets('under review: received and in review', (tester) async {
       await pumpStatus(tester, verified: false);
       await tester.pumpAndSettle();

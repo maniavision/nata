@@ -21,6 +21,10 @@ class VerificationService {
   factory VerificationService() => _instance;
   VerificationService._();
 
+  /// For test doubles that extend this class.
+  @visibleForTesting
+  VerificationService.test();
+
   SupabaseClient get _client => Supabase.instance.client;
   String? get _userId => _client.auth.currentUser?.id;
 
@@ -120,7 +124,8 @@ class VerificationService {
           .schema('nata')
           .from('identity_verifications')
           .select(
-            'id, status, id_document_type, created_at, updated_at, verified_at',
+            'id, status, id_document_type, created_at, updated_at, '
+            'verified_at, needs_review, id_approved_at',
           )
           .eq('user_id', uid)
           .order('created_at', ascending: false)
@@ -131,4 +136,23 @@ class VerificationService {
       return null;
     }
   }
+
+  // ── Failed ID checks ──────────────────────────────────────────────────────
+
+  /// How many ID photos must fail the app's check before the ID goes to
+  /// Nata's team instead (nata.id_review_after()).
+  static const reviewAfter = 5;
+
+  /// Counts one more ID photo that failed the app's check, on the server so
+  /// reinstalling doesn't reset it. Returns the new count.
+  Future<int> recordIdCheckFailure() async {
+    final n = await _client.rpc('record_id_check_failure');
+    return (n as num).toInt();
+  }
+
+  /// Hands the ID already sent to Nata's team, after [reviewAfter] failed
+  /// checks: the face match waits until they approve it. [reason] is the
+  /// check that failed ('not_an_id', 'no_face', ...).
+  Future<void> sendIdForReview(String reason) =>
+      _client.rpc('send_id_for_review', params: {'p_reason': reason});
 }

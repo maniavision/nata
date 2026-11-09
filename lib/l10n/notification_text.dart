@@ -124,6 +124,7 @@ import 'app_localizations.dart';
     ),
     'identity_verified' => (l.notifVerifiedTitle, l.notifVerifiedBody),
     'identity_rejected' => (l.notifRejectedTitle, l.notifRejectedBody),
+    'id_approved' => (l.notifIdApprovedTitle, l.notifIdApprovedBody),
     'problem_reported' => (l.notifProblemTitle, l.notifProblemBody),
     _ => (n.title, n.body),
   };

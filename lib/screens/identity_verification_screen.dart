@@ -25,10 +25,10 @@ import '../services/route_alert_service.dart';
 import '../services/trip_service.dart';
 
 class IdentityVerificationScreen extends StatefulWidget {
-  /// Which step to open on: 0 = ID upload, 1 = face scan (not part of the flow
-  /// at the moment), 2 = emergency contact, 3 = success.
-  /// Only tests use anything other than the default.
-  @visibleForTesting
+  /// Which step to open on: 0 = ID upload, 1 = face scan, 2 = emergency
+  /// contact, 3 = success. 1 is opened once Nata's team approves an ID they
+  /// reviewed (the id_approved notification, Profile > Identity
+  /// verification); back then leaves instead of going to the ID upload.
   final int initialStep;
 
   /// Override for tests; defaults to the real [EmergencyContactService].
@@ -39,6 +39,13 @@ class IdentityVerificationScreen extends StatefulWidget {
 
   /// Override for tests; defaults to the real [FaceVerificationService].
   final FaceVerificationService? faceService;
+
+  /// Override for tests; defaults to the real [VerificationService].
+  final VerificationService? verificationService;
+
+  /// An ID already picked (bytes, file name), for tests.
+  @visibleForTesting
+  final (Uint8List, String)? initialDocument;
 
   /// The page "Skip for now" opens when there is nothing to go back to
   /// (verification opened right after sign-up). Replaced in tests.
@@ -54,6 +61,8 @@ class IdentityVerificationScreen extends StatefulWidget {
     this.emergencyService,
     this.idCheck,
     this.faceService,
+    this.verificationService,
+    this.initialDocument,
     this.homeBuilder,
     this.routeAlertService,
     this.tripService,
@@ -70,12 +79,46 @@ class _IdentityVerificationScreenState
   int _idType = 0; // index into IdDocumentType.values (the buttons' order)
 
   // Document picked by the user in Step 1
-  Uint8List? _documentBytes;
-  String? _documentFileName;
-  String? _documentMimeType;
+  late Uint8List? _documentBytes = widget.initialDocument?.$1;
+  late String? _documentFileName = widget.initialDocument?.$2;
+  late String? _documentMimeType = widget.initialDocument == null
+      ? null
+      : 'image/jpeg';
 
   bool _submitting = false;
   String? _submitError;
+
+  /// Failed ID checks so far (counted on the server).
+  int _failures = 0;
+
+  /// True once the ID went to Nata's team after too many failed checks.
+  bool _sentForReview = false;
+
+  VerificationService get _verification =>
+      widget.verificationService ?? VerificationService();
+
+  /// What the server calls each failed check.
+  static String _reasonFor(IdCheckResult check) => switch (check) {
+    IdCheckResult.notAnId => 'not_an_id',
+    IdCheckResult.wrongType => 'wrong_type',
+    IdCheckResult.nameMismatch => 'name_mismatch',
+    IdCheckResult.noFace => 'no_face',
+    _ => 'unreadable',
+  };
+
+  /// The check's error, with more help the more photos have failed:
+  /// tips from the 2nd, a better camera from the 3rd, and a warning before
+  /// the last one (the 5th goes to the team).
+  String _withHelp(String error, int failures) {
+    final l = context.l10n;
+    final last = VerificationService.reviewAfter - 1;
+    return [
+      error,
+      if (failures >= 2 && failures < last) l.idCheckTips,
+      if (failures >= 3) l.idCheckAskHelp,
+      if (failures >= last) l.idCheckLastTry,
+    ].join('\n\n');
+  }
 
   void _onDocumentPicked(Uint8List bytes, String fileName, String mimeType) {
     setState(() {
@@ -121,16 +164,30 @@ class _IdentityVerificationScreenState
         IdCheckResult.unreadable => l.errIdUnreadable,
         IdCheckResult.passed || IdCheckResult.unverifiable => null,
       };
+      String? reviewReason;
       if (checkError != null) {
-        setState(() {
-          _submitting = false;
-          _submitError = checkError;
-        });
-        return;
+        int failures;
+        try {
+          failures = await _verification.recordIdCheckFailure();
+        } catch (e) {
+          debugPrint('[VerificationScreen] failure count error: $e');
+          failures = _failures + 1;
+        }
+        if (!mounted) return;
+        _failures = failures;
+        if (failures < VerificationService.reviewAfter) {
+          setState(() {
+            _submitting = false;
+            _submitError = _withHelp(checkError, failures);
+          });
+          return;
+        }
+        // Enough photos failed: the ID goes to Nata's team as it is.
+        reviewReason = _reasonFor(check);
       }
 
       // 2. Upload document to Supabase Storage
-      final path = await VerificationService()
+      final path = await _verification
           .uploadDocument(
             bytes: _documentBytes!,
             fileName: VerificationService.idDocumentFileName(
@@ -141,9 +198,14 @@ class _IdentityVerificationScreenState
           .timeout(const Duration(seconds: 60));
 
       // 3. Create identity_verifications record
-      await VerificationService()
+      await _verification
           .submitVerification(idType: idType, documentPath: path)
           .timeout(const Duration(seconds: 30));
+      if (reviewReason != null) {
+        await _verification
+            .sendIdForReview(reviewReason)
+            .timeout(const Duration(seconds: 30));
+      }
 
       // 4. The ID image the selfie will be compared with. Without one (no
       //    face found on it) there is nothing to match: the ID goes to manual
@@ -166,10 +228,12 @@ class _IdentityVerificationScreenState
 
       // On to the face scan, or the emergency contact. Clear the spinner
       // too, or coming back to this step shows it forever.
+      // An ID sent to the team waits for them before the face scan.
       if (mounted) {
         setState(() {
           _submitting = false;
-          _step = faceMatchReady ? 1 : 2;
+          _sentForReview = reviewReason != null;
+          _step = faceMatchReady && reviewReason == null ? 1 : 2;
         });
       }
     } catch (e) {
@@ -237,7 +301,11 @@ class _IdentityVerificationScreenState
                   key: const ValueKey(1),
                   service: widget.faceService ?? FaceVerificationService(),
                   onDone: () => setState(() => _step = 2),
-                  onBack: () => setState(() => _step = 0),
+                  // Opened after the team approved the ID: nothing to go
+                  // back to here.
+                  onBack: widget.initialStep == 1
+                      ? _leave
+                      : () => setState(() => _step = 0),
                 )
               : _step == 2
               ? _StepEmergency(
@@ -248,6 +316,7 @@ class _IdentityVerificationScreenState
                 )
               : _Step3(
                   key: const ValueKey(3),
+                  underReview: _sentForReview,
                   // Likely senders: get alerts for their route.
                   routeNudge: VerifiedRouteNudge(
                     routeService: widget.routeAlertService,
@@ -1218,8 +1287,12 @@ class _Step3 extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback onViewProfile;
   final Widget routeNudge;
+
+  /// The ID went to Nata's team: say so instead of "verified".
+  final bool underReview;
   const _Step3({
     super.key,
+    this.underReview = false,
     required this.onContinue,
     required this.onViewProfile,
     required this.routeNudge,
@@ -1249,38 +1322,42 @@ class _Step3 extends StatelessWidget {
                   size: 22,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE4F4EE),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: const Color(0xFF168A68).withValues(alpha: 0.3),
+              if (underReview)
+                const SizedBox.shrink()
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE4F4EE),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: const Color(0xFF168A68).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        size: 14,
+                        color: Color(0xFF168A68),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        context.l10n.tier1Verified.split('·').first.trim() +
+                            ',',
+                        style: GoogleFonts.dmSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          letterSpacing: 1.0,
+                          color: const Color(0xFF168A68),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      size: 14,
-                      color: Color(0xFF168A68),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      context.l10n.tier1Verified.split('·').first.trim() + ',',
-                      style: GoogleFonts.dmSans(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11,
-                        letterSpacing: 1.0,
-                        color: const Color(0xFF168A68),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(width: 40),
             ],
           ),
@@ -1323,7 +1400,9 @@ class _Step3 extends StatelessWidget {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF168A68),
+                          color: underReview
+                              ? const Color(0xFFA86B12)
+                              : const Color(0xFF168A68),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: AppColors.background,
@@ -1336,8 +1415,10 @@ class _Step3 extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.verified_rounded,
+                        child: Icon(
+                          underReview
+                              ? Icons.schedule_rounded
+                              : Icons.verified_rounded,
                           size: 20,
                           color: Colors.white,
                         ),
@@ -1347,7 +1428,11 @@ class _Step3 extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  context.l10n.fullyVerified,
+                  underReview
+                      ? context.l10n.idSentForReviewTitle
+                      : context.l10n.fullyVerified,
+                  key: const ValueKey('verification-done-title'),
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w800,
                     fontSize: 24,
@@ -1357,7 +1442,9 @@ class _Step3 extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  context.l10n.fullyVerifiedSub,
+                  underReview
+                      ? context.l10n.idSentForReviewBody
+                      : context.l10n.fullyVerifiedSub,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.dmSans(
                     fontSize: 12,
@@ -1368,7 +1455,7 @@ class _Step3 extends StatelessWidget {
                 routeNudge,
                 const SizedBox(height: 24),
                 // Verification report card
-                _reportCard(context),
+                if (!underReview) _reportCard(context),
                 const SizedBox(height: 16),
                 // Perks card
                 _perksCard(context),

@@ -15,6 +15,7 @@ import '../screens/traveler_results_screen.dart';
 import 'app_badge.dart';
 import 'push_registrar.dart';
 import '../screens/recipient_chat_screen.dart';
+import '../screens/identity_verification_screen.dart';
 import 'chat_presence.dart';
 import '../widgets/in_app_banner.dart';
 
@@ -171,6 +172,14 @@ class PushService {
     final navigator = _navigator?.currentState;
     if (navigator == null || _client.auth.currentUser == null) return;
     final event = message.data['event'] as String?;
+    if (event == 'id_approved') {
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => const IdentityVerificationScreen(initialStep: 1),
+        ),
+      );
+      return;
+    }
     if (event == 'trip_match') {
       final results = resultsForRouteAlert(message.data);
       navigator.push(

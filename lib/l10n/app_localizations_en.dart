@@ -5445,4 +5445,124 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifDeliveredByTravelerBody(String traveler) {
     return '$traveler says they delivered your item. Confirm it and leave a review.';
   }
+
+  @override
+  String get idCheckTips =>
+      'Tips: use good light, avoid glare, keep the whole ID inside the frame and hold the phone steady.';
+
+  @override
+  String get idCheckAskHelp =>
+      'Still not working? Ask someone with a better camera to take the photo and send it to you, then tap Choose photo.';
+
+  @override
+  String get idCheckLastTry =>
+      'If the next photo doesn\'t pass either, we\'ll send your ID to our team to check.';
+
+  @override
+  String get idSentForReviewTitle => 'Your ID is being reviewed';
+
+  @override
+  String get idSentForReviewBody =>
+      'Our team will check your ID. We\'ll let you know once it\'s done, then you\'ll finish with a quick face scan.';
+
+  @override
+  String get idStatusApprovedTitle => 'ID approved';
+
+  @override
+  String get idStatusApprovedBody =>
+      'Our team approved your ID. Finish with a quick face scan to get verified.';
+
+  @override
+  String get idStatusApproved => 'Approved';
+
+  @override
+  String get idStatusFinishFaceScan => 'Finish with a face scan';
+
+  @override
+  String get idStatusTeamReviewBody =>
+      'Our team is checking your ID. We\'ll let you know once it\'s done, then you\'ll finish with a quick face scan.';
+
+  @override
+  String get idStatusWaiting => 'Waiting';
+
+  @override
+  String get notifIdApprovedTitle => 'ID approved';
+
+  @override
+  String get notifIdApprovedBody =>
+      'Your ID was approved. Finish with a quick face scan to get verified.';
+
+  @override
+  String get supportIdReviewsCard => 'ID reviews';
+
+  @override
+  String get supportIdReviewsSuffix => 'waiting';
+
+  @override
+  String get supportIdReviewsLine =>
+      'IDs whose photo failed the app\'s check 5 times';
+
+  @override
+  String get supportIdReviewsTitle => 'ID reviews';
+
+  @override
+  String get supportIdReviewsEmpty => 'No IDs waiting.';
+
+  @override
+  String get supportIdReviewDetail => 'Check the ID';
+
+  @override
+  String get supportIdProfileName => 'Name on the profile';
+
+  @override
+  String get supportIdFailedCheck => 'Last failed check';
+
+  @override
+  String get supportIdFailures => 'Failed photos';
+
+  @override
+  String get supportIdNoImage => 'The ID image couldn\'t be loaded.';
+
+  @override
+  String get supportIdCheckHint =>
+      'Approve only if it\'s a real ID, the name matches the profile and the face is clear. The member then finishes with a face scan.';
+
+  @override
+  String get supportIdRejectHint => 'Reason for rejecting (the member sees it)';
+
+  @override
+  String get supportIdApprove => 'Approve ID';
+
+  @override
+  String get supportIdReject => 'Reject ID';
+
+  @override
+  String get supportIdApproved => 'ID approved';
+
+  @override
+  String get supportIdRejected => 'ID rejected';
+
+  @override
+  String get supportIdNoteRequired => 'Write why the ID is rejected.';
+
+  @override
+  String get supportIdReasonNotAnId => 'Not recognized as an ID';
+
+  @override
+  String get supportIdReasonWrongType => 'Not the type chosen';
+
+  @override
+  String get supportIdReasonNameMismatch => 'Name not found';
+
+  @override
+  String get supportIdReasonNoFace => 'No face found';
+
+  @override
+  String get supportIdReasonUnreadable => 'Text unreadable';
+
+  @override
+  String get supportActIdApproved => 'ID approved';
+
+  @override
+  String get supportActIdRejected => 'ID rejected';
 }

@@ -1162,7 +1162,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
           await Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => _verificationStatus == 'unverified'
+              // Rejected: send a new ID.
+              builder: (context) =>
+                  _verificationStatus == 'unverified' ||
+                      _verificationStatus == 'rejected'
                   ? const IdentityVerificationScreen()
                   : IdentityStatusScreen(
                       verified: _verificationStatus == 'verified',

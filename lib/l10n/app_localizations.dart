@@ -9421,6 +9421,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{traveler} says they delivered your item. Confirm it and leave a review.'**
   String notifDeliveredByTravelerBody(String traveler);
+
+  /// No description provided for @idCheckTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips: use good light, avoid glare, keep the whole ID inside the frame and hold the phone steady.'**
+  String get idCheckTips;
+
+  /// No description provided for @idCheckAskHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Still not working? Ask someone with a better camera to take the photo and send it to you, then tap Choose photo.'**
+  String get idCheckAskHelp;
+
+  /// No description provided for @idCheckLastTry.
+  ///
+  /// In en, this message translates to:
+  /// **'If the next photo doesn\'t pass either, we\'ll send your ID to our team to check.'**
+  String get idCheckLastTry;
+
+  /// No description provided for @idSentForReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ID is being reviewed'**
+  String get idSentForReviewTitle;
+
+  /// No description provided for @idSentForReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Our team will check your ID. We\'ll let you know once it\'s done, then you\'ll finish with a quick face scan.'**
+  String get idSentForReviewBody;
+
+  /// No description provided for @idStatusApprovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ID approved'**
+  String get idStatusApprovedTitle;
+
+  /// No description provided for @idStatusApprovedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Our team approved your ID. Finish with a quick face scan to get verified.'**
+  String get idStatusApprovedBody;
+
+  /// No description provided for @idStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get idStatusApproved;
+
+  /// No description provided for @idStatusFinishFaceScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish with a face scan'**
+  String get idStatusFinishFaceScan;
+
+  /// No description provided for @idStatusTeamReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Our team is checking your ID. We\'ll let you know once it\'s done, then you\'ll finish with a quick face scan.'**
+  String get idStatusTeamReviewBody;
+
+  /// No description provided for @idStatusWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get idStatusWaiting;
+
+  /// No description provided for @notifIdApprovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ID approved'**
+  String get notifIdApprovedTitle;
+
+  /// No description provided for @notifIdApprovedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ID was approved. Finish with a quick face scan to get verified.'**
+  String get notifIdApprovedBody;
+
+  /// No description provided for @supportIdReviewsCard.
+  ///
+  /// In en, this message translates to:
+  /// **'ID reviews'**
+  String get supportIdReviewsCard;
+
+  /// No description provided for @supportIdReviewsSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'waiting'**
+  String get supportIdReviewsSuffix;
+
+  /// No description provided for @supportIdReviewsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'IDs whose photo failed the app\'s check 5 times'**
+  String get supportIdReviewsLine;
+
+  /// No description provided for @supportIdReviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ID reviews'**
+  String get supportIdReviewsTitle;
+
+  /// No description provided for @supportIdReviewsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No IDs waiting.'**
+  String get supportIdReviewsEmpty;
+
+  /// No description provided for @supportIdReviewDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the ID'**
+  String get supportIdReviewDetail;
+
+  /// No description provided for @supportIdProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on the profile'**
+  String get supportIdProfileName;
+
+  /// No description provided for @supportIdFailedCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Last failed check'**
+  String get supportIdFailedCheck;
+
+  /// No description provided for @supportIdFailures.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed photos'**
+  String get supportIdFailures;
+
+  /// No description provided for @supportIdNoImage.
+  ///
+  /// In en, this message translates to:
+  /// **'The ID image couldn\'t be loaded.'**
+  String get supportIdNoImage;
+
+  /// No description provided for @supportIdCheckHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve only if it\'s a real ID, the name matches the profile and the face is clear. The member then finishes with a face scan.'**
+  String get supportIdCheckHint;
+
+  /// No description provided for @supportIdRejectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for rejecting (the member sees it)'**
+  String get supportIdRejectHint;
+
+  /// No description provided for @supportIdApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve ID'**
+  String get supportIdApprove;
+
+  /// No description provided for @supportIdReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject ID'**
+  String get supportIdReject;
+
+  /// No description provided for @supportIdApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'ID approved'**
+  String get supportIdApproved;
+
+  /// No description provided for @supportIdRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'ID rejected'**
+  String get supportIdRejected;
+
+  /// No description provided for @supportIdNoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write why the ID is rejected.'**
+  String get supportIdNoteRequired;
+
+  /// No description provided for @supportIdReasonNotAnId.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recognized as an ID'**
+  String get supportIdReasonNotAnId;
+
+  /// No description provided for @supportIdReasonWrongType.
+  ///
+  /// In en, this message translates to:
+  /// **'Not the type chosen'**
+  String get supportIdReasonWrongType;
+
+  /// No description provided for @supportIdReasonNameMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Name not found'**
+  String get supportIdReasonNameMismatch;
+
+  /// No description provided for @supportIdReasonNoFace.
+  ///
+  /// In en, this message translates to:
+  /// **'No face found'**
+  String get supportIdReasonNoFace;
+
+  /// No description provided for @supportIdReasonUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Text unreadable'**
+  String get supportIdReasonUnreadable;
+
+  /// No description provided for @supportActIdApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'ID approved'**
+  String get supportActIdApproved;
+
+  /// No description provided for @supportActIdRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'ID rejected'**
+  String get supportActIdRejected;
 }
 
 class _AppLocalizationsDelegate

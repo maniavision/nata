@@ -5531,4 +5531,126 @@ class AppLocalizationsFr extends AppLocalizations {
   String notifDeliveredByTravelerBody(String traveler) {
     return '$traveler indique avoir livré votre article. Confirmez-le et laissez un avis.';
   }
+
+  @override
+  String get idCheckTips =>
+      'Conseils : un bon éclairage, sans reflets, toute la pièce dans le cadre et le téléphone bien stable.';
+
+  @override
+  String get idCheckAskHelp =>
+      'Toujours pas ? Demandez à quelqu\'un qui a un meilleur appareil photo de prendre la photo et de vous l\'envoyer, puis touchez Choisir une photo.';
+
+  @override
+  String get idCheckLastTry =>
+      'Si la prochaine photo ne passe pas non plus, nous enverrons votre pièce d\'identité à notre équipe pour vérification.';
+
+  @override
+  String get idSentForReviewTitle =>
+      'Votre pièce d\'identité est en cours d\'examen';
+
+  @override
+  String get idSentForReviewBody =>
+      'Notre équipe va vérifier votre pièce d\'identité. Nous vous préviendrons une fois terminé, puis vous finirez par un rapide scan du visage.';
+
+  @override
+  String get idStatusApprovedTitle => 'Pièce d\'identité approuvée';
+
+  @override
+  String get idStatusApprovedBody =>
+      'Notre équipe a approuvé votre pièce d\'identité. Terminez par un rapide scan du visage pour être vérifié.';
+
+  @override
+  String get idStatusApproved => 'Approuvée';
+
+  @override
+  String get idStatusFinishFaceScan => 'Terminer avec un scan du visage';
+
+  @override
+  String get idStatusTeamReviewBody =>
+      'Notre équipe vérifie votre pièce d\'identité. Nous vous préviendrons une fois terminé, puis vous finirez par un rapide scan du visage.';
+
+  @override
+  String get idStatusWaiting => 'En attente';
+
+  @override
+  String get notifIdApprovedTitle => 'Pièce d\'identité approuvée';
+
+  @override
+  String get notifIdApprovedBody =>
+      'Votre pièce d\'identité a été approuvée. Terminez par un rapide scan du visage pour être vérifié.';
+
+  @override
+  String get supportIdReviewsCard => 'Pièces à vérifier';
+
+  @override
+  String get supportIdReviewsSuffix => 'en attente';
+
+  @override
+  String get supportIdReviewsLine =>
+      'Pièces dont la photo a échoué 5 fois à la vérification de l\'app';
+
+  @override
+  String get supportIdReviewsTitle => 'Pièces à vérifier';
+
+  @override
+  String get supportIdReviewsEmpty => 'Aucune pièce en attente.';
+
+  @override
+  String get supportIdReviewDetail => 'Vérifier la pièce';
+
+  @override
+  String get supportIdProfileName => 'Nom du profil';
+
+  @override
+  String get supportIdFailedCheck => 'Dernière vérification échouée';
+
+  @override
+  String get supportIdFailures => 'Photos refusées';
+
+  @override
+  String get supportIdNoImage =>
+      'L\'image de la pièce n\'a pas pu être chargée.';
+
+  @override
+  String get supportIdCheckHint =>
+      'N\'approuvez que s\'il s\'agit d\'une vraie pièce, que le nom correspond au profil et que le visage est net. Le membre termine ensuite par un scan du visage.';
+
+  @override
+  String get supportIdRejectHint => 'Motif du refus (le membre le voit)';
+
+  @override
+  String get supportIdApprove => 'Approuver la pièce';
+
+  @override
+  String get supportIdReject => 'Refuser la pièce';
+
+  @override
+  String get supportIdApproved => 'Pièce approuvée';
+
+  @override
+  String get supportIdRejected => 'Pièce refusée';
+
+  @override
+  String get supportIdNoteRequired => 'Indiquez pourquoi la pièce est refusée.';
+
+  @override
+  String get supportIdReasonNotAnId => 'Pas reconnue comme pièce d\'identité';
+
+  @override
+  String get supportIdReasonWrongType => 'Pas le type choisi';
+
+  @override
+  String get supportIdReasonNameMismatch => 'Nom introuvable';
+
+  @override
+  String get supportIdReasonNoFace => 'Aucun visage trouvé';
+
+  @override
+  String get supportIdReasonUnreadable => 'Texte illisible';
+
+  @override
+  String get supportActIdApproved => 'Pièce approuvée';
+
+  @override
+  String get supportActIdRejected => 'Pièce refusée';
 }

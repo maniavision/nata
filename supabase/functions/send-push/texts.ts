@@ -76,6 +76,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Identity check failed",
       "We couldn't verify your ID. Please try again with a clear photo."
     ],
+    "id_approved": [
+      "ID approved",
+      "Your ID was approved. Finish with a quick face scan to get verified."
+    ],
     "problem_reported": [
       "Problem reported",
       "A problem was reported on one of your deliveries. Our support team will contact you."
@@ -202,6 +206,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Verificación fallida",
       "No pudimos verificar tu documento. Inténtalo de nuevo con una foto nítida."
     ],
+    "id_approved": [
+      "Documento aprobado",
+      "Tu documento fue aprobado. Termina con un escaneo rápido de tu rostro para verificarte."
+    ],
     "problem_reported": [
       "Problema informado",
       "Se informó de un problema en una de tus entregas. Nuestro equipo de soporte se pondrá en contacto contigo."
@@ -327,6 +335,10 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "identity_rejected": [
       "Vérification échouée",
       "Nous n’avons pas pu vérifier votre pièce d’identité. Réessayez avec une photo nette."
+    ],
+    "id_approved": [
+      "Pièce d’identité approuvée",
+      "Votre pièce d’identité a été approuvée. Terminez par un rapide scan du visage pour être vérifié."
     ],
     "problem_reported": [
       "Problème signalé",

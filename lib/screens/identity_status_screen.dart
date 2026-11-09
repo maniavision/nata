@@ -7,6 +7,7 @@ import '../l10n/l10n_ext.dart';
 import '../main.dart';
 import '../services/verification_service.dart';
 import '../widgets/page_header.dart';
+import 'identity_verification_screen.dart';
 
 const _green = Color(0xFF168A68);
 const _greenBg = Color(0xFFE4F4EE);
@@ -14,7 +15,9 @@ const _amber = Color(0xFFA86B12);
 const _amberBg = Color(0xFFFBF0DC);
 
 /// Where a user's ID check stands, for someone who has already sent their ID:
-/// verified, or under review. Opened from Profile > Identity Verification.
+/// verified, under review (by the face match or by Nata's team), or approved
+/// by the team and waiting for the face scan. Opened from Profile > Identity
+/// Verification.
 class IdentityStatusScreen extends StatefulWidget {
   /// True once the ID is verified; false while it is under review.
   final bool verified;
@@ -76,6 +79,10 @@ class _IdentityStatusScreenState extends State<IdentityStatusScreen> {
     final l = context.l10n;
     final verified = widget.verified;
     final bottom = MediaQuery.of(context).padding.bottom;
+    // Approved by the team after failed photo checks: the face scan is next.
+    final approved = !verified && _record?['id_approved_at'] != null;
+    // Waiting for the team (20240209_id_check_attempts.sql).
+    final teamReview = !verified && _record?['needs_review'] == true;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -93,21 +100,27 @@ class _IdentityStatusScreenState extends State<IdentityStatusScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: verified ? _greenBg : _amberBg,
+                        color: verified || approved ? _greenBg : _amberBg,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         verified
                             ? Icons.verified_user_rounded
+                            : approved
+                            ? Icons.task_alt_rounded
                             : Icons.schedule_rounded,
                         size: 38,
-                        color: verified ? _green : _amber,
+                        color: verified || approved ? _green : _amber,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    verified ? l.idStatusVerifiedTitle : l.idStatusReviewTitle,
+                    verified
+                        ? l.idStatusVerifiedTitle
+                        : approved
+                        ? l.idStatusApprovedTitle
+                        : l.idStatusReviewTitle,
                     key: const ValueKey('identity-status-title'),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
@@ -119,7 +132,13 @@ class _IdentityStatusScreenState extends State<IdentityStatusScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    verified ? l.idStatusVerifiedBody : l.idStatusReviewBody,
+                    verified
+                        ? l.idStatusVerifiedBody
+                        : approved
+                        ? l.idStatusApprovedBody
+                        : teamReview
+                        ? l.idStatusTeamReviewBody
+                        : l.idStatusReviewBody,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.dmSans(
                       fontSize: 13,
@@ -140,6 +159,8 @@ class _IdentityStatusScreenState extends State<IdentityStatusScreen> {
                           label: l.idStatusDocument,
                           value: verified
                               ? _documentLabel(l)
+                              : approved
+                              ? l.idStatusApproved
                               : l.idStatusReceived,
                           done: true,
                         ),
@@ -148,6 +169,8 @@ class _IdentityStatusScreenState extends State<IdentityStatusScreen> {
                           label: l.idStatusFaceMatch,
                           value: verified
                               ? l.idStatusPassed
+                              : approved || teamReview
+                              ? l.idStatusWaiting
                               : l.idStatusInReview,
                           done: verified,
                         ),
@@ -197,21 +220,43 @@ class _IdentityStatusScreenState extends State<IdentityStatusScreen> {
               child: SizedBox(
                 width: double.infinity,
                 height: 52,
-                child: OutlinedButton(
-                  key: const ValueKey('identity-status-back'),
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.foreground,
-                    backgroundColor: AppColors.card,
-                    side: const BorderSide(color: AppColors.border),
-                    shape: const StadiumBorder(),
-                    textStyle: GoogleFonts.dmSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                    ),
-                  ),
-                  child: Text(l.backToProfile),
-                ),
+                child: approved
+                    ? FilledButton.icon(
+                        key: const ValueKey('identity-status-face-scan'),
+                        onPressed: () => Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => const IdentityVerificationScreen(
+                              initialStep: 1,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.face_retouching_natural_rounded),
+                        label: Text(l.idStatusFinishFaceScan),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          shape: const StadiumBorder(),
+                          textStyle: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                      )
+                    : OutlinedButton(
+                        key: const ValueKey('identity-status-back'),
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.foreground,
+                          backgroundColor: AppColors.card,
+                          side: const BorderSide(color: AppColors.border),
+                          shape: const StadiumBorder(),
+                          textStyle: GoogleFonts.dmSans(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                        child: Text(l.backToProfile),
+                      ),
               ),
             ),
           ],
