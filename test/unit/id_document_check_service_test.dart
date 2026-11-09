@@ -88,6 +88,40 @@ JEAN ERIC
       );
     });
 
+    // Laid out like the front of a UK driving licence (made-up details):
+    // numbered fields, no labels.
+    const ukLicence =
+        'UK DRIVING LICENCE\n1. MBALLA ONDO\n2. MS ANNE-MARIE\n'
+        '3. 01.01.1990 UNITED KINGDOM\n4a. 01.01.2020 4c. DVLA\n'
+        '4b. 01.01.2030\n5. MBALL901010AB9CD 00\n9. AM/B';
+
+    test('recognizes a UK driving licence by its numbered fields', () {
+      expect(
+        IdDocumentCheckService.keywordGroupsIn(ukLicence),
+        greaterThanOrEqualTo(IdDocumentCheckService.minKeywords),
+      );
+      expect(IdDocumentCheckService.hasEuLicenceFields(ukLicence), isTrue);
+    });
+
+    test('still recognized when the title was cut off the photo', () {
+      final noTitle = ukLicence.replaceFirst('UK DRIVING LICENCE\n', '');
+      expect(
+        IdDocumentCheckService.keywordGroupsIn(noTitle),
+        greaterThanOrEqualTo(IdDocumentCheckService.minKeywords),
+      );
+    });
+
+    test('one licence field number alone is not enough', () {
+      expect(
+        IdDocumentCheckService.hasEuLicenceFields('Flat 4a, Main St'),
+        isFalse,
+      );
+      expect(
+        IdDocumentCheckService.hasEuLicenceFields('Gate 14B 4CX'),
+        isFalse,
+      );
+    });
+
     test('a receipt has no ID labels', () {
       expect(
         IdDocumentCheckService.keywordGroupsIn('TOTAL 12.50 THANK YOU VISA'),
@@ -164,6 +198,13 @@ JEAN ERIC
       expect(mentions(marylandLicense, IdDocumentType.nationalId), isFalse);
     });
 
+    test('EU licence field numbers count as a driving licence', () {
+      const fields = '1. MBALLA\n4a. 01.01.2020 4c. DVLA\n4b. 01.01.2030';
+      expect(mentions(fields, IdDocumentType.driversLicense), isTrue);
+      expect(mentions(fields, IdDocumentType.passport), isFalse);
+      expect(mentions(fields, IdDocumentType.nationalId), isFalse);
+    });
+
     test('ordinary lines are not mistaken for an MRZ', () {
       expect(mentions('PLACE OF BIRTH', IdDocumentType.passport), isFalse);
       expect(mentions('ISSUE DATE', IdDocumentType.nationalId), isFalse);
@@ -230,6 +271,25 @@ JEAN ERIC
         await run(build(text: passportText.replaceAll('MBALLA', 'NGONO'))),
         IdCheckResult.nameMismatch,
       );
+    });
+
+    test('a UK driving licence passes, names in either order', () async {
+      const licence =
+          'UK DRIVING LICENCE\n1. MBALLA ONDO\n2. MS ANNE-MARIE\n'
+          '3. 01.01.1990 UNITED KINGDOM\n4a. 01.01.2020 4c. DVLA\n'
+          '4b. 01.01.2030\n5. MBALL901010AB9CD 00\n9. AM/B';
+      for (final profile in [
+        {'first_name': 'Anne-Marie', 'last_name': 'Mballa Ondo'},
+        {'first_name': 'Mballa Ondo', 'last_name': 'Anne-Marie'},
+      ]) {
+        expect(
+          await run(
+            build(text: licence, profile: profile),
+            type: IdDocumentType.driversLicense,
+          ),
+          IdCheckResult.passed,
+        );
+      }
     });
 
     test('noFace when no face is detected', () async {

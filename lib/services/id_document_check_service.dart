@@ -169,7 +169,7 @@ class IdDocumentCheckService {
       'VALIDADE',
       'GULTIG BIS',
     ],
-    'authority': ['AUTHORITY', 'AUTORITE', 'AUTORIDAD', 'BEHORDE'],
+    'authority': ['AUTHORITY', 'AUTORITE', 'AUTORIDAD', 'BEHORDE', 'DVLA'],
   };
 
   /// Words that name each type of ID, in the languages IDs are commonly
@@ -227,12 +227,36 @@ class IdDocumentCheckService {
     ),
   };
 
+  /// The field numbers printed on the front of EU-format driving licences
+  /// (UK, France, Germany, ...): "4a." issue date, "4b." expiry date, "4c."
+  /// issuing authority. These licences number their fields instead of
+  /// labelling them (the labels are on the back), so the usual words
+  /// ("surname", "date of birth") are not on the front.
+  static final _euLicenceField = RegExp(
+    r'(?:^|[^0-9A-Z])4\s?([ABC])(?=[\s.,:)]|$)',
+  );
+
+  /// True when at least two of the EU licence fields 4a, 4b and 4c are in
+  /// [text]: an EU-format driving licence, even when OCR missed its title.
+  @visibleForTesting
+  static bool hasEuLicenceFields(String text) =>
+      _euLicenceField
+          .allMatches(text.toUpperCase())
+          .map((m) => m.group(1))
+          .toSet()
+          .length >=
+      2;
+
   /// True when [text] names [type]: one of its [typeKeywords] as whole
-  /// words, or a machine-readable zone line of that type.
+  /// words, a machine-readable zone line of that type, or (for a driver's
+  /// licence) the EU licence field numbers.
   @visibleForTesting
   static bool mentionsType(String text, IdDocumentType type) {
     final haystack = ' ${_normalize(text)} ';
     if (typeKeywords[type]!.any((k) => haystack.contains(' $k '))) return true;
+    if (type == IdDocumentType.driversLicense && hasEuLicenceFields(text)) {
+      return true;
+    }
     final mrz = _mrzStart[type];
     return mrz != null && mrz.hasMatch(text.toUpperCase());
   }
@@ -285,13 +309,15 @@ class IdDocumentCheckService {
   }
 
   /// How many [idKeywords] groups have at least one label in [text], each
-  /// matched as whole words.
+  /// matched as whole words. The EU licence field numbers (see
+  /// [hasEuLicenceFields]) count as one more group.
   @visibleForTesting
   static int keywordGroupsIn(String text) {
     final haystack = ' ${_normalize(text)} ';
-    return idKeywords.values
+    final labels = idKeywords.values
         .where((labels) => labels.any((l) => haystack.contains(' $l ')))
         .length;
+    return labels + (hasEuLicenceFields(text) ? 1 : 0);
   }
 
   /// True when every word of [name] appears as a whole word in [text].
