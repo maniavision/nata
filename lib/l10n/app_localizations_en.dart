@@ -872,7 +872,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useCamera => 'Use camera';
 
   @override
-  String get chooseFile => 'Choose file';
+  String get choosePhoto => 'Choose photo';
 
   @override
   String get faceScan => '3D Face Scan';

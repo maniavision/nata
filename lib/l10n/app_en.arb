@@ -313,7 +313,7 @@
   "takePhotoOrUpload": "Take photo or upload front page",
   "allCornersVisible": "Ensure all 4 corners are visible with no glare",
   "useCamera": "Use camera",
-  "chooseFile": "Choose file",
+  "choosePhoto": "Choose photo",
   "faceScan": "3D Face Scan",
   "faceScanSub": "Matches your live selfie with your ID photo",
   "scanIdToContinue": "Scan ID to Continue",

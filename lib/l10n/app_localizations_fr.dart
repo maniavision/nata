@@ -881,7 +881,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get useCamera => 'Utiliser la caméra';
 
   @override
-  String get chooseFile => 'Choisir un fichier';
+  String get choosePhoto => 'Choisir une photo';
 
   @override
   String get faceScan => 'Scan facial 3D';

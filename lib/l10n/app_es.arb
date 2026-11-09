@@ -304,7 +304,7 @@
   "takePhotoOrUpload": "Toma una foto o sube la página frontal",
   "allCornersVisible": "Asegúrate de que las 4 esquinas sean visibles sin reflejos",
   "useCamera": "Usar cámara",
-  "chooseFile": "Elegir archivo",
+  "choosePhoto": "Elegir foto",
   "faceScan": "Escaneo facial 3D",
   "faceScanSub": "Compara tu selfie en vivo con la foto de tu ID",
   "scanIdToContinue": "Escanear ID para continuar",

@@ -876,7 +876,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get useCamera => 'Usar cámara';
 
   @override
-  String get chooseFile => 'Elegir archivo';
+  String get choosePhoto => 'Elegir foto';
 
   @override
   String get faceScan => 'Escaneo facial 3D';
