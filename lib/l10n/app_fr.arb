@@ -913,7 +913,7 @@
   "whereAreYouSending": "Où envoyez-vous ?",
   "whereSendingFrom": "D'où envoyez-vous ?",
   "destinationExample": "ex. Londres, Royaume-Uni",
-  "anytimeThisMonth": "N'importe quand ce mois-ci",
+  "anytimeThisMonth": "À tout moment ce mois-ci",
   "flexibleShort": "(±3 j)",
   "availableTravelers": "Voyageurs disponibles",
   "errLoadTravelers": "Impossible de charger les voyageurs.",
@@ -928,7 +928,7 @@
     }
   },
 
-  "dateAnytime": "N'importe quand",
+  "dateAnytime": "À tout moment",
   "dateThisWeek": "Cette semaine",
   "dateNextWeek": "Semaine prochaine",
   "dateFlexible": "Flexible (±3 j)",
@@ -959,7 +959,7 @@
       }
     }
   },
-  "confirmDateAnytime": "Confirmer la date (n'importe quand)",
+  "confirmDateAnytime": "Confirmer la date (à tout moment)",
 
   "searchCountryHint": "Rechercher un pays...",
   "searchCityIn": "Rechercher une ville en/au {country}...",
@@ -1697,7 +1697,7 @@
   "routeAlertsAdd": "Ajouter un trajet",
   "routeAlertsMax": "Jusqu'à 5 trajets",
   "routeAlertsEmptyTitle": "Aucun trajet pour l'instant",
-  "routeAlertsEmptyBody": "Ajoutez vos trajets d'envoi et nous vous dirons quand un voyageur les fait.",
+  "routeAlertsEmptyBody": "Ajoutez vos itinéraires d'envoi et nous vous alerterons dès qu'un voyageur en propose un.",
   "routeAlertsFrom": "De",
   "routeAlertsTo": "À",
   "routeAlertsChooseCity": "Choisir une ville",
@@ -1725,7 +1725,7 @@
   "homeVerifyBody": "2 minutes suffisent. Nécessaire pour envoyer ou transporter des articles.",
   "homeVerifyAction": "Vérifier",
   "homeRoutesTitle": "Alertes pour vos trajets",
-  "homeRoutesBody": "Nous vous prévenons quand un voyageur fait vos trajets d'envoi.",
+  "homeRoutesBody": "Nous vous alertons dès qu'un voyageur propose votre itinéraire.",
   "homeRoutesAction": "Ajouter un trajet",
   "homeFaceIdTitle": "Connexion avec Face ID",
   "homeFaceIdBody": "La prochaine fois, votre visage vous connecte. Pas besoin de code.",

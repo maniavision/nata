@@ -52,7 +52,7 @@ void main() {
 
       expect(find.text('Bonjour,'), findsOneWidget);
       expect(find.text('Où envoyez-vous ?'), findsOneWidget);
-      expect(find.text("N'importe quand ce mois-ci"), findsOneWidget);
+      expect(find.text("À tout moment ce mois-ci"), findsOneWidget);
       expect(find.text('Voyageurs disponibles'), findsOneWidget);
       expect(find.textContaining('28 livraisons'), findsOneWidget);
       // "Destination" is the same word in French.

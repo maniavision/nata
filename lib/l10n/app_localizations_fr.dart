@@ -2220,7 +2220,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get destinationExample => 'ex. Londres, Royaume-Uni';
 
   @override
-  String get anytimeThisMonth => 'N\'importe quand ce mois-ci';
+  String get anytimeThisMonth => 'À tout moment ce mois-ci';
 
   @override
   String get flexibleShort => '(±3 j)';
@@ -2244,7 +2244,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get dateAnytime => 'N\'importe quand';
+  String get dateAnytime => 'À tout moment';
 
   @override
   String get dateThisWeek => 'Cette semaine';
@@ -2292,7 +2292,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get confirmDateAnytime => 'Confirmer la date (n\'importe quand)';
+  String get confirmDateAnytime => 'Confirmer la date (à tout moment)';
 
   @override
   String get searchCountryHint => 'Rechercher un pays...';
@@ -3789,7 +3789,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get routeAlertsEmptyBody =>
-      'Ajoutez vos trajets d\'envoi et nous vous dirons quand un voyageur les fait.';
+      'Ajoutez vos itinéraires d\'envoi et nous vous alerterons dès qu\'un voyageur en propose un.';
 
   @override
   String get routeAlertsFrom => 'De';
@@ -3901,7 +3901,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeRoutesBody =>
-      'Nous vous prévenons quand un voyageur fait vos trajets d\'envoi.';
+      'Nous vous alertons dès qu\'un voyageur propose votre itinéraire.';
 
   @override
   String get homeRoutesAction => 'Ajouter un trajet';
