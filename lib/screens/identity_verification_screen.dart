@@ -10,6 +10,7 @@ import '../services/country_service.dart';
 import '../services/emergency_contact_service.dart';
 import '../services/face_verification_service.dart';
 import '../services/id_document_check_service.dart';
+import '../services/id_document_scanner.dart';
 import '../services/preferences_service.dart';
 import '../services/request_service.dart' show RequestInput;
 import '../widgets/country_code_picker_sheet.dart';
@@ -950,7 +951,31 @@ class _Step1 extends StatelessWidget {
     );
   }
 
+  /// Scans the ID with the phone's document scanner, which finds the card's
+  /// edges and crops to them. If the scanner can't run (the iOS simulator
+  /// has no document camera), falls back to a plain photo.
   Future<void> _pickFromCamera(BuildContext context) async {
+    final scan = await IdDocumentScanner.scan();
+    switch (scan.outcome) {
+      case IdScanOutcome.scanned:
+        final bytes = scan.bytes!;
+        final ext = IdDocumentScanner.extensionOf(bytes);
+        onDocumentPicked(
+          bytes,
+          'id_document_$ext.$ext',
+          ext == 'png' ? 'image/png' : 'image/jpeg',
+        );
+      case IdScanOutcome.cancelled:
+        return;
+      case IdScanOutcome.cameraDenied:
+        if (context.mounted) await showCameraDeniedSheet(context);
+      case IdScanOutcome.unavailable:
+        if (context.mounted) await _takePlainPhoto(context);
+    }
+  }
+
+  /// A plain camera photo of the ID, when the document scanner can't run.
+  Future<void> _takePlainPhoto(BuildContext context) async {
     try {
       final picker = ImagePicker();
       final XFile? photo = await picker.pickImage(
