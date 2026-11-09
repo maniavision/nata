@@ -4443,7 +4443,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tipRouteAlertsBody =>
-      'Enregistrez les trajets sur lesquels vous envoyez et soyez averti quand un voyageur les fait.';
+      'Enregistrez vos itinéraires d\'envoi et soyez alerté dès qu\'un voyageur en propose un.';
 
   @override
   String get paidSecurelyThroughStripe =>
