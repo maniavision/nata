@@ -304,7 +304,7 @@
   "takePhotoOrUpload": "Prenez une photo ou téléchargez la page de couverture",
   "allCornersVisible": "Assurez-vous que les 4 coins sont visibles sans reflet",
   "useCamera": "Utiliser la caméra",
-  "chooseFile": "Choisir un fichier",
+  "choosePhoto": "Choisir une photo",
   "faceScan": "Scan facial 3D",
   "faceScanSub": "Compare votre selfie en direct avec la photo de votre pièce d'identité",
   "scanIdToContinue": "Scanner la pièce d'identité pour continuer",

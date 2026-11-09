@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import '../main.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n_ext.dart';
@@ -10,6 +9,7 @@ import '../services/country_service.dart';
 import '../services/emergency_contact_service.dart';
 import '../services/face_verification_service.dart';
 import '../services/id_document_check_service.dart';
+import '../services/id_document_scanner.dart';
 import '../services/preferences_service.dart';
 import '../services/request_service.dart' show RequestInput;
 import '../widgets/country_code_picker_sheet.dart';
@@ -849,7 +849,7 @@ class _Step1 extends StatelessWidget {
                 _uploadButton(
                   context,
                   Icons.photo_library_rounded,
-                  context.l10n.chooseFile,
+                  context.l10n.choosePhoto,
                   onTap: () => _pickFromGallery(context),
                 ),
               ],
@@ -935,7 +935,7 @@ class _Step1 extends StatelessWidget {
                   color: AppColors.primary,
                 ),
                 title: Text(
-                  context.l10n.chooseFile,
+                  context.l10n.choosePhoto,
                   style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
                 ),
                 onTap: () {
@@ -950,7 +950,31 @@ class _Step1 extends StatelessWidget {
     );
   }
 
+  /// Scans the ID with the phone's document scanner, which finds the card's
+  /// edges and crops to them. If the scanner can't run (the iOS simulator
+  /// has no document camera), falls back to a plain photo.
   Future<void> _pickFromCamera(BuildContext context) async {
+    final scan = await IdDocumentScanner.scan();
+    switch (scan.outcome) {
+      case IdScanOutcome.scanned:
+        final bytes = scan.bytes!;
+        final ext = IdDocumentScanner.extensionOf(bytes);
+        onDocumentPicked(
+          bytes,
+          'id_document_$ext.$ext',
+          ext == 'png' ? 'image/png' : 'image/jpeg',
+        );
+      case IdScanOutcome.cancelled:
+        return;
+      case IdScanOutcome.cameraDenied:
+        if (context.mounted) await showCameraDeniedSheet(context);
+      case IdScanOutcome.unavailable:
+        if (context.mounted) await _takePlainPhoto(context);
+    }
+  }
+
+  /// A plain camera photo of the ID, when the document scanner can't run.
+  Future<void> _takePlainPhoto(BuildContext context) async {
     try {
       final picker = ImagePicker();
       final XFile? photo = await picker.pickImage(
@@ -979,25 +1003,28 @@ class _Step1 extends StatelessWidget {
     }
   }
 
+  /// Picks a photo of the ID from the phone's photo gallery (the system
+  /// photo picker, which needs no permission).
   Future<void> _pickFromGallery(BuildContext context) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'heic'],
-        withData: true,
+      final XFile? photo = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2000,
+        maxHeight: 2000,
+        imageQuality: 90,
       );
-      if (result == null || result.files.isEmpty) return;
-      final file = result.files.first;
-      if (file.bytes == null) return;
-      final ext = (file.extension ?? 'jpg').toLowerCase();
-      final mime = ext == 'pdf'
-          ? 'application/pdf'
-          : ext == 'png'
-          ? 'image/png'
-          : 'image/jpeg';
-      onDocumentPicked(file.bytes!, file.name, mime);
+      if (photo == null) return;
+      final bytes = await photo.readAsBytes();
+      final ext = photo.name.split('.').last.toLowerCase() == 'png'
+          ? 'png'
+          : 'jpg';
+      onDocumentPicked(
+        bytes,
+        'id_document_$ext.$ext',
+        ext == 'png' ? 'image/png' : 'image/jpeg',
+      );
     } catch (e) {
-      debugPrint('[Step1] file picker error: $e');
+      debugPrint('[Step1] gallery error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           nataToast(

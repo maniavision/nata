@@ -130,11 +130,12 @@ void main() {
       expect(find.textContaining('camera'), findsWidgets);
     });
 
-    testWidgets('renders Choose file button', (tester) async {
+    testWidgets('renders Choose photo button', (tester) async {
       await tester.pumpWidget(buildScreen());
       await tester.pump();
 
-      expect(find.textContaining('file'), findsWidgets);
+      expect(find.text('Choose photo'), findsOneWidget);
+      expect(find.byIcon(Icons.photo_library_rounded), findsOneWidget);
     });
 
     testWidgets('renders upload zone with add photo icon', (tester) async {

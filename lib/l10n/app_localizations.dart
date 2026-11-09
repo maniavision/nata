@@ -1720,11 +1720,11 @@ abstract class AppLocalizations {
   /// **'Use camera'**
   String get useCamera;
 
-  /// No description provided for @chooseFile.
+  /// No description provided for @choosePhoto.
   ///
   /// In en, this message translates to:
-  /// **'Choose file'**
-  String get chooseFile;
+  /// **'Choose photo'**
+  String get choosePhoto;
 
   /// No description provided for @faceScan.
   ///
