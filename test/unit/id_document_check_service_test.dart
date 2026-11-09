@@ -240,10 +240,49 @@ JEAN ERIC
 
     test('notAnId when fewer than 2 ID labels are found', () async {
       expect(
-        await run(build(text: 'PASSPORT MBALLA JEAN')),
+        await run(build(text: 'SURNAME MBALLA JEAN')),
+        IdCheckResult.notAnId,
+      );
+      // Names a type, but not the selected one.
+      expect(
+        await run(
+          build(text: 'PASSPORT MBALLA JEAN'),
+          type: IdDocumentType.nationalId,
+        ),
         IdCheckResult.notAnId,
       );
     });
+
+    test(
+      'an ID naming the selected type passes with its labels misread',
+      () async {
+        // Read from a worn licence (made-up details): only the title is
+        // clean, the small labels came out as "lleu" and "delivrarce".
+        const licence =
+            'REPUBIIQUE DU CONGO\nPERMIS DE CONDUIRE\nMBALLA\nJEAN\n'
+            'lleu de naissance\n01-janv-1990\nDate de delivrarce\n01-mars-2020';
+        expect(
+          await run(build(text: licence), type: IdDocumentType.driversLicense),
+          IdCheckResult.passed,
+        );
+        // The name still has to be on it.
+        expect(
+          await run(
+            build(text: licence.replaceAll('MBALLA', 'NGONO')),
+            type: IdDocumentType.driversLicense,
+          ),
+          IdCheckResult.nameMismatch,
+        );
+        // And a face.
+        expect(
+          await run(
+            build(text: licence, face: false),
+            type: IdDocumentType.driversLicense,
+          ),
+          IdCheckResult.noFace,
+        );
+      },
+    );
 
     test('wrongType when the ID is not the selected type', () async {
       expect(
