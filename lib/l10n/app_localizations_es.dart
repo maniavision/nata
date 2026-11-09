@@ -3766,7 +3766,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get routeAlertsEmptyBody =>
-      'Añade las rutas en las que envías y te diremos cuando un viajero las haga.';
+      'Añade tus rutas de envío y te avisaremos en cuanto un viajero ofrezca una.';
 
   @override
   String get routeAlertsFrom => 'Desde';
@@ -3878,7 +3878,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeRoutesBody =>
-      'Te avisamos cuando un viajero haga las rutas en las que envías.';
+      'Te avisamos en cuanto un viajero ofrezca tu ruta.';
 
   @override
   String get homeRoutesAction => 'Añadir una ruta';
@@ -4410,7 +4410,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tipRouteAlertsBody =>
-      'Guarda las rutas en las que envías y entérate cuando un viajero las vuele.';
+      'Guarda tus rutas de envío y entérate en cuanto un viajero ofrezca una.';
 
   @override
   String get paidSecurelyThroughStripe =>
