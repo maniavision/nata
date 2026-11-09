@@ -480,6 +480,18 @@ class _SupportScreenState extends State<SupportScreen> {
             line: l.supportReportsLine,
             onTap: () => _open(SupportReportsScreen(service: _service)),
           ),
+          const SizedBox(height: 12),
+          _SummaryCard(
+            key: const ValueKey('support-id-reviews'),
+            icon: Icons.badge_rounded,
+            color: _amber,
+            background: _amberBg,
+            label: l.supportIdReviewsCard,
+            count: s.idReviews,
+            suffix: l.supportIdReviewsSuffix,
+            line: l.supportIdReviewsLine,
+            onTap: () => _open(SupportIdReviewsScreen(service: _service)),
+          ),
           const SizedBox(height: 20),
           _Section(
             title: l.supportRecentActivity,
@@ -587,6 +599,8 @@ class _ActivityRow extends StatelessWidget {
       'payout_retried' => (Icons.refresh_rounded, l.supportActPayoutRetried),
       'refund_retried' => (Icons.refresh_rounded, l.supportActRefundRetried),
       'report_reviewed' => (Icons.flag_rounded, l.supportActReportReviewed),
+      'id_approved' => (Icons.badge_rounded, l.supportActIdApproved),
+      'id_rejected' => (Icons.badge_outlined, l.supportActIdRejected),
       _ => (Icons.lock_open_rounded, l.supportActUnlocked),
     };
     final resolved = activity.action == 'resolved';
@@ -2154,6 +2168,316 @@ class _SupportReportDetailScreenState extends State<SupportReportDetailScreen> {
               Text(r.reviewNote, style: _body(weight: FontWeight.w400)),
             ],
           ),
+      ],
+    );
+  }
+}
+
+// ── ID reviews ──────────────────────────────────────────────────────────────
+
+String _idReasonLabel(AppLocalizations l, String reason) => switch (reason) {
+  'not_an_id' => l.supportIdReasonNotAnId,
+  'wrong_type' => l.supportIdReasonWrongType,
+  'name_mismatch' => l.supportIdReasonNameMismatch,
+  'no_face' => l.supportIdReasonNoFace,
+  _ => l.supportIdReasonUnreadable,
+};
+
+String _idTypeLabel(AppLocalizations l, String type) => switch (type) {
+  'drivers_license' => l.idDocDriversLicense,
+  'national_id' => l.idDocNationalId,
+  _ => l.idDocPassport,
+};
+
+/// IDs whose photo failed the app's check 5 times, sent to the team.
+class SupportIdReviewsScreen extends StatefulWidget {
+  final SupportService? service;
+  const SupportIdReviewsScreen({super.key, this.service});
+
+  @override
+  State<SupportIdReviewsScreen> createState() => _SupportIdReviewsScreenState();
+}
+
+class _SupportIdReviewsScreenState extends State<SupportIdReviewsScreen> {
+  late final SupportService _service = widget.service ?? SupportService();
+  List<IdReview>? _items;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final items = await _service.idReviews();
+      if (!mounted) return;
+      setState(() {
+        _items = items;
+        _failed = false;
+      });
+    } catch (e) {
+      debugPrint('[Support] id reviews: $e');
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final items = _items;
+    return _Page(
+      title: l.supportIdReviewsTitle,
+      onRefresh: _load,
+      children: [
+        if (items == null && _failed)
+          _message(l.supportLoadFailed)
+        else if (items == null)
+          _loading()
+        else if (items.isEmpty)
+          _message(
+            l.supportIdReviewsEmpty,
+            key: const ValueKey('id-reviews-empty'),
+          )
+        else
+          for (final r in items) ...[
+            _Card(
+              cardKey: ValueKey('id-review-${r.userId}'),
+              onTap: () async {
+                final done = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) => SupportIdReviewDetailScreen(
+                      review: r,
+                      service: _service,
+                    ),
+                  ),
+                );
+                if (done == true && mounted) _load();
+              },
+              child: Row(
+                children: [
+                  _Avatar(name: r.name),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(r.name, style: _title()),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${_idTypeLabel(l, r.documentType)} · ${_ago(context, r.submittedAt)}',
+                          style: _small(),
+                        ),
+                        const SizedBox(height: 6),
+                        _Chip(
+                          _idReasonLabel(l, r.reason),
+                          color: _amber,
+                          background: _amberBg,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.mutedForeground,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+      ],
+    );
+  }
+}
+
+/// One ID to check: the image, the name on the profile, why the app's check
+/// failed; approve (the member goes on to the face scan) or reject.
+class SupportIdReviewDetailScreen extends StatefulWidget {
+  final IdReview review;
+  final SupportService? service;
+  const SupportIdReviewDetailScreen({
+    super.key,
+    required this.review,
+    this.service,
+  });
+
+  @override
+  State<SupportIdReviewDetailScreen> createState() =>
+      _SupportIdReviewDetailScreenState();
+}
+
+class _SupportIdReviewDetailScreenState
+    extends State<SupportIdReviewDetailScreen> {
+  late final SupportService _service = widget.service ?? SupportService();
+  final _note = TextEditingController();
+  late final Future<String?> _image = _service
+      .idDocumentUrl(widget.review.documentPath)
+      .catchError((Object e) {
+        debugPrint('[Support] id image: $e');
+        return null;
+      });
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _decide(bool approve) async {
+    final l = context.l10n;
+    if (!approve && _note.text.trim().isEmpty) {
+      _snack(context, l.supportIdNoteRequired);
+      return;
+    }
+    final navigator = Navigator.of(context);
+    setState(() => _busy = true);
+    try {
+      await _service.reviewId(
+        widget.review.userId,
+        approve: approve,
+        note: _note.text.trim(),
+      );
+      if (!mounted) return;
+      _snack(context, approve ? l.supportIdApproved : l.supportIdRejected);
+      navigator.pop(true);
+    } catch (e) {
+      debugPrint('[Support] review id: $e');
+      if (!mounted) return;
+      setState(() => _busy = false);
+      _snack(context, l.supportActionFailed);
+    }
+  }
+
+  Widget _fact(String label, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: Text(label, style: _small())),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(value, style: _body(), textAlign: TextAlign.end),
+        ),
+      ],
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final r = widget.review;
+    final isPdf = r.documentPath.toLowerCase().endsWith('.pdf');
+    return _Page(
+      title: l.supportIdReviewDetail,
+      onRefresh: () async {},
+      children: [
+        _Card(
+          child: FutureBuilder<String?>(
+            future: _image,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const SizedBox(
+                  height: 180,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.accent),
+                  ),
+                );
+              }
+              final url = snap.data;
+              if (url == null) {
+                return Text(l.supportIdNoImage, style: _small());
+              }
+              if (isPdf) {
+                return _Pill(
+                  'PDF',
+                  primary: false,
+                  icon: Icons.picture_as_pdf_rounded,
+                  onTap: () => launchUrl(
+                    Uri.parse(url),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                );
+              }
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: InteractiveViewer(
+                  maxScale: 5,
+                  child: Image.network(
+                    url,
+                    key: const ValueKey('id-review-image'),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) =>
+                        Text(l.supportIdNoImage, style: _small()),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        _Card(
+          child: Column(
+            children: [
+              _fact(l.supportIdProfileName, r.name),
+              _fact(l.idStatusDocument, _idTypeLabel(l, r.documentType)),
+              _fact(l.supportIdFailedCheck, _idReasonLabel(l, r.reason)),
+              _fact(l.supportIdFailures, '${r.failures}'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(l.supportIdCheckHint, style: _small()),
+        const SizedBox(height: 16),
+        _Section(
+          title: l.supportResolutionNote,
+          children: [
+            TextField(
+              key: const ValueKey('id-review-note'),
+              controller: _note,
+              minLines: 2,
+              maxLines: 4,
+              style: _body(weight: FontWeight.w400),
+              decoration: InputDecoration(
+                hintText: l.supportIdRejectHint,
+                hintStyle: _body(
+                  weight: FontWeight.w400,
+                  color: AppColors.mutedForeground,
+                ),
+                filled: true,
+                fillColor: AppColors.input,
+                contentPadding: const EdgeInsets.all(12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _Pill(
+          l.supportIdApprove,
+          buttonKey: const ValueKey('id-review-approve'),
+          icon: Icons.check_rounded,
+          busy: _busy,
+          onTap: () => _decide(true),
+        ),
+        const SizedBox(height: 10),
+        _Pill(
+          l.supportIdReject,
+          buttonKey: const ValueKey('id-review-reject'),
+          primary: false,
+          destructive: true,
+          busy: _busy,
+          onTap: () => _decide(false),
+        ),
       ],
     );
   }

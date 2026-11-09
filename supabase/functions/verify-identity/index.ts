@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
   const db = admin.schema("nata");
   const { data: row, error: rowError } = await db
     .from("identity_verifications")
-    .select("id, status, face_match_attempts")
+    .select("id, status, face_match_attempts, needs_review")
     .eq("user_id", user.id)
     .maybeSingle();
   if (rowError) {
@@ -83,6 +83,13 @@ Deno.serve(async (req: Request) => {
   if (!row) return json({ error: "no_verification" }, 400);
   if (row.status === "verified") {
     return json({ verdict: "match", similarity: null, attemptsLeft: 0 });
+  }
+
+  // An ID sent to Nata's team after failed photo checks
+  // (20240209_id_check_attempts.sql) waits for them: no face match until
+  // they approve it. Nothing is counted.
+  if (row.needs_review === true) {
+    return json({ verdict: "manual_review", similarity: null, attemptsLeft: 0 });
   }
 
   const attempts: number = row.face_match_attempts ?? 0;

@@ -16,6 +16,7 @@ import 'traveler_results_screen.dart';
 import '../services/app_badge.dart';
 import '../services/screen_cache.dart';
 import 'recipient_chat_screen.dart';
+import 'identity_verification_screen.dart';
 
 /// "2 min ago", "1 hr ago", "Yesterday", "Jun 12" ...
 String notificationTimeLabel(AppLocalizations l, DateTime now, DateTime then) {
@@ -155,6 +156,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   /// Requests; a new message opens its chat.
   void _open(AppNotification n) {
     _markRead(n);
+    if (n.event == 'id_approved') {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const IdentityVerificationScreen(initialStep: 1),
+        ),
+      );
+      return;
+    }
     if (n.event == 'trip_match') {
       final results =
           widget.routeResultsBuilder?.call(n.payload) ??

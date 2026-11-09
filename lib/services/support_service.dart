@@ -52,6 +52,38 @@ class SupportService {
     ];
   }
 
+  /// IDs waiting for the team, oldest first.
+  Future<List<IdReview>> idReviews() async {
+    final rows = await _client.rpc('support_id_reviews') as List;
+    return [
+      for (final r in rows)
+        IdReview.fromJson(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// A short-lived link to an ID image (staff can read the bucket).
+  Future<String?> idDocumentUrl(String path) async {
+    if (path.isEmpty) return null;
+    return SignedUrls.get(
+      'identity-documents',
+      path,
+      lifetime: const Duration(seconds: 600),
+      create: () =>
+          _client.storage.from('identity-documents').createSignedUrl(path, 600),
+    );
+  }
+
+  /// Approves the ID (the member goes on to the face scan) or rejects it
+  /// with [note] as the reason (required then).
+  Future<void> reviewId(
+    String userId, {
+    required bool approve,
+    String note = '',
+  }) => _client.rpc(
+    'support_review_id',
+    params: {'p_user': userId, 'p_approve': approve, 'p_note': note},
+  );
+
   Future<void> resolve(String disputeId, String note) => _client.rpc(
     'support_resolve',
     params: {'p_dispute': disputeId, 'p_note': note},
@@ -158,12 +190,14 @@ class SupportSummary {
   final int lockedDeliveries;
   final int failedPayments;
   final int openReports;
+  final int idReviews;
 
   const SupportSummary({
     required this.openProblems,
     required this.lockedDeliveries,
     required this.failedPayments,
     this.openReports = 0,
+    this.idReviews = 0,
   });
 
   factory SupportSummary.fromJson(Map<String, dynamic> j) => SupportSummary(
@@ -171,6 +205,7 @@ class SupportSummary {
     lockedDeliveries: (j['locked_deliveries'] as num?)?.toInt() ?? 0,
     failedPayments: (j['failed_payments'] as num?)?.toInt() ?? 0,
     openReports: (j['open_reports'] as num?)?.toInt() ?? 0,
+    idReviews: (j['id_reviews'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -468,4 +503,46 @@ class SupportReportMessage {
         hasPhoto: (j['has_photo'] as bool?) ?? false,
         createdAt: _date(j['created_at']) ?? DateTime.now(),
       );
+}
+
+/// An ID sent to the team after its photo failed the app's check
+/// [failures] times (public.support_id_reviews).
+class IdReview {
+  final String userId;
+  final String firstName;
+  final String lastName;
+
+  /// 'passport', 'drivers_license' or 'national_id'.
+  final String documentType;
+  final String documentPath;
+
+  /// The check that failed last: 'not_an_id', 'wrong_type',
+  /// 'name_mismatch', 'no_face' or 'unreadable'.
+  final String reason;
+  final int failures;
+  final DateTime submittedAt;
+
+  const IdReview({
+    required this.userId,
+    required this.firstName,
+    required this.lastName,
+    required this.documentType,
+    required this.documentPath,
+    required this.reason,
+    required this.failures,
+    required this.submittedAt,
+  });
+
+  String get name => '$firstName $lastName'.trim();
+
+  factory IdReview.fromJson(Map<String, dynamic> j) => IdReview(
+    userId: _str(j['user_id']),
+    firstName: _str(j['first_name']),
+    lastName: _str(j['last_name']),
+    documentType: _str(j['id_document_type']),
+    documentPath: _str(j['id_document_path']),
+    reason: _str(j['review_reason']),
+    failures: (j['failures'] as num?)?.toInt() ?? 0,
+    submittedAt: _date(j['submitted_at']) ?? DateTime.now(),
+  );
 }

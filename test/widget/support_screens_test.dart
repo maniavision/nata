@@ -82,7 +82,34 @@ class FakeSupportService extends Fake implements SupportService {
   @override
   Future<void> reviewReport(String reportId, String note) async =>
       reviewed.add((id: reportId, note: note));
+
+  List<IdReview> idReviewList = [];
+  final List<({String user, bool approve, String note})> idDecisions = [];
+
+  @override
+  Future<List<IdReview>> idReviews() async => idReviewList;
+
+  @override
+  Future<String?> idDocumentUrl(String path) async => null;
+
+  @override
+  Future<void> reviewId(
+    String userId, {
+    required bool approve,
+    String note = '',
+  }) async => idDecisions.add((user: userId, approve: approve, note: note));
 }
+
+IdReview idReview() => IdReview(
+  userId: 'u-alphonse',
+  firstName: 'Alphonse',
+  lastName: 'Mballa',
+  documentType: 'drivers_license',
+  documentPath: 'u-alphonse/id_document.jpg',
+  reason: 'not_an_id',
+  failures: 5,
+  submittedAt: DateTime.now().subtract(const Duration(hours: 3)),
+);
 
 SupportChatReport chatReport({String id = 'cr1', int count = 1}) =>
     SupportChatReport(
@@ -363,5 +390,81 @@ void main() {
     await tester.pumpWidget(appWrapper(SupportReportsScreen(service: service)));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('reports-empty')), findsOneWidget);
+  });
+
+  group('ID reviews', () {
+    testWidgets('the dashboard counts IDs waiting', (tester) async {
+      service.summaryValue = const SupportSummary(
+        openProblems: 0,
+        lockedDeliveries: 0,
+        failedPayments: 0,
+        idReviews: 2,
+      );
+      await tester.pumpWidget(appWrapper(SupportScreen(service: service)));
+      await tester.pumpAndSettle();
+      final card = find.byKey(const ValueKey('support-id-reviews'));
+      await tester.ensureVisible(card);
+      expect(
+        find.descendant(of: card, matching: find.text('ID REVIEWS')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('approve an ID', (tester) async {
+      service.idReviewList = [idReview()];
+      await tester.pumpWidget(
+        appWrapper(SupportIdReviewsScreen(service: service)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Alphonse Mballa'), findsOneWidget);
+      expect(find.text('Not recognized as an ID'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('id-review-u-alphonse')));
+      await tester.pumpAndSettle();
+      expect(find.text("The ID image couldn't be loaded."), findsOneWidget);
+
+      final approve = find.byKey(const ValueKey('id-review-approve'));
+      await tester.ensureVisible(approve);
+      await tester.tap(approve);
+      await tester.pumpAndSettle();
+      expect(service.idDecisions.single.approve, isTrue);
+      expect(service.idDecisions.single.user, 'u-alphonse');
+    });
+
+    testWidgets('rejecting needs a reason', (tester) async {
+      await tester.pumpWidget(
+        appWrapper(
+          SupportIdReviewDetailScreen(review: idReview(), service: service),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final reject = find.byKey(const ValueKey('id-review-reject'));
+      await tester.ensureVisible(reject);
+      await tester.tap(reject);
+      await tester.pump();
+      expect(service.idDecisions, isEmpty);
+      expect(find.text('Write why the ID is rejected.'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('id-review-note')),
+        'The photo shows a bank card, not an ID.',
+      );
+      await tester.ensureVisible(reject);
+      await tester.tap(reject);
+      await tester.pumpAndSettle();
+      expect(service.idDecisions.single, (
+        user: 'u-alphonse',
+        approve: false,
+        note: 'The photo shows a bank card, not an ID.',
+      ));
+    });
+
+    testWidgets('no IDs waiting says so', (tester) async {
+      await tester.pumpWidget(
+        appWrapper(SupportIdReviewsScreen(service: service)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('id-reviews-empty')), findsOneWidget);
+    });
   });
 }

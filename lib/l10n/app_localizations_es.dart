@@ -5494,4 +5494,125 @@ class AppLocalizationsEs extends AppLocalizations {
   String notifDeliveredByTravelerBody(String traveler) {
     return '$traveler dice que entregó tu artículo. Confírmalo y deja una reseña.';
   }
+
+  @override
+  String get idCheckTips =>
+      'Consejos: buena luz, sin reflejos, todo el documento dentro del encuadre y el teléfono quieto.';
+
+  @override
+  String get idCheckAskHelp =>
+      '¿Sigue sin funcionar? Pide a alguien con una mejor cámara que tome la foto y te la envíe, y luego toca Elegir foto.';
+
+  @override
+  String get idCheckLastTry =>
+      'Si la próxima foto tampoco pasa, enviaremos tu documento a nuestro equipo para que lo revise.';
+
+  @override
+  String get idSentForReviewTitle => 'Tu documento está en revisión';
+
+  @override
+  String get idSentForReviewBody =>
+      'Nuestro equipo revisará tu documento. Te avisaremos cuando termine y luego completarás un escaneo rápido de tu rostro.';
+
+  @override
+  String get idStatusApprovedTitle => 'Documento aprobado';
+
+  @override
+  String get idStatusApprovedBody =>
+      'Nuestro equipo aprobó tu documento. Termina con un escaneo rápido de tu rostro para verificarte.';
+
+  @override
+  String get idStatusApproved => 'Aprobado';
+
+  @override
+  String get idStatusFinishFaceScan => 'Terminar con un escaneo facial';
+
+  @override
+  String get idStatusTeamReviewBody =>
+      'Nuestro equipo está revisando tu documento. Te avisaremos cuando termine y luego completarás un escaneo rápido de tu rostro.';
+
+  @override
+  String get idStatusWaiting => 'En espera';
+
+  @override
+  String get notifIdApprovedTitle => 'Documento aprobado';
+
+  @override
+  String get notifIdApprovedBody =>
+      'Tu documento fue aprobado. Termina con un escaneo rápido de tu rostro para verificarte.';
+
+  @override
+  String get supportIdReviewsCard => 'Documentos por revisar';
+
+  @override
+  String get supportIdReviewsSuffix => 'en espera';
+
+  @override
+  String get supportIdReviewsLine =>
+      'Documentos cuya foto falló 5 veces la verificación de la app';
+
+  @override
+  String get supportIdReviewsTitle => 'Documentos por revisar';
+
+  @override
+  String get supportIdReviewsEmpty => 'No hay documentos en espera.';
+
+  @override
+  String get supportIdReviewDetail => 'Revisar el documento';
+
+  @override
+  String get supportIdProfileName => 'Nombre del perfil';
+
+  @override
+  String get supportIdFailedCheck => 'Última verificación fallida';
+
+  @override
+  String get supportIdFailures => 'Fotos rechazadas';
+
+  @override
+  String get supportIdNoImage => 'No se pudo cargar la imagen del documento.';
+
+  @override
+  String get supportIdCheckHint =>
+      'Aprueba solo si es un documento real, el nombre coincide con el perfil y el rostro se ve claro. Luego el miembro termina con un escaneo facial.';
+
+  @override
+  String get supportIdRejectHint => 'Motivo del rechazo (el miembro lo ve)';
+
+  @override
+  String get supportIdApprove => 'Aprobar documento';
+
+  @override
+  String get supportIdReject => 'Rechazar documento';
+
+  @override
+  String get supportIdApproved => 'Documento aprobado';
+
+  @override
+  String get supportIdRejected => 'Documento rechazado';
+
+  @override
+  String get supportIdNoteRequired =>
+      'Escribe por qué se rechaza el documento.';
+
+  @override
+  String get supportIdReasonNotAnId => 'No reconocido como documento';
+
+  @override
+  String get supportIdReasonWrongType => 'No es el tipo elegido';
+
+  @override
+  String get supportIdReasonNameMismatch => 'Nombre no encontrado';
+
+  @override
+  String get supportIdReasonNoFace => 'No se encontró un rostro';
+
+  @override
+  String get supportIdReasonUnreadable => 'Texto ilegible';
+
+  @override
+  String get supportActIdApproved => 'Documento aprobado';
+
+  @override
+  String get supportActIdRejected => 'Documento rechazado';
 }
