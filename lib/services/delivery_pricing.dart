@@ -42,10 +42,13 @@ class CostCalculator {
   static const minimumHours = 24;
 
   /// Whole dollars-and-cents, rounded half up (like Java's BigDecimal).
+  /// [perKg] replaces [costPerKg] (the estimate page charges more per kg;
+  /// requests and the database keep [costPerKg]).
   static double calculateCost({
     required double distanceKm,
     required int deliveryTimeInHours,
     required double weightKg,
+    double perKg = costPerKg,
   }) {
     if (distanceKm < 0) {
       throw ArgumentError('Distance cannot be negative.');
@@ -60,7 +63,7 @@ class CostCalculator {
     }
 
     final distanceCost = distanceKm * costPerKm;
-    final weightCost = weightKg * costPerKg;
+    final weightCost = weightKg * perKg;
     // The urgency term is rounded to 4 decimals first, as in the original.
     final urgencyCost = _roundHalfUp(urgencyFactor / deliveryTimeInHours, 4);
 

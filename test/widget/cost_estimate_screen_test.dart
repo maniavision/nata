@@ -92,8 +92,8 @@ void main() {
     await open(tester);
     await fill(tester, '5');
     final usd = CostEstimateScreen.priceUsd(distanceKm: km, kg: 5);
-    // 5 + km × 0.0123… + 5 × 3 + 750 ÷ 168, rounded up.
-    expect(usd, ceilWhole(5 + km * 0.0123456789 + 15 + 4.4643).toDouble());
+    // 5 + km × 0.0123… + 5 × 8 + 750 ÷ 168, rounded up.
+    expect(usd, ceilWhole(5 + km * 0.0123456789 + 40 + 4.4643).toDouble());
     expect(price(), '\$${usd.toInt()}');
     expect(find.textContaining('5 kg'), findsOneWidget);
   });
@@ -116,6 +116,7 @@ void main() {
       distanceKm: local,
       deliveryTimeInHours: CostEstimateScreen.assumedHours,
       weightKg: 5,
+      perKg: CostEstimateScreen.costPerKg,
     );
     final usd = CostEstimateScreen.priceUsd(
       distanceKm: local,
@@ -125,6 +126,16 @@ void main() {
     expect(usd, ceilWhole(full * 0.35).toDouble());
     expect(price(), '\$${usd.toInt()}');
     expect(find.textContaining('Within one country'), findsNothing);
+  });
+
+  test('each kg adds \$8', () {
+    // 5,000 km: 5 + 61.73 + kg × 8 + 4.46, rounded up.
+    double at(double kg) =>
+        CostEstimateScreen.priceUsd(distanceKm: 5000, kg: kg);
+    expect(at(1), 80);
+    expect(at(5), 112);
+    expect(at(10), 152);
+    expect(at(20), 232);
   });
 
   test('65% less in Africa, 45% anywhere else', () {
@@ -146,6 +157,7 @@ void main() {
               distanceKm: 400,
               deliveryTimeInHours: CostEstimateScreen.assumedHours,
               weightKg: 5,
+              perKg: CostEstimateScreen.costPerKg,
             ) *
             0.55,
       ).toDouble(),

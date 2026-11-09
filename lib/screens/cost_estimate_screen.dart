@@ -44,6 +44,11 @@ class CostEstimateScreen extends StatefulWidget {
 
   static const kgPerLb = 0.45359237;
 
+  /// What each kg adds to the estimate, in US dollars: more than requests
+  /// were priced at ([CostCalculator.costPerKg], \$3), so a heavier parcel
+  /// costs noticeably more.
+  static const costPerKg = 8.0;
+
   /// The heaviest weight the page prices, in kg (as the request form).
   static const maxWeightKg = 999.0;
 
@@ -63,6 +68,7 @@ class CostEstimateScreen extends StatefulWidget {
       distanceKm: distanceKm,
       deliveryTimeInHours: assumedHours,
       weightKg: kg,
+      perKg: costPerKg,
     );
     return ceilWhole(cost * (100 - discountPercent) / 100).toDouble();
   }
