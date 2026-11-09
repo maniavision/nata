@@ -12,7 +12,8 @@ enum IdCheckResult {
   /// Every check ran and passed.
   passed,
 
-  /// Fewer than [IdDocumentCheckService.minKeywords] ID labels were found
+  /// The selected ID type isn't named on the document and fewer than
+  /// [IdDocumentCheckService.minKeywords] ID labels were found
   /// ("passport", "date of birth", ...): probably not an ID document.
   notAnId,
 
@@ -61,7 +62,8 @@ class IdDocumentCheckService {
   /// counts as "could not run", so a stuck native call never blocks the UI.
   static const stepTimeout = Duration(seconds: 20);
 
-  /// How many distinct ID labels (see [idKeywords]) must be on the document.
+  /// How many distinct ID labels (see [idKeywords]) must be on a document
+  /// that doesn't name the selected ID type.
   static const minKeywords = 2;
 
   /// Labels printed on passports, ID cards and driver's licences, grouped by
@@ -269,8 +271,15 @@ class IdDocumentCheckService {
     final text = await _step('read text', _readText(bytes, fileName));
     if (text == null || text.trim().isEmpty) return IdCheckResult.unreadable;
 
-    if (keywordGroupsIn(text) < minKeywords) return IdCheckResult.notAnId;
-    if (!mentionsType(text, idType)) return IdCheckResult.wrongType;
+    // A document that names the selected type ("PERMIS DE CONDUIRE") is
+    // taken as an ID even with fewer labels: the small field labels are
+    // often misread or missed on worn cards and low-resolution photos. The
+    // name and face checks below still have to pass.
+    final namesType = mentionsType(text, idType);
+    if (!namesType && keywordGroupsIn(text) < minKeywords) {
+      return IdCheckResult.notAnId;
+    }
+    if (!namesType) return IdCheckResult.wrongType;
 
     var nameChecked = false;
     final profile = await _loadProfile();
