@@ -47,9 +47,14 @@ class FakeSupportService extends Fake implements SupportService {
   Future<void> refundSender(String disputeId, String note) async =>
       refundedIds.add(disputeId);
 
+  SupportDeliveryPhotos photosValue = (
+    pickup: null,
+    handover: null,
+    sender: null,
+  );
+
   @override
-  Future<({String? pickup, String? handover})> photos(String requestId) async =>
-      (pickup: null, handover: null);
+  Future<SupportDeliveryPhotos> photos(String requestId) async => photosValue;
 
   @override
   Future<List<FailedPayment>> failedPayments() async => failed;
@@ -238,6 +243,37 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(service.refundedIds, ['d1']);
+  });
+
+  testWidgets('the sender\'s handover photo shows at pickup', (tester) async {
+    tall(tester);
+    service.photosValue = (
+      pickup: 'https://x/pickup.jpg',
+      handover: null,
+      sender: 'https://x/sender.jpg',
+    );
+    await tester.pumpWidget(
+      appWrapper(
+        SupportProblemDetailScreen(problem: problem(), service: service),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('support-sender-photo')), findsOneWidget);
+    expect(find.text("Sender's photo"), findsOneWidget);
+  });
+
+  testWidgets('no sender photo, no caption', (tester) async {
+    tall(tester);
+    await tester.pumpWidget(
+      appWrapper(
+        SupportProblemDetailScreen(problem: problem(), service: service),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('support-sender-photo')), findsNothing);
+    expect(find.text("Sender's photo"), findsNothing);
   });
 
   testWidgets('money already paid out cannot be refunded', (tester) async {

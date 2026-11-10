@@ -1480,18 +1480,6 @@ abstract class AppLocalizations {
   /// **'Code entered — ready to confirm'**
   String get codeEntered;
 
-  /// No description provided for @uploadHandoffPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload Handoff Photo'**
-  String get uploadHandoffPhoto;
-
-  /// No description provided for @handoffPhotoSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Take a photo of you and the recipient together, or a photo of the item being handed over.'**
-  String get handoffPhotoSub;
-
   /// No description provided for @confirmDeliveryButton.
   ///
   /// In en, this message translates to:
@@ -2996,12 +2984,6 @@ abstract class AppLocalizations {
   /// **'Take or Upload Handover Photo'**
   String get takeOrUploadHandoverPhoto;
 
-  /// No description provided for @handoverPhotoHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Attach photo with recipient or at delivery spot'**
-  String get handoverPhotoHint;
-
   /// No description provided for @handoverPhotoAttached.
   ///
   /// In en, this message translates to:
@@ -3415,12 +3397,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Alternative'**
   String get alternative;
-
-  /// No description provided for @noHandoffPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'No handoff photo yet'**
-  String get noHandoffPhoto;
 
   /// No description provided for @change.
   ///
@@ -9691,6 +9667,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Face match tries'**
   String get supportIdFaceMatchTries;
+
+  /// No description provided for @handOverItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand over your item'**
+  String get handOverItem;
+
+  /// No description provided for @handoverPhotoCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover photo'**
+  String get handoverPhotoCard;
+
+  /// No description provided for @hoCheckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check it\'s {name}'**
+  String hoCheckTitle(String name);
+
+  /// No description provided for @hoCheckBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is {name}\'s face from their ID check. Make sure it\'s the person in front of you before you hand over your item.'**
+  String hoCheckBody(String name);
+
+  /// No description provided for @hoNoFace.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no ID photo to show for {name}. Check their name and profile photo before you hand over your item.'**
+  String hoNoFace(String name);
+
+  /// No description provided for @hoIdVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'ID verified'**
+  String get hoIdVerified;
+
+  /// No description provided for @hoPhotoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo of {name} with your item'**
+  String hoPhotoTitle(String name);
+
+  /// No description provided for @hoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get hoOptional;
+
+  /// No description provided for @hoPhotoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask {name} first. Only you, {name} and Nata Support can see it.'**
+  String hoPhotoBody(String name);
+
+  /// No description provided for @hoPhotoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo saved'**
+  String get hoPhotoSaved;
+
+  /// No description provided for @errHoPhotoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the photo. Please try again.'**
+  String get errHoPhotoFailed;
+
+  /// No description provided for @hoDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get hoDone;
+
+  /// No description provided for @pickupSenderPhotoNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The sender may also take a photo of you with the item.'**
+  String get pickupSenderPhotoNote;
+
+  /// No description provided for @supportSenderPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender\'s photo'**
+  String get supportSenderPhoto;
 }
 
 class _AppLocalizationsDelegate

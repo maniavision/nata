@@ -917,7 +917,7 @@ class _SupportProblemDetailScreenState
     extends State<SupportProblemDetailScreen> {
   late final SupportService _service = widget.service ?? SupportService();
   final _note = TextEditingController();
-  ({String? pickup, String? handover}) _photos = (pickup: null, handover: null);
+  SupportDeliveryPhotos _photos = (pickup: null, handover: null, sender: null);
   bool _confirmRefund = false;
   bool _busy = false;
 
@@ -966,9 +966,21 @@ class _SupportProblemDetailScreenState
     String title,
     String sub, {
     String? photo,
+    String? senderPhoto,
     bool last = false,
     bool reported = false,
   }) {
+    Widget thumb(String url, {Key? key}) => ClipRRect(
+      key: key,
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        url,
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+      ),
+    );
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1005,17 +1017,30 @@ class _SupportProblemDetailScreenState
                     ),
                   ),
                   Text(sub, style: _small()),
-                  if (photo != null) ...[
+                  if (photo != null || senderPhoto != null) ...[
                     const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        photo,
-                        width: 64,
-                        height: 64,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                      ),
+                    Row(
+                      children: [
+                        if (photo != null) thumb(photo),
+                        if (photo != null && senderPhoto != null)
+                          const SizedBox(width: 8),
+                        // The sender's photo of the traveler with the item.
+                        if (senderPhoto != null)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              thumb(
+                                senderPhoto,
+                                key: const ValueKey('support-sender-photo'),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                context.l10n.supportSenderPhoto,
+                                style: _small(),
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
                   ],
                 ],
@@ -1068,7 +1093,12 @@ class _SupportProblemDetailScreenState
           '${_day(p.paidAt)} · ${l.supportHeldLine(amount)}',
         ),
       if (p.pickedUpAt != null)
-        _step(l.supportPickedUp, _day(p.pickedUpAt), photo: _photos.pickup),
+        _step(
+          l.supportPickedUp,
+          _day(p.pickedUpAt),
+          photo: _photos.pickup,
+          senderPhoto: _photos.sender,
+        ),
       if (p.deliveredAt != null)
         _step(l.supportDelivered, _day(p.deliveredAt), photo: _photos.handover),
       _step(

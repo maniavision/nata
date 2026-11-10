@@ -122,6 +122,16 @@ void main() {
     expect(find.byType(RecipientChatScreen), findsOneWidget);
   });
 
+  testWidgets('before pickup, the traveler is told the sender may take a '
+      'photo of them', (tester) async {
+    await pump(tester, sampleDelivery());
+
+    expect(
+      find.text('The sender may also take a photo of you with the item.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('before pickup: confirming delivery is locked', (tester) async {
     await pump(tester, sampleDelivery());
 

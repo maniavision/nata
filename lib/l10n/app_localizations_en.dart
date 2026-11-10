@@ -746,13 +746,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get codeEntered => 'Code entered — ready to confirm';
 
   @override
-  String get uploadHandoffPhoto => 'Upload Handoff Photo';
-
-  @override
-  String get handoffPhotoSub =>
-      'Take a photo of you and the recipient together, or a photo of the item being handed over.';
-
-  @override
   String get confirmDeliveryButton => 'Confirm Delivery & Release Payment';
 
   @override
@@ -1596,10 +1589,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takeOrUploadHandoverPhoto => 'Take or Upload Handover Photo';
 
   @override
-  String get handoverPhotoHint =>
-      'Attach photo with recipient or at delivery spot';
-
-  @override
   String get handoverPhotoAttached => 'Handover photo attached';
 
   @override
@@ -1823,9 +1812,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alternative => 'Alternative';
-
-  @override
-  String get noHandoffPhoto => 'No handoff photo yet';
 
   @override
   String get change => 'Change';
@@ -5588,4 +5574,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportIdFaceMatchTries => 'Face match tries';
+
+  @override
+  String get handOverItem => 'Hand over your item';
+
+  @override
+  String get handoverPhotoCard => 'Handover photo';
+
+  @override
+  String hoCheckTitle(String name) {
+    return 'Check it\'s $name';
+  }
+
+  @override
+  String hoCheckBody(String name) {
+    return 'This is $name\'s face from their ID check. Make sure it\'s the person in front of you before you hand over your item.';
+  }
+
+  @override
+  String hoNoFace(String name) {
+    return 'There\'s no ID photo to show for $name. Check their name and profile photo before you hand over your item.';
+  }
+
+  @override
+  String get hoIdVerified => 'ID verified';
+
+  @override
+  String hoPhotoTitle(String name) {
+    return 'Photo of $name with your item';
+  }
+
+  @override
+  String get hoOptional => 'Optional';
+
+  @override
+  String hoPhotoBody(String name) {
+    return 'Ask $name first. Only you, $name and Nata Support can see it.';
+  }
+
+  @override
+  String get hoPhotoSaved => 'Photo saved';
+
+  @override
+  String get errHoPhotoFailed => 'Couldn\'t save the photo. Please try again.';
+
+  @override
+  String get hoDone => 'Done';
+
+  @override
+  String get pickupSenderPhotoNote =>
+      'The sender may also take a photo of you with the item.';
+
+  @override
+  String get supportSenderPhoto => 'Sender\'s photo';
 }

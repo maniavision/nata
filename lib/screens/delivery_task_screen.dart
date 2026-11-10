@@ -756,6 +756,11 @@ class _DeliveryTaskScreenState extends State<DeliveryTaskScreen> {
           if (pickedUpAt == null) ...[
             const SizedBox(height: 4),
             _note(l.pickupPhotoHint),
+            const SizedBox(height: 4),
+            KeyedSubtree(
+              key: const ValueKey('delivery-task-sender-photo-note'),
+              child: _note(l.pickupSenderPhotoNote),
+            ),
           ],
           const SizedBox(height: 12),
           if (pickedUpAt == null || _pickupPhotos.isNotEmpty) ...[
