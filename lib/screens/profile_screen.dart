@@ -1144,8 +1144,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ? context.l10n.tier1Verified
             : _awaitingContact
             ? context.l10n.identityNeedsContact
+            // Under review: the badge on the right already says so.
             : (_verificationStatus == 'pending'
-                  ? context.l10n.identityUnderReview
+                  ? ''
                   : context.l10n.identityActionRequiredSub),
         subtitleColor: _verificationStatus == 'verified'
             ? const Color(0xFF168A68)
@@ -1254,18 +1255,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color: AppColors.foreground,
                               ),
                             ),
-                            Text(
-                              item.subtitle,
-                              style: GoogleFonts.dmSans(
-                                fontSize: 11,
-                                color:
-                                    item.subtitleColor ??
-                                    AppColors.mutedForeground,
-                                fontWeight: item.subtitleColor != null
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
+                            if (item.subtitle.isNotEmpty)
+                              Text(
+                                item.subtitle,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 11,
+                                  color:
+                                      item.subtitleColor ??
+                                      AppColors.mutedForeground,
+                                  fontWeight: item.subtitleColor != null
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),

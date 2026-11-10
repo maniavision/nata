@@ -985,9 +985,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Action Required: Verify your identity';
 
   @override
-  String get identityUnderReview => 'Verification is currently under review';
-
-  @override
   String get verificationReviewing => 'Reviewing';
 
   @override
@@ -5498,8 +5495,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportIdReviewsSuffix => 'waiting';
 
   @override
-  String get supportIdReviewsLine =>
-      'IDs whose photo failed the app\'s check 5 times';
+  String get supportIdReviewsLine => 'IDs the app couldn\'t verify';
 
   @override
   String get supportIdReviewsTitle => 'ID reviews';
@@ -5564,4 +5560,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportActIdRejected => 'ID rejected';
+
+  @override
+  String get supportIdReasonFaceScanNotDone => 'Face scan not done';
+
+  @override
+  String get supportIdReasonFaceMatchFailed => 'Face match failed';
+
+  @override
+  String get supportIdReasonFaceMatchNotRun => 'Face match didn\'t run';
+
+  @override
+  String get supportIdSelfie => 'Selfie from the face scan';
+
+  @override
+  String get supportIdCheckHintSelfie =>
+      'Approve only if it\'s a real ID, the name matches the profile and the person in the selfie is the one on the ID. Approving verifies the member.';
+
+  @override
+  String get supportIdVerify => 'Verify member';
+
+  @override
+  String get supportIdVerified => 'Member verified';
+
+  @override
+  String get supportActIdVerified => 'verified a member';
+
+  @override
+  String get supportIdFaceMatchTries => 'Face match tries';
 }

@@ -996,10 +996,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Action requise : vérifiez votre identité';
 
   @override
-  String get identityUnderReview =>
-      'La vérification est actuellement en cours d\'examen';
-
-  @override
   String get verificationReviewing => 'En cours d\'examen';
 
   @override
@@ -5586,8 +5582,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportIdReviewsSuffix => 'en attente';
 
   @override
-  String get supportIdReviewsLine =>
-      'Pièces dont la photo a échoué 5 fois à la vérification de l\'app';
+  String get supportIdReviewsLine => 'Pièces que l\'app n\'a pas pu vérifier';
 
   @override
   String get supportIdReviewsTitle => 'Pièces à vérifier';
@@ -5653,4 +5648,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportActIdRejected => 'Pièce refusée';
+
+  @override
+  String get supportIdReasonFaceScanNotDone => 'Scan du visage non fait';
+
+  @override
+  String get supportIdReasonFaceMatchFailed => 'Comparaison du visage échouée';
+
+  @override
+  String get supportIdReasonFaceMatchNotRun =>
+      'Comparaison du visage non lancée';
+
+  @override
+  String get supportIdSelfie => 'Selfie du scan du visage';
+
+  @override
+  String get supportIdCheckHintSelfie =>
+      'N\'approuvez que s\'il s\'agit d\'une vraie pièce, que le nom correspond au profil et que la personne du selfie est celle de la pièce. Approuver vérifie le membre.';
+
+  @override
+  String get supportIdVerify => 'Vérifier le membre';
+
+  @override
+  String get supportIdVerified => 'Membre vérifié';
+
+  @override
+  String get supportActIdVerified => 'a vérifié un membre';
+
+  @override
+  String get supportIdFaceMatchTries => 'Essais de comparaison';
 }

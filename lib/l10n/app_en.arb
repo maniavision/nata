@@ -349,7 +349,6 @@
   "gdprCompliant": "GDPR & KYC Compliant",
   "trips": "Trips",
   "identityActionRequiredSub": "Action Required: Verify your identity",
-  "identityUnderReview": "Verification is currently under review",
   "verificationReviewing": "Reviewing",
   "ratingStat": "Rating",
   "upcomingTrips": "UPCOMING TRIPS",
@@ -2385,7 +2384,7 @@
   "notifIdApprovedBody": "Your ID was approved. Finish with a quick face scan to get verified.",
   "supportIdReviewsCard": "ID reviews",
   "supportIdReviewsSuffix": "waiting",
-  "supportIdReviewsLine": "IDs whose photo failed the app's check 5 times",
+  "supportIdReviewsLine": "IDs the app couldn't verify",
   "supportIdReviewsTitle": "ID reviews",
   "supportIdReviewsEmpty": "No IDs waiting.",
   "supportIdReviewDetail": "Check the ID",
@@ -2406,5 +2405,14 @@
   "supportIdReasonNoFace": "No face found",
   "supportIdReasonUnreadable": "Text unreadable",
   "supportActIdApproved": "ID approved",
-  "supportActIdRejected": "ID rejected"
+  "supportActIdRejected": "ID rejected",
+  "supportIdReasonFaceScanNotDone": "Face scan not done",
+  "supportIdReasonFaceMatchFailed": "Face match failed",
+  "supportIdReasonFaceMatchNotRun": "Face match didn't run",
+  "supportIdSelfie": "Selfie from the face scan",
+  "supportIdCheckHintSelfie": "Approve only if it's a real ID, the name matches the profile and the person in the selfie is the one on the ID. Approving verifies the member.",
+  "supportIdVerify": "Verify member",
+  "supportIdVerified": "Member verified",
+  "supportActIdVerified": "verified a member",
+  "supportIdFaceMatchTries": "Face match tries"
 }

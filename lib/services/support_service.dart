@@ -73,8 +73,9 @@ class SupportService {
     );
   }
 
-  /// Approves the ID (the member goes on to the face scan) or rejects it
-  /// with [note] as the reason (required then).
+  /// Approves the ID (with a selfie the member is verified, otherwise they
+  /// go on to the face scan) or rejects it with [note] as the reason
+  /// (required then).
   Future<void> reviewId(
     String userId, {
     required bool approve,
@@ -505,8 +506,9 @@ class SupportReportMessage {
       );
 }
 
-/// An ID sent to the team after its photo failed the app's check
-/// [failures] times (public.support_id_reviews).
+/// An ID check waiting for the team (public.support_id_reviews): its photo
+/// failed the app's check [failures] times, or it stayed pending with no
+/// face match (see [reason]).
 class IdReview {
   final String userId;
   final String firstName;
@@ -517,10 +519,17 @@ class IdReview {
   final String documentPath;
 
   /// The check that failed last: 'not_an_id', 'wrong_type',
-  /// 'name_mismatch', 'no_face' or 'unreadable'.
+  /// 'name_mismatch', 'no_face' or 'unreadable'; or, for a check stuck
+  /// after the photo passed: 'face_scan_not_done', 'face_match_failed' or
+  /// 'face_match_not_run'.
   final String reason;
   final int failures;
   final DateTime submittedAt;
+
+  /// The selfie from the face scan, if one was taken. Approving then
+  /// verifies the member.
+  final String? selfiePath;
+  final int faceMatchAttempts;
 
   const IdReview({
     required this.userId,
@@ -531,6 +540,8 @@ class IdReview {
     required this.reason,
     required this.failures,
     required this.submittedAt,
+    this.selfiePath,
+    this.faceMatchAttempts = 0,
   });
 
   String get name => '$firstName $lastName'.trim();
@@ -544,5 +555,9 @@ class IdReview {
     reason: _str(j['review_reason']),
     failures: (j['failures'] as num?)?.toInt() ?? 0,
     submittedAt: _date(j['submitted_at']) ?? DateTime.now(),
+    selfiePath: (j['selfie_path'] as String?)?.trim().isEmpty ?? true
+        ? null
+        : (j['selfie_path'] as String).trim(),
+    faceMatchAttempts: (j['face_match_attempts'] as num?)?.toInt() ?? 0,
   );
 }
