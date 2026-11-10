@@ -5310,7 +5310,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feeNote =>
-      'You pay a traveler\'s fee only if they accept. It opens the chat, where you agree on the price and the handover and pay the traveler directly.';
+      'This flat fee connects you with the traveler. You can then discuss the price and drop-off location, and pay them directly.';
 
   @override
   String sendRequestToTravelers(int count) {

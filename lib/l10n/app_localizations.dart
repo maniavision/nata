@@ -9233,7 +9233,7 @@ abstract class AppLocalizations {
   /// No description provided for @feeNote.
   ///
   /// In en, this message translates to:
-  /// **'You pay a traveler\'s fee only if they accept. It opens the chat, where you agree on the price and the handover and pay the traveler directly.'**
+  /// **'This flat fee connects you with the traveler. You can then discuss the price and drop-off location, and pay them directly.'**
   String get feeNote;
 
   /// No description provided for @sendRequestToTravelers.

@@ -1251,7 +1251,7 @@ void main() {
       );
       expect(find.textContaining('Local'), findsOneWidget);
       expect(
-        find.textContaining("You pay a traveler's fee only if they accept"),
+        find.textContaining('This flat fee connects you with the traveler'),
         findsOneWidget,
       );
       // No distance price or estimate any more.
