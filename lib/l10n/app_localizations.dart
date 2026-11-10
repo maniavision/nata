@@ -6473,7 +6473,7 @@ abstract class AppLocalizations {
   /// No description provided for @routeAlertsIntro.
   ///
   /// In en, this message translates to:
-  /// **'Save the routes you often send on. When a verified traveler posts a trip on one of them, we\'ll notify you.'**
+  /// **'Save the routes where you frequently send items. We\'ll alert you whenever a verified traveler posts a matching trip.'**
   String get routeAlertsIntro;
 
   /// No description provided for @routeAlertsSaved.

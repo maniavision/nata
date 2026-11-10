@@ -1691,7 +1691,7 @@
   "priceTipSender": "Vous ne savez pas combien proposer pour cette livraison ? Le calculateur de coût suggère un prix juste selon la distance et le poids. Ce n'est qu'un repère : vous décidez ensemble avec le voyageur.",
   "priceTipTraveler": "Vous ne savez pas combien demander pour cette livraison ? Le calculateur de coût suggère un prix juste selon la distance et le poids. Ce n'est qu'un repère : vous décidez ensemble avec l'expéditeur.",
   "priceTipOpen": "Ouvrir le calculateur",
-  "routeAlertsIntro": "Enregistrez les trajets sur lesquels vous envoyez souvent. Quand un voyageur vérifié publie un voyage sur l'un d'eux, nous vous prévenons.",
+  "routeAlertsIntro": "Enregistrez les trajets pour lesquels vous expédiez souvent des articles. Quand un voyageur vérifié annonce un voyage correspondant, nous vous alertons.",
   "routeAlertsSaved": "TRAJETS ENREGISTRÉS",
   "routeAlertsCount": "{count} sur 5",
   "routeAlertsAdd": "Ajouter un trajet",

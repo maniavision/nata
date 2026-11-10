@@ -3703,7 +3703,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routeAlertsIntro =>
-      'Save the routes you often send on. When a verified traveler posts a trip on one of them, we\'ll notify you.';
+      'Save the routes where you frequently send items. We\'ll alert you whenever a verified traveler posts a matching trip.';
 
   @override
   String get routeAlertsSaved => 'SAVED ROUTES';

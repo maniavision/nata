@@ -3745,7 +3745,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get routeAlertsIntro =>
-      'Guarda las rutas en las que sueles enviar. Cuando un viajero verificado publique un viaje en una de ellas, te avisaremos.';
+      'Guarda las rutas en las que envías artículos con frecuencia. Te avisaremos cuando un viajero verificado publique un viaje coincidente.';
 
   @override
   String get routeAlertsSaved => 'RUTAS GUARDADAS';

@@ -1742,7 +1742,7 @@
   "priceTipSender": "Not sure what to offer for this delivery? The cost calculator suggests a fair price from the distance and the weight. It's only a guide: you and the traveler decide together.",
   "priceTipTraveler": "Not sure what to charge for this delivery? The cost calculator suggests a fair price from the distance and the weight. It's only a guide: you and the sender decide together.",
   "priceTipOpen": "Open the cost calculator",
-  "routeAlertsIntro": "Save the routes you often send on. When a verified traveler posts a trip on one of them, we'll notify you.",
+  "routeAlertsIntro": "Save the routes where you frequently send items. We'll alert you whenever a verified traveler posts a matching trip.",
   "routeAlertsSaved": "SAVED ROUTES",
   "routeAlertsCount": "{count} of 5",
   "@routeAlertsCount": {"placeholders": {"count": {"type": "int"}}},
