@@ -638,7 +638,7 @@
   "automatic": "Automatique",
   "transactions": "Transactions",
   "addPaymentMethod": "Ajouter un moyen de paiement",
-  "paymentSecurityNote": "Vos données de paiement sont chiffrées et conservées en toute sécurité. Les paiements restent en séquestre jusqu'à la confirmation de la livraison.",
+  "paymentSecurityNote": "Vos données de paiement sont chiffrées et conservées en toute sécurité. Elles servent à payer les frais Nata.",
   "paymentKindCard": "Carte",
   "paymentKindCardSub": "Débit ou crédit",
   "paymentKindMobile": "Mobile Money",
@@ -1225,7 +1225,7 @@
   "errRateUnavailable": "Le taux de change n'est pas disponible pour le moment, le prix ne peut donc pas être fixé. Veuillez réessayer plus tard.",
   "errRequestNotPending": "Cette demande a déjà reçu une réponse.",
 
-  "chatLockedUntilPayment": "Le chat se débloque une fois la livraison payée. Votre paiement reste en séquestre jusqu'à la confirmation de la livraison.",
+  "chatLockedUntilPayment": "Le chat se débloque une fois la demande payée.",
   "chatMeetInPublicTitle": "Retrouvez-vous dans un lieu public",
   "chatMeetInPublicBody": "Pour la récupération et la remise, retrouvez-vous toujours dans un lieu public et fréquenté, comme un aéroport, une gare ou un café. N'allez jamais à une adresse privée.",
   "chatClosedAfterDelivery": "Livraison terminée. Cette discussion est fermée, mais vous pouvez toujours la lire.",

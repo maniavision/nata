@@ -3155,7 +3155,7 @@ abstract class AppLocalizations {
   /// No description provided for @paymentSecurityNote.
   ///
   /// In en, this message translates to:
-  /// **'Your payment details are encrypted and stored securely. Payments are held in escrow until delivery is confirmed.'**
+  /// **'Your payment details are encrypted and stored securely. They\'re used to pay Nata\'s fees.'**
   String get paymentSecurityNote;
 
   /// No description provided for @paymentKindCard.
@@ -4685,7 +4685,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatLockedUntilPayment.
   ///
   /// In en, this message translates to:
-  /// **'Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.'**
+  /// **'Chat unlocks once the request is paid.'**
   String get chatLockedUntilPayment;
 
   /// No description provided for @chatMeetInPublicTitle.

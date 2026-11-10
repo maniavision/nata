@@ -958,7 +958,7 @@ void main() {
         expect(find.byKey(const ValueKey('chat-locked')), findsOneWidget);
         expect(find.byKey(const ValueKey('chat-input')), findsNothing);
         expect(
-          find.textContaining('Chat unlocks once the delivery is paid'),
+          find.textContaining('Chat unlocks once the request is paid'),
           findsOneWidget,
         );
       });
