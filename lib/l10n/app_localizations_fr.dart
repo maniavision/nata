@@ -3768,7 +3768,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get routeAlertsIntro =>
-      'Enregistrez les trajets sur lesquels vous envoyez souvent. Quand un voyageur vérifié publie un voyage sur l\'un d\'eux, nous vous prévenons.';
+      'Enregistrez les trajets pour lesquels vous expédiez souvent des articles. Quand un voyageur vérifié annonce un voyage correspondant, nous vous alertons.';
 
   @override
   String get routeAlertsSaved => 'TRAJETS ENREGISTRÉS';
