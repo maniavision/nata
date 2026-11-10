@@ -1170,6 +1170,30 @@ class FakeRequestService extends Fake implements RequestService {
     }
   }
 
+  /// What handoverTravelerFace and senderHandoverPhotoUrl return, and the
+  /// sender's photos uploaded; [failSenderPhoto] makes uploading fail.
+  HandoverFace? handoverFace;
+  String? senderPhotoUrl;
+  final List<String> senderPhotos = [];
+  RequestException? failSenderPhoto;
+
+  @override
+  Future<HandoverFace?> handoverTravelerFace(String requestId) async =>
+      handoverFace;
+
+  @override
+  Future<String?> senderHandoverPhotoUrl(String requestId) async =>
+      senderPhotoUrl;
+
+  @override
+  Future<void> uploadSenderHandoverPhoto(
+    String requestId,
+    Uint8List photo,
+  ) async {
+    if (failSenderPhoto != null) throw failSenderPhoto!;
+    senderPhotos.add(requestId);
+  }
+
   /// What deliveryPhotoUrls returns.
   ({List<String> pickup, List<String> handover}) photoUrls = (
     pickup: const [],

@@ -1,3 +1,4 @@
+import 'package:carrywise_app/screens/handover_check_screen.dart';
 import 'package:carrywise_app/screens/incoming_request_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/review_screen.dart';
@@ -612,6 +613,43 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(service.deliveriesConfirmed, ['f1']);
+    });
+
+    testWidgets('a paid request opens Hand over your item', (tester) async {
+      service.mine = [
+        sampleSentRequest(id: 'f1', status: 'paid', pricing: 'flat'),
+      ];
+      await pumpOutgoing(tester);
+
+      final button = find.byKey(const ValueKey('sent-request-hand-over-f1'));
+      expect(find.text('Hand over your item'), findsOneWidget);
+      await tester.ensureVisible(button);
+      await tester.pumpAndSettle();
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HandoverCheckScreen), findsOneWidget);
+    });
+
+    testWidgets('once picked up, it offers the handover photo', (tester) async {
+      service.mine = [
+        sampleSentRequest(id: 'f1', status: 'handed_off', pricing: 'flat'),
+      ];
+      await pumpOutgoing(tester);
+
+      expect(find.text('Handover photo'), findsOneWidget);
+    });
+
+    testWidgets('no handover before paying', (tester) async {
+      service.mine = [
+        sampleSentRequest(id: 'f1', status: 'accepted', pricing: 'flat'),
+      ];
+      await pumpOutgoing(tester);
+
+      expect(
+        find.byKey(const ValueKey('sent-request-hand-over-f1')),
+        findsNothing,
+      );
     });
 
     testWidgets('"Not yet" changes nothing', (tester) async {

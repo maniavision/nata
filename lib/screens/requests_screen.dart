@@ -15,6 +15,7 @@ import '../widgets/avatar_image.dart';
 import 'checkout_escrow_screen.dart';
 import 'delivery_request_screen.dart';
 import 'confirm_receipt_screen.dart';
+import 'handover_check_screen.dart';
 import 'review_screen.dart';
 import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
@@ -376,6 +377,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
       _loadSent();
     }
   }
+
+  /// Opens Hand over your item: the traveler's verified face, and an
+  /// optional photo of them with the item.
+  Future<void> _handOver(SentRequest request) => Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) =>
+          HandoverCheckScreen(request: request, service: widget.requestService),
+    ),
+  );
 
   /// Opens Rate Your Traveler; reloads afterwards either way, since receipt
   /// may just have been confirmed.
@@ -1436,6 +1446,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         : r.awaitingReceipt
         ? () => _confirmReceipt(r)
         : null,
+    onHandOver: r.isPaid ? () => _handOver(r) : null,
     onReview: r.canReview ? () => _review(r) : null,
     deliveryCode: _codes[r.id],
     onTextCode: _texting.contains(r.id) ? null : () => _textCode(r),
@@ -1780,6 +1791,9 @@ class _SentRequestCard extends StatelessWidget {
   /// Confirms a delivered request was received, then opens the review.
   final VoidCallback? onConfirmReceipt;
 
+  /// Opens Hand over your item (paid or picked-up requests).
+  final VoidCallback? onHandOver;
+
   /// Opens the review for a delivered, confirmed request.
   final VoidCallback? onReview;
 
@@ -1817,6 +1831,7 @@ class _SentRequestCard extends StatelessWidget {
     this.onCancel,
     this.onPay,
     this.onConfirmReceipt,
+    this.onHandOver,
     this.onReview,
     this.deliveryCode,
     this.onTextCode,
@@ -2204,6 +2219,18 @@ class _SentRequestCard extends StatelessWidget {
                   color: AppColors.accent,
                   filled: true,
                   onTap: onPay ?? () {},
+                ),
+              ],
+              if (onHandOver != null && request.isPaid) ...[
+                const SizedBox(height: 12),
+                _button(
+                  key: 'sent-request-hand-over-${request.id}',
+                  icon: Icons.handshake_rounded,
+                  label: request.status == 'paid'
+                      ? l.handOverItem
+                      : l.handoverPhotoCard,
+                  color: AppColors.primary,
+                  onTap: onHandOver!,
                 ),
               ],
               if (deliveryCode != null && request.isPaid) ...[

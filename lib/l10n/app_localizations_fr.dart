@@ -751,13 +751,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get codeEntered => 'Code saisi — prêt à confirmer';
 
   @override
-  String get uploadHandoffPhoto => 'Télécharger la photo de remise';
-
-  @override
-  String get handoffPhotoSub =>
-      'Prenez une photo avec le destinataire ou de l\'article en cours de remise.';
-
-  @override
   String get confirmDeliveryButton =>
       'Confirmer la livraison et libérer le paiement';
 
@@ -1620,10 +1613,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Prendre ou téléverser la photo de remise';
 
   @override
-  String get handoverPhotoHint =>
-      'Photo avec le destinataire ou sur le lieu de livraison';
-
-  @override
   String get handoverPhotoAttached => 'Photo de remise jointe';
 
   @override
@@ -1850,9 +1839,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get alternative => 'Alternative';
-
-  @override
-  String get noHandoffPhoto => 'Pas encore de photo de remise';
 
   @override
   String get change => 'Modifier';
@@ -5677,4 +5663,58 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportIdFaceMatchTries => 'Essais de comparaison';
+
+  @override
+  String get handOverItem => 'Remettre votre article';
+
+  @override
+  String get handoverPhotoCard => 'Photo de la remise';
+
+  @override
+  String hoCheckTitle(String name) {
+    return 'Vérifiez que c\'est $name';
+  }
+
+  @override
+  String hoCheckBody(String name) {
+    return 'Voici le visage de $name lors de sa vérification d\'identité. Assurez-vous que c\'est bien la personne en face de vous avant de remettre votre article.';
+  }
+
+  @override
+  String hoNoFace(String name) {
+    return 'Aucune photo d\'identité à afficher pour $name. Vérifiez son nom et sa photo de profil avant de remettre votre article.';
+  }
+
+  @override
+  String get hoIdVerified => 'Identité vérifiée';
+
+  @override
+  String hoPhotoTitle(String name) {
+    return 'Photo de $name avec votre article';
+  }
+
+  @override
+  String get hoOptional => 'Facultatif';
+
+  @override
+  String hoPhotoBody(String name) {
+    return 'Demandez d\'abord à $name. Seuls vous, $name et le support Nata pouvez la voir.';
+  }
+
+  @override
+  String get hoPhotoSaved => 'Photo enregistrée';
+
+  @override
+  String get errHoPhotoFailed =>
+      'Impossible d\'enregistrer la photo. Veuillez réessayer.';
+
+  @override
+  String get hoDone => 'Terminé';
+
+  @override
+  String get pickupSenderPhotoNote =>
+      'L\'expéditeur peut aussi prendre une photo de vous avec l\'article.';
+
+  @override
+  String get supportSenderPhoto => 'Photo de l\'expéditeur';
 }

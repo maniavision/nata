@@ -1829,6 +1829,82 @@ class RequestService {
 
   static const _deliveryPhotoBucket = 'handover-photos';
 
+  /// The traveler's verified face for the sender at handover
+  /// (20240211_sender_handover_photo.sql): a short-lived link to the selfie
+  /// from their ID check (null when they have none), and whether they're
+  /// verified. Null when the delivery isn't under way.
+  Future<HandoverFace?> handoverTravelerFace(String requestId) async {
+    final rows =
+        await _client.rpc(
+              'handover_traveler_face',
+              params: {'p_request_id': requestId},
+            )
+            as List;
+    if (rows.isEmpty) return null;
+    final r = Map<String, dynamic>.from(rows.first as Map);
+    final path = r['selfie_path'] as String?;
+    String? url;
+    if (path != null) {
+      try {
+        url = await _client.storage
+            .from(_identityBucket)
+            .createSignedUrl(path, 600);
+      } catch (e) {
+        debugPrint('[RequestService] traveler face: $e');
+      }
+    }
+    return HandoverFace(selfieUrl: url, verified: r['verified'] == true);
+  }
+
+  static const _identityBucket = 'identity-documents';
+
+  /// The sender's photo of the traveler with the item, as a short-lived
+  /// link; null when they haven't taken one.
+  Future<String?> senderHandoverPhotoUrl(String requestId) async {
+    final rows =
+        await _client.rpc(
+              'delivery_photos',
+              params: {'p_request_id': requestId},
+            )
+            as List;
+    if (rows.isEmpty) return null;
+    final path = (rows.first as Map)['sender_handover_photo_path'] as String?;
+    if (path == null) return null;
+    return SignedUrls.get(
+      _deliveryPhotoBucket,
+      path,
+      lifetime: const Duration(seconds: 600),
+      create: () =>
+          _client.storage.from(_deliveryPhotoBucket).createSignedUrl(path, 600),
+    );
+  }
+
+  /// Uploads the sender's (optional) photo of the traveler with the item and
+  /// makes it the request's. Each upload has its own file, so a retake
+  /// never overwrites a photo someone may be looking at.
+  Future<void> uploadSenderHandoverPhoto(
+    String requestId,
+    Uint8List photo,
+  ) async {
+    final path =
+        '$requestId/sender-${DateTime.now().millisecondsSinceEpoch}.jpg';
+    try {
+      await _client.storage
+          .from(_deliveryPhotoBucket)
+          .uploadBinary(
+            path,
+            photo,
+            fileOptions: const FileOptions(contentType: 'image/jpeg'),
+          );
+    } catch (e) {
+      throw RequestException(RequestFailure.other, e);
+    }
+    await _call('set_sender_handover_photo', {
+      'p_request_id': requestId,
+      'p_path': path,
+    });
+  }
+
   /// The traveler enters the recipient's [code]. The right code marks the
   /// request delivered and queues the payout to [payoutAccountId].
   Future<DeliveryCheckResult> confirmDelivery(
@@ -2022,6 +2098,18 @@ enum ProblemReason {
 
 /// Which delivery photo: the item at pickup, or the handover.
 enum DeliveryPhotoKind { pickup, handover }
+
+/// What the sender sees of the traveler at handover.
+class HandoverFace {
+  /// A short-lived link to the selfie from the traveler's ID check; null
+  /// when there's none.
+  final String? selfieUrl;
+
+  /// The traveler's ID is verified.
+  final bool verified;
+
+  const HandoverFace({this.selfieUrl, this.verified = false});
+}
 
 /// One message between the traveler and the recipient.
 class RecipientMessage {

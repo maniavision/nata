@@ -10,6 +10,14 @@ class SupportAccess {
 
 /// The Support section for Nata staff (20240154_support_tools.sql). Every
 /// call is refused with nata:not_admin for anyone not in nata.admins.
+/// A delivery's photos for Support, as short-lived links: the traveler's
+/// at pickup and handover, and the sender's of the traveler with the item.
+typedef SupportDeliveryPhotos = ({
+  String? pickup,
+  String? handover,
+  String? sender,
+});
+
 class SupportService {
   final SupabaseClient _client;
 
@@ -97,15 +105,16 @@ class SupportService {
     params: {'p_dispute': disputeId, 'p_note': note},
   );
 
-  /// The pickup and handover photos, as short-lived links.
-  Future<({String? pickup, String? handover})> photos(String requestId) async {
+  /// The pickup and handover photos, and the sender's photo of the
+  /// traveler with the item, as short-lived links.
+  Future<SupportDeliveryPhotos> photos(String requestId) async {
     final rows =
         await _client.rpc(
               'support_delivery_photos',
               params: {'p_request': requestId},
             )
             as List;
-    if (rows.isEmpty) return (pickup: null, handover: null);
+    if (rows.isEmpty) return (pickup: null, handover: null, sender: null);
     final r = Map<String, dynamic>.from(rows.first as Map);
     Future<String?> url(String? path) async => path == null
         ? null
@@ -119,6 +128,7 @@ class SupportService {
     return (
       pickup: await url(r['pickup_photo_path'] as String?),
       handover: await url(r['handover_photo_path'] as String?),
+      sender: await url(r['sender_handover_photo_path'] as String?),
     );
   }
 
