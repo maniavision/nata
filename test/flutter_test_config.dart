@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/services/auth_gate.dart';
 import 'package:carrywise_app/services/home_search_memory.dart';
+import 'package:carrywise_app/services/number_text.dart';
 import 'package:carrywise_app/services/screen_cache.dart';
 import 'package:carrywise_app/services/signed_urls.dart';
 import 'package:carrywise_app/services/support_service.dart';
@@ -18,6 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// without this a search picked in one test would show up in the next.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   setUp(HomeSearchMemory.clear);
+  // Numbers start in English; a French screen switches them itself.
+  setUp(() => NumberText.locale = 'en');
   // Pages start empty in each test, as for a user signed in just now.
   setUp(() {
     ScreenCache.clear();

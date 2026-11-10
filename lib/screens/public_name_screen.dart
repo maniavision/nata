@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 import '../widgets/page_header.dart';
+import '../services/number_text.dart';
 
 /// How people who find this member as a traveler see their name (designed
 /// in Sleek, "Public name"): their first name and last initial, or a
@@ -431,7 +432,7 @@ class _PublicNameScreenState extends State<PublicNameScreen> {
                 ),
                 if (widget.rating != null)
                   Text(
-                    '★ ${widget.rating!.toStringAsFixed(1)}',
+                    '★ ${NumberText.fixed(widget.rating!)}',
                     style: GoogleFonts.dmSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

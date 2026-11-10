@@ -11,6 +11,7 @@ import '../services/traveler_service.dart' show TravelerReview, TravelerReviews;
 import '../widgets/avatar_image.dart';
 import '../widgets/nata_toast.dart';
 import '../widgets/storage_photo.dart';
+import '../services/number_text.dart';
 
 /// Accepting and declining a request, shared by the Incoming card and the
 /// request details screen. Each returns true when the request changed.
@@ -871,7 +872,7 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
                     Text.rich(
                       key: const ValueKey('sender-rating'),
                       TextSpan(
-                        text: rating.toStringAsFixed(1),
+                        text: NumberText.fixed(rating),
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w800,
                           fontSize: 14,
@@ -950,7 +951,7 @@ class _IncomingRequestScreenState extends State<IncomingRequestScreen> {
             _stars(r.rating.toDouble()),
             const SizedBox(width: 4),
             Text(
-              r.rating.toStringAsFixed(1),
+              NumberText.fixed(r.rating),
               style: GoogleFonts.dmSans(
                 fontWeight: FontWeight.w700,
                 fontSize: 11,

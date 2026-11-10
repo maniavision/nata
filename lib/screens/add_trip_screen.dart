@@ -18,6 +18,7 @@ import '../widgets/location_search_sheet.dart';
 import '../widgets/camera_denied_sheet.dart';
 import '../widgets/one_line_text.dart';
 import '../widgets/nata_toast.dart';
+import '../services/number_text.dart';
 
 /// Opens a location picker; replaceable in tests.
 typedef LocationPicker =
@@ -1160,7 +1161,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
             // Shown in the app's language; the English label is only
             // used to find the weight.
             display: (o) => context.l10n.upToKg(
-              _weightOptions.firstWhere((w) => w.$1 == o).$2.toStringAsFixed(1),
+              NumberText.fixed(_weightOptions.firstWhere((w) => w.$1 == o).$2),
             ),
             onChanged: (v) =>
                 setState(() => _maxWeightLabel = v ?? _maxWeightLabel),
@@ -1537,8 +1538,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
       DateFormat.yMMMMd(Localizations.localeOf(context).toString()).format(d);
 
   String _fmtSize(int bytes) => bytes >= 1024 * 1024
-      ? '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB'
-      : '${(bytes / 1024).clamp(0.1, double.infinity).toStringAsFixed(1)} KB';
+      ? '${NumberText.fixed(bytes / (1024 * 1024))} MB'
+      : '${NumberText.fixed((bytes / 1024).clamp(0.1, double.infinity))} KB';
 }
 
 /// Keeps a booking reference valid as the user types: letters and digits only,

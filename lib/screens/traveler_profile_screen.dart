@@ -12,6 +12,7 @@ import '../l10n/l10n_ext.dart';
 import '../widgets/one_line_text.dart';
 import '../widgets/nata_toast.dart';
 import '../widgets/traveler_photo.dart';
+import '../services/number_text.dart';
 
 /// Shows a traveler's profile and the trip the user picked.
 ///
@@ -304,7 +305,8 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   SizedBox(width: gap),
                   Flexible(
                     child: _ratingStat(
-                      _rating?.toStringAsFixed(1) ?? l.newTravelerRating,
+                      (_rating == null ? null : NumberText.fixed(_rating!)) ??
+                          l.newTravelerRating,
                       l.ratingStat,
                     ),
                   ),
@@ -523,7 +525,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             label: l.weightLimit.toUpperCase(),
             value: _trip.maxWeightKg == null
                 ? '—'
-                : l.upToKg(_trip.maxWeightKg!.toStringAsFixed(1)),
+                : l.upToKg(NumberText.fixed(_trip.maxWeightKg!)),
             sub: l.checkBaggage,
           ),
         ],

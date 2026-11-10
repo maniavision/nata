@@ -1400,7 +1400,7 @@ void main() {
       expect(find.text('Frais Nata'), findsOneWidget);
       expect(find.text('Poids du colis'), findsOneWidget);
       expect(find.text('Aucune photo'), findsOneWidget);
-      expect(find.text('Max 3.0 kg'), findsOneWidget);
+      expect(find.text('Max 3,0 kg'), findsOneWidget);
     });
 
     testWidgets('messages are translated', (tester) async {

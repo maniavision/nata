@@ -23,6 +23,7 @@ import '../widgets/camera_denied_sheet.dart';
 import '../widgets/one_line_text.dart';
 import '../widgets/nata_toast.dart';
 import '../widgets/traveler_photo.dart';
+import '../services/number_text.dart';
 
 /// Takes or chooses an item photo. [camera] true = take it with the camera.
 /// Replaceable in tests.
@@ -569,7 +570,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
     if (weight == null) return l.errWeight;
     final max = _maxWeightKg;
     if (max != null && weight > max) {
-      return l.errWeightTooHeavy(max.toStringAsFixed(1));
+      return l.errWeightTooHeavy(NumberText.fixed(max));
     }
     // While editing, the request's photos may still be downloading.
     if (_photos.isEmpty && !(_loadingPhotos && !_photosChanged)) {
@@ -674,7 +675,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
       case RequestFailure.ownTrip:
         return l.errOwnTrip;
       case RequestFailure.weightTooHeavy:
-        return l.errWeightTooHeavy((_maxWeightKg ?? 0).toStringAsFixed(1));
+        return l.errWeightTooHeavy(NumberText.fixed((_maxWeightKg ?? 0)));
       case RequestFailure.duplicate:
         return l.errDuplicate;
       case RequestFailure.destinationLimit:
@@ -906,7 +907,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                l.travelerMaxKg(max.toStringAsFixed(1)),
+                l.travelerMaxKg(NumberText.fixed(max)),
                 key: ValueKey(
                   trip == _trip
                       ? 'request-max-chip'
@@ -1329,7 +1330,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
           const SizedBox(height: 4),
           Text(
             l.travelerLimitLabel(
-              max == null ? '—' : '${max.toStringAsFixed(1)} kg',
+              max == null ? '—' : '${NumberText.fixed(max)} kg',
             ),
             key: const ValueKey('request-weight-limit'),
             style: GoogleFonts.dmSans(
@@ -1664,7 +1665,7 @@ class _DeliveryRequestScreenState extends State<DeliveryRequestScreen> {
               alignment: Alignment.centerLeft,
               child: Text(
                 l.priceRateLine(
-                  p.rate.toStringAsFixed(p.rate >= 100 ? 2 : 4),
+                  NumberText.fixed(p.rate, p.rate >= 100 ? 2 : 4),
                   p.currency,
                   DateFormat.MMMd(
                     Localizations.localeOf(context).toString(),

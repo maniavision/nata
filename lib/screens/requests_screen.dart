@@ -20,6 +20,7 @@ import 'traveler_results_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../widgets/nata_toast.dart';
 import '../widgets/traveler_photo.dart';
+import '../services/number_text.dart';
 
 class RequestsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [RequestService].
@@ -802,7 +803,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       // With their rating as a sender, once travelers rated them.
       subtitle: [
         context.l10n.senderDeliveries(r.senderDeliveries),
-        if (r.senderRating != null) '★ ${r.senderRating!.toStringAsFixed(1)}',
+        if (r.senderRating != null) '★ ${NumberText.fixed(r.senderRating!)}',
       ].join(' · '),
       amount: _payoutText(r),
       trip: r.routeLabel,

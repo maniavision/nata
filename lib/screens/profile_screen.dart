@@ -33,6 +33,7 @@ import '../widgets/nata_toast.dart';
 import 'route_alerts_screen.dart';
 import 'cost_estimate_screen.dart';
 import '../widgets/name_sheets.dart';
+import '../services/number_text.dart';
 
 class ProfileScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [AuthService].
@@ -813,7 +814,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: Text(
                                   _avgRating == null
                                       ? context.l10n.noReviewsYet
-                                      : '${_avgRating!.toStringAsFixed(1)} ',
+                                      : '${NumberText.fixed(_avgRating!)} ',
                                   key: const ValueKey('profile-rating'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,

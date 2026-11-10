@@ -355,11 +355,7 @@ class _RecipientChatScreenState extends State<RecipientChatScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.shield_outlined,
-            size: 18,
-            color: AppColors.primary,
-          ),
+          const Icon(Icons.shield_outlined, size: 18, color: AppColors.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

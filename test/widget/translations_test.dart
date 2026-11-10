@@ -110,7 +110,7 @@ void main() {
 
     expect(find.text('Voyageurs trouvés'), findsOneWidget);
     expect(find.text('1 disponible'), findsOneWidget);
-    expect(find.text('Accepte jusqu\'à 3.0 kg'), findsOneWidget);
+    expect(find.text('Accepte jusqu\'à 3,0 kg'), findsOneWidget);
     expect(find.text('Travelers Found'), findsNothing);
   });
 

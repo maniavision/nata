@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:carrywise_app/l10n/app_localizations.dart';
 import 'package:carrywise_app/main.dart';
+import 'package:carrywise_app/services/number_text.dart';
 
 /// Wraps [child] with MaterialApp + all localization delegates so that
 /// context.l10n works inside widget tests without needing a real NataApp.
@@ -18,6 +19,7 @@ Widget appWrapper(
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
+        NumberTextDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

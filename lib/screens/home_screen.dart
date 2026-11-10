@@ -37,6 +37,7 @@ import 'profile_screen.dart';
 import 'requests_screen.dart';
 import 'trips_screen.dart';
 import '../widgets/traveler_photo.dart';
+import '../services/number_text.dart';
 
 /// The capital of a country (by ISO code) as a departure, or null.
 typedef CapitalLookup = Future<LocationSelection?> Function(String countryCode);
@@ -1470,7 +1471,9 @@ class _TravelerRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        trip.avgRating?.toStringAsFixed(1) ??
+                        (trip.avgRating == null
+                                ? null
+                                : NumberText.fixed(trip.avgRating!)) ??
                             context.l10n.newTravelerRating,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w700,
@@ -1522,7 +1525,7 @@ class _TravelerRow extends StatelessWidget {
                   trip.maxWeightKg == null
                       ? ''
                       : context.l10n.upToKg(
-                          trip.maxWeightKg!.toStringAsFixed(1),
+                          NumberText.fixed(trip.maxWeightKg!),
                         ),
                   style: GoogleFonts.dmSans(
                     fontSize: 11,

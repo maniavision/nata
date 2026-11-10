@@ -1,6 +1,5 @@
-import 'package:intl/intl.dart';
-
 import 'exchange_rate_service.dart';
+import 'number_text.dart';
 
 /// The wallet card's figures: payouts and payments are in many currencies
 /// (NGN, XOF, USD...), so each is turned into US dollars before they are
@@ -51,12 +50,9 @@ class WalletMoney {
   /// [amount] already in [code] ("\$45.00", "NGN 60,000").
   static String inCurrency(double amount, String code) {
     final symbol = _symbols[code];
-    if (symbol != null) {
-      return NumberFormat.currency(
-        symbol: symbol,
-        decimalDigits: 2,
-      ).format(amount);
-    }
-    return '$code ${NumberFormat('#,##0', 'en_US').format(amount.round())}';
+    final text = symbol != null
+        ? NumberText.grouped(amount, decimals: 2)
+        : NumberText.grouped(amount.round());
+    return NumberText.withCurrency(text, code, symbol);
   }
 }
