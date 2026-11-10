@@ -2159,7 +2159,7 @@
   "feeInternational": "Internacional",
   "feeTotalIfAllAccept": "Si todos aceptan",
   "nataFeeTitle": "Tarifa de Nata",
-  "feeNote": "Solo pagas la tarifa de un viajero si acepta. Abre el chat, donde acordáis el precio y la entrega, y le pagas directamente.",
+  "feeNote": "Esta tarifa fija te pone en contacto con el viajero. Luego podrás acordar el precio y el lugar de entrega, y pagarle directamente.",
   "sendRequestToTravelers": "Enviar a {count} viajeros",
   "pickTravelersHint": "Marca hasta {max} viajeros que vayan a la misma ciudad para enviarles una sola solicitud.",
   "travelersPicked": "{count, plural, =1{1 viajero elegido} other{{count} viajeros elegidos}}",

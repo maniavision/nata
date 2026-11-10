@@ -2159,7 +2159,7 @@
   "feeInternational": "International",
   "feeTotalIfAllAccept": "S'ils acceptent tous",
   "nataFeeTitle": "Frais Nata",
-  "feeNote": "Vous ne payez les frais d'un voyageur que s'il accepte. Ils ouvrent la discussion, où vous convenez du prix et de la remise, et vous payez le voyageur directement.",
+  "feeNote": "Ces frais fixes vous permettent d'entrer en contact avec le voyageur. Vous pourrez ensuite discuter du prix et du lieu de remise, puis le payer directement.",
   "sendRequestToTravelers": "Envoyer à {count} voyageurs",
   "pickTravelersHint": "Cochez jusqu'à {max} voyageurs qui vont dans la même ville pour leur envoyer une seule demande.",
   "travelersPicked": "{count, plural, =1{1 voyageur choisi} other{{count} voyageurs choisis}}",

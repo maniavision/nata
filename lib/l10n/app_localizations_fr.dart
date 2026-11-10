@@ -5395,7 +5395,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get feeNote =>
-      'Vous ne payez les frais d\'un voyageur que s\'il accepte. Ils ouvrent la discussion, où vous convenez du prix et de la remise, et vous payez le voyageur directement.';
+      'Ces frais fixes vous permettent d\'entrer en contact avec le voyageur. Vous pourrez ensuite discuter du prix et du lieu de remise, puis le payer directement.';
 
   @override
   String sendRequestToTravelers(int count) {

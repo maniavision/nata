@@ -2321,7 +2321,7 @@
   "feeInternational": "International",
   "feeTotalIfAllAccept": "If they all accept",
   "nataFeeTitle": "Nata fee",
-  "feeNote": "You pay a traveler's fee only if they accept. It opens the chat, where you agree on the price and the handover and pay the traveler directly.",
+  "feeNote": "This flat fee puts you in touch with the traveler. You can then agree on the price and the handover place, and pay them directly.",
   "sendRequestToTravelers": "Send to {count} travelers",
   "@sendRequestToTravelers": {"placeholders": {"count": {"type": "int"}}},
   "pickTravelersHint": "Tick up to {max} travelers going to the same city to send them one request.",
