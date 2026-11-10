@@ -10,6 +10,7 @@ import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'add_trip_screen.dart';
 import 'requests_screen.dart';
+import '../services/number_text.dart';
 
 /// "My Trips": the signed-in traveler's trips, split into Upcoming and Past.
 class TripsScreen extends StatefulWidget {
@@ -617,7 +618,7 @@ class _TripsScreenState extends State<TripsScreen> {
                   _statTile(
                     t.maxWeightKg == null
                         ? '—'
-                        : '${t.maxWeightKg!.toStringAsFixed(1)} kg',
+                        : '${NumberText.fixed(t.maxWeightKg!)} kg',
                     l.maxWeightLabel,
                   ),
                   const SizedBox(width: 8),

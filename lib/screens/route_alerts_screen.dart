@@ -7,6 +7,7 @@ import '../services/request_service.dart' show RequestInput;
 import '../services/route_alert_service.dart';
 import '../widgets/location_search_sheet.dart';
 import '../widgets/nata_toast.dart';
+import '../services/number_text.dart';
 
 /// Picks a place (country, then city). Replaced in tests.
 typedef RoutePlacePicker =
@@ -924,7 +925,7 @@ class _AddRouteSheetState extends State<_AddRouteSheet> {
   }
 }
 
-/// 5 -> "5", 2.5 -> "2.5".
+/// 5 -> "5", 2.5 -> "2.5" ("2,5" in French).
 String formatKg(double kg) => kg == kg.roundToDouble()
     ? kg.toInt().toString()
-    : kg.toStringAsFixed(kg * 10 == (kg * 10).roundToDouble() ? 1 : 2);
+    : NumberText.fixed(kg, kg * 10 == (kg * 10).roundToDouble() ? 1 : 2);

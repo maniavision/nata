@@ -14,6 +14,7 @@ import 'route_alerts_screen.dart' show formatKg;
 import 'traveler_profile_screen.dart';
 import '../widgets/nata_toast.dart';
 import '../widgets/traveler_photo.dart';
+import '../services/number_text.dart';
 
 class TravelerResultsScreen extends StatefulWidget {
   /// Search criteria from Home. All optional: with none, every upcoming
@@ -877,7 +878,7 @@ class _TravelerCardState extends State<_TravelerCard> {
   String get _capacity {
     final w = widget.trip.maxWeightKg;
     if (w == null) return context.l10n.capacityNotSpecified;
-    return context.l10n.acceptsUpToKg(w.toStringAsFixed(1));
+    return context.l10n.acceptsUpToKg(NumberText.fixed(w));
   }
 
   @override
@@ -1023,7 +1024,9 @@ class _TravelerCardState extends State<_TravelerCard> {
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        widget.trip.avgRating?.toStringAsFixed(1) ??
+                        (widget.trip.avgRating == null
+                                ? null
+                                : NumberText.fixed(widget.trip.avgRating!)) ??
                             context.l10n.newTravelerRating,
                         style: GoogleFonts.dmSans(
                           fontWeight: FontWeight.w600,

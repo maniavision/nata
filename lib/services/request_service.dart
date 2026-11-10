@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'delivery_pricing.dart';
@@ -12,6 +11,7 @@ import 'traveler_service.dart'
     show TravelerReview, TravelerReviews, TravelerTrip;
 import 'phone_number.dart';
 import 'signed_urls.dart';
+import 'number_text.dart';
 
 /// What kind of item is being sent.
 enum RequestCategory {
@@ -556,12 +556,8 @@ class PriceFormatter {
   /// Whole amounts without decimals; a flat fee keeps its cents ("\$2.99").
   static String write(double amount, String currency) {
     final cents = (amount * 100).round() % 100 != 0;
-    final text = NumberFormat(
-      cents ? '#,##0.00' : '#,##0',
-      'en_US',
-    ).format(amount);
-    final symbol = _symbols[currency];
-    return symbol != null ? '$symbol$text' : '$currency $text';
+    final text = NumberText.grouped(amount, decimals: cents ? 2 : 0);
+    return NumberText.withCurrency(text, currency, _symbols[currency]);
   }
 }
 

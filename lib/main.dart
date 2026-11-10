@@ -10,6 +10,7 @@ import 'screens/splash_screen.dart';
 import 'widgets/app_update_listener.dart';
 import 'services/app_badge.dart';
 import 'services/deep_links.dart';
+import 'services/number_text.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -110,6 +111,7 @@ class _NataAppState extends State<NataApp> with WidgetsBindingObserver {
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: const [
             AppLocalizations.delegate,
+            NumberTextDelegate(),
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
