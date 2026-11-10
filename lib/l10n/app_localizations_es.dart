@@ -5358,7 +5358,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get feeNote =>
-      'Esta tarifa fija te pone en contacto con el viajero. Luego podrás acordar el precio y el lugar de entrega, y pagarle directamente.';
+      'Esta tarifa fija te permite contactar al viajero. Luego podrán acordar el precio y el lugar de entrega, y pagarle directamente.';
 
   @override
   String sendRequestToTravelers(int count) {
