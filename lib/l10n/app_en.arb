@@ -655,7 +655,7 @@
   "automatic": "Automatic",
   "transactions": "Transactions",
   "addPaymentMethod": "Add Payment Method",
-  "paymentSecurityNote": "Your payment details are encrypted and stored securely. Payments are held in escrow until delivery is confirmed.",
+  "paymentSecurityNote": "Your payment details are encrypted and stored securely. They're used to pay Nata's fees.",
   "paymentKindCard": "Card",
   "paymentKindCardSub": "Debit or credit",
   "paymentKindMobile": "Mobile Money",
@@ -1247,7 +1247,7 @@
   "errRateUnavailable": "The exchange rate isn't available right now, so the price can't be fixed. Please try again later.",
   "errRequestNotPending": "This request has already been answered.",
 
-  "chatLockedUntilPayment": "Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.",
+  "chatLockedUntilPayment": "Chat unlocks once the request is paid.",
   "chatMeetInPublicTitle": "Meet in a public place",
   "chatMeetInPublicBody": "For pickup and handover, always meet somewhere busy and public, like an airport, a station or a café. Never go to a private address.",
   "chatClosedAfterDelivery": "Delivery complete. This chat is closed, but you can still read it.",

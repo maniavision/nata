@@ -1680,7 +1680,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentSecurityNote =>
-      'Your payment details are encrypted and stored securely. Payments are held in escrow until delivery is confirmed.';
+      'Your payment details are encrypted and stored securely. They\'re used to pay Nata\'s fees.';
 
   @override
   String get paymentKindCard => 'Card';
@@ -2637,8 +2637,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errRequestNotPending => 'This request has already been answered.';
 
   @override
-  String get chatLockedUntilPayment =>
-      'Chat unlocks once the delivery is paid. Your payment stays in escrow until delivery is confirmed.';
+  String get chatLockedUntilPayment => 'Chat unlocks once the request is paid.';
 
   @override
   String get chatMeetInPublicTitle => 'Meet in a public place';

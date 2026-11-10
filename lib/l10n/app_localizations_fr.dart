@@ -1705,7 +1705,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paymentSecurityNote =>
-      'Vos données de paiement sont chiffrées et conservées en toute sécurité. Les paiements restent en séquestre jusqu\'à la confirmation de la livraison.';
+      'Vos données de paiement sont chiffrées et conservées en toute sécurité. Elles servent à payer les frais Nata.';
 
   @override
   String get paymentKindCard => 'Carte';
@@ -2689,7 +2689,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatLockedUntilPayment =>
-      'Le chat se débloque une fois la livraison payée. Votre paiement reste en séquestre jusqu\'à la confirmation de la livraison.';
+      'Le chat se débloque une fois la demande payée.';
 
   @override
   String get chatMeetInPublicTitle => 'Retrouvez-vous dans un lieu public';

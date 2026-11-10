@@ -1695,7 +1695,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get paymentSecurityNote =>
-      'Tus datos de pago se cifran y se guardan de forma segura. Los pagos se retienen en depósito hasta que se confirma la entrega.';
+      'Tus datos de pago se cifran y se guardan de forma segura. Se usan para pagar las tarifas de Nata.';
 
   @override
   String get paymentKindCard => 'Tarjeta';
@@ -2673,7 +2673,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatLockedUntilPayment =>
-      'El chat se desbloquea cuando se paga la entrega. Tu pago queda en depósito hasta que se confirme la entrega.';
+      'El chat se desbloquea cuando se paga la solicitud.';
 
   @override
   String get chatMeetInPublicTitle => 'Encuéntrense en un lugar público';

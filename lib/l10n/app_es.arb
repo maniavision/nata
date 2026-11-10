@@ -638,7 +638,7 @@
   "automatic": "Automático",
   "transactions": "Transacciones",
   "addPaymentMethod": "Añadir método de pago",
-  "paymentSecurityNote": "Tus datos de pago se cifran y se guardan de forma segura. Los pagos se retienen en depósito hasta que se confirma la entrega.",
+  "paymentSecurityNote": "Tus datos de pago se cifran y se guardan de forma segura. Se usan para pagar las tarifas de Nata.",
   "paymentKindCard": "Tarjeta",
   "paymentKindCardSub": "Débito o crédito",
   "paymentKindMobile": "Dinero móvil",
@@ -1225,7 +1225,7 @@
   "errRateUnavailable": "El tipo de cambio no está disponible ahora mismo, así que el precio no se puede fijar. Inténtalo más tarde.",
   "errRequestNotPending": "Esta solicitud ya ha sido respondida.",
 
-  "chatLockedUntilPayment": "El chat se desbloquea cuando se paga la entrega. Tu pago queda en depósito hasta que se confirme la entrega.",
+  "chatLockedUntilPayment": "El chat se desbloquea cuando se paga la solicitud.",
   "chatMeetInPublicTitle": "Encuéntrense en un lugar público",
   "chatMeetInPublicBody": "Para la recogida y la entrega, encuéntrense siempre en un lugar público y concurrido, como un aeropuerto, una estación o un café. Nunca vayas a una dirección privada.",
   "chatClosedAfterDelivery": "Entrega completada. Este chat está cerrado, pero aún puedes leerlo.",
