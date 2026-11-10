@@ -164,15 +164,15 @@ void main() {
       );
     });
 
-    testWidgets('pending: badge, subtitle and trailing label', (tester) async {
+    testWidgets('pending: badge and trailing label, no subtitle', (
+      tester,
+    ) async {
       await pump(tester, 'pending');
 
       expect(find.text('Verification pending'), findsOneWidget);
       expect(find.text('Verification pending,'), findsNothing);
-      expect(
-        find.text('Verification is currently under review'),
-        findsOneWidget,
-      );
+      // The "Reviewing" label says it; no line repeating it.
+      expect(find.textContaining('currently under review'), findsNothing);
       expect(find.text('Reviewing'), findsOneWidget);
     });
 
@@ -211,10 +211,6 @@ void main() {
     testWidgets('the pending state is translated too', (tester) async {
       await pump(tester, 'pending', locale: const Locale('es'));
 
-      expect(
-        find.text('La verificación está actualmente en revisión'),
-        findsOneWidget,
-      );
       expect(find.text('En revisión'), findsOneWidget);
       expect(find.text('Verificación pendiente'), findsOneWidget);
     });

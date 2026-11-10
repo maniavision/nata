@@ -459,6 +459,100 @@ void main() {
       ));
     });
 
+    testWidgets('a stuck check with a selfie: verify the member', (
+      tester,
+    ) async {
+      service.idReviewList = [
+        IdReview(
+          userId: 'u-anne',
+          firstName: 'Anne',
+          lastName: 'Ondo',
+          documentType: 'national_id',
+          documentPath: 'u-anne/id_document.jpg',
+          reason: 'face_match_not_run',
+          failures: 0,
+          submittedAt: DateTime.now().subtract(const Duration(hours: 2)),
+          selfiePath: 'u-anne/selfie.jpg',
+        ),
+      ];
+      await tester.pumpWidget(
+        appWrapper(SupportIdReviewsScreen(service: service)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text("Face match didn't run"), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('id-review-u-anne')));
+      await tester.pumpAndSettle();
+      expect(find.text('Selfie from the face scan'), findsOneWidget);
+      expect(find.textContaining('Approving verifies the member'), findsOne);
+      // No failed photos to count.
+      expect(find.text('Failed photos'), findsNothing);
+
+      final verify = find.byKey(const ValueKey('id-review-approve'));
+      await tester.ensureVisible(verify);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: verify, matching: find.text('Verify member')),
+        findsOneWidget,
+      );
+      await tester.tap(verify);
+      await tester.pumpAndSettle();
+      expect(service.idDecisions.single, (
+        user: 'u-anne',
+        approve: true,
+        note: '',
+      ));
+    });
+
+    testWidgets('a stuck check with no selfie keeps Approve ID', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        appWrapper(
+          SupportIdReviewDetailScreen(
+            review: IdReview(
+              userId: 'u-anne',
+              firstName: 'Anne',
+              lastName: 'Ondo',
+              documentType: 'passport',
+              documentPath: 'u-anne/id_document.jpg',
+              reason: 'face_scan_not_done',
+              failures: 0,
+              submittedAt: DateTime.now(),
+            ),
+            service: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Face scan not done'), findsOneWidget);
+      expect(find.text('Selfie from the face scan'), findsNothing);
+      final approve = find.byKey(const ValueKey('id-review-approve'));
+      await tester.ensureVisible(approve);
+      expect(
+        find.descendant(of: approve, matching: find.text('Approve ID')),
+        findsOneWidget,
+      );
+    });
+
+    test('reads a stuck check from the server', () {
+      final r = IdReview.fromJson({
+        'user_id': 'u1',
+        'first_name': 'Anne',
+        'last_name': 'Ondo',
+        'id_document_type': 'passport',
+        'id_document_path': 'u1/id_document.jpg',
+        'review_reason': 'face_match_failed',
+        'failures': 0,
+        'submitted_at': '2026-11-09T10:00:00Z',
+        'selfie_path': 'u1/selfie.jpg',
+        'face_match_attempts': 3,
+      });
+      expect(r.selfiePath, 'u1/selfie.jpg');
+      expect(r.faceMatchAttempts, 3);
+      expect(IdReview.fromJson({'selfie_path': null}).selfiePath, isNull);
+    });
+
     testWidgets('no IDs waiting says so', (tester) async {
       await tester.pumpWidget(
         appWrapper(SupportIdReviewsScreen(service: service)),

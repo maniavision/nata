@@ -601,6 +601,7 @@ class _ActivityRow extends StatelessWidget {
       'report_reviewed' => (Icons.flag_rounded, l.supportActReportReviewed),
       'id_approved' => (Icons.badge_rounded, l.supportActIdApproved),
       'id_rejected' => (Icons.badge_outlined, l.supportActIdRejected),
+      'id_verified' => (Icons.verified_rounded, l.supportActIdVerified),
       _ => (Icons.lock_open_rounded, l.supportActUnlocked),
     };
     final resolved = activity.action == 'resolved';
@@ -2180,6 +2181,9 @@ String _idReasonLabel(AppLocalizations l, String reason) => switch (reason) {
   'wrong_type' => l.supportIdReasonWrongType,
   'name_mismatch' => l.supportIdReasonNameMismatch,
   'no_face' => l.supportIdReasonNoFace,
+  'face_scan_not_done' => l.supportIdReasonFaceScanNotDone,
+  'face_match_failed' => l.supportIdReasonFaceMatchFailed,
+  'face_match_not_run' => l.supportIdReasonFaceMatchNotRun,
   _ => l.supportIdReasonUnreadable,
 };
 
@@ -2189,7 +2193,8 @@ String _idTypeLabel(AppLocalizations l, String type) => switch (type) {
   _ => l.idDocPassport,
 };
 
-/// IDs whose photo failed the app's check 5 times, sent to the team.
+/// ID checks the app couldn't finish: the photo failed its check 5 times,
+/// or the check stayed pending with no face match.
 class SupportIdReviewsScreen extends StatefulWidget {
   final SupportService? service;
   const SupportIdReviewsScreen({super.key, this.service});
@@ -2292,8 +2297,9 @@ class _SupportIdReviewsScreenState extends State<SupportIdReviewsScreen> {
   }
 }
 
-/// One ID to check: the image, the name on the profile, why the app's check
-/// failed; approve (the member goes on to the face scan) or reject.
+/// One ID to check: the image (and the selfie, if taken), the name on the
+/// profile, why the app couldn't finish; approve (with a selfie the member
+/// is verified, otherwise they go on to the face scan) or reject.
 class SupportIdReviewDetailScreen extends StatefulWidget {
   final IdReview review;
   final SupportService? service;
@@ -2318,6 +2324,15 @@ class _SupportIdReviewDetailScreenState
         debugPrint('[Support] id image: $e');
         return null;
       });
+  late final Future<String?> _selfie = widget.review.selfiePath == null
+      ? Future.value(null)
+      : _service.idDocumentUrl(widget.review.selfiePath!).catchError((
+          Object e,
+        ) {
+          debugPrint('[Support] selfie image: $e');
+          return null;
+        });
+  bool get _hasSelfie => widget.review.selfiePath != null;
   bool _busy = false;
 
   @override
@@ -2341,7 +2356,14 @@ class _SupportIdReviewDetailScreenState
         note: _note.text.trim(),
       );
       if (!mounted) return;
-      _snack(context, approve ? l.supportIdApproved : l.supportIdRejected);
+      _snack(
+        context,
+        !approve
+            ? l.supportIdRejected
+            : _hasSelfie
+            ? l.supportIdVerified
+            : l.supportIdApproved,
+      );
       navigator.pop(true);
     } catch (e) {
       debugPrint('[Support] review id: $e');
@@ -2417,6 +2439,50 @@ class _SupportIdReviewDetailScreenState
             },
           ),
         ),
+        if (_hasSelfie) ...[
+          const SizedBox(height: 16),
+          _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.supportIdSelfie, style: _title()),
+                const SizedBox(height: 10),
+                FutureBuilder<String?>(
+                  future: _selfie,
+                  builder: (context, snap) {
+                    if (snap.connectionState != ConnectionState.done) {
+                      return const SizedBox(
+                        height: 180,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      );
+                    }
+                    final url = snap.data;
+                    if (url == null) {
+                      return Text(l.supportIdNoImage, style: _small());
+                    }
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: InteractiveViewer(
+                        maxScale: 5,
+                        child: Image.network(
+                          url,
+                          key: const ValueKey('id-review-selfie'),
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) =>
+                              Text(l.supportIdNoImage, style: _small()),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         _Card(
           child: Column(
@@ -2424,12 +2490,17 @@ class _SupportIdReviewDetailScreenState
               _fact(l.supportIdProfileName, r.name),
               _fact(l.idStatusDocument, _idTypeLabel(l, r.documentType)),
               _fact(l.supportIdFailedCheck, _idReasonLabel(l, r.reason)),
-              _fact(l.supportIdFailures, '${r.failures}'),
+              if (r.failures > 0) _fact(l.supportIdFailures, '${r.failures}'),
+              if (r.faceMatchAttempts > 0)
+                _fact(l.supportIdFaceMatchTries, '${r.faceMatchAttempts}'),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        Text(l.supportIdCheckHint, style: _small()),
+        Text(
+          _hasSelfie ? l.supportIdCheckHintSelfie : l.supportIdCheckHint,
+          style: _small(),
+        ),
         const SizedBox(height: 16),
         _Section(
           title: l.supportResolutionNote,
@@ -2463,7 +2534,7 @@ class _SupportIdReviewDetailScreenState
         ),
         const SizedBox(height: 16),
         _Pill(
-          l.supportIdApprove,
+          _hasSelfie ? l.supportIdVerify : l.supportIdApprove,
           buttonKey: const ValueKey('id-review-approve'),
           icon: Icons.check_rounded,
           busy: _busy,

@@ -991,10 +991,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Acción requerida: verifica tu identidad';
 
   @override
-  String get identityUnderReview =>
-      'La verificación está actualmente en revisión';
-
-  @override
   String get verificationReviewing => 'En revisión';
 
   @override
@@ -5548,8 +5544,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get supportIdReviewsSuffix => 'en espera';
 
   @override
-  String get supportIdReviewsLine =>
-      'Documentos cuya foto falló 5 veces la verificación de la app';
+  String get supportIdReviewsLine => 'Documentos que la app no pudo verificar';
 
   @override
   String get supportIdReviewsTitle => 'Documentos por revisar';
@@ -5615,4 +5610,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get supportActIdRejected => 'Documento rechazado';
+
+  @override
+  String get supportIdReasonFaceScanNotDone => 'Escaneo facial no hecho';
+
+  @override
+  String get supportIdReasonFaceMatchFailed => 'Comparación facial fallida';
+
+  @override
+  String get supportIdReasonFaceMatchNotRun =>
+      'La comparación facial no se hizo';
+
+  @override
+  String get supportIdSelfie => 'Selfie del escaneo facial';
+
+  @override
+  String get supportIdCheckHintSelfie =>
+      'Aprueba solo si es un documento real, el nombre coincide con el perfil y la persona del selfie es la del documento. Aprobar verifica al miembro.';
+
+  @override
+  String get supportIdVerify => 'Verificar al miembro';
+
+  @override
+  String get supportIdVerified => 'Miembro verificado';
+
+  @override
+  String get supportActIdVerified => 'verificó a un miembro';
+
+  @override
+  String get supportIdFaceMatchTries => 'Intentos de comparación';
 }

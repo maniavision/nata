@@ -340,7 +340,6 @@
   "gdprCompliant": "Conforme RGPD et KYC",
   "trips": "Trajets",
   "identityActionRequiredSub": "Action requise : vérifiez votre identité",
-  "identityUnderReview": "La vérification est actuellement en cours d'examen",
   "verificationReviewing": "En cours d'examen",
   "ratingStat": "Note",
   "upcomingTrips": "PROCHAINS TRAJETS",
@@ -2206,7 +2205,7 @@
   "notifIdApprovedBody": "Votre pièce d'identité a été approuvée. Terminez par un rapide scan du visage pour être vérifié.",
   "supportIdReviewsCard": "Pièces à vérifier",
   "supportIdReviewsSuffix": "en attente",
-  "supportIdReviewsLine": "Pièces dont la photo a échoué 5 fois à la vérification de l'app",
+  "supportIdReviewsLine": "Pièces que l'app n'a pas pu vérifier",
   "supportIdReviewsTitle": "Pièces à vérifier",
   "supportIdReviewsEmpty": "Aucune pièce en attente.",
   "supportIdReviewDetail": "Vérifier la pièce",
@@ -2227,5 +2226,14 @@
   "supportIdReasonNoFace": "Aucun visage trouvé",
   "supportIdReasonUnreadable": "Texte illisible",
   "supportActIdApproved": "Pièce approuvée",
-  "supportActIdRejected": "Pièce refusée"
+  "supportActIdRejected": "Pièce refusée",
+  "supportIdReasonFaceScanNotDone": "Scan du visage non fait",
+  "supportIdReasonFaceMatchFailed": "Comparaison du visage échouée",
+  "supportIdReasonFaceMatchNotRun": "Comparaison du visage non lancée",
+  "supportIdSelfie": "Selfie du scan du visage",
+  "supportIdCheckHintSelfie": "N'approuvez que s'il s'agit d'une vraie pièce, que le nom correspond au profil et que la personne du selfie est celle de la pièce. Approuver vérifie le membre.",
+  "supportIdVerify": "Vérifier le membre",
+  "supportIdVerified": "Membre vérifié",
+  "supportActIdVerified": "a vérifié un membre",
+  "supportIdFaceMatchTries": "Essais de comparaison"
 }

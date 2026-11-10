@@ -1936,12 +1936,6 @@ abstract class AppLocalizations {
   /// **'Action Required: Verify your identity'**
   String get identityActionRequiredSub;
 
-  /// No description provided for @identityUnderReview.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification is currently under review'**
-  String get identityUnderReview;
-
   /// No description provided for @verificationReviewing.
   ///
   /// In en, this message translates to:
@@ -9515,7 +9509,7 @@ abstract class AppLocalizations {
   /// No description provided for @supportIdReviewsLine.
   ///
   /// In en, this message translates to:
-  /// **'IDs whose photo failed the app\'s check 5 times'**
+  /// **'IDs the app couldn\'t verify'**
   String get supportIdReviewsLine;
 
   /// No description provided for @supportIdReviewsTitle.
@@ -9643,6 +9637,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ID rejected'**
   String get supportActIdRejected;
+
+  /// No description provided for @supportIdReasonFaceScanNotDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Face scan not done'**
+  String get supportIdReasonFaceScanNotDone;
+
+  /// No description provided for @supportIdReasonFaceMatchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Face match failed'**
+  String get supportIdReasonFaceMatchFailed;
+
+  /// No description provided for @supportIdReasonFaceMatchNotRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Face match didn\'t run'**
+  String get supportIdReasonFaceMatchNotRun;
+
+  /// No description provided for @supportIdSelfie.
+  ///
+  /// In en, this message translates to:
+  /// **'Selfie from the face scan'**
+  String get supportIdSelfie;
+
+  /// No description provided for @supportIdCheckHintSelfie.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve only if it\'s a real ID, the name matches the profile and the person in the selfie is the one on the ID. Approving verifies the member.'**
+  String get supportIdCheckHintSelfie;
+
+  /// No description provided for @supportIdVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify member'**
+  String get supportIdVerify;
+
+  /// No description provided for @supportIdVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Member verified'**
+  String get supportIdVerified;
+
+  /// No description provided for @supportActIdVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'verified a member'**
+  String get supportActIdVerified;
+
+  /// No description provided for @supportIdFaceMatchTries.
+  ///
+  /// In en, this message translates to:
+  /// **'Face match tries'**
+  String get supportIdFaceMatchTries;
 }
 
 class _AppLocalizationsDelegate

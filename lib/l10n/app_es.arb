@@ -340,7 +340,6 @@
   "gdprCompliant": "Cumplimiento GDPR y KYC",
   "trips": "Viajes",
   "identityActionRequiredSub": "Acción requerida: verifica tu identidad",
-  "identityUnderReview": "La verificación está actualmente en revisión",
   "verificationReviewing": "En revisión",
   "ratingStat": "Valoración",
   "upcomingTrips": "PRÓXIMOS VIAJES",
@@ -2206,7 +2205,7 @@
   "notifIdApprovedBody": "Tu documento fue aprobado. Termina con un escaneo rápido de tu rostro para verificarte.",
   "supportIdReviewsCard": "Documentos por revisar",
   "supportIdReviewsSuffix": "en espera",
-  "supportIdReviewsLine": "Documentos cuya foto falló 5 veces la verificación de la app",
+  "supportIdReviewsLine": "Documentos que la app no pudo verificar",
   "supportIdReviewsTitle": "Documentos por revisar",
   "supportIdReviewsEmpty": "No hay documentos en espera.",
   "supportIdReviewDetail": "Revisar el documento",
@@ -2227,5 +2226,14 @@
   "supportIdReasonNoFace": "No se encontró un rostro",
   "supportIdReasonUnreadable": "Texto ilegible",
   "supportActIdApproved": "Documento aprobado",
-  "supportActIdRejected": "Documento rechazado"
+  "supportActIdRejected": "Documento rechazado",
+  "supportIdReasonFaceScanNotDone": "Escaneo facial no hecho",
+  "supportIdReasonFaceMatchFailed": "Comparación facial fallida",
+  "supportIdReasonFaceMatchNotRun": "La comparación facial no se hizo",
+  "supportIdSelfie": "Selfie del escaneo facial",
+  "supportIdCheckHintSelfie": "Aprueba solo si es un documento real, el nombre coincide con el perfil y la persona del selfie es la del documento. Aprobar verifica al miembro.",
+  "supportIdVerify": "Verificar al miembro",
+  "supportIdVerified": "Miembro verificado",
+  "supportActIdVerified": "verificó a un miembro",
+  "supportIdFaceMatchTries": "Intentos de comparación"
 }
