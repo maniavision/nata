@@ -7,11 +7,13 @@ import '../services/exchange_rate_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
+import '../services/market_service.dart';
 import '../services/request_service.dart';
 import '../services/screen_cache.dart';
 import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/avatar_image.dart';
+import '../widgets/market_offers_panel.dart';
 import 'checkout_escrow_screen.dart';
 import 'delivery_request_screen.dart';
 import 'confirm_receipt_screen.dart';
@@ -30,6 +32,9 @@ class RequestsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [ExchangeRateService].
   final ExchangeRateService? exchangeRates;
 
+  /// Override for tests; defaults to the real [MarketService].
+  final MarketService? marketService;
+
   /// 0 = Incoming, 1 = Outgoing.
   final int initialTab;
 
@@ -44,6 +49,7 @@ class RequestsScreen extends StatefulWidget {
     super.key,
     this.requestService,
     this.exchangeRates,
+    this.marketService,
     this.initialTab = 0,
     this.now,
     this.askDeliveredFor,
@@ -1422,16 +1428,50 @@ class _RequestsScreenState extends State<RequestsScreen> {
           for (final r in sent)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _closes(r.status)
-                  ? _swipeToArchive(
-                      id: r.id,
-                      status: r.status,
-                      child: _sentCard(r),
-                    )
-                  : _sentCard(r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _closes(r.status)
+                      ? _swipeToArchive(
+                          id: r.id,
+                          status: r.status,
+                          child: _sentCard(r),
+                        )
+                      : _sentCard(r),
+                  if (_canList(r))
+                    MarketOffersPanel(
+                      key: ValueKey('market-panel-host-${r.id}'),
+                      groupId: r.id,
+                      service: widget.marketService,
+                      onAccepted: _payAccepted,
+                    ),
+                ],
+              ),
             ),
       ],
     );
+  }
+
+  /// The first request of a group sent with a flat fee, while nobody on it
+  /// has been paid: it can go on the Parcel Market (20240213).
+  bool _canList(SentRequest r) {
+    if (!r.isFlat || r.groupId != r.id) return false;
+    if (r.status == 'cancelled' && r.cancelledBySender) return false;
+    return !(_sent ?? const <SentRequest>[]).any(
+      (x) => x.groupId == r.id && (x.isPaid || x.status == 'delivered'),
+    );
+  }
+
+  /// An offer was accepted: the new request, straight to paying its fee.
+  Future<void> _payAccepted(String requestId) async {
+    await _loadSent();
+    if (!mounted) return;
+    for (final r in _sent ?? const <SentRequest>[]) {
+      if (r.id == requestId && r.awaitingPayment) {
+        await _pay(r);
+        return;
+      }
+    }
   }
 
   Widget _sentCard(SentRequest r) => _SentRequestCard(

@@ -5627,4 +5627,209 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportSenderPhoto => 'Sender\'s photo';
+
+  @override
+  String get parcelMarket => 'Parcel Market';
+
+  @override
+  String get marketIntro =>
+      'Items senders want to send on the routes of your trips. Offer to carry one, and the sender decides.';
+
+  @override
+  String get marketLoadFailed => 'Couldn\'t load the market.';
+
+  @override
+  String get marketEmptyTitle => 'No items on your routes yet';
+
+  @override
+  String get marketEmptyBody =>
+      'Items show here when a sender on one of your trips\' routes puts theirs on the market.';
+
+  @override
+  String get marketNoTripTitle => 'Post a trip first';
+
+  @override
+  String get marketNoTripBody =>
+      'The market shows items that fit your live trips.';
+
+  @override
+  String marketItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketAsked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers asked',
+      one: '1 traveler asked',
+      zero: 'No requests yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketOffered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offered',
+      one: '1 offered',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketDelivered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deliveries',
+      one: '1 delivery',
+      zero: 'New traveler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get marketRestricted => 'Check customs rules';
+
+  @override
+  String get marketOffer => 'Offer to carry';
+
+  @override
+  String get marketAcceptRequest => 'Accept the request';
+
+  @override
+  String get marketOfferSent => 'Offer sent';
+
+  @override
+  String get marketWithdraw => 'Withdraw';
+
+  @override
+  String get marketOfferTitle => 'Offer to carry this item?';
+
+  @override
+  String marketOfferBody(String name) {
+    return '$name sees your offer and can accept it. Once they pay the Nata fee, the chat opens and you agree on the price.';
+  }
+
+  @override
+  String marketOfferRequestedBody(String name) {
+    return '$name already asked you to carry this item. This accepts their request, and they have 24 hours to pay the Nata fee.';
+  }
+
+  @override
+  String get marketRestrictedNote =>
+      'Documents and electronics may need checks at customs. Make sure you can carry them before offering.';
+
+  @override
+  String get marketSendOffer => 'Send offer';
+
+  @override
+  String get marketOfferedToast =>
+      'Offer sent. We\'ll let you know when the sender answers.';
+
+  @override
+  String get marketAcceptedToast =>
+      'Request accepted. The sender has 24 hours to pay the Nata fee.';
+
+  @override
+  String get marketErrClosed => 'This item is no longer on the market.';
+
+  @override
+  String get marketErrLimit => 'This item already has 5 offers waiting.';
+
+  @override
+  String get marketErrAlready => 'You\'ve already offered to carry this item.';
+
+  @override
+  String get marketErrTripFull =>
+      'This trip is already carrying for 3 senders.';
+
+  @override
+  String get marketErrTrip => 'Your trip no longer fits this item.';
+
+  @override
+  String get marketErrFailed => 'Couldn\'t send your offer. Please try again.';
+
+  @override
+  String get marketFindParcels => 'Find parcels to carry';
+
+  @override
+  String get marketFindParcelsSub =>
+      'Items senders want to send on your routes';
+
+  @override
+  String get marketShowOn => 'Show on the Parcel Market';
+
+  @override
+  String get marketShowOnSub =>
+      'Travelers on this route can offer to carry it. They see your public name and a blurred photo.';
+
+  @override
+  String get marketOffersTitle => 'OFFERS TO CARRY';
+
+  @override
+  String get marketAcceptOffer => 'Accept & pay';
+
+  @override
+  String get marketDeclineOffer => 'Decline';
+
+  @override
+  String get marketOfferAcceptedToast =>
+      'Offer accepted. Pay the Nata fee to open the chat.';
+
+  @override
+  String get marketErrOfferGone => 'This offer is no longer available.';
+
+  @override
+  String get marketErrListing =>
+      'Couldn\'t update the market. Please try again.';
+
+  @override
+  String get notifOfferNewTitle => 'New offer to carry';
+
+  @override
+  String notifOfferNewBody(String traveler, String route) {
+    return '$traveler offered to carry your item on $route.';
+  }
+
+  @override
+  String get notifOfferAcceptedTitle => 'Offer accepted';
+
+  @override
+  String notifOfferAcceptedBody(String sender, String route) {
+    return '$sender accepted your offer on $route. The chat opens once they pay the Nata fee.';
+  }
+
+  @override
+  String get notifOfferDeclinedTitle => 'Offer declined';
+
+  @override
+  String get notifOfferDeclinedBody =>
+      'The sender chose another traveler for this item.';
+
+  @override
+  String get notifOfferClosedTitle => 'Item no longer available';
+
+  @override
+  String notifOfferClosedBody(String route) {
+    return 'The item you offered to carry on $route is no longer on the market.';
+  }
+
+  @override
+  String get notifItemFoundTitle => 'Item found a traveler';
+
+  @override
+  String notifItemFoundBody(String route) {
+    return 'The item on $route found another traveler, so this request was closed.';
+  }
 }

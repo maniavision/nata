@@ -28,6 +28,7 @@ EVENTS = {
     "refund_to_balance": ("notifRefundToBalanceTitle", "notifRefundToBalanceBody"),
     "identity_verified": ("notifVerifiedTitle", "notifVerifiedBody"),
     "identity_rejected": ("notifRejectedTitle", "notifRejectedBody"),
+    "id_approved": ("notifIdApprovedTitle", "notifIdApprovedBody"),
     "problem_reported": ("notifProblemTitle", "notifProblemBody"),
     "message_new": ("notifMessageTitle", "notifMessageBody"),
     "recipient_message": ("notifMessageTitle", "notifMessageBody"),
@@ -37,6 +38,12 @@ EVENTS = {
     # Flat Nata fees (20240200).
     "request_accepted_fee": ("notifAcceptedTitle", "notifAcceptedFeeBody"),
     "contact_fee_paid": ("notifChatOpenTitle", "notifFeePaidBody"),
+    # The Parcel Market (20240213).
+    "market_offer_new": ("notifOfferNewTitle", "notifOfferNewBody"),
+    "market_offer_accepted": ("notifOfferAcceptedTitle", "notifOfferAcceptedBody"),
+    "market_offer_declined": ("notifOfferDeclinedTitle", "notifOfferDeclinedBody"),
+    "market_offer_closed": ("notifOfferClosedTitle", "notifOfferClosedBody"),
+    "request_item_found": ("notifItemFoundTitle", "notifItemFoundBody"),
     "contact_fee_received": ("notifChatOpenTitle", "notifFeeReceivedBody"),
     "delivery_confirmed_by_sender": ("notifDeliveryConfirmedTitle", "notifConfirmedBySenderBody"),
     # Delivery check-ins (20240201).

@@ -5717,4 +5717,210 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportSenderPhoto => 'Photo de l\'expéditeur';
+
+  @override
+  String get parcelMarket => 'Marché des colis';
+
+  @override
+  String get marketIntro =>
+      'Des colis que des expéditeurs veulent envoyer sur les trajets de vos voyages. Proposez d\'en transporter un, l\'expéditeur décide.';
+
+  @override
+  String get marketLoadFailed => 'Impossible de charger le marché.';
+
+  @override
+  String get marketEmptyTitle => 'Aucun colis sur vos trajets pour l\'instant';
+
+  @override
+  String get marketEmptyBody =>
+      'Les colis apparaissent ici quand un expéditeur sur le trajet d\'un de vos voyages met le sien sur le marché.';
+
+  @override
+  String get marketNoTripTitle => 'Publiez d\'abord un voyage';
+
+  @override
+  String get marketNoTripBody =>
+      'Le marché montre les colis qui correspondent à vos voyages en ligne.';
+
+  @override
+  String marketItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketAsked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs sollicités',
+      one: '1 voyageur sollicité',
+      zero: 'Aucune demande',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketOffered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count propositions',
+      one: '1 proposition',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketDelivered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livraisons',
+      one: '1 livraison',
+      zero: 'Nouveau voyageur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get marketRestricted => 'Vérifiez les règles de douane';
+
+  @override
+  String get marketOffer => 'Proposer de transporter';
+
+  @override
+  String get marketAcceptRequest => 'Accepter la demande';
+
+  @override
+  String get marketOfferSent => 'Proposition envoyée';
+
+  @override
+  String get marketWithdraw => 'Retirer';
+
+  @override
+  String get marketOfferTitle => 'Proposer de transporter ce colis ?';
+
+  @override
+  String marketOfferBody(String name) {
+    return '$name voit votre proposition et peut l\'accepter. Une fois les frais Nata payés, le chat s\'ouvre et vous convenez du prix.';
+  }
+
+  @override
+  String marketOfferRequestedBody(String name) {
+    return '$name vous a déjà demandé de transporter ce colis. Cela accepte sa demande, et il a 24 heures pour payer les frais Nata.';
+  }
+
+  @override
+  String get marketRestrictedNote =>
+      'Les documents et l\'électronique peuvent être contrôlés à la douane. Assurez-vous de pouvoir les transporter avant de proposer.';
+
+  @override
+  String get marketSendOffer => 'Envoyer la proposition';
+
+  @override
+  String get marketOfferedToast =>
+      'Proposition envoyée. Nous vous préviendrons quand l\'expéditeur répondra.';
+
+  @override
+  String get marketAcceptedToast =>
+      'Demande acceptée. L\'expéditeur a 24 heures pour payer les frais Nata.';
+
+  @override
+  String get marketErrClosed => 'Ce colis n\'est plus sur le marché.';
+
+  @override
+  String get marketErrLimit => 'Ce colis a déjà 5 propositions en attente.';
+
+  @override
+  String get marketErrAlready =>
+      'Vous avez déjà proposé de transporter ce colis.';
+
+  @override
+  String get marketErrTripFull =>
+      'Ce voyage transporte déjà pour 3 expéditeurs.';
+
+  @override
+  String get marketErrTrip => 'Votre voyage ne correspond plus à ce colis.';
+
+  @override
+  String get marketErrFailed =>
+      'Impossible d\'envoyer votre proposition. Veuillez réessayer.';
+
+  @override
+  String get marketFindParcels => 'Trouver des colis à transporter';
+
+  @override
+  String get marketFindParcelsSub => 'Des colis à envoyer sur vos trajets';
+
+  @override
+  String get marketShowOn => 'Afficher sur le Marché des colis';
+
+  @override
+  String get marketShowOnSub =>
+      'Les voyageurs sur ce trajet peuvent proposer de le transporter. Ils voient votre nom public et une photo floutée.';
+
+  @override
+  String get marketOffersTitle => 'PROPOSITIONS DE TRANSPORT';
+
+  @override
+  String get marketAcceptOffer => 'Accepter et payer';
+
+  @override
+  String get marketDeclineOffer => 'Refuser';
+
+  @override
+  String get marketOfferAcceptedToast =>
+      'Proposition acceptée. Payez les frais Nata pour ouvrir le chat.';
+
+  @override
+  String get marketErrOfferGone => 'Cette proposition n\'est plus disponible.';
+
+  @override
+  String get marketErrListing =>
+      'Impossible de mettre à jour le marché. Veuillez réessayer.';
+
+  @override
+  String get notifOfferNewTitle => 'Nouvelle proposition de transport';
+
+  @override
+  String notifOfferNewBody(String traveler, String route) {
+    return '$traveler propose de transporter votre colis sur $route.';
+  }
+
+  @override
+  String get notifOfferAcceptedTitle => 'Proposition acceptée';
+
+  @override
+  String notifOfferAcceptedBody(String sender, String route) {
+    return '$sender a accepté votre proposition sur $route. Le chat s\'ouvre dès qu\'il paie les frais Nata.';
+  }
+
+  @override
+  String get notifOfferDeclinedTitle => 'Proposition refusée';
+
+  @override
+  String get notifOfferDeclinedBody =>
+      'L\'expéditeur a choisi un autre voyageur pour ce colis.';
+
+  @override
+  String get notifOfferClosedTitle => 'Colis plus disponible';
+
+  @override
+  String notifOfferClosedBody(String route) {
+    return 'Le colis que vous proposiez de transporter sur $route n\'est plus sur le marché.';
+  }
+
+  @override
+  String get notifItemFoundTitle => 'Le colis a trouvé un voyageur';
+
+  @override
+  String notifItemFoundBody(String route) {
+    return 'Le colis sur $route a trouvé un autre voyageur, cette demande est donc fermée.';
+  }
 }
