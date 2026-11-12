@@ -455,7 +455,13 @@ as $$
          nata.public_first(p.first_name, p.pseudonym, p.use_pseudonym),
          nata.public_last(p.last_name, p.use_pseudonym),
          p.avatar_path,
-         nata.photo_revealed(o.traveler_id),
+         -- Clear once the sender paid this traveler for a delivery (written
+         -- out here: nata.photo_revealed, 20240188, isn't live everywhere).
+         exists (select 1 from nata.delivery_requests d
+                   join nata.trips dt on dt.id = d.trip_id
+                  where dt.traveler_id = o.traveler_id
+                    and d.sender_id = auth.uid()
+                    and d.status in ('paid', 'handed_off', 'delivered')),
          p.verification_status = 'verified',
          p.avg_rating, p.items_delivered_count,
          dc.name, ac.name, t.departure_date, t.arrival_date,
