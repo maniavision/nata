@@ -1,7 +1,9 @@
 import 'package:carrywise_app/screens/add_trip_screen.dart';
 import 'package:carrywise_app/screens/home_screen.dart';
+import 'package:carrywise_app/screens/parcel_market_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
+import 'package:carrywise_app/services/market_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/services/verify_gate.dart';
 import 'package:flutter/material.dart';
@@ -628,4 +630,53 @@ void main() {
       expect(find.text('Jul 04, 2030'), findsOneWidget);
     });
   });
+
+  group('Parcel Market', () {
+    testWidgets('a live upcoming trip shows the way to the market', (
+      tester,
+    ) async {
+      service.trips = [
+        sampleMyTrip(
+          id: 'live',
+          status: TripStatus.live,
+          departureDate: inDays(5),
+        ),
+      ];
+      final market = _FakeMarket();
+      tester.view.physicalSize = const Size(900, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        appWrapper(TripsScreen(service: service, marketService: market)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Find parcels to carry'), findsOneWidget);
+      await tapKey(tester, 'trips-market');
+      expect(find.byType(ParcelMarketScreen), findsOneWidget);
+      expect(market.loaded, isTrue);
+    });
+
+    testWidgets('not for a trip still in review, nor on Past', (tester) async {
+      service.trips = [
+        sampleMyTrip(
+          id: 'review',
+          status: TripStatus.pendingReview,
+          departureDate: inDays(5),
+        ),
+      ];
+      await pump(tester);
+      expect(find.byKey(const ValueKey('trips-market')), findsNothing);
+    });
+  });
+}
+
+class _FakeMarket extends Fake implements MarketService {
+  bool loaded = false;
+
+  @override
+  Future<List<MarketListing>> listings() async {
+    loaded = true;
+    return const [];
+  }
 }

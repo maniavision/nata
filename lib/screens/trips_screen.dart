@@ -3,12 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/market_service.dart';
 import '../services/screen_cache.dart';
 import '../services/verify_gate.dart';
 import '../services/trip_service.dart';
 import '../widgets/coach_tips.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'add_trip_screen.dart';
+import 'parcel_market_screen.dart';
 import 'requests_screen.dart';
 import '../services/number_text.dart';
 
@@ -17,7 +19,10 @@ class TripsScreen extends StatefulWidget {
   /// Override for tests; defaults to the real [TripService].
   final TripService? service;
 
-  const TripsScreen({super.key, this.service});
+  /// Override for tests; defaults to the real [MarketService].
+  final MarketService? marketService;
+
+  const TripsScreen({super.key, this.service, this.marketService});
 
   /// Where the trips are kept between visits (ScreenCache).
   static const cacheKey = 'trips';
@@ -358,6 +363,7 @@ class _TripsScreenState extends State<TripsScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
         children: [
+          if (_tab == 0 && trips.any((t) => t.isLive)) _buildMarketCard(),
           if (trips.isEmpty) _buildEmpty(),
           for (final t in trips)
             Padding(
@@ -365,6 +371,78 @@ class _TripsScreenState extends State<TripsScreen> {
               child: _buildTripCard(t),
             ),
         ],
+      ),
+    );
+  }
+
+  /// Opens the Parcel Market (20240213): items to carry on these trips'
+  /// routes.
+  Widget _buildMarketCard() {
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Material(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          key: const ValueKey('trips-market'),
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ParcelMarketScreen(service: widget.marketService),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryForeground.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.inventory_2_rounded,
+                    size: 22,
+                    color: AppColors.primaryForeground,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.marketFindParcels,
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          color: AppColors.primaryForeground,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l.marketFindParcelsSub,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          color: AppColors.primaryForeground.withValues(
+                            alpha: 0.8,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.primaryForeground,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

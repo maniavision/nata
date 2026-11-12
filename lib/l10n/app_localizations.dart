@@ -9751,6 +9751,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sender\'s photo'**
   String get supportSenderPhoto;
+
+  /// No description provided for @parcelMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Parcel Market'**
+  String get parcelMarket;
+
+  /// No description provided for @marketIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Items senders want to send on the routes of your trips. Offer to carry one, and the sender decides.'**
+  String get marketIntro;
+
+  /// No description provided for @marketLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the market.'**
+  String get marketLoadFailed;
+
+  /// No description provided for @marketEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No items on your routes yet'**
+  String get marketEmptyTitle;
+
+  /// No description provided for @marketEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Items show here when a sender on one of your trips\' routes puts theirs on the market.'**
+  String get marketEmptyBody;
+
+  /// No description provided for @marketNoTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a trip first'**
+  String get marketNoTripTitle;
+
+  /// No description provided for @marketNoTripBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The market shows items that fit your live trips.'**
+  String get marketNoTripBody;
+
+  /// No description provided for @marketItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String marketItems(int count);
+
+  /// No description provided for @marketAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No requests yet} =1{1 traveler asked} other{{count} travelers asked}}'**
+  String marketAsked(int count);
+
+  /// No description provided for @marketOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 offered} other{{count} offered}}'**
+  String marketOffered(int count);
+
+  /// No description provided for @marketDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{New traveler} =1{1 delivery} other{{count} deliveries}}'**
+  String marketDelivered(int count);
+
+  /// No description provided for @marketRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'Check customs rules'**
+  String get marketRestricted;
+
+  /// No description provided for @marketOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer to carry'**
+  String get marketOffer;
+
+  /// No description provided for @marketAcceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the request'**
+  String get marketAcceptRequest;
+
+  /// No description provided for @marketOfferSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent'**
+  String get marketOfferSent;
+
+  /// No description provided for @marketWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw'**
+  String get marketWithdraw;
+
+  /// No description provided for @marketOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer to carry this item?'**
+  String get marketOfferTitle;
+
+  /// No description provided for @marketOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} sees your offer and can accept it. Once they pay the Nata fee, the chat opens and you agree on the price.'**
+  String marketOfferBody(String name);
+
+  /// No description provided for @marketOfferRequestedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} already asked you to carry this item. This accepts their request, and they have 24 hours to pay the Nata fee.'**
+  String marketOfferRequestedBody(String name);
+
+  /// No description provided for @marketRestrictedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents and electronics may need checks at customs. Make sure you can carry them before offering.'**
+  String get marketRestrictedNote;
+
+  /// No description provided for @marketSendOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Send offer'**
+  String get marketSendOffer;
+
+  /// No description provided for @marketOfferedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent. We\'ll let you know when the sender answers.'**
+  String get marketOfferedToast;
+
+  /// No description provided for @marketAcceptedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Request accepted. The sender has 24 hours to pay the Nata fee.'**
+  String get marketAcceptedToast;
+
+  /// No description provided for @marketErrClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This item is no longer on the market.'**
+  String get marketErrClosed;
+
+  /// No description provided for @marketErrLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'This item already has 5 offers waiting.'**
+  String get marketErrLimit;
+
+  /// No description provided for @marketErrAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already offered to carry this item.'**
+  String get marketErrAlready;
+
+  /// No description provided for @marketErrTripFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip is already carrying for 3 senders.'**
+  String get marketErrTripFull;
+
+  /// No description provided for @marketErrTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trip no longer fits this item.'**
+  String get marketErrTrip;
+
+  /// No description provided for @marketErrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send your offer. Please try again.'**
+  String get marketErrFailed;
+
+  /// No description provided for @marketFindParcels.
+  ///
+  /// In en, this message translates to:
+  /// **'Find parcels to carry'**
+  String get marketFindParcels;
+
+  /// No description provided for @marketFindParcelsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Items senders want to send on your routes'**
+  String get marketFindParcelsSub;
+
+  /// No description provided for @marketShowOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on the Parcel Market'**
+  String get marketShowOn;
+
+  /// No description provided for @marketShowOnSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Travelers on this route can offer to carry it. They see your public name and a blurred photo.'**
+  String get marketShowOnSub;
+
+  /// No description provided for @marketOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFERS TO CARRY'**
+  String get marketOffersTitle;
+
+  /// No description provided for @marketAcceptOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept & pay'**
+  String get marketAcceptOffer;
+
+  /// No description provided for @marketDeclineOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get marketDeclineOffer;
+
+  /// No description provided for @marketOfferAcceptedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer accepted. Pay the Nata fee to open the chat.'**
+  String get marketOfferAcceptedToast;
+
+  /// No description provided for @marketErrOfferGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer is no longer available.'**
+  String get marketErrOfferGone;
+
+  /// No description provided for @marketErrListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the market. Please try again.'**
+  String get marketErrListing;
+
+  /// No description provided for @notifOfferNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New offer to carry'**
+  String get notifOfferNewTitle;
+
+  /// No description provided for @notifOfferNewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{traveler} offered to carry your item on {route}.'**
+  String notifOfferNewBody(String traveler, String route);
+
+  /// No description provided for @notifOfferAcceptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer accepted'**
+  String get notifOfferAcceptedTitle;
+
+  /// No description provided for @notifOfferAcceptedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{sender} accepted your offer on {route}. The chat opens once they pay the Nata fee.'**
+  String notifOfferAcceptedBody(String sender, String route);
+
+  /// No description provided for @notifOfferDeclinedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer declined'**
+  String get notifOfferDeclinedTitle;
+
+  /// No description provided for @notifOfferDeclinedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The sender chose another traveler for this item.'**
+  String get notifOfferDeclinedBody;
+
+  /// No description provided for @notifOfferClosedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item no longer available'**
+  String get notifOfferClosedTitle;
+
+  /// No description provided for @notifOfferClosedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The item you offered to carry on {route} is no longer on the market.'**
+  String notifOfferClosedBody(String route);
+
+  /// No description provided for @notifItemFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item found a traveler'**
+  String get notifItemFoundTitle;
+
+  /// No description provided for @notifItemFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The item on {route} found another traveler, so this request was closed.'**
+  String notifItemFoundBody(String route);
 }
 
 class _AppLocalizationsDelegate

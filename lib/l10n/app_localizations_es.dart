@@ -5679,4 +5679,209 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get supportSenderPhoto => 'Foto del remitente';
+
+  @override
+  String get parcelMarket => 'Mercado de paquetes';
+
+  @override
+  String get marketIntro =>
+      'Paquetes que los remitentes quieren enviar en las rutas de tus viajes. Ofrécete a llevar uno y el remitente decide.';
+
+  @override
+  String get marketLoadFailed => 'No se pudo cargar el mercado.';
+
+  @override
+  String get marketEmptyTitle => 'Aún no hay paquetes en tus rutas';
+
+  @override
+  String get marketEmptyBody =>
+      'Los paquetes aparecen aquí cuando un remitente en la ruta de uno de tus viajes pone el suyo en el mercado.';
+
+  @override
+  String get marketNoTripTitle => 'Publica primero un viaje';
+
+  @override
+  String get marketNoTripBody =>
+      'El mercado muestra los paquetes que encajan con tus viajes publicados.';
+
+  @override
+  String marketItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count artículos',
+      one: '1 artículo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketAsked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count viajeros solicitados',
+      one: '1 viajero solicitado',
+      zero: 'Sin solicitudes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketOffered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ofertas',
+      one: '1 oferta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String marketDelivered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entregas',
+      one: '1 entrega',
+      zero: 'Viajero nuevo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get marketRestricted => 'Revisa las normas de aduana';
+
+  @override
+  String get marketOffer => 'Ofrecerme a llevarlo';
+
+  @override
+  String get marketAcceptRequest => 'Aceptar la solicitud';
+
+  @override
+  String get marketOfferSent => 'Oferta enviada';
+
+  @override
+  String get marketWithdraw => 'Retirar';
+
+  @override
+  String get marketOfferTitle => '¿Ofrecerte a llevar este paquete?';
+
+  @override
+  String marketOfferBody(String name) {
+    return '$name ve tu oferta y puede aceptarla. Cuando pague la tarifa de Nata, se abre el chat y acordáis el precio.';
+  }
+
+  @override
+  String marketOfferRequestedBody(String name) {
+    return '$name ya te pidió llevar este paquete. Esto acepta su solicitud, y tiene 24 horas para pagar la tarifa de Nata.';
+  }
+
+  @override
+  String get marketRestrictedNote =>
+      'Los documentos y la electrónica pueden revisarse en aduana. Asegúrate de poder llevarlos antes de ofrecerte.';
+
+  @override
+  String get marketSendOffer => 'Enviar oferta';
+
+  @override
+  String get marketOfferedToast =>
+      'Oferta enviada. Te avisaremos cuando el remitente responda.';
+
+  @override
+  String get marketAcceptedToast =>
+      'Solicitud aceptada. El remitente tiene 24 horas para pagar la tarifa de Nata.';
+
+  @override
+  String get marketErrClosed => 'Este paquete ya no está en el mercado.';
+
+  @override
+  String get marketErrLimit => 'Este paquete ya tiene 5 ofertas pendientes.';
+
+  @override
+  String get marketErrAlready => 'Ya te ofreciste a llevar este paquete.';
+
+  @override
+  String get marketErrTripFull =>
+      'Este viaje ya lleva paquetes de 3 remitentes.';
+
+  @override
+  String get marketErrTrip => 'Tu viaje ya no encaja con este paquete.';
+
+  @override
+  String get marketErrFailed =>
+      'No se pudo enviar tu oferta. Inténtalo de nuevo.';
+
+  @override
+  String get marketFindParcels => 'Buscar paquetes para llevar';
+
+  @override
+  String get marketFindParcelsSub => 'Paquetes para enviar en tus rutas';
+
+  @override
+  String get marketShowOn => 'Mostrar en el Mercado de paquetes';
+
+  @override
+  String get marketShowOnSub =>
+      'Los viajeros en esta ruta pueden ofrecerse a llevarlo. Ven tu nombre público y una foto difuminada.';
+
+  @override
+  String get marketOffersTitle => 'OFERTAS PARA LLEVARLO';
+
+  @override
+  String get marketAcceptOffer => 'Aceptar y pagar';
+
+  @override
+  String get marketDeclineOffer => 'Rechazar';
+
+  @override
+  String get marketOfferAcceptedToast =>
+      'Oferta aceptada. Paga la tarifa de Nata para abrir el chat.';
+
+  @override
+  String get marketErrOfferGone => 'Esta oferta ya no está disponible.';
+
+  @override
+  String get marketErrListing =>
+      'No se pudo actualizar el mercado. Inténtalo de nuevo.';
+
+  @override
+  String get notifOfferNewTitle => 'Nueva oferta para llevarlo';
+
+  @override
+  String notifOfferNewBody(String traveler, String route) {
+    return '$traveler se ofreció a llevar tu paquete en $route.';
+  }
+
+  @override
+  String get notifOfferAcceptedTitle => 'Oferta aceptada';
+
+  @override
+  String notifOfferAcceptedBody(String sender, String route) {
+    return '$sender aceptó tu oferta en $route. El chat se abre cuando pague la tarifa de Nata.';
+  }
+
+  @override
+  String get notifOfferDeclinedTitle => 'Oferta rechazada';
+
+  @override
+  String get notifOfferDeclinedBody =>
+      'El remitente eligió a otro viajero para este paquete.';
+
+  @override
+  String get notifOfferClosedTitle => 'Paquete ya no disponible';
+
+  @override
+  String notifOfferClosedBody(String route) {
+    return 'El paquete que te ofreciste a llevar en $route ya no está en el mercado.';
+  }
+
+  @override
+  String get notifItemFoundTitle => 'El paquete encontró viajero';
+
+  @override
+  String notifItemFoundBody(String route) {
+    return 'El paquete en $route encontró otro viajero, así que esta solicitud se cerró.';
+  }
 }

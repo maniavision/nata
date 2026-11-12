@@ -112,6 +112,26 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Chat is open",
       "{sender} paid the Nata fee. Agree on the price and the handover in the chat."
     ],
+    "market_offer_new": [
+      "New offer to carry",
+      "{traveler} offered to carry your item on {route}."
+    ],
+    "market_offer_accepted": [
+      "Offer accepted",
+      "{sender} accepted your offer on {route}. The chat opens once they pay the Nata fee."
+    ],
+    "market_offer_declined": [
+      "Offer declined",
+      "The sender chose another traveler for this item."
+    ],
+    "market_offer_closed": [
+      "Item no longer available",
+      "The item you offered to carry on {route} is no longer on the market."
+    ],
+    "request_item_found": [
+      "Item found a traveler",
+      "The item on {route} found another traveler, so this request was closed."
+    ],
     "contact_fee_received": [
       "Chat is open",
       "You can now chat with {traveler} to agree on the price and the handover."
@@ -242,6 +262,26 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "El chat está abierto",
       "{sender} pagó la tarifa de Nata. Acordad el precio y la entrega en el chat."
     ],
+    "market_offer_new": [
+      "Nueva oferta para llevarlo",
+      "{traveler} se ofreció a llevar tu paquete en {route}."
+    ],
+    "market_offer_accepted": [
+      "Oferta aceptada",
+      "{sender} aceptó tu oferta en {route}. El chat se abre cuando pague la tarifa de Nata."
+    ],
+    "market_offer_declined": [
+      "Oferta rechazada",
+      "El remitente eligió a otro viajero para este paquete."
+    ],
+    "market_offer_closed": [
+      "Paquete ya no disponible",
+      "El paquete que te ofreciste a llevar en {route} ya no está en el mercado."
+    ],
+    "request_item_found": [
+      "El paquete encontró viajero",
+      "El paquete en {route} encontró otro viajero, así que esta solicitud se cerró."
+    ],
     "contact_fee_received": [
       "El chat está abierto",
       "Ya puedes chatear con {traveler} para acordar el precio y la entrega."
@@ -337,8 +377,8 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
       "Nous n’avons pas pu vérifier votre pièce d’identité. Réessayez avec une photo nette."
     ],
     "id_approved": [
-      "Pièce d’identité approuvée",
-      "Votre pièce d’identité a été approuvée. Terminez par un rapide scan du visage pour être vérifié."
+      "Pièce d'identité approuvée",
+      "Votre pièce d'identité a été approuvée. Terminez par un rapide scan du visage pour être vérifié."
     ],
     "problem_reported": [
       "Problème signalé",
@@ -371,6 +411,26 @@ export const TEXTS: Record<string, Record<string, [string, string]>> =
     "contact_fee_paid": [
       "La discussion est ouverte",
       "{sender} a payé les frais Nata. Convenez du prix et de la remise dans la discussion."
+    ],
+    "market_offer_new": [
+      "Nouvelle proposition de transport",
+      "{traveler} propose de transporter votre colis sur {route}."
+    ],
+    "market_offer_accepted": [
+      "Proposition acceptée",
+      "{sender} a accepté votre proposition sur {route}. Le chat s'ouvre dès qu'il paie les frais Nata."
+    ],
+    "market_offer_declined": [
+      "Proposition refusée",
+      "L'expéditeur a choisi un autre voyageur pour ce colis."
+    ],
+    "market_offer_closed": [
+      "Colis plus disponible",
+      "Le colis que vous proposiez de transporter sur {route} n'est plus sur le marché."
+    ],
+    "request_item_found": [
+      "Le colis a trouvé un voyageur",
+      "Le colis sur {route} a trouvé un autre voyageur, cette demande est donc fermée."
     ],
     "contact_fee_received": [
       "La discussion est ouverte",

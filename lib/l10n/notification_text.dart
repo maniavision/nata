@@ -75,6 +75,27 @@ import 'app_localizations.dart';
       l.notifDeliveryConfirmedTitle,
       l.notifDeliveryConfirmedBody(sender),
     ),
+    // The Parcel Market (20240213).
+    'market_offer_new' => (
+      l.notifOfferNewTitle,
+      l.notifOfferNewBody(traveler, route),
+    ),
+    'market_offer_accepted' => (
+      l.notifOfferAcceptedTitle,
+      l.notifOfferAcceptedBody(sender, route),
+    ),
+    'market_offer_declined' => (
+      l.notifOfferDeclinedTitle,
+      l.notifOfferDeclinedBody,
+    ),
+    'market_offer_closed' => (
+      l.notifOfferClosedTitle,
+      l.notifOfferClosedBody(route),
+    ),
+    'request_item_found' => (
+      l.notifItemFoundTitle,
+      l.notifItemFoundBody(route),
+    ),
     'trip_match' => (
       l.notifTripMatchTitle,
       l.notifTripMatchBody(traveler, route),
@@ -145,6 +166,8 @@ int? requestsTabForEvent(String? event) => switch (event) {
   'request_cancelled_by_sender' ||
   'request_expired_unpaid_traveler' ||
   'delivery_confirmed' ||
+  'market_offer_accepted' ||
+  'request_item_found' ||
   'payout_paid' => 0,
   'request_accepted' ||
   'request_accepted_fee' ||
@@ -158,6 +181,7 @@ int? requestsTabForEvent(String? event) => switch (event) {
   'item_picked_up' ||
   'item_delivered' ||
   'payment_received' ||
+  'market_offer_new' ||
   'refund_sent' => 1,
   _ => null,
 };

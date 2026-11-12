@@ -86,4 +86,35 @@ void main() {
     }
     expect(ts, contains('"Paiement reçu"'));
   });
+
+  test('the Parcel Market events are written in the user\'s language', () {
+    expect(notificationText(en, notification('market_offer_new')), (
+      'New offer to carry',
+      'Fortune offered to carry your item on Lagos → London.',
+    ));
+    expect(requestsTabForEvent('market_offer_new'), 1);
+    expect(notificationText(en, notification('market_offer_accepted')), (
+      'Offer accepted',
+      'Amara accepted your offer on Lagos → London. The chat opens once '
+          'they pay the Nata fee.',
+    ));
+    expect(requestsTabForEvent('market_offer_accepted'), 0);
+    expect(notificationText(en, notification('request_item_found')), (
+      'Item found a traveler',
+      'The item on Lagos → London found another traveler, so this request '
+          'was closed.',
+    ));
+    expect(requestsTabForEvent('request_item_found'), 0);
+    expect(
+      notificationText(en, notification('market_offer_declined')).$1,
+      'Offer declined',
+    );
+    expect(
+      notificationText(
+        AppLocalizationsFr(),
+        notification('market_offer_closed'),
+      ).$1,
+      'Colis plus disponible',
+    );
+  });
 }
