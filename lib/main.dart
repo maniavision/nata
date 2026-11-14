@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:carrywise_app/l10n/app_localizations.dart';
 import 'config/supabase_config.dart';
+import 'services/live_updates.dart';
 import 'services/push_service.dart';
 import 'services/preferences_service.dart';
 import 'screens/splash_screen.dart';
@@ -69,6 +70,7 @@ class _NataAppState extends State<NataApp> with WidgetsBindingObserver {
     // Keep the ValueNotifier in sync with PreferencesService changes.
     _prefs.addListener(_onPrefsChanged);
     PushService.instance.start(_navigatorKey);
+    LiveUpdates.start();
     DeepLinks.instance.start(_navigatorKey);
     WidgetsBinding.instance.addObserver(this);
   }
@@ -80,6 +82,8 @@ class _NataAppState extends State<NataApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       AppBadge.refresh();
       PushService.instance.resumed();
+      // What changed while away shows on the page that is open.
+      LiveUpdates.ping();
     }
   }
 

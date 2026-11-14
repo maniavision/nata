@@ -13,6 +13,7 @@ import '../screens/requests_screen.dart';
 import '../screens/chat_thread_screen.dart';
 import '../screens/traveler_results_screen.dart';
 import 'app_badge.dart';
+import 'live_updates.dart';
 import 'push_registrar.dart';
 import '../screens/recipient_chat_screen.dart';
 import '../screens/identity_verification_screen.dart';
@@ -88,6 +89,7 @@ class PushService {
     // banner shows unless its chat is the one on screen.
     FirebaseMessaging.onMessage.listen((message) {
       AppBadge.refresh();
+      LiveUpdates.ping();
       _banner(message);
     });
     final initial = await messaging.getInitialMessage();

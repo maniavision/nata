@@ -18,6 +18,7 @@ import '../widgets/location_search_sheet.dart';
 import '../widgets/camera_denied_sheet.dart';
 import '../widgets/one_line_text.dart';
 import '../widgets/nata_toast.dart';
+import 'trips_screen.dart';
 import '../services/number_text.dart';
 
 /// Opens a location picker; replaceable in tests.
@@ -36,7 +37,8 @@ typedef ReceiptCamera = Future<PickedReceipt?> Function();
 
 /// Add a trip (or edit one when [trip] is given).
 ///
-/// Pops with `true` after a successful save so the caller can refresh.
+/// Pops with `true` after a successful save so the caller can refresh; a new
+/// trip opened from elsewhere goes on to My Trips instead, to show it.
 class AddTripScreen extends StatefulWidget {
   /// The trip to edit; null to create a new one.
   final Trip? trip;
@@ -49,6 +51,10 @@ class AddTripScreen extends StatefulWidget {
   final TicketCheckService? ticketCheck;
   final TicketRedactionService? ticketRedaction;
 
+  /// After publishing a new trip, open My Trips in place of this page. My
+  /// Trips itself passes false: it shows the trip when this page closes.
+  final bool openTripsWhenPublished;
+
   const AddTripScreen({
     super.key,
     this.trip,
@@ -58,6 +64,7 @@ class AddTripScreen extends StatefulWidget {
     this.receiptCamera,
     this.ticketCheck,
     this.ticketRedaction,
+    this.openTripsWhenPublished = true,
   });
 
   @override
@@ -438,6 +445,14 @@ class _AddTripScreenState extends State<AddTripScreen> {
           tone: ToastTone.success,
         ),
       );
+      if (!_editing && widget.openTripsWhenPublished) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => TripsScreen(service: widget.service),
+          ),
+        );
+        return;
+      }
       Navigator.of(context).pop(true);
     } catch (e) {
       debugPrint('[AddTrip] save failed: $e');

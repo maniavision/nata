@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:carrywise_app/screens/add_trip_screen.dart';
+import 'package:carrywise_app/screens/trips_screen.dart';
 import 'package:carrywise_app/services/preferences_service.dart';
 import 'package:carrywise_app/services/ticket_check_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
@@ -70,7 +71,13 @@ void main() {
   }
 
   /// Opens AddTripScreen on top of a host page so pop(true) can be observed.
-  Future<void> pump(WidgetTester tester, {Trip? trip}) async {
+  /// [openTrips]: published from elsewhere than My Trips (which goes on to
+  /// My Trips instead of closing).
+  Future<void> pump(
+    WidgetTester tester, {
+    Trip? trip,
+    bool openTrips = false,
+  }) async {
     tester.view.physicalSize = const Size(900, 3200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -92,6 +99,7 @@ void main() {
                         receiptCamera: fakeReceiptCamera,
                         ticketCheck: ticketCheck,
                         ticketRedaction: redaction,
+                        openTripsWhenPublished: openTrips,
                       ),
                     ),
                   );
@@ -832,6 +840,20 @@ void main() {
       expect(popped, isTrue);
       expect(popResult, isTrue);
       expect(find.text('Trip published'), findsOneWidget);
+    });
+
+    testWidgets('published from Home, it opens My Trips to show the trip', (
+      tester,
+    ) async {
+      await pump(tester, openTrips: true);
+      await fillValidForm(tester);
+
+      await save(tester);
+
+      expect(find.byType(TripsScreen), findsOneWidget);
+      expect(find.text('Trip published'), findsOneWidget);
+      // Replaced by My Trips, not closed with true.
+      expect(popResult, isNot(isTrue));
     });
 
     testWidgets('shows a busy state and ignores a second tap', (tester) async {

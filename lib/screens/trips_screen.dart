@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
 import '../l10n/l10n_ext.dart';
+import '../services/live_updates.dart';
 import '../services/market_service.dart';
 import '../services/screen_cache.dart';
 import '../services/verify_gate.dart';
@@ -61,6 +62,10 @@ class _TripsScreenState extends State<TripsScreen> {
       _loading = false;
     }
     _load(quiet: cached != null);
+    // A request on a trip changed: show it without leaving.
+    _live = LiveReload(() {
+      if (mounted) _load(quiet: true);
+    });
     CoachTips.showWhenSettled(
       context,
       name: 'trips',
@@ -79,6 +84,14 @@ class _TripsScreenState extends State<TripsScreen> {
         ),
       ],
     );
+  }
+
+  late final LiveReload _live;
+
+  @override
+  void dispose() {
+    _live.dispose();
+    super.dispose();
   }
 
   /// [quiet] refreshes keep what is on screen if they fail.
@@ -135,7 +148,11 @@ class _TripsScreenState extends State<TripsScreen> {
     if (!mounted) return;
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => AddTripScreen(trip: trip, service: widget.service),
+        builder: (_) => AddTripScreen(
+          trip: trip,
+          service: widget.service,
+          openTripsWhenPublished: false,
+        ),
       ),
     );
     if (saved == true && mounted) _load();

@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../main.dart';
 import '../services/market_service.dart';
+import '../services/live_updates.dart';
 import '../services/request_service.dart';
 import '../services/screen_cache.dart';
 import '../widgets/coach_tips.dart';
@@ -151,6 +152,21 @@ class _RequestsScreenState extends State<RequestsScreen> {
     _loadIncoming(quiet: _incomingAll != null);
     _loadRates();
     _loadClosed();
+    // A request changed (paid, accepted, ...): show it without leaving.
+    _live = LiveReload(() {
+      if (!mounted) return;
+      _loadSent();
+      _loadIncoming(quiet: true);
+      _loadClosed();
+    });
+  }
+
+  late final LiveReload _live;
+
+  @override
+  void dispose() {
+    _live.dispose();
+    super.dispose();
   }
 
   /// When the user's closed requests closed, and which were swiped away;

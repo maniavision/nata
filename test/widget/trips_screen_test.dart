@@ -3,6 +3,7 @@ import 'package:carrywise_app/screens/home_screen.dart';
 import 'package:carrywise_app/screens/parcel_market_screen.dart';
 import 'package:carrywise_app/screens/requests_screen.dart';
 import 'package:carrywise_app/screens/trips_screen.dart';
+import 'package:carrywise_app/services/live_updates.dart';
 import 'package:carrywise_app/services/market_service.dart';
 import 'package:carrywise_app/services/trip_service.dart';
 import 'package:carrywise_app/services/verify_gate.dart';
@@ -629,6 +630,24 @@ void main() {
       );
       expect(find.text('Jul 04, 2030'), findsOneWidget);
     });
+  });
+
+  testWidgets('a change shows without leaving the page', (tester) async {
+    service.trips = [];
+    await pump(tester);
+    expect(find.byKey(const ValueKey('trips-empty-add')), findsOneWidget);
+
+    service.trips = [
+      sampleMyTrip(
+        id: 'new',
+        status: TripStatus.live,
+        departureDate: inDays(3),
+      ),
+    ];
+    LiveUpdates.ping();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('trips-empty-add')), findsNothing);
   });
 
   group('Parcel Market', () {
